@@ -1,0 +1,45 @@
+syntax = "proto2";
+ 
+package RLAPI;
+
+
+message Vector3D {
+  required float x = 1;
+  required float y = 2;
+  required float z = 3;
+}
+message CarInfo {
+  required Vector3D 	Location = 1;
+  required Vector3D 	Rotation = 2;
+  required ScoreInfo 	Score = 3;
+  required bool 		SuperSonic = 5;
+  required bool 		Bot = 6;
+  required string 		Team = 7;
+  required int32 		Boost = 4;
+}
+message BallInfo {
+  required Vector3D 	Location = 1;
+  required Vector3D 	Rotation = 2;
+  required Vector3D 	Velocity = 3;
+  required Vector3D 	AngularVelocity = 4;
+  required Vector3D 	Acceleration = 5;
+}
+message BoostInfo {
+	required Vector3D 	Location = 1;
+	required bool 		Active = 2;
+	required int32 		Timer = 3;
+}
+message ScoreInfo {
+  required int32 		Score = 1;
+  required int32 		Goals = 2;
+  required int32 		Assists = 3;
+  required int32 		Saves = 4;
+  required int32 		Shots = 5;
+  required int32 		Demolitions = 6;
+}
+
+message GameTickPacket {
+  repeated CarInfo 		gamecars = 1;
+  repeated BoostInfo 	gameboosts = 2;
+  required BallInfo  	gameball= 3;
+}

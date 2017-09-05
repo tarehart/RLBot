@@ -1,77 +1,36 @@
 from ctypes import *
 from ctypes.wintypes import *
 from multiprocessing import Process, Array, Queue
+from gametick import GameTickPacket_pb2
 
 import time
 import atexit
+import socket
 import realTimeDisplay
-import ReadWriteMem
 import PlayHelper
-import array
 import AlwaysTowardsBallAgent as agent1
 import AlwaysTowardsBallAgent as agent2
+
+TCP_IP = '127.0.0.1'
+TCP_PORT = 35401
+BUFFER_SIZE = 1024
+
 
 OpenProcess = windll.kernel32.OpenProcess
 CloseHandle = windll.kernel32.CloseHandle
 
 ph = PlayHelper.play_helper()
 
-def updateInputs(inputs, scoring, ph):
+def updateInputs(inputs, scoring, ph, conn):
 
-	PROCESS_ALL_ACCESS = 0x1F0FFF
-
-	rwm = ReadWriteMem.ReadWriteMem()
-	pid = rwm.GetProcessIdByName("RocketLeague.exe")
-	rocketLeagueBaseAddress = rwm.GetBaseAddress(pid)
-
-	processHandle = OpenProcess(PROCESS_ALL_ACCESS, False, pid)
-	
-	blueScore = None
-	orangeScore = None
-	blueDemo = None
-	orangeDemo = None
-	
-	addresses = ph.GetAddressVector(processHandle,rocketLeagueBaseAddress)
 	while(True):
-		values = ph.GetValueVector(processHandle, addresses)
-		
-		# Process scoring to see if any new goals or demos
-		if (blueScore == None):
-			# Need to update values if don't already exist
-			blueScore = values[1][0]
-			orangeScore = values[1][1]
-			blueDemo = values[1][2]
-			orangeDemo = values[1][3]
 
-		if (not blueScore == values[1][0]):
-			print("Blue has scored! Waiting for ball and players to reset")
-			blueScore = values[1][0]
-			time.sleep(15) # Sleep 15 seconds for goal and replay then ping for correct values
-			addresses = ph.GetAddressVector(processHandle,rocketLeagueBaseAddress)
-			while (ph.ping_refreshed_pointers(processHandle, addresses)):
-				time.sleep(0.5)
-				addresses = ph.GetAddressVector(processHandle,rocketLeagueBaseAddress)
+		data = conn.recv(BUFFER_SIZE)
+		packet = GameTickPacket_pb2.GameTickPacket()
+		packet.ParseFromString(data)
+		conn.send(b'\x00') # Send back an arbitrary byte. Don't know if it matters
 
-		if (not orangeScore == values[1][1]):
-			print("Orange has scored! Waiting for ball and players to reset")
-			orangeScore = values[1][1]
-			time.sleep(15) # Sleep 15 seconds for goal and replay then ping for correct values
-			addresses = ph.GetAddressVector(processHandle,rocketLeagueBaseAddress)
-			while (ph.ping_refreshed_pointers(processHandle, addresses)):
-				time.sleep(0.5)
-				addresses = ph.GetAddressVector(processHandle,rocketLeagueBaseAddress)
-
-		if (not blueDemo == values[1][2]):
-			print("Orange has scored a demo on blue! Waiting for blue player to reset")
-			blueDemo = values[1][2]
-			time.sleep(4) # Takes about 3 seconds to respawn for a demo
-			addresses = ph.GetAddressVector(processHandle,rocketLeagueBaseAddress)
-
-		if (not orangeDemo == values[1][3]):
-			print("Blue has scored a demo on orange! Waiting for orange player to reset")
-			orangeDemo = values[1][3]
-			time.sleep(4) # Takes about 3 seconds to respawn from demo. Even though blue can keep playing, for training I am just sleeping
-			addresses = ph.GetAddressVector(processHandle,rocketLeagueBaseAddress)
+		values = ph.GetValueVector(packet)
 
 		# Finally update input to values
 		for i in range(len(values[0])):
@@ -101,8 +60,6 @@ if __name__ == '__main__':
 	# Make sure input devices are reset to neutral whenever the script terminates
 	atexit.register(resetInputs)
 
-	time.sleep(3) # Sleep 3 second before starting to give me time to set things up
-
 	inputs = Array('f', [0.0 for x in range(38)])
 	scoring = Array('f', [0.0 for x in range(12)])
 	q1 = Queue(1)
@@ -113,10 +70,18 @@ if __name__ == '__main__':
 	
 	rtd = realTimeDisplay.real_time_display()
 	rtd.build_initial_window(agent1.BOT_NAME, agent2.BOT_NAME)
+
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.bind((TCP_IP, TCP_PORT))
+	s.listen(1)
+
+	print("Waiting for rocket league to connect...")
+	conn, addr = s.accept()
+	print("Connected!")
 	
 	ph = PlayHelper.play_helper()
 	
-	p1 = Process(target=updateInputs, args=(inputs, scoring, ph))
+	p1 = Process(target=updateInputs, args=(inputs, scoring, ph, conn))
 	p1.start()
 	p2 = Process(target=runAgent, args=(inputs, scoring, "blue", q1))
 	p2.start()

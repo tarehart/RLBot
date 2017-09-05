@@ -1,133 +1,112 @@
-import ReadWriteMem
 import array
-import time
 import pyvjoy
+from math import sin
+from math import cos
+
+
+def transform_unit_x(pitch, yaw, roll):
+    x = cos(yaw) * cos(pitch)
+    y = sin(yaw) * cos(pitch)
+    z = sin(pitch)
+    return (x, y, z)
+
+def transform_unit_y(pitch, yaw, roll):
+    x = sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw)
+    y = sin(roll) * sin(pitch) * sin(yaw) + cos(roll) * cos(yaw)
+    z = -sin(roll) * cos(pitch)
+    return (x, y, z)
+
+def transform_unit_z(pitch, yaw, roll):
+    x = -(cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw))
+    y = cos(yaw) * sin(roll) - cos(roll) * sin(pitch) * sin(yaw)
+    z = cos(roll) * cos(pitch)
+    return (x, y, z)
 
 class play_helper:
-    
-    rwm = ReadWriteMem.ReadWriteMem()
-    
-    def GetAddressVector(self, processHandle, rocketLeagueBaseAddress):
-        addressList = array.array('i',(0,)*41) # Create a tuple with 41 values
-        
-        addressList[0] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x019FCF34, 0xCC, 0x30, 0x54]) # Blue Boost address (Updated August 5, 2017)
-        addressList[1] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x018DB9C4, 0x4, 0x20, 0x44]) # Player z address
-        addressList[2] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x018DB9C4, 0x8, 0x20, 0x44]) # Ball z address
-        addressList[3] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x018DB9C4, 0x0, 0x20, 0x44]) # Bot (orange) z address
 
-        self.verifyPlayerPointers(processHandle, addressList) # Still need to deal with demolitions being wacky pointers but that can be done later if possible
-
-        addressList[4] = addressList[1] + 4 # Player y address
-        addressList[5] = addressList[1] - 4 # Player x address
-        addressList[6] = addressList[2] + 4 # Ball y address
-        addressList[7] = addressList[2] - 4 # Ball x address
-        addressList[8] = addressList[4] + 8 # Player rot1
-        addressList[9] = addressList[8] + 4 # Player rot2
-        addressList[10] = addressList[9] + 4 # Player rot3
-        addressList[11] = addressList[10] + 8 # Player rot4
-        addressList[12] = addressList[11] + 4 # Player rot5
-        addressList[13] = addressList[12] + 4 # Player rot6
-        addressList[14] = addressList[13] + 8 # Player rot7
-        addressList[15] = addressList[14] + 4 # Player rot8
-        addressList[16] = addressList[15] + 4 # Player rot9
-        addressList[17] = addressList[3] + 4 # Bot y address (orange)
-        addressList[18] = addressList[3] - 4 # Bot x address
-        addressList[19] = addressList[17] + 8 # Bot rot1
-        addressList[20] = addressList[19] + 4 # Bot rot2
-        addressList[21] = addressList[20] + 4 # Bot rot3
-        addressList[22] = addressList[21] + 8 # Bot rot4
-        addressList[23] = addressList[22] + 4 # Bot rot5
-        addressList[24] = addressList[23] + 4 # Bot rot6
-        addressList[25] = addressList[24] + 8 # Bot rot7
-        addressList[26] = addressList[25] + 4 # Bot rot8
-        addressList[27] = addressList[26] + 4 # Bot rot9
-        addressList[28] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x019A3BA0, 0x8, 0x228, 0x20C]) # Blue score address
-        addressList[29] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x019A3BA0, 0x10, 0x228, 0x20C]) # Orange score address
-        addressList[30] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x019A3BA0, 0x8, 0x310]) # Blue "Score" address
-        addressList[31] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x019A3BA0, 0x10, 0x310]) # Orange "Score" address
-        addressList[32] = addressList[30] + 4 # Blue goals
-        addressList[33] = addressList[32] + 12 # Blue saves
-        addressList[34] = addressList[32] + 16 # Blue shots
-        addressList[35] = addressList[31] + 4 # Orange goals
-        addressList[36] = addressList[35] + 12 # Orange saves
-        addressList[37] = addressList[35] + 16 # Orange shots
-        addressList[38] = addressList[37] + 4 # Demos by orange
-        addressList[39] = addressList[34] + 4 # Demos by blue
-        addressList[40] = self.rwm.GetFinalAddress(processHandle, rocketLeagueBaseAddress, [0x0192F0A4, 0x688, 0x8, 0x30C]) # Orange Boost address
-
-        return addressList
-
-    def getKey(self, item):
-        return item[1]
-
-    def verifyPlayerPointers(self, processHandle, addressVect):
-        # So after a goal, we have pointers to blue, white, orange, but not necessarily that correct order. Check values and reorganize.
-        tupleList = [(addressVect[1],self.rwm.ReadFloatFromAddress(processHandle, addressVect[1])), (addressVect[2],self.rwm.ReadFloatFromAddress(processHandle, addressVect[2])), (addressVect[3],self.rwm.ReadFloatFromAddress(processHandle, addressVect[3]))]
-        sortedList = sorted(tupleList, key=self.getKey)
-        # Now assign
-        addressVect[1] = sortedList[0][0]
-        addressVect[2] = sortedList[1][0]
-        addressVect[3] = sortedList[2][0]
-
-    def ping_refreshed_pointers(self, processHandle, addressVect):
-        # Make sure pointers after goal are pointing to z values that make sense
-        tupleList = [(addressVect[1],self.rwm.ReadFloatFromAddress(processHandle, addressVect[1])), (addressVect[2],self.rwm.ReadFloatFromAddress(processHandle, addressVect[2])), (addressVect[3],self.rwm.ReadFloatFromAddress(processHandle, addressVect[3]))]
-        sortedList = sorted(tupleList, key=self.getKey)
-        value1 = sortedList[0][1]
-        value2 = sortedList[1][1]
-        value3 = sortedList[2][1]
-        if (value1 < -100 or value1 > -30):
-            print("Ping failed blue z value check")
-            return True
-        if (value2 < -5 or value2 > 5):
-            print("Ping failed ball z value check")
-            return True
-        if (value3 < 30 or value3 > 100):
-            print("Ping failed orng z value check")
-            return True
-
-        # Check boost values are reset
-        if (not float(self.rwm.ReadIntFromAddress(processHandle, addressVect[0])) == 33):
-            print("Ping failed blue boost check")
-            return True
-        if (not float(self.rwm.ReadIntFromAddress(processHandle, addressVect[40])) == 33):
-            print("Ping failed orange boost check")
-            return True
-
-        return False
-
-    def GetValueVector(self, processHandle, addressVect):
+    def GetValueVector(self, packet):
         neuralInputs = array.array('f',(0,)*38) # Create a tuple with 38 float values
         scoring = array.array('f',(0,)*12) # Create a tuple with 12 float values
         # Need to read 28 values for neural inputs and calculate 9 velocities
-         
-        # Boost is an int so different case
-        neuralInputs[0] = float(self.rwm.ReadIntFromAddress(processHandle, addressVect[0]))
-        neuralInputs[37] = float(self.rwm.ReadIntFromAddress(processHandle, addressVect[40]))
-        for i in range(1,28):
-            neuralInputs[i] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[i])
 
-        neuralInputs[28] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[1] + 268) # x
-        neuralInputs[29] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[1] + 276) # "y"
-        neuralInputs[30] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[1] + 272) # "z"
-        neuralInputs[31] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[2] + 268) # x
-        neuralInputs[32] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[2] + 276) # "y"
-        neuralInputs[33] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[2] + 272) # "z"
-        neuralInputs[34] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[3] + 268) # x
-        neuralInputs[35] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[3] + 276) # "y"
-        neuralInputs[36] = self.rwm.ReadFloatFromAddress(processHandle, addressVect[3] + 272) # "z"
-        
+        blueCar = None
+        orangeCar = None
+
+        for car in packet.gamecars:
+            if car.Team == "blue":
+                blueCar = car
+            elif car.Team == "orange":
+                orangeCar = car
+
+        ball = packet.gameball
+
+        neuralInputs[0] = blueCar.Boost / 300
+        neuralInputs[1] = blueCar.Location.y
+        neuralInputs[2] = ball.Location.y
+        neuralInputs[3] = orangeCar.Location.y
+        neuralInputs[4] = blueCar.Location.z
+        neuralInputs[5] = blueCar.Location.x
+        neuralInputs[6] = ball.Location.z
+        neuralInputs[7] = ball.Location.x
+
+        blueNose = transform_unit_x(blueCar.Rotation.x, blueCar.Rotation.y, blueCar.Rotation.z)
+        neuralInputs[8] = blueNose[0]
+        neuralInputs[11] = blueNose[1]
+        neuralInputs[14] = blueNose[2]
+
+        blueRoof = transform_unit_z(blueCar.Rotation.x, blueCar.Rotation.y, blueCar.Rotation.z)
+        neuralInputs[10] = blueRoof[0]
+        neuralInputs[13] = blueRoof[1]
+        neuralInputs[16] = blueRoof[2]
+
+
+        neuralInputs[17] = orangeCar.Location.z
+        neuralInputs[18] = orangeCar.Location.x
+
+        orangeNose = transform_unit_x(orangeCar.Rotation.x, orangeCar.Rotation.y, orangeCar.Rotation.z)
+        neuralInputs[19] = orangeNose[0]
+        neuralInputs[22] = orangeNose[1]
+        neuralInputs[25] = orangeNose[2]
+
+        orangeRoof = transform_unit_z(orangeCar.Rotation.x, orangeCar.Rotation.y, orangeCar.Rotation.z)
+        neuralInputs[21] = orangeRoof[0]
+        neuralInputs[24] = orangeRoof[1]
+        neuralInputs[27] = orangeRoof[2]
+
+        # neuralInputs[28] = blueCar.Velocity.y
+        # neuralInputs[29] = blueCar.Velocity.y
+        # neuralInputs[30] = blueCar.Velocity.y
+
+        neuralInputs[31] = ball.Velocity.x
+        neuralInputs[32] = ball.Velocity.z
+        neuralInputs[33] = ball.Velocity.y
+
+        # neuralInputs[34] = orangeCar.Velocity.y
+        # neuralInputs[35] = orangeCar.Velocity.y
+        # neuralInputs[36] = orangeCar.Velocity.y
+
+        neuralInputs[37] = orangeCar.Boost / 300
+
+        # Missing: 9, 12, 15, 20, 23, 26
+
+
         # Also create tuple of scoring changes/demos so I can know when reset is necessary
-        scoring[0] = float(self.rwm.ReadIntFromAddress(processHandle, addressVect[28])) # Blue Score
-        scoring[1] = float(self.rwm.ReadIntFromAddress(processHandle, addressVect[29])) # Orange Score
-        scoring[2] = float(self.rwm.ReadIntFromAddress(processHandle, addressVect[38])) # Demos on blue
-        scoring[3] = float(self.rwm.ReadIntFromAddress(processHandle, addressVect[39])) # Demos on orange
-		
-		# Now fill in the other scoring values
-        for i in range(30,38):
-            scoring[i - 26] = float(self.rwm.ReadIntFromAddress(processHandle, addressVect[i]))
+        scoring[0] = float(blueCar.Score.Goals) # Blue Score - This may be a breaking change, because we will no longer count non-attributed goals.
+        scoring[1] = float(orangeCar.Score.Goals) # Orange Score - This may be a breaking change, because we will no longer count non-attributed goals.
+        scoring[2] = float(orangeCar.Score.Demolitions) # Demos on blue, by orange
+        scoring[3] = float(blueCar.Score.Demolitions) # Demos on orange, by blue
+        scoring[4] = float(blueCar.Score.Score)
+        scoring[5] = float(orangeCar.Score.Score)
+        scoring[6] = float(blueCar.Score.Goals)
+        scoring[7] = float(blueCar.Score.Saves)
+        scoring[8] = float(blueCar.Score.Shots)
+        scoring[9] = float(orangeCar.Score.Goals)
+        scoring[10] = float(orangeCar.Score.Saves)
+        scoring[11] = float(orangeCar.Score.Shots)
 
         return neuralInputs, scoring
+
+
 
     def reset_contollers(self):
         p1 = pyvjoy.VJoyDevice(1)
