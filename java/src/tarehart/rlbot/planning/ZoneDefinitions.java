@@ -12,7 +12,7 @@ public class ZoneDefinitions {
         new Vector2(-17.27, -102.4),
         new Vector2(-17.27, -119.9),
         new Vector2(17.27, -119.9),
-        new Vector2(17.27, 102.4),
+        new Vector2(17.27, -102.4),
         new Vector2(50.5, -102.4),
         new Vector2(81.93, -71.7),
         new Vector2(81.93, 71.7),
@@ -21,7 +21,9 @@ public class ZoneDefinitions {
         new Vector2(17.27, 119.9),
         new Vector2(-17.27, 119.9),
         new Vector2(-17.27, 102.4),
-        new Vector2(-50.5, 102.4)
+        new Vector2(-50.5, 102.4),
+        new Vector2(-81.93, 71.7),
+        new Vector2(-81.93, -71.7)
     });
 
     //NOTE: Some Zone boundaries use some rounded values that go outside of the field since that won't

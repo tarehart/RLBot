@@ -22,7 +22,8 @@ public class ArenaDisplay extends JPanel {
             ZoneDefinitions.BOTTOM,
             ZoneDefinitions.TOP,
             ZoneDefinitions.BOTTOMCORNER,
-            ZoneDefinitions.TOPCORNER
+            ZoneDefinitions.TOPCORNER,
+            ZoneDefinitions.FULLFIELD
     };
     private static final int BALL_DRAW_RADIUS = 5;
     public static final Color BLUE_COLOR = new Color(84, 164, 213);

@@ -63,6 +63,7 @@ public abstract class Bot {
 
 
         AgentOutput output = getOutput(input);
+
         Plan.Posture posture = currentPlan != null ? currentPlan.getPosture() : Plan.Posture.NEUTRAL;
         String situation = currentPlan != null ? currentPlan.getSituation() : "";
         if (!Objects.equals(situation, previousSituation)) {
@@ -71,6 +72,7 @@ public abstract class Bot {
         previousSituation = situation;
         readout.update(input, posture, situation, BotLog.collect(input.team), BallTelemetry.getPath(input.team).get());
         BallTelemetry.reset(input.team);
+
         return output;
     }
 
