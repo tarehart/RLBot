@@ -55,6 +55,7 @@ public class Readout {
     private JLabel orangeSubZone;
     private JLabel ballMainZone;
     private JLabel ballSubZone;
+    private ArenaDisplay arenaDisplay;
 
     private double maxCarSpeedVal;
 
@@ -85,6 +86,8 @@ public class Readout {
         updatePositionInfo(input);
         updateTacticsInfo(input);
         updateZonePlanInfo(input);
+        arenaDisplay.updateInput(input);
+        arenaDisplay.repaint();
     }
 
     private void updateBallHeightMaxes(AgentInput input) {

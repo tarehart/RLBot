@@ -2,13 +2,10 @@ package tarehart.rlbot.planning;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
-import tarehart.rlbot.math.Polygon;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.tuning.BotLog;
-
-import java.util.List;
 
 public class ZonePlan {
 
@@ -55,23 +52,25 @@ public class ZonePlan {
     }
 
     private Zone.MainZone getMainZone(Vector3 point) {
-        if(ZoneDefinitions.ORANGE.contains(point))
+        Vector2 flatPoint = point.flatten();
+        if(ZoneDefinitions.ORANGE.contains(flatPoint))
             return Zone.MainZone.ORANGE;
-        if(ZoneDefinitions.MID.contains(point))
+        if(ZoneDefinitions.MID.contains(flatPoint))
             return Zone.MainZone.MID;
-        if(ZoneDefinitions.BLUE.contains(point))
+        if(ZoneDefinitions.BLUE.contains(flatPoint))
             return Zone.MainZone.BLUE;
         return Zone.MainZone.NONE;
     }
 
     private Zone.SubZone getSubZone(Vector3 point) {
-        if(ZoneDefinitions.TOPCORNER.contains(point))
+        Vector2 flatPoint = point.flatten();
+        if(ZoneDefinitions.TOPCORNER.contains(flatPoint))
             return Zone.SubZone.TOPCORNER;
-        if(ZoneDefinitions.BOTTOMCORNER.contains(point))
+        if(ZoneDefinitions.BOTTOMCORNER.contains(flatPoint))
             return Zone.SubZone.BOTTOMCORNER;
-        if(ZoneDefinitions.TOP.contains(point))
+        if(ZoneDefinitions.TOP.contains(flatPoint))
             return Zone.SubZone.TOP;
-        if(ZoneDefinitions.BOTTOM.contains(point))
+        if(ZoneDefinitions.BOTTOM.contains(flatPoint))
             return Zone.SubZone.BOTTOM;
         return Zone.SubZone.NONE;
     }

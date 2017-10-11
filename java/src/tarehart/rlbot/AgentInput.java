@@ -107,10 +107,14 @@ public class AgentInput {
     }
 
     public CarData getMyCarData() {
-        return team == Bot.Team.BLUE ? blueCar : orangeCar;
+        return getCarData(team);
     }
 
     public CarData getEnemyCarData() {
         return team == Bot.Team.BLUE ? orangeCar : blueCar;
+    }
+
+    public CarData getCarData(Bot.Team team) {
+        return team == Bot.Team.BLUE ? blueCar : orangeCar;
     }
 }
