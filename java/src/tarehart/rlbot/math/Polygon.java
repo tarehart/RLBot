@@ -29,6 +29,6 @@ public class Polygon {
     }
 
     public Area getAwtArea() {
-        return area;
+        return new Area(area); // copy for safety
     }
 }
