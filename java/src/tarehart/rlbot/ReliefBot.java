@@ -25,16 +25,21 @@ public class ReliefBot extends Bot {
     protected AgentOutput getOutput(AgentInput input) {
 
         final CarData car = input.getMyCarData();
+        Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
 
 //        if (canInterruptPlanFor(Plan.Posture.OVERRIDE)) {
 //            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new InterceptStep(new Vector3()));
 //            currentPlan.begin();
 //        }
 
-        // Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
+        // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
         if (noActivePlanWithPosture(Plan.Posture.KICKOFF) && input.ballPosition.flatten().magnitudeSquared() == 0) {
-            currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
-            currentPlan.begin();
+            // Make sure that the bot is on it's own side of the field.
+            // (prevent own goals in "Disable Goal Reset" mode)
+            if(!zonePlan.isPresent() || zonePlan.get().goForKickoff) {
+                currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
+                currentPlan.begin();
+            }
         }
 
         if (canInterruptPlanFor(Plan.Posture.LANDING) && !ArenaModel.isCarOnWall(car) &&

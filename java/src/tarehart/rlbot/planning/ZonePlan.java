@@ -18,6 +18,7 @@ public class ZonePlan {
     public Zone ballZone;
     public Zone myZone; // DON'T LET ME IN MY ZONE
     public Zone opponentZone;
+    public boolean goForKickoff;
 
 
     public ZonePlan(AgentInput input) {
@@ -35,6 +36,7 @@ public class ZonePlan {
         determineZonePlan(input.team);
     }
 
+
     //TODO: Actually generate some recommended steps from this
     private void determineZonePlan(Bot.Team team) {
         ballZone = new Zone(getMainZone(ballPosition), getSubZone(ballPosition));
@@ -44,6 +46,11 @@ public class ZonePlan {
         if(!isAnalysisSane(ballZone, myZone, opponentZone, team))
             return; // Don't even bother coming up with a plan in this case
 
+        // Determine if this bot should go for kickoff or avoid it
+        if(team == Bot.Team.BLUE)
+            goForKickoff = this.myZone.mainZone == Zone.MainZone.BLUE;
+        else
+            goForKickoff = this.myZone.mainZone == Zone.MainZone.ORANGE;
         //TODO: Come up with a plan
     }
 
