@@ -93,4 +93,12 @@ public class Vector3 {
         Vector3 antidote = planeNormal.scaled(-d);
         return plus(antidote);
     }
+
+    @Override
+    public String toString() {
+        return "(" + String.format("%.2f", x)
+                + ", " + String.format("%.2f", y)
+                + ", " + String.format("%.2f", z)
+                + ")";
+    }
 }

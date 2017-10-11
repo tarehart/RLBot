@@ -1,11 +1,12 @@
 package tarehart.rlbot.ui;
 
+import tarehart.rlbot.Bot;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.math.SpaceTimeVelocity;
 import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.planning.Plan;
+import tarehart.rlbot.planning.*;
 import tarehart.rlbot.tuning.BallPrediction;
 import tarehart.rlbot.tuning.PredictionWarehouse;
 
@@ -36,6 +37,24 @@ public class Readout {
     private JLabel orangeCarPosX;
     private JLabel orangeCarPosY;
     private JLabel orangeCarPosZ;
+    private JLabel ballPosX;
+    private JLabel ballPosY;
+    private JLabel ballPosZ;
+    private JLabel ownGoalFutureProximity;
+    private JLabel distanceBallIsBehindUs;
+    private JLabel enemyOffensiveApproachError;
+    private JLabel distanceFromEnemyBackWall;
+    private JLabel distanceFromEnemyCorner;
+    private JLabel needsDefensiveClear;
+    private JLabel shotOnGoalAvailable;
+    private JLabel expectedEnemyContact;
+    private JLabel scoredOnThreat;
+    private JLabel blueMainZone;
+    private JLabel blueSubZone;
+    private JLabel orangeMainZone;
+    private JLabel orangeSubZone;
+    private JLabel ballMainZone;
+    private JLabel ballSubZone;
 
     private double maxCarSpeedVal;
 
@@ -63,7 +82,9 @@ public class Readout {
 
         updateBallPredictionRadar(input, ballPath);
         updateBallHeightMaxes(input);
-        updateCarPositionInfo(input);
+        updatePositionInfo(input);
+        updateTacticsInfo(input);
+        updateZonePlanInfo(input);
     }
 
     private void updateBallHeightMaxes(AgentInput input) {
@@ -110,13 +131,51 @@ public class Readout {
         }
     }
 
-    private void updateCarPositionInfo(AgentInput input) {
+    private void updatePositionInfo(AgentInput input) {
         blueCarPosX.setText(String.format("%.2f", input.blueCar.position.x));
         blueCarPosY.setText(String.format("%.2f", input.blueCar.position.y));
         blueCarPosZ.setText(String.format("%.2f", input.blueCar.position.z));
         orangeCarPosX.setText(String.format("%.2f", input.orangeCar.position.x));
         orangeCarPosY.setText(String.format("%.2f", input.orangeCar.position.y));
         orangeCarPosZ.setText(String.format("%.2f", input.orangeCar.position.z));
+        ballPosX.setText(String.format("%.2f", input.ballPosition.x));
+        ballPosY.setText(String.format("%.2f", input.ballPosition.y));
+        ballPosZ.setText(String.format("%.2f", input.ballPosition.z));
+    }
+
+    private void updateTacticsInfo(AgentInput input) {
+        Optional<TacticalSituation> situationOpt = TacticsTelemetry.get(input.team);
+
+        if(situationOpt.isPresent()) {
+            TacticalSituation situation = situationOpt.get();
+
+            ownGoalFutureProximity.setText(String.format("%.2f", situation.ownGoalFutureProximity));
+            distanceBallIsBehindUs.setText(String.format("%.2f", situation.distanceBallIsBehindUs));
+            enemyOffensiveApproachError.setText(String.format("%.2f", situation.enemyOffensiveApproachError));
+            distanceFromEnemyBackWall.setText(String.format("%.2f", situation.distanceFromEnemyBackWall));
+            distanceFromEnemyCorner.setText(String.format("%.2f", situation.distanceFromEnemyCorner));
+            needsDefensiveClear.setText(situation.needsDefensiveClear ? "True" : "False");
+            shotOnGoalAvailable.setText(situation.shotOnGoalAvailable ? "True" : "False");
+            expectedEnemyContact.setText(situation.expectedEnemyContact.toString());
+            //scoredOnThreat.setText(); //TODO: Write toString function for SpaceTimeVelocity
+        }
+    }
+
+    private void updateZonePlanInfo(AgentInput input) {
+        Optional<ZonePlan> zonePlanOpt = ZoneTelemetry.get(input.team);
+
+        if(zonePlanOpt.isPresent()) {
+            ZonePlan zonePlan = zonePlanOpt.get();
+            Zone blueCarZone = input.team == Bot.Team.BLUE ? zonePlan.myZone : zonePlan.opponentZone;
+            Zone orangeCarZone = input.team == Bot.Team.ORANGE ? zonePlan.myZone : zonePlan.opponentZone;
+
+            blueMainZone.setText(blueCarZone.mainZone.name());
+            blueSubZone.setText(blueCarZone.subZone.name());
+            orangeMainZone.setText(orangeCarZone.mainZone.name());
+            orangeSubZone.setText(orangeCarZone.subZone.name());
+            ballMainZone.setText(zonePlan.ballZone.mainZone.name());
+            ballSubZone.setText(zonePlan.ballZone.subZone.name());
+        }
     }
 
     public JPanel getRootPanel() {

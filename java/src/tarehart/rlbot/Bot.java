@@ -6,9 +6,7 @@ import tarehart.rlbot.math.SpaceTimeVelocity;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.planning.GoalUtil;
-import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.*;
 import tarehart.rlbot.steps.defense.GetOnDefenseStep;
 import tarehart.rlbot.steps.defense.ThreatAssessor;
@@ -31,8 +29,10 @@ public abstract class Bot {
 
     private final Team team;
     Plan currentPlan = null;
+    ZonePlan currentZonePlan = null;
     private Readout readout;
     private String previousSituation = null;
+    ZonePlan previousZonePlan = null;
 
     private ArenaModel arenaModel;
 
@@ -53,6 +53,8 @@ public abstract class Bot {
         // Just for now, always calculate ballpath so we can learn some stuff.
         BallPath ballPath = arenaModel.simulateBall(new SpaceTimeVelocity(input.ballPosition, input.time, input.ballVelocity), Duration.ofSeconds(5));
         BallTelemetry.setPath(ballPath, input.team);
+        ZonePlan zonePlan = new ZonePlan(input);
+        ZoneTelemetry.set(zonePlan, input.team);
 
         //BallRecorder.recordPosition(new SpaceTimeVelocity(input.ballPosition, input.time, input.ballVelocity));
         //Optional<SpaceTimeVelocity> afterBounce = ballPath.getMotionAfterWallBounce(1);

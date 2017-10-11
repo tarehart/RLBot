@@ -163,6 +163,9 @@ public class TacticsAdvisor {
         situation.shotOnGoalAvailable = GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(input.team), ballPath) &&
                 input.getMyCarData().position.distance(input.ballPosition) < 80;
 
+        // Store current TacticalSituation in TacticalTelemetry for Readout display
+        TacticsTelemetry.set(situation, input.team);
+
         return situation;
     }
 

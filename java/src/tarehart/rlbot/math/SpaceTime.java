@@ -3,6 +3,7 @@ package tarehart.rlbot.math;
 import tarehart.rlbot.math.vector.Vector3;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class SpaceTime {
 
@@ -16,9 +17,6 @@ public class SpaceTime {
 
     @Override
     public String toString() {
-        return "SpaceTime{" +
-                "space=" + space +
-                ", time=" + time +
-                '}';
+        return "space=" + space + ", time=" + time.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
     }
 }
