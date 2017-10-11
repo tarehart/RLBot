@@ -117,7 +117,7 @@ public class MidairStrikeStep implements Step {
         Vector2 currentFlatVelocity = car.velocity.flatten();
 
         double yawCorrection = currentFlatVelocity.correctionAngle(flatToIntercept);
-        Vector2 desiredFlatOrientation = VectorUtil.rotateVector(currentFlatVelocity, yawCorrection * 2).normaliseCopy();
+        Vector2 desiredFlatOrientation = VectorUtil.rotateVector(currentFlatVelocity, yawCorrection * 2).normalized();
 
 
         Vector3 desiredNoseVector = new Vector3(

@@ -354,7 +354,7 @@ public class SteerUtil {
         boolean clockwise = Circle.isClockwise(idealCircle, targetPosition, targetFacing);
 
         Vector2 centerToMe = car.position.flatten().minus(idealCircle.center);
-        Vector2 idealDirection = VectorUtil.orthogonal(centerToMe, v -> Circle.isClockwise(idealCircle, flatPosition, v) == clockwise).normaliseCopy();
+        Vector2 idealDirection = VectorUtil.orthogonal(centerToMe, v -> Circle.isClockwise(idealCircle, flatPosition, v) == clockwise).normalized();
 
         if (facing.dotProduct(idealDirection) < .7) {
             AgentOutput output = steerTowardGroundPosition(car, flatPosition.plus(idealDirection));

@@ -79,12 +79,12 @@ public class DribbleStep implements Step {
         if (ballSpeed > 20) {
             double velocityCorrectionAngle = ballVelocityFlat.correctionAngle(ballToGoal);
             double angleTweak = Math.min(Math.PI / 6, Math.max(-Math.PI / 6, velocityCorrectionAngle * ballSpeed / 10));
-            pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normaliseCopy();
+            pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normalized();
             approachDistance = VectorUtil.project(toBallFlat, new Vector2(pushDirection.y, -pushDirection.x)).magnitude() * 1.6 + .8;
             approachDistance = Math.min(approachDistance, 4);
-            pressurePoint = futureBallPosition.minus(pushDirection.normaliseCopy().scaled(approachDistance));
+            pressurePoint = futureBallPosition.minus(pushDirection.normalized().scaled(approachDistance));
         } else {
-            pushDirection = ballToGoal.normaliseCopy();
+            pushDirection = ballToGoal.normalized();
             pressurePoint = futureBallPosition.minus(pushDirection);
         }
 
@@ -94,7 +94,7 @@ public class DribbleStep implements Step {
 
         LocalDateTime hurryUp = input.time.plus(TimeUtil.toDuration(leadSeconds));
 
-        boolean hasLineOfSight = pushDirection.normaliseCopy().dotProduct(carToBall.normaliseCopy()) > -.2 || input.ballPosition.z > 2;
+        boolean hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.ballPosition.z > 2;
         if (!hasLineOfSight) {
             // Steer toward a farther-back waypoint.
             Vector2 fallBack = VectorUtil.orthogonal(pushDirection, v -> v.dotProduct(ballToGoal) < 0).scaledToMagnitude(5);
@@ -103,7 +103,7 @@ public class DribbleStep implements Step {
         }
 
         AgentOutput dribble = SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(pressurePoint.x, pressurePoint.y, 0), hurryUp));
-        if (carToPressurePoint.normaliseCopy().dotProduct(ballToGoal.normaliseCopy()) > .80 &&
+        if (carToPressurePoint.normalized().dotProduct(ballToGoal.normalized()) > .80 &&
                 flatDistance > 3 && flatDistance < 5 && input.ballPosition.z < 2 && approachDistance < 2
                 && Vector2.angle(myDirectionFlat, carToPressurePoint) < Math.PI / 12) {
             if (car.boost > 0) {

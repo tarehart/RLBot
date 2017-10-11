@@ -79,7 +79,7 @@ public class GetOnOffenseStep implements Step {
         DistancePlot plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), 0);
 
 
-        Optional<Vector2> circleTurnOption = SteerUtil.getWaypointForCircleTurn(car, plot, target.flatten(), targetToBallFuture.flatten().normaliseCopy());
+        Optional<Vector2> circleTurnOption = SteerUtil.getWaypointForCircleTurn(car, plot, target.flatten(), targetToBallFuture.flatten().normalized());
 
         if (circleTurnOption.isPresent()) {
             Vector2 circleTurn = circleTurnOption.get();

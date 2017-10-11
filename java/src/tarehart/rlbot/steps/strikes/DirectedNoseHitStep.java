@@ -105,7 +105,7 @@ public class DirectedNoseHitStep implements Step {
             circleBackoff = car.position.distance(kickPlan.ballAtIntercept.getSpace()) > 60 ? 5.0 : 1.0;
         }
 
-        Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten().normaliseCopy();
+        Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten().normalized();
         Vector3 carPositionAtIntercept = kickPlan.getCarPositionAtIntercept();
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
         estimatedAngleOfKickFromApproach = DirectedKickUtil.getAngleOfKickFromApproach(car, kickPlan);
@@ -135,7 +135,7 @@ public class DirectedNoseHitStep implements Step {
             Vector2 circleTerminus = steerTarget.minus(strikeForceFlat.scaled(circleBackoff));
             double correctionNeeded = estimatedAngleOfKickFromApproach - (MAX_NOSE_HIT_ANGLE * Math.signum(estimatedAngleOfKickFromApproach));
             maneuverSeconds = correctionNeeded * MANEUVER_SECONDS_PER_RADIAN;
-            Vector2 terminusFacing = VectorUtil.rotateVector(carToIntercept, correctionNeeded).normaliseCopy();
+            Vector2 terminusFacing = VectorUtil.rotateVector(carToIntercept, correctionNeeded).normalized();
 
             // Line up for a nose hit
             circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, circleTerminus, terminusFacing);

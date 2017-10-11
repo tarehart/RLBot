@@ -4,7 +4,6 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.planning.Goal;
 import tarehart.rlbot.planning.GoalUtil;
 
@@ -50,6 +49,6 @@ public class FunnelTowardEnemyGoal implements KickStrategy {
 
         Vector3 toEnemyGoal = enemyGoal.getCenter().minus(ballPosition);
         Vector3 angleUpWall = new Vector3(Math.signum(toEnemyGoal.x), Math.signum(enemyGoal.getCenter().y), 0);
-        return angleUpWall.flatten().normaliseCopy();
+        return angleUpWall.flatten().normalized();
     }
 }

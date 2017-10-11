@@ -82,7 +82,7 @@ public class DirectedSideHitStep implements Step {
             }
         }
 
-        Vector2 strikeDirection = kickPlan.plannedKickForce.flatten().normaliseCopy();
+        Vector2 strikeDirection = kickPlan.plannedKickForce.flatten().normalized();
         Vector3 carPositionAtIntercept = kickPlan.getCarPositionAtIntercept();
 
         Vector2 orthogonalPoint = carPositionAtIntercept.flatten();
@@ -96,7 +96,7 @@ public class DirectedSideHitStep implements Step {
         double backoff = expectedSpeed * strikeTime + 1;
 
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
-        Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normaliseCopy();
+        Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
 
         Vector2 steerTarget = orthogonalPoint.minus(facingForSideFlip.scaled(backoff));
 

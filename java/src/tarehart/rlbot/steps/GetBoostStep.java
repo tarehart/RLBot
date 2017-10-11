@@ -63,7 +63,7 @@ public class GetBoostStep implements Step {
 
 
             DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost);
-            Vector2 facing = VectorUtil.orthogonal(target.flatten(), v -> v.dotProduct(toBoost) > 0).normaliseCopy();
+            Vector2 facing = VectorUtil.orthogonal(target.flatten(), v -> v.dotProduct(toBoost) > 0).normalized();
 
             SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
 

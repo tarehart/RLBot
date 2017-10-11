@@ -7,7 +7,6 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.input.CarOrientation;
-import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.steps.Step;
@@ -31,7 +30,7 @@ public class LandGracefullyStep implements Step {
 
     private static Vector2 faceBall(AgentInput input) {
         Vector2 toBall = (input.ballPosition).minus(input.getMyCarData().position).flatten();
-        return toBall.normaliseCopy();
+        return toBall.normalized();
     }
 
 

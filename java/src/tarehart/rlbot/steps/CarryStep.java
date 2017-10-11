@@ -11,7 +11,6 @@ import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.tuning.BotLog;
 
@@ -59,7 +58,7 @@ public class CarryStep implements Step {
 
         double velocityCorrectionAngle = ballVelocityFlat.correctionAngle(ballToGoal);
         double angleTweak = Math.min(Math.PI / 6, Math.max(-Math.PI / 6, velocityCorrectionAngle * 2));
-        pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normaliseCopy();
+        pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normalized();
         pressurePoint = futureBallPosition.minus(pushDirection.scaled(approachDistance));
 
 
