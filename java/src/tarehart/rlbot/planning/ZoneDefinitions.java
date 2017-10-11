@@ -31,7 +31,7 @@ public class ZoneDefinitions {
     public static final Polygon ORANGE = new Polygon(new Vector2[]{
         new Vector2(-82, 34),
         new Vector2(82, 34),
-        new Vector2(82, 120), //TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(82, 120),
         new Vector2(-82, 120)
     });
     public static final Polygon MID = new Polygon(new Vector2[] {
@@ -43,42 +43,50 @@ public class ZoneDefinitions {
     public static final Polygon BLUE = new Polygon(new Vector2[] {
         new Vector2(-82, -34),
         new Vector2(82, -34),
-        new Vector2(82, -120), //TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(82, -120),
         new Vector2(-82, -120)
     });
     public static final Polygon TOP = new Polygon(new Vector2[] {
-        new Vector2(0, -120), //TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(0, -120),
         new Vector2(-82, -120),
         new Vector2(-82, 120),
         new Vector2(0, 120)
     });
     public static final Polygon BOTTOM = new Polygon(new Vector2[] {
-        new Vector2(0, -120), //TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(0, -120),
         new Vector2(82, -120),
         new Vector2(82, 120),
         new Vector2(0, 120)
     });
     public static final Polygon TOPCORNER = new Polygon(new Vector2[] {
         new Vector2(-82, -53.5),
+        new Vector2(-66.5, -61.6),
+        new Vector2(-43.25, -85.9),
         new Vector2(-35.5, -102.1),
-        new Vector2(-35.5, -120),//TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(-35.5, -120),
         new Vector2(-82, -120),
         new Vector2(-82, -53.5),
         new Vector2(-82, 53.5),
+        new Vector2(-66.5, 61.6),
+        new Vector2(-43.25, 85.9),
         new Vector2(-35.5, 102.1),
-        new Vector2(-35.5, 120),//TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(-35.5, 120),
         new Vector2(-82, 120),
         new Vector2(-82, 53.5)
     });
     public static final Polygon BOTTOMCORNER = new Polygon(new Vector2[] {
         new Vector2(82, -53.5),
+        new Vector2(66.5, -61.6),
+        new Vector2(43.25, -85.9),
         new Vector2(35.5, -102.1),
-        new Vector2(35.5, -120),//TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(35.5, -120),
         new Vector2(82, -120),
         new Vector2(82, -53.5),
         new Vector2(82, 53.5),
+        new Vector2(66.5, 61.6),
+        new Vector2(43.25, 85.9),
         new Vector2(35.5, 102.1),
-        new Vector2(35.5, 120),//TODO: Check if this is far enough back to cover the back of the net
+        new Vector2(35.5, 120),
         new Vector2(82, 120),
         new Vector2(82, 53.5)
     });
