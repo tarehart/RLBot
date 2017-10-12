@@ -29,6 +29,11 @@ public class ArenaDisplay extends JPanel {
             clipToField(ZoneDefinitions.BLUEBOX),
             clipToField(ZoneDefinitions.ORANGEBOX)
     };
+    public static final Color REAL_BALL_COLOR = new Color(177, 177, 177);
+    private static final Color PREDICTED_BALL_COLOR = new Color(239, 227, 208);
+    public static final double NATURAL_WIDTH = 300;
+    public static final int CAR_LENGTH = 4;
+    public static final int CAR_WIDTH = 2;
 
     private static Area clipToField(Polygon p) {
         Area a = p.getAwtArea();
@@ -36,13 +41,14 @@ public class ArenaDisplay extends JPanel {
         return a;
     }
 
-    private static final int BALL_DRAW_RADIUS = 5;
+    private static final double BALL_DRAW_RADIUS = 1.9;
     public static final Color BLUE_COLOR = new Color(84, 164, 213);
     public static final Color ORANGE_COLOR = new Color(247, 151, 66);
 
     private CarData orangeCar;
     private CarData blueCar;
     private Vector3 ball;
+    private Vector3 ballPrediction = new Vector3();
 
     public void updateInput(AgentInput input) {
         orangeCar = input.getCarData(Bot.Team.ORANGE);
@@ -50,9 +56,17 @@ public class ArenaDisplay extends JPanel {
         ball = input.ballPosition;
     }
 
+    public void updateBallPrediction(Vector3 ballPrediction) {
+        this.ballPrediction = ballPrediction;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        if (ball == null) {
+            return; // This helps the UI not spazz out in the editor.
+        }
 
         //Create a Graphics2D object from g
         Graphics2D graphics2D = (Graphics2D)g;
@@ -62,12 +76,13 @@ public class ArenaDisplay extends JPanel {
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
-
         graphics2D.translate(this.getWidth() / 2, this.getHeight() / 2);
+        double scale = this.getWidth() / NATURAL_WIDTH;
+        graphics2D.scale(scale, scale);
         graphics2D.scale(-1, 1);
         graphics2D.rotate(Math.PI / 2);
 
-        graphics2D.setStroke(new BasicStroke(2));
+        graphics2D.setStroke(new BasicStroke(1));
         graphics2D.setColor(new Color(201, 224, 196));
         Arrays.stream(areas).forEach(graphics2D::draw);
 
@@ -79,13 +94,15 @@ public class ArenaDisplay extends JPanel {
 
         drawCar(orangeCar, graphics2D);
         drawCar(blueCar, graphics2D);
-        drawBall(ball, graphics2D);
+
+        drawBall(ballPrediction, graphics2D, PREDICTED_BALL_COLOR);
+        drawBall(ball, graphics2D, REAL_BALL_COLOR);
 
     }
 
     private void drawCar(CarData car, Graphics2D g) {
 
-        Rectangle2D carShape = new Rectangle2D.Double(-4, -2, 8, 4);
+        Rectangle2D carShape = new Rectangle2D.Double(-CAR_LENGTH / 2, -CAR_WIDTH / 2, CAR_LENGTH, CAR_WIDTH);
         AffineTransform carTransformation = new AffineTransform();
         carTransformation.translate(car.position.x, car.position.y);
         carTransformation.rotate(car.orientation.noseVector.x, car.orientation.noseVector.y);
@@ -98,7 +115,7 @@ public class ArenaDisplay extends JPanel {
 
     }
 
-    private void drawBall(Vector3 position, Graphics2D g) {
+    private void drawBall(Vector3 position, Graphics2D g, Color color) {
 
         Ellipse2D.Double ballShape = new Ellipse2D.Double(-BALL_DRAW_RADIUS, -BALL_DRAW_RADIUS, BALL_DRAW_RADIUS * 2, BALL_DRAW_RADIUS * 2);
         AffineTransform ballTransform = new AffineTransform();
@@ -107,7 +124,7 @@ public class ArenaDisplay extends JPanel {
         ballTransform.scale(scale, scale);
         Shape transformedBall = ballTransform.createTransformedShape(ballShape);
 
-        g.setColor(new Color(177, 177, 177));
+        g.setColor(color);
         g.fill(transformedBall);
     }
 

@@ -81,7 +81,14 @@ public class Readout {
         ballHeightActual.setValue((int) (input.ballPosition.z * HEIGHT_BAR_MULTIPLIER));
         logViewer.append(log);
 
-        updateBallPredictionRadar(input, ballPath);
+        gatherBallPredictionData(input, ballPath);
+        Optional<Vector3> ballPredictionOption = getBallPrediction(input);
+        if (ballPredictionOption.isPresent()) {
+            Vector3 ballPrediction = ballPredictionOption.get();
+            ballHeightPredicted.setValue((int) (ballPrediction.z * HEIGHT_BAR_MULTIPLIER));
+            arenaDisplay.updateBallPrediction(ballPrediction);
+        }
+
         updateBallHeightMaxes(input);
         updatePositionInfo(input);
         updateTacticsInfo(input);
@@ -108,7 +115,7 @@ public class Readout {
         }
     }
 
-    private void updateBallPredictionRadar(AgentInput input, BallPath ballPath) {
+    private void gatherBallPredictionData(AgentInput input, BallPath ballPath) {
         int predictionMillis = predictionTime.getValue();
         LocalDateTime predictionTime = input.time.plus(Duration.ofMillis(predictionMillis));
 
@@ -121,17 +128,11 @@ public class Readout {
                 }
             }
         }
+    }
 
+    private Optional<Vector3> getBallPrediction(AgentInput input) {
         Optional<BallPrediction> predictionOfNow = warehouse.getPredictionOfMoment(input.time);
-        if (predictionOfNow.isPresent()) {
-            Vector3 predictedLocation = predictionOfNow.get().predictedLocation;
-            ballHeightPredicted.setValue((int) (predictedLocation.z * HEIGHT_BAR_MULTIPLIER));
-
-            Vector3 predictionRelative = predictedLocation.minus(input.ballPosition);
-            ballPredictionReadout.setPredictionCoordinates(new Vector2(predictionRelative.x, predictionRelative.y));
-            ballPredictionReadout.setVelocity(new Vector2(input.ballVelocity.x, input.ballVelocity.y));
-            ballPredictionReadout.repaint();
-        }
+        return predictionOfNow.map(ballPrediction -> ballPrediction.predictedLocation);
     }
 
     private void updatePositionInfo(AgentInput input) {
