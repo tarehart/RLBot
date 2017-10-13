@@ -19,4 +19,5 @@ public class TacticalSituation {
     public boolean shotOnGoalAvailable;
     public boolean forceDefensivePosture;
     public boolean goForKickoff;
+    public boolean waitToClear;
 }

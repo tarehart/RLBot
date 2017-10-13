@@ -166,22 +166,9 @@ public class TacticsAdvisor {
         situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath);
         situation.shotOnGoalAvailable = GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(input.team), ballPath) &&
                 myCar.position.distance(input.ballPosition) < 80;
-
-        if(input.team == Bot.Team.BLUE) {
-            situation.forceDefensivePosture = myCar.position.y > opponentCar.position.y
-                    && opponentCar.position.y > input.ballPosition.y;
-        }
-        else {
-            situation.forceDefensivePosture = myCar.position.y < opponentCar.position.y
-                    && opponentCar.position.y < input.ballPosition.y;
-        }
-
-        if(zonePlan.isPresent()) {
-            if (input.team == Bot.Team.BLUE)
-                situation.goForKickoff = zonePlan.get().myZone.mainZone == Zone.MainZone.BLUE;
-            else
-                situation.goForKickoff = zonePlan.get().myZone.mainZone == Zone.MainZone.ORANGE;
-        }
+        situation.forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition);
+        situation.goForKickoff = getGoForKickoff(zonePlan, input.team);
+        situation.waitToClear = getWaitToClear(zonePlan, input);
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry.set(situation, input.team);
@@ -205,6 +192,46 @@ public class TacticsAdvisor {
 
         CarData enemyCar = input.getEnemyCarData();
         return SteerUtil.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost);
+    }
+
+    private boolean getForceDefensivePosture(Bot.Team team, CarData myCar, CarData opponentCar, Vector3 ballPosition) {
+        if(team == Bot.Team.BLUE) {
+            return myCar.position.y > opponentCar.position.y
+                    && opponentCar.position.y > ballPosition.y;
+        }
+        else {
+            return myCar.position.y < opponentCar.position.y
+                    && opponentCar.position.y < ballPosition.y;
+        }
+    }
+
+    // Really only used for avoiding "Disable Goal Reset" own goals
+    private boolean getGoForKickoff(Optional<ZonePlan> zonePlan, Bot.Team team) {
+        if(zonePlan.isPresent()) {
+            if (team == Bot.Team.BLUE)
+                return zonePlan.get().myZone.mainZone == Zone.MainZone.BLUE;
+            else
+                return zonePlan.get().myZone.mainZone == Zone.MainZone.ORANGE;
+        }
+
+        return true;
+    }
+
+    private boolean getWaitToClear(Optional<ZonePlan> zonePlan, AgentInput input) {
+        double myBallDistance = input.ballPosition.distance(input.getMyCarData().position);
+        double enemyBallDistance = input.ballPosition.distance(input.getEnemyCarData().position);
+
+        if(zonePlan.isPresent() && myBallDistance > enemyBallDistance
+            && (zonePlan.get().ballZone.subZone == Zone.SubZone.TOPCORNER
+            || zonePlan.get().ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
+
+            if (input.team == Bot.Team.BLUE)
+                return zonePlan.get().ballZone.mainZone == Zone.MainZone.BLUE;
+            else
+                return zonePlan.get().ballZone.mainZone == Zone.MainZone.ORANGE;
+        }
+
+        return false;
     }
 
     private double measureEnemyApproachError(AgentInput input, SpaceTime enemyContact) {
