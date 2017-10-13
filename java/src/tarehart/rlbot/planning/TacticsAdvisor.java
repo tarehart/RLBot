@@ -17,6 +17,7 @@ import tarehart.rlbot.steps.DribbleStep;
 import tarehart.rlbot.steps.GetBoostStep;
 import tarehart.rlbot.steps.GetOnOffenseStep;
 import tarehart.rlbot.steps.defense.GetOnDefenseStep;
+import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep;
 import tarehart.rlbot.steps.defense.WhatASaveStep;
 import tarehart.rlbot.steps.strikes.*;
 import tarehart.rlbot.steps.wall.DescendFromWallStep;
@@ -47,6 +48,15 @@ public class TacticsAdvisor {
 
         if (situation.shotOnGoalAvailable) {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new IdealDirectedHitStep(new KickAtEnemyGoal(), input));
+        }
+
+        if (situation.forceDefensivePosture) {
+            double secondsToOverrideFor = 0.25;
+            return new Plan(Plan.Posture.DEFENSIVE).withStep(new GetOnDefenseStep(secondsToOverrideFor));
+        }
+
+        if(situation.waitToClear) {
+            //return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
         }
 
         Duration planHorizon = Duration.ofSeconds(5);

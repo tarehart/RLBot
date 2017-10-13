@@ -54,19 +54,19 @@ public class ReliefBot extends Bot {
         }
 
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
-            BotLog.println("Need to go for save! Canceling current plan.", input.team);
+            BotLog.println("Canceling current plan. Need to go for save!", input.team);
             currentPlan = null;
-        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan != null
-                && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
-            BotLog.println("Forcing defensive rotation! Canceling current plan.", input.team);
-            double secondsToOverrideFor = 1;
-            currentPlan = new Plan(Plan.Posture.DEFENSIVE).withStep(new GetOnDefenseStep(secondsToOverrideFor));
-            currentPlan.begin();
+        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
+            BotLog.println("Canceling current plan. Forcing defensive rotation!", input.team);
+            currentPlan = null;
+        } else if (situation.waitToClear && canInterruptPlanFor(Plan.Posture.WAITTOCLEAR)) {
+            //BotLog.println("Canceling current plan. Ball is in the corner and I need to rotate!", input.team);
+            //currentPlan = null;
         } else if (situation.needsDefensiveClear && canInterruptPlanFor(Plan.Posture.CLEAR)) {
-            BotLog.println("Going for clear! Canceling current plan.", input.team);
+            BotLog.println("Canceling current plan. Going for clear!", input.team);
             currentPlan = null;
         } else if (situation.shotOnGoalAvailable && canInterruptPlanFor(Plan.Posture.OFFENSIVE)) {
-            BotLog.println("Shot opportunity! Canceling current plan.", input.team);
+            BotLog.println("Canceling current plan. Shot opportunity!", input.team);
             currentPlan = null;
         }
 

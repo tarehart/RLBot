@@ -56,6 +56,9 @@ public class Readout {
     private JLabel ballMainZone;
     private JLabel ballSubZone;
     private ArenaDisplay arenaDisplay;
+    private JLabel goForKickoff;
+    private JLabel waitToClear;
+    private JLabel forceDefensivePosture;
 
     private double maxCarSpeedVal;
 
@@ -160,8 +163,11 @@ public class Readout {
             distanceFromEnemyCorner.setText(String.format("%.2f", situation.distanceFromEnemyCorner));
             needsDefensiveClear.setText(situation.needsDefensiveClear ? "True" : "False");
             shotOnGoalAvailable.setText(situation.shotOnGoalAvailable ? "True" : "False");
-            expectedEnemyContact.setText(situation.expectedEnemyContact.toString());
+            //expectedEnemyContact.setText(situation.expectedEnemyContact.toString()); //TODO: Do something about the UI jitter this causes
             //scoredOnThreat.setText(); //TODO: Write toString function for SpaceTimeVelocity
+            goForKickoff.setText(situation.goForKickoff ? "True" : "False");
+            waitToClear.setText(situation.waitToClear ? "True" : "False");
+            forceDefensivePosture.setText(situation.forceDefensivePosture ? "True" : "False");
         }
     }
 

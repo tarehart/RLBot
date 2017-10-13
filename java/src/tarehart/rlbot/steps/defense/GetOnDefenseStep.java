@@ -24,7 +24,7 @@ public class GetOnDefenseStep implements Step {
     private static final double CENTER_OFFSET = Goal.EXTENT * .5;
     private static final double AWAY_FROM_GOAL = 3;
     private static final double DEFAULT_LIFESPAN = 3;
-    private double lifespan = 3; // seconds
+    private double lifespan; // seconds
     private Plan plan;
     private LocalDateTime startTime;
 
