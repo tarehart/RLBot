@@ -25,7 +25,9 @@ public class ArenaDisplay extends JPanel {
             clipToField(ZoneDefinitions.BOTTOM),
             clipToField(ZoneDefinitions.TOP),
             clipToField(ZoneDefinitions.BOTTOMCORNER),
-            clipToField(ZoneDefinitions.TOPCORNER)
+            clipToField(ZoneDefinitions.TOPCORNER),
+            clipToField(ZoneDefinitions.BLUEBOX),
+            clipToField(ZoneDefinitions.ORANGEBOX)
     };
 
     private static Area clipToField(Polygon p) {

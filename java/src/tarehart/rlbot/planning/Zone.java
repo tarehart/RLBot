@@ -28,6 +28,8 @@ public class Zone {
         TOP,
         BOTTOM,
         TOPCORNER,
-        BOTTOMCORNER;
+        BOTTOMCORNER,
+        ORANGEBOX,
+        BLUEBOX;
     }
 }

@@ -1,5 +1,6 @@
 package tarehart.rlbot.planning;
 
+import tarehart.rlbot.Bot;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
@@ -146,6 +147,9 @@ public class TacticsAdvisor {
     public TacticalSituation assessSituation(AgentInput input, BallPath ballPath) {
 
         Optional<SpaceTime> enemyIntercept = getEnemyIntercept(input, ballPath);
+        Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
+        CarData myCar = input.getMyCarData();
+        CarData opponentCar = input.getEnemyCarData();
 
         SpaceTimeVelocity futureBallMotion = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(LOOKAHEAD_SECONDS))).orElse(ballPath.getEndpoint());
 
@@ -161,7 +165,23 @@ public class TacticsAdvisor {
         situation.scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath);
         situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath);
         situation.shotOnGoalAvailable = GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(input.team), ballPath) &&
-                input.getMyCarData().position.distance(input.ballPosition) < 80;
+                myCar.position.distance(input.ballPosition) < 80;
+
+        if(input.team == Bot.Team.BLUE) {
+            situation.forceDefensivePosture = myCar.position.y > opponentCar.position.y
+                    && opponentCar.position.y > input.ballPosition.y;
+        }
+        else {
+            situation.forceDefensivePosture = myCar.position.y < opponentCar.position.y
+                    && opponentCar.position.y < input.ballPosition.y;
+        }
+
+        if(zonePlan.isPresent()) {
+            if (input.team == Bot.Team.BLUE)
+                situation.goForKickoff = zonePlan.get().myZone.mainZone == Zone.MainZone.BLUE;
+            else
+                situation.goForKickoff = zonePlan.get().myZone.mainZone == Zone.MainZone.ORANGE;
+        }
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry.set(situation, input.team);

@@ -17,4 +17,6 @@ public class TacticalSituation {
     public Optional<SpaceTimeVelocity> scoredOnThreat;
     public boolean needsDefensiveClear;
     public boolean shotOnGoalAvailable;
+    public boolean forceDefensivePosture;
+    public boolean goForKickoff;
 }

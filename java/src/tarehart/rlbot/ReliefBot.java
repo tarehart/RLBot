@@ -6,6 +6,7 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.GoForKickoffStep;
+import tarehart.rlbot.steps.defense.GetOnDefenseStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
 import tarehart.rlbot.tuning.BotLog;
 
@@ -26,6 +27,8 @@ public class ReliefBot extends Bot {
 
         final CarData car = input.getMyCarData();
         Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
+        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(7));
+        TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath);
 
 //        if (canInterruptPlanFor(Plan.Posture.OVERRIDE)) {
 //            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new InterceptStep(new Vector3()));
@@ -36,7 +39,7 @@ public class ReliefBot extends Bot {
         if (noActivePlanWithPosture(Plan.Posture.KICKOFF) && input.ballPosition.flatten().magnitudeSquared() == 0) {
             // Make sure that the bot is on it's own side of the field.
             // (prevent own goals in "Disable Goal Reset" mode)
-            if(!zonePlan.isPresent() || zonePlan.get().goForKickoff) {
+            if(!zonePlan.isPresent() || situation.goForKickoff) {
                 currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
                 currentPlan.begin();
             }
@@ -50,12 +53,15 @@ public class ReliefBot extends Bot {
             currentPlan.begin();
         }
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(7));
-        TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath);
-
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
             BotLog.println("Need to go for save! Canceling current plan.", input.team);
             currentPlan = null;
+        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan != null
+                && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
+            BotLog.println("Forcing defensive rotation! Canceling current plan.", input.team);
+            double secondsToOverrideFor = 1;
+            currentPlan = new Plan(Plan.Posture.DEFENSIVE).withStep(new GetOnDefenseStep(secondsToOverrideFor));
+            currentPlan.begin();
         } else if (situation.needsDefensiveClear && canInterruptPlanFor(Plan.Posture.CLEAR)) {
             BotLog.println("Going for clear! Canceling current plan.", input.team);
             currentPlan = null;

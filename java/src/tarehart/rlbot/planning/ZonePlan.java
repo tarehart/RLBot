@@ -15,20 +15,16 @@ public class ZonePlan {
     public Zone ballZone;
     public Zone myZone; // DON'T LET ME IN MY ZONE
     public Zone opponentZone;
-    public boolean goForKickoff;
+    public boolean ballIsInMyBox;
+    public boolean ballIsInOpponentBox;
+
 
 
     public ZonePlan(AgentInput input) {
         // Store data for later use and for telemetry output
-        this.ballPosition = input.ballPosition;
-        if(input.team == Bot.Team.BLUE) {
-            this.myCar = input.blueCar;
-            this.opponentCar = input.orangeCar;
-        }
-        else {
-            this.myCar = input.orangeCar;
-            this.opponentCar = input.blueCar;
-        }
+        ballPosition = input.ballPosition;
+        myCar = input.getMyCarData();
+        opponentCar = input.getEnemyCarData();
 
         determineZonePlan(input.team);
     }
@@ -43,14 +39,20 @@ public class ZonePlan {
         if(!isAnalysisSane(ballZone, myZone, opponentZone, team))
             return; // Don't even bother coming up with a plan in this case
 
-        // Determine if this bot should go for kickoff or avoid it
-        if(team == Bot.Team.BLUE)
-            goForKickoff = this.myZone.mainZone == Zone.MainZone.BLUE;
-        else
-            goForKickoff = this.myZone.mainZone == Zone.MainZone.ORANGE;
+        // Determine if the ball is in my our their box
+        if(team == Bot.Team.BLUE) {
+            ballIsInMyBox = this.ballZone.subZone == Zone.SubZone.BLUEBOX;
+            ballIsInOpponentBox = this.ballZone.subZone == Zone.SubZone.ORANGEBOX;
+        }
+        else {
+            ballIsInMyBox = this.ballZone.subZone == Zone.SubZone.ORANGEBOX;
+            ballIsInOpponentBox = this.ballZone.subZone == Zone.SubZone.BLUEBOX;
+        }
+
         //TODO: Come up with a plan
     }
 
+    // The order of analysis of zones basically determines their priority
     private Zone.MainZone getMainZone(Vector3 point) {
         Vector2 flatPoint = point.flatten();
         if(ZoneDefinitions.ORANGE.contains(flatPoint))
@@ -62,12 +64,17 @@ public class ZonePlan {
         return Zone.MainZone.NONE;
     }
 
+    // The order of analysis of sub zones basically determines their priority
     private Zone.SubZone getSubZone(Vector3 point) {
         Vector2 flatPoint = point.flatten();
         if(ZoneDefinitions.TOPCORNER.contains(flatPoint))
             return Zone.SubZone.TOPCORNER;
         if(ZoneDefinitions.BOTTOMCORNER.contains(flatPoint))
             return Zone.SubZone.BOTTOMCORNER;
+        if(ZoneDefinitions.ORANGEBOX.contains(flatPoint))
+            return Zone.SubZone.ORANGEBOX;
+        if(ZoneDefinitions.BLUEBOX.contains(flatPoint))
+            return Zone.SubZone.BLUEBOX;
         if(ZoneDefinitions.TOP.contains(flatPoint))
             return Zone.SubZone.TOP;
         if(ZoneDefinitions.BOTTOM.contains(flatPoint))

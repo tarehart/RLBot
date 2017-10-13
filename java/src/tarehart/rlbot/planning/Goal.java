@@ -1,6 +1,7 @@
 package tarehart.rlbot.planning;
 
 import tarehart.rlbot.math.Plane;
+import tarehart.rlbot.math.Polygon;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 
@@ -9,11 +10,12 @@ public class Goal {
 
     private static final double GOAL_DISTANCE = 102;
     public static final double GOAL_HEIGHT = 12;
-
     public static final double EXTENT = 17.8555;
+
     private Vector3 center;
     private Plane threatPlane;
     private Plane scorePlane;
+    private Polygon box;
 
     public Goal(boolean negativeSide) {
 
@@ -21,6 +23,7 @@ public class Goal {
 
         threatPlane = new Plane(new Vector3(0, negativeSide ? 1 : -1, 0), new Vector3(0, (GOAL_DISTANCE - 1) * (negativeSide ? -1 : 1), 0));
         scorePlane = new Plane(new Vector3(0, negativeSide ? 1 : -1, 0), new Vector3(0, (GOAL_DISTANCE + 2) * (negativeSide ? -1 : 1), 0));
+        box = negativeSide ? ZoneDefinitions.BLUEBOX : ZoneDefinitions.ORANGEBOX;
     }
 
 
@@ -74,18 +77,6 @@ public class Goal {
     }
 
     public boolean isInBox(Vector3 position) {
-        if (getCenter().y * position.y < 0) {
-            return false; // Wrong side of field
-        }
-
-        if (Math.abs(position.y) < 70) {
-            return false; // Too much toward center
-        }
-
-        if (Math.abs(position.x) > 50) {
-            return false; // Too much to the side
-        }
-
-        return true;
+        return box.contains(position.flatten());
     }
 }

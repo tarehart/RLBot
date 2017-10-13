@@ -23,11 +23,17 @@ public class GetOnDefenseStep implements Step {
     private static final double NEEDS_DEFENSE_THRESHOLD = 10;
     private static final double CENTER_OFFSET = Goal.EXTENT * .5;
     private static final double AWAY_FROM_GOAL = 3;
-    private static final double LIFESPAN = 3; // seconds
+    private static final double DEFAULT_LIFESPAN = 3;
+    private double lifespan = 3; // seconds
     private Plan plan;
     private LocalDateTime startTime;
 
     public GetOnDefenseStep() {
+        this(DEFAULT_LIFESPAN);
+    }
+
+    public GetOnDefenseStep(double lifespan) {
+        this.lifespan = lifespan;
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -43,7 +49,7 @@ public class GetOnDefenseStep implements Step {
             startTime = input.time;
         }
 
-        if (TimeUtil.secondsBetween(startTime, input.time) > LIFESPAN) {
+        if (TimeUtil.secondsBetween(startTime, input.time) > lifespan) {
             return Optional.empty(); // Time to reevaluate the plan.
         }
 
