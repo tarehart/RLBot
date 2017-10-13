@@ -6,15 +6,14 @@ import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.Polygon;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
+import tarehart.rlbot.planning.WaypointTelemetry;
 import tarehart.rlbot.planning.ZoneDefinitions;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Area;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.*;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class ArenaDisplay extends JPanel {
 
@@ -47,12 +46,14 @@ public class ArenaDisplay extends JPanel {
 
     private CarData orangeCar;
     private CarData blueCar;
+    private CarData myCar;
     private Vector3 ball;
     private Vector3 ballPrediction = new Vector3();
 
     public void updateInput(AgentInput input) {
         orangeCar = input.getCarData(Bot.Team.ORANGE);
         blueCar = input.getCarData(Bot.Team.BLUE);
+        myCar = input.getMyCarData();
         ball = input.ballPosition;
     }
 
@@ -90,6 +91,8 @@ public class ArenaDisplay extends JPanel {
         graphics2D.draw(ZoneDefinitions.FULLFIELD.getAwtArea());
 
 
+        drawWaypoint(graphics2D);
+
         graphics2D.setStroke(new BasicStroke(0));
 
         drawCar(orangeCar, graphics2D);
@@ -98,6 +101,17 @@ public class ArenaDisplay extends JPanel {
         drawBall(ballPrediction, graphics2D, PREDICTED_BALL_COLOR);
         drawBall(ball, graphics2D, REAL_BALL_COLOR);
 
+    }
+
+    private void drawWaypoint(Graphics2D graphics2D) {
+        Optional<Vector2> waypointOption = WaypointTelemetry.get(myCar.team);
+        if (waypointOption.isPresent()) {
+            graphics2D.setColor(new Color(186, 238, 216));
+            graphics2D.setStroke(new BasicStroke(1));
+            Vector2 waypoint = waypointOption.get();
+            Line2D.Double line = new Line2D.Double(myCar.position.x, myCar.position.y, waypoint.x, waypoint.y);
+            graphics2D.draw(line);
+        }
     }
 
     private void drawCar(CarData car, Graphics2D g) {

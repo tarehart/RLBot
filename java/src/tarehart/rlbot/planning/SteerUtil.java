@@ -157,6 +157,8 @@ public class SteerUtil {
             return steerTowardGroundPositionFromWall(carData, position);
         }
 
+        WaypointTelemetry.set(position, carData.team);
+
         double correctionAngle = getCorrectionAngleRad(carData, position);
         Vector2 myPositionFlat = carData.position.flatten();
         double distance = position.distance(myPositionFlat);
