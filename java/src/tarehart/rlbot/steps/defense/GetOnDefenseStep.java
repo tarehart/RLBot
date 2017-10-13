@@ -67,6 +67,7 @@ public class GetOnDefenseStep implements Step {
 
         SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, targetPosition, targetFacing);
 
+        //TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
         if (sensibleFlip.isPresent()) {
             BotLog.println("Front flip for defense", input.team);

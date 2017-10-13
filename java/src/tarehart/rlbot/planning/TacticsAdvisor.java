@@ -56,7 +56,7 @@ public class TacticsAdvisor {
         }
 
         if(situation.waitToClear) {
-            //return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
+            return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
         }
 
         Duration planHorizon = Duration.ofSeconds(5);
@@ -228,12 +228,18 @@ public class TacticsAdvisor {
     }
 
     private boolean getWaitToClear(Optional<ZonePlan> zonePlan, AgentInput input) {
+        Vector3 myGoalLocation = GoalUtil.getOwnGoal(input.team).getCenter();
         double myBallDistance = input.ballPosition.distance(input.getMyCarData().position);
         double enemyBallDistance = input.ballPosition.distance(input.getEnemyCarData().position);
+        double ballDistanceToGoal = input.ballPosition.distance(myGoalLocation);
+        double myDistanceToGoal = input.getMyCarData().position.distance(myGoalLocation);
+        //double enemyDistanceToGoal = input.getEnemyCarData().position.distance(myGoalLocation);
 
-        if(zonePlan.isPresent() && myBallDistance > enemyBallDistance
+        if(zonePlan.isPresent()
+            && (myBallDistance > enemyBallDistance // Enemy is closer
+                || myDistanceToGoal > ballDistanceToGoal) // Wrong side of the ball
             && (zonePlan.get().ballZone.subZone == Zone.SubZone.TOPCORNER
-            || zonePlan.get().ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
+                || zonePlan.get().ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
 
             if (input.team == Bot.Team.BLUE)
                 return zonePlan.get().ballZone.mainZone == Zone.MainZone.BLUE;

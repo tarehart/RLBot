@@ -60,8 +60,8 @@ public class ReliefBot extends Bot {
             BotLog.println("Canceling current plan. Forcing defensive rotation!", input.team);
             currentPlan = null;
         } else if (situation.waitToClear && canInterruptPlanFor(Plan.Posture.WAITTOCLEAR)) {
-            //BotLog.println("Canceling current plan. Ball is in the corner and I need to rotate!", input.team);
-            //currentPlan = null;
+            BotLog.println("Canceling current plan. Ball is in the corner and I need to rotate!", input.team);
+            currentPlan = null;
         } else if (situation.needsDefensiveClear && canInterruptPlanFor(Plan.Posture.CLEAR)) {
             BotLog.println("Canceling current plan. Going for clear!", input.team);
             currentPlan = null;
