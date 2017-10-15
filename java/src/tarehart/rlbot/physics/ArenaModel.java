@@ -19,14 +19,12 @@ import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.planning.Goal;
-import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.tuning.BallTelemetry;
 
 import javax.vecmath.Quat4f;
-import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -40,12 +38,11 @@ public class ArenaModel {
     public static final float SIDE_WALL = 81.92f;
     public static final float BACK_WALL = 102.4f;
     public static final float CEILING = 40.88f;
-    public static final float BALL_ANGULAR_DAMPING = 1f;
+    public static final float BALL_ANGULAR_DAMPING = 0f;
 
     private static final int WALL_THICKNESS = 10;
     private static final int WALL_LENGTH = 400;
     public static final float GRAVITY = 13f;
-    public static final Duration SIMULATION_STEP = Duration.ofMillis(100);
     public static final float BALL_DRAG = .0305f;
     public static final float BALL_RADIUS = 1.8555f;
 
@@ -53,7 +50,7 @@ public class ArenaModel {
 
     // The diagonal surfaces that merge the floor and the wall--
     // Higher = more diagonal showing.
-    public static final float RAIL_HEIGHT = 1.8f;
+    public static final float RAIL_HEIGHT = 2.5f;
     public static final float BALL_RESTITUTION = .583f;
     public static final float WALL_RESTITUTION = 1f;
     public static final float WALL_FRICTION = .5f;
@@ -103,7 +100,7 @@ public class ArenaModel {
             }
             return ballPath;
         } else {
-            BallPath ballPath = arenaModel.simulateBall(new SpaceTimeVelocity(input.ballPosition, startingAt, input.ballVelocity), duration);
+            BallPath ballPath = arenaModel.simulateBall(new BallSlice(input.ballPosition, startingAt, input.ballVelocity), duration);
             BallTelemetry.setPath(ballPath, input.team);
             return ballPath;
         }
@@ -141,14 +138,32 @@ public class ArenaModel {
         addWallToWorld(new Vector3f(1, -1, 0), new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
         addWallToWorld(new Vector3f(-1, -1, 0), new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
 
-        // 45 degree angle rails at floor
+        // 45 degree angle rails on sides
         addWallToWorld(new Vector3f(1, 0, 1), new Vector3f(-SIDE_WALL, 0, RAIL_HEIGHT));
         addWallToWorld(new Vector3f(-1, 0, 1), new Vector3f(SIDE_WALL, 0, RAIL_HEIGHT));
 
+        // 45 degree angle rails on back walls, either side of the goal
         addWallToWorld(new Vector3f(0, 1, 1), new Vector3f(sideOffest, -BACK_WALL, RAIL_HEIGHT));
         addWallToWorld(new Vector3f(0, 1, 1), new Vector3f(-sideOffest, -BACK_WALL, RAIL_HEIGHT));
         addWallToWorld(new Vector3f(0, -1, 1), new Vector3f(sideOffest, BACK_WALL, RAIL_HEIGHT));
         addWallToWorld(new Vector3f(0, -1, 1), new Vector3f(-sideOffest, BACK_WALL, RAIL_HEIGHT));
+
+        // Floor rails in the corners
+        float normalizedVertical = (float) Math.sqrt(2);
+        float normalizedFlats = .5f;
+        addWallToWorld(
+                new Vector3f(normalizedFlats, normalizedFlats, normalizedVertical),
+                new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+        addWallToWorld(
+                new Vector3f(-normalizedFlats, normalizedFlats, normalizedVertical),
+                new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+        addWallToWorld(
+                new Vector3f(normalizedFlats, -normalizedFlats, normalizedVertical),
+                new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+        addWallToWorld(
+                new Vector3f(-normalizedFlats, -normalizedFlats, normalizedVertical),
+                new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+
     }
 
     private void addWallToWorld(Vector3f normal, Vector3f position) {
@@ -205,13 +220,13 @@ public class ArenaModel {
         return new Vector3(trans.origin.x, trans.origin.y, trans.origin.z);
     }
 
-    public BallPath simulateBall(SpaceTimeVelocity start, Duration duration) {
+    public BallPath simulateBall(BallSlice start, Duration duration) {
         BallPath ballPath = new BallPath(start);
         simulateBall(ballPath, start.getTime().plus(duration));
         return ballPath;
     }
 
-    public BallPath simulateBall(SpaceTimeVelocity start, LocalDateTime endTime) {
+    public BallPath simulateBall(BallSlice start, LocalDateTime endTime) {
         BallPath ballPath = new BallPath(start);
         simulateBall(ballPath, endTime);
         return ballPath;
@@ -222,7 +237,7 @@ public class ArenaModel {
     }
 
     private void simulateBall(BallPath ballPath, LocalDateTime endTime) {
-        SpaceTimeVelocity start = ballPath.getEndpoint();
+        BallSlice start = ballPath.getEndpoint();
         LocalDateTime simulationTime = LocalDateTime.from(start.getTime());
         if (simulationTime.isAfter(endTime)) {
             return;
@@ -230,6 +245,7 @@ public class ArenaModel {
 
         ball.clearForces();
         ball.setLinearVelocity(toV3f(start.getVelocity()));
+        ball.setAngularVelocity(toV3f(start.spin));
         Transform ballTransform = new Transform();
         ballTransform.setIdentity();
         ballTransform.origin.set(toV3f(start.getSpace()));
@@ -246,10 +262,11 @@ public class ArenaModel {
             world.stepSimulation(1.0f / stepsPerSecond, 2, 0.5f / stepsPerSecond);
             simulationTime = simulationTime.plus(TimeUtil.toDuration(1 / stepsPerSecond));
             Vector3 ballVelocity = getBallVelocity();
-            ballPath.addSlice(new SpaceTimeVelocity(getBallPosition(), simulationTime, ballVelocity));
+            Vector3 ballSpin = getBallSpin();
+            ballPath.addSlice(new BallSlice(getBallPosition(), simulationTime, ballVelocity, ballSpin));
             double speed = ballVelocity.magnitude();
             if (speed < 10) {
-                ball.setFriction(0);
+                ball.setFriction(0.1f);
                 ball.setDamping(0, BALL_ANGULAR_DAMPING);
             } else {
                 ball.setFriction(BALL_FRICTION);
@@ -262,6 +279,12 @@ public class ArenaModel {
         Vector3f ballVel = new Vector3f();
         ball.getLinearVelocity(ballVel);
         return toV3(ballVel);
+    }
+
+    private Vector3 getBallSpin() {
+        Vector3f ballSpin = new Vector3f();
+        ball.getAngularVelocity(ballSpin);
+        return toV3(ballSpin);
     }
 
     private static Vector3f toV3f(Vector3 v) {

@@ -1,9 +1,8 @@
 package tarehart.rlbot.planning;
 
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class TacticalSituation {
@@ -14,7 +13,7 @@ public class TacticalSituation {
     public SpaceTime expectedEnemyContact;
     public double distanceFromEnemyBackWall;
     public double distanceFromEnemyCorner;
-    public Optional<SpaceTimeVelocity> scoredOnThreat;
+    public Optional<BallSlice> scoredOnThreat;
     public boolean needsDefensiveClear;
     public boolean shotOnGoalAvailable;
     public boolean forceDefensivePosture;

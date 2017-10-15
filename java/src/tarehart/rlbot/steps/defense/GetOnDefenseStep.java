@@ -3,9 +3,8 @@ package tarehart.rlbot.steps.defense;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
-import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
@@ -56,7 +55,7 @@ public class GetOnDefenseStep implements Step {
         CarData car = input.getMyCarData();
 
         BallPath ballPath = ArenaModel.predictBallPath(input, 3);
-        SpaceTimeVelocity ballMotion = ballPath.getMotionAt(input.time.plusSeconds(3)).get();
+        BallSlice ballMotion = ballPath.getMotionAt(input.time.plusSeconds(3)).get();
 
         Vector3 goalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
         Vector2 targetPosition = new Vector2(Math.signum(ballMotion.getSpace().x) * CENTER_OFFSET, goalCenter.y - Math.signum(goalCenter.y) * AWAY_FROM_GOAL);

@@ -1,7 +1,7 @@
 package tarehart.rlbot.tuning;
 
 import com.google.gson.Gson;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.BallPath;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class BallRecorder {
     private static LocalDateTime endTime;
     private static Gson gson = new Gson();
 
-    public static void startRecording(SpaceTimeVelocity startPoint, LocalDateTime endTime) {
+    public static void startRecording(BallSlice startPoint, LocalDateTime endTime) {
 
         if (ballPath == null) {
             ballPath = new BallPath(startPoint);
@@ -28,7 +28,7 @@ public class BallRecorder {
         }
     }
 
-    public static void recordPosition(SpaceTimeVelocity ballPosition) {
+    public static void recordPosition(BallSlice ballPosition) {
         if (ballPath != null) {
 
             if (ballPosition.getTime().isAfter(endTime)) {

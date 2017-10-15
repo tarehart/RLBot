@@ -1,21 +1,9 @@
 package tarehart.rlbot;
 
-import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTimeVelocity;
-import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
-import tarehart.rlbot.steps.*;
-import tarehart.rlbot.steps.defense.GetOnDefenseStep;
-import tarehart.rlbot.steps.defense.ThreatAssessor;
-import tarehart.rlbot.steps.defense.WhatASaveStep;
-import tarehart.rlbot.steps.landing.LandGracefullyStep;
-import tarehart.rlbot.steps.strikes.*;
-import tarehart.rlbot.steps.wall.DescendFromWallStep;
-import tarehart.rlbot.steps.wall.MountWallStep;
-import tarehart.rlbot.steps.wall.WallTouchStep;
 import tarehart.rlbot.tuning.BallTelemetry;
 import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.ui.Readout;
@@ -23,7 +11,6 @@ import tarehart.rlbot.ui.Readout;
 import javax.swing.*;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 
 public abstract class Bot {
 
@@ -51,7 +38,8 @@ public abstract class Bot {
     public AgentOutput processInput(AgentInput input) {
 
         // Just for now, always calculate ballpath so we can learn some stuff.
-        BallPath ballPath = arenaModel.simulateBall(new SpaceTimeVelocity(input.ballPosition, input.time, input.ballVelocity), Duration.ofSeconds(5));
+        BallSlice startingSlice = new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin);
+        BallPath ballPath = arenaModel.simulateBall(startingSlice, Duration.ofSeconds(5));
         BallTelemetry.setPath(ballPath, input.team);
         ZonePlan zonePlan = new ZonePlan(input);
         ZoneTelemetry.set(zonePlan, input.team);

@@ -5,7 +5,7 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import org.junit.Assert;
 import org.junit.Test;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 
@@ -56,7 +56,7 @@ public class PredictedVsActualTest {
         BallPath predictedPath = makePrediction(actualPath);
         // (-73.29997, 65.447556, 4.5342107) after first time step
 
-        List<SpaceTimeVelocity> actual = actualPath.getSlices();
+        List<BallSlice> actual = actualPath.getSlices();
         for (int i = 0; i < actual.size(); i++) {
             if (i < 20) {
                 Vector3 velocity = actual.get(i).getVelocity();
@@ -71,12 +71,12 @@ public class PredictedVsActualTest {
             }
         }
 
-        List<SpaceTimeVelocity> predicted = predictedPath.getSlices();
+        List<BallSlice> predicted = predictedPath.getSlices();
 
-        List<SpaceTimeVelocity> actualTrimmed = new ArrayList<>(predicted.size());
+        List<BallSlice> actualTrimmed = new ArrayList<>(predicted.size());
 
         for (int i = 0; i < predicted.size() - 1; i++) {
-            SpaceTimeVelocity spaceTimeVelocity = actualPath.getMotionAt(predicted.get(i).getTime()).get();
+            BallSlice spaceTimeVelocity = actualPath.getMotionAt(predicted.get(i).getTime()).get();
             actualTrimmed.add(spaceTimeVelocity);
             System.out.println(String.format("Actual: %.4f Predicted: %.4f", spaceTimeVelocity.getVelocity().x, predicted.get(i).getVelocity().x));
 
@@ -97,9 +97,9 @@ public class PredictedVsActualTest {
     }
 
     private BallPath finesseActualPath(BallPath actualPath) {
-        Optional<SpaceTimeVelocity> newStart = actualPath.getMotionAt(actualPath.getStartPoint().getTime().plus(Duration.ofMillis(100)));
+        Optional<BallSlice> newStart = actualPath.getMotionAt(actualPath.getStartPoint().getTime().plus(Duration.ofMillis(100)));
         BallPath finessed = new BallPath(newStart.get());
-        List<SpaceTimeVelocity> slices = actualPath.getSlices();
+        List<BallSlice> slices = actualPath.getSlices();
         for (int i = 0; i < actualPath.getSlices().size(); i++) {
             if (slices.get(i).getTime().isAfter(newStart.get().getTime())) {
                 finessed.addSlice(slices.get(i));

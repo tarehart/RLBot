@@ -13,28 +13,28 @@ import java.util.function.Predicate;
 
 public class BallPath {
 
-    ArrayList<SpaceTimeVelocity> path = new ArrayList<>();
+    ArrayList<BallSlice> path = new ArrayList<>();
 
-    public BallPath(SpaceTimeVelocity start) {
+    public BallPath(BallSlice start) {
         path.add(start);
     }
 
-    public void addSlice(SpaceTimeVelocity spaceTime) {
+    public void addSlice(BallSlice spaceTime) {
         path.add(spaceTime);
     }
 
-    public List<SpaceTimeVelocity> getSlices() {
+    public List<BallSlice> getSlices() {
         return path;
     }
 
-    public Optional<SpaceTimeVelocity> getMotionAt(LocalDateTime time) {
+    public Optional<BallSlice> getMotionAt(LocalDateTime time) {
         if (time.isBefore(path.get(0).getTime()) || time.isAfter(path.get(path.size() - 1).getTime())) {
             return Optional.empty();
         }
 
         for (int i = 0; i < path.size() - 1; i++) {
-            SpaceTimeVelocity current = path.get(i);
-            SpaceTimeVelocity next = path.get(i + 1);
+            BallSlice current = path.get(i);
+            BallSlice next = path.get(i + 1);
             if (next.getTime().isAfter(time)) {
 
                 long simulationStepMillis = Duration.between(current.getTime(), next.getTime()).toMillis();
@@ -43,7 +43,7 @@ public class BallPath {
                 Vector3 toTween = toNext.scaled(tweenPoint);
                 Vector3 space = current.getSpace().plus(toTween);
                 Vector3 velocity = averageVectors(current.getVelocity(), next.getVelocity(), 1 - tweenPoint);
-                return Optional.of(new SpaceTimeVelocity(new SpaceTime(space, time), velocity));
+                return Optional.of(new BallSlice(new SpaceTime(space, time), velocity));
             }
         }
 
@@ -51,7 +51,9 @@ public class BallPath {
     }
 
     private Vector3 averageVectors(Vector3 a, Vector3 b, double weightOfA) {
-        return a.scaled(weightOfA).plus(b.scaled(1 - weightOfA));
+        Vector3 weightedA = a.scaled(weightOfA);
+        Vector3 weightedB = b.scaled(1 - weightOfA);
+        return weightedA.plus(weightedB);
     }
 
     /**
@@ -59,7 +61,7 @@ public class BallPath {
      *
      * 0 is not a valid input.
      */
-    public Optional<SpaceTimeVelocity> getMotionAfterWallBounce(int targetBounce) {
+    public Optional<BallSlice> getMotionAfterWallBounce(int targetBounce) {
 
         assert targetBounce > 0;
 
@@ -67,8 +69,8 @@ public class BallPath {
         int numBounces = 0;
 
         for (int i = 1; i < path.size(); i++) {
-            SpaceTimeVelocity spt = path.get(i);
-            SpaceTimeVelocity previous = path.get(i - 1);
+            BallSlice spt = path.get(i);
+            BallSlice previous = path.get(i - 1);
 
             if (isWallBounce(previous.getVelocity(), spt.getVelocity())) {
                 numBounces++;
@@ -78,7 +80,7 @@ public class BallPath {
                 if (path.size() == i + 1) {
                     return Optional.empty();
                 }
-                return Optional.of(spt.copy());
+                return Optional.of(spt);
             }
         }
 
@@ -99,24 +101,24 @@ public class BallPath {
         return previousVelocity.z < 0 && currentVelocity.z > 0;
     }
 
-    public SpaceTimeVelocity getStartPoint() {
-        return path.get(0).copy();
+    public BallSlice getStartPoint() {
+        return path.get(0);
     }
 
-    public SpaceTimeVelocity getEndpoint() {
-        return path.get(path.size() - 1).copy();
+    public BallSlice getEndpoint() {
+        return path.get(path.size() - 1);
     }
 
-    public Optional<SpaceTimeVelocity> getLanding(LocalDateTime startOfSearch) {
+    public Optional<BallSlice> getLanding(LocalDateTime startOfSearch) {
 
         for (int i = 1; i < path.size(); i++) {
-            SpaceTimeVelocity spt = path.get(i);
+            BallSlice spt = path.get(i);
 
             if (spt.getTime().isBefore(startOfSearch)) {
                 continue;
             }
 
-            SpaceTimeVelocity previous = path.get(i - 1);
+            BallSlice previous = path.get(i - 1);
 
 
             if (isFloorBounce(previous.getVelocity(), spt.getVelocity())) {
@@ -127,10 +129,10 @@ public class BallPath {
                 double floorGapOfPrev = previous.getSpace().z - ArenaModel.BALL_RADIUS;
                 double floorGapOfCurrent = spt.getSpace().z - ArenaModel.BALL_RADIUS;
 
-                SpaceTimeVelocity bouncePosition = new SpaceTimeVelocity(new Vector3(spt.getSpace().x, spt.getSpace().y, ArenaModel.BALL_RADIUS), spt.getTime(), spt.getVelocity());
+                BallSlice bouncePosition = new BallSlice(new Vector3(spt.getSpace().x, spt.getSpace().y, ArenaModel.BALL_RADIUS), spt.getTime(), spt.getVelocity());
                 if (floorGapOfPrev < floorGapOfCurrent) {
                     // TODO: consider interpolating instead of just picking the more accurate.
-                    bouncePosition = new SpaceTimeVelocity(
+                    bouncePosition = new BallSlice(
                             new Vector3(previous.getSpace().x, previous.getSpace().y, ArenaModel.BALL_RADIUS),
                             previous.getTime(),
                             spt.getVelocity());
@@ -143,15 +145,15 @@ public class BallPath {
         return Optional.empty();
     }
 
-    public Optional<SpaceTimeVelocity> getPlaneBreak(LocalDateTime searchStart, Plane plane, boolean directionSensitive) {
+    public Optional<BallSlice> getPlaneBreak(LocalDateTime searchStart, Plane plane, boolean directionSensitive) {
         for (int i = 1; i < path.size(); i++) {
-            SpaceTimeVelocity spt = path.get(i);
+            BallSlice spt = path.get(i);
 
             if (spt.getTime().isBefore(searchStart)) {
                 continue;
             }
 
-            SpaceTimeVelocity previous = path.get(i - 1);
+            BallSlice previous = path.get(i - 1);
 
             if (directionSensitive && spt.getSpace().minus(previous.getSpace()).dotProduct(plane.normal) > 0) {
                 // Moving the same direction as the plane normal. If we're direction sensitive, then we don't care about plane breaks in this direction.
@@ -168,7 +170,7 @@ public class BallPath {
                 double tweenPoint = previous.getSpace().distance(breakPosition) / previous.getSpace().distance(spt.getSpace());
                 LocalDateTime moment = previous.getTime().plus(TimeUtil.toDuration(stepSeconds * tweenPoint));
                 Vector3 velocity = averageVectors(previous.getVelocity(), spt.getVelocity(), 1 - tweenPoint);
-                return Optional.of(new SpaceTimeVelocity(breakPosition, moment, velocity));
+                return Optional.of(new BallSlice(breakPosition, moment, velocity));
             }
         }
 
@@ -179,7 +181,7 @@ public class BallPath {
         return VectorUtil.getPlaneIntersection(plane, start, end.minus(start));
     }
 
-    public Optional<SpaceTimeVelocity> findSlice(Predicate<SpaceTimeVelocity> decider) {
+    public Optional<BallSlice> findSlice(Predicate<BallSlice> decider) {
         for (int i = 1; i < path.size(); i++) {
             if (decider.test(path.get(i))) {
                 return Optional.of(path.get(i));
@@ -188,9 +190,9 @@ public class BallPath {
         return Optional.empty();
     }
 
-    public Optional<SpaceTimeVelocity> findSlice(Predicate<SpaceTimeVelocity> decider, LocalDateTime timeLimit) {
+    public Optional<BallSlice> findSlice(Predicate<BallSlice> decider, LocalDateTime timeLimit) {
         for (int i = 1; i < path.size(); i++) {
-            SpaceTimeVelocity slice = path.get(i);
+            BallSlice slice = path.get(i);
             if (slice.getTime().isAfter(timeLimit)) {
                 return Optional.empty();
             }

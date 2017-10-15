@@ -56,7 +56,7 @@ public class ReliefBot extends Bot {
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
             BotLog.println("Canceling current plan. Need to go for save!", input.team);
             currentPlan = null;
-        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
+        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan != null && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
             BotLog.println("Canceling current plan. Forcing defensive rotation!", input.team);
             currentPlan = null;
         } else if (situation.waitToClear && canInterruptPlanFor(Plan.Posture.WAITTOCLEAR)) {

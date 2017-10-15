@@ -5,8 +5,7 @@ import com.google.gson.Gson;
 import tarehart.rlbot.math.vector.Vector3;
 import org.junit.Assert;
 import org.junit.Test;
-import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.BallPath;
 
 import java.io.IOException;
@@ -22,9 +21,9 @@ public class BallRecorderTest {
     public void testFileOutput() throws IOException {
 
         LocalDateTime now = LocalDateTime.now();
-        BallRecorder.startRecording(new SpaceTimeVelocity(new Vector3(0, 0, 0), now, new Vector3(1, 0, 1)), now.plusSeconds(1));
-        BallRecorder.recordPosition(new SpaceTimeVelocity(new Vector3(1, 1, 2), now.plusSeconds(1), new Vector3(1, 0, 1)));
-        BallRecorder.recordPosition(new SpaceTimeVelocity(new Vector3(2, 2, 5), now.plusSeconds(2), new Vector3(1, 0, 1)));
+        BallRecorder.startRecording(new BallSlice(new Vector3(0, 0, 0), now, new Vector3(1, 0, 1)), now.plusSeconds(1));
+        BallRecorder.recordPosition(new BallSlice(new Vector3(1, 1, 2), now.plusSeconds(1), new Vector3(1, 0, 1)));
+        BallRecorder.recordPosition(new BallSlice(new Vector3(2, 2, 5), now.plusSeconds(2), new Vector3(1, 0, 1)));
 
 
         Stream<Path> list = Files.list(Paths.get("./" + BallRecorder.DIRECTORY));

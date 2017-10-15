@@ -25,6 +25,7 @@ public class AgentInput {
     public final Vector3 ballVelocity;
     public final Bot.Team team;
     public final long frameCount;
+    public final Vector3 ballSpin;
     public LocalDateTime time;
     public List<FullBoost> fullBoosts = new ArrayList<>(6);
 
@@ -35,6 +36,9 @@ public class AgentInput {
     public AgentInput(PyGameTickPacket gameTickPacket, Bot.Team team, Chronometer chronometer, SpinTracker spinTracker, long frameCount) {
 
         this.frameCount = frameCount;
+
+        PyVector3 angVel = gameTickPacket.gameball.AngularVelocity;
+        this.ballSpin = new Vector3(angVel.X, angVel.Y, angVel.Z);
 
         ballPosition = convert(gameTickPacket.gameball.Location);
         ballVelocity = convert(gameTickPacket.gameball.Velocity);

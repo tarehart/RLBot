@@ -32,4 +32,9 @@ public class Zone {
         ORANGEBOX,
         BLUEBOX;
     }
+
+    @Override
+    public String toString() {
+        return mainZone + " " + subZone;
+    }
 }

@@ -6,7 +6,7 @@ import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
@@ -161,7 +161,7 @@ public class TacticsAdvisor {
         CarData myCar = input.getMyCarData();
         CarData opponentCar = input.getEnemyCarData();
 
-        SpaceTimeVelocity futureBallMotion = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(LOOKAHEAD_SECONDS))).orElse(ballPath.getEndpoint());
+        BallSlice futureBallMotion = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(LOOKAHEAD_SECONDS))).orElse(ballPath.getEndpoint());
 
         TacticalSituation situation = new TacticalSituation();
         situation.expectedEnemyContact = enemyIntercept.orElse(ballPath.getEndpoint().toSpaceTime());
@@ -186,7 +186,7 @@ public class TacticsAdvisor {
         return situation;
     }
 
-    private double getDistanceFromEnemyCorner(SpaceTimeVelocity futureBallMotion, double enemyGoalY) {
+    private double getDistanceFromEnemyCorner(BallSlice futureBallMotion, double enemyGoalY) {
         Vector2 positiveCorner = ArenaModel.CORNER_ANGLE_CENTER;
         double goalSign = Math.signum(enemyGoalY);
 
