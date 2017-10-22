@@ -130,8 +130,8 @@ public class Readout {
         Optional<ZonePlan> zonePlanOpt = ZoneTelemetry.get(input.team);
 
         String text = "" +
-                "Blue Pos: " + input.blueCar.position + "\n" +
-                "Orng Pos: " + input.orangeCar.position + "\n" +
+                "Blue Pos: " + input.blueCar.map(c -> c.position).orElse(new Vector3()) + "\n" +
+                "Orng Pos: " + input.orangeCar.map(c -> c.position).orElse(new Vector3()) + "\n" +
                 "Ball Pos: " + input.ballPosition + "\n" +
                 "\n" +
                 "Blue Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.team == Bot.Team.BLUE)).orElse("Unknown") + "\n" +
@@ -144,7 +144,8 @@ public class Readout {
     }
 
     private String printCarZone(ZonePlan zp, boolean ownZone) {
-        Zone zone = ownZone ? zp.myZone : zp.opponentZone;
+        Zone zone = ownZone ? zp.myZone :
+                zp.opponentZone.isPresent() ? zp.opponentZone.get() : new Zone(Zone.MainZone.NONE, Zone.SubZone.NONE);
         return zone.mainZone + " " + zone.subZone;
     }
 

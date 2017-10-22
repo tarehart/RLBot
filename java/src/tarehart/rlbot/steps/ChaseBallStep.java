@@ -37,7 +37,7 @@ public class ChaseBallStep implements Step {
 
         BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(3));
 
-        if (input.getEnemyCarData().position.distance(input.ballPosition) > 50) {
+        if (input.getEnemyCarData().map(c -> c.position.distance(input.ballPosition)).orElse(Double.MAX_VALUE) > 50) {
             if (car.boost < 10 && GetBoostStep.seesOpportunisticBoost(car, input.fullBoosts)) {
                 plan = new Plan().withStep(new GetBoostStep());
                 plan.begin();

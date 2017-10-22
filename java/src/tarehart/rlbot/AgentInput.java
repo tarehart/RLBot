@@ -14,8 +14,8 @@ import java.util.Optional;
 
 public class AgentInput {
 
-    public final CarData blueCar;
-    public final CarData orangeCar;
+    public final Optional<CarData> blueCar;
+    public final Optional<CarData> orangeCar;
 
     public final int blueScore;
     public final int orangeScore;
@@ -67,8 +67,8 @@ public class AgentInput {
 
         double elapsedSeconds = TimeUtil.toSeconds(chronometer.getTimeDiff());
 
-        blueCar = blueCarInput.map(c -> convert(c, Bot.Team.BLUE, spinTracker, elapsedSeconds, frameCount)).orElse(null);
-        orangeCar = orangeCarInput.map(c -> convert(c, Bot.Team.ORANGE, spinTracker, elapsedSeconds, frameCount)).orElse(null);
+        blueCar = blueCarInput.map(c -> convert(c, Bot.Team.BLUE, spinTracker, elapsedSeconds, frameCount));
+        orangeCar = orangeCarInput.map(c -> convert(c, Bot.Team.ORANGE, spinTracker, elapsedSeconds, frameCount));
 
         for (PyBoostInfo boostInfo: gameTickPacket.gameBoosts) {
             Vector3 location = convert(boostInfo.Location);
@@ -111,14 +111,16 @@ public class AgentInput {
     }
 
     public CarData getMyCarData() {
-        return getCarData(team);
+        // We can do an unprotected get here because the car corresponding to our own color
+        // will always be present because it's us.
+        return getCarData(team).get();
     }
 
-    public CarData getEnemyCarData() {
+    public Optional<CarData> getEnemyCarData() {
         return team == Bot.Team.BLUE ? orangeCar : blueCar;
     }
 
-    public CarData getCarData(Bot.Team team) {
+    public Optional<CarData> getCarData(Bot.Team team) {
         return team == Bot.Team.BLUE ? blueCar : orangeCar;
     }
 }

@@ -7,14 +7,16 @@ import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.tuning.BotLog;
 
+import java.util.Optional;
+
 public class ZonePlan {
 
     public Vector3 ballPosition;
     public CarData myCar;
-    public CarData opponentCar;
+    public Optional<CarData> opponentCar;
     public Zone ballZone;
     public Zone myZone; // DON'T LET ME IN MY ZONE
-    public Zone opponentZone;
+    public Optional<Zone> opponentZone;
     public boolean ballIsInMyBox;
     public boolean ballIsInOpponentBox;
 
@@ -34,7 +36,7 @@ public class ZonePlan {
     private void determineZonePlan(Bot.Team team) {
         ballZone = new Zone(getMainZone(ballPosition), getSubZone(ballPosition));
         myZone = new Zone(getMainZone(myCar.position), getSubZone(myCar.position));
-        opponentZone = new Zone(getMainZone(opponentCar.position), getSubZone(opponentCar.position));
+        opponentZone = opponentCar.map(c -> new Zone(getMainZone(c.position), getSubZone(c.position)));
 
         if(!isAnalysisSane(ballZone, myZone, opponentZone, team))
             return; // Don't even bother coming up with a plan in this case
@@ -82,18 +84,18 @@ public class ZonePlan {
         return Zone.SubZone.NONE;
     }
 
-    private boolean isAnalysisSane(Zone ballZone, Zone myZone, Zone opponentZone, Bot.Team team) {
+    private boolean isAnalysisSane(Zone ballZone, Zone myZone, Optional<Zone> opponentZone, Bot.Team team) {
         boolean sanityCheck = true;
         if(ballZone.mainZone == Zone.MainZone.NONE) {
             BotLog.println("WTF where is the ball?", team);
             sanityCheck = false;
         }
         if(myZone.mainZone == Zone.MainZone.NONE) {
-            BotLog.println("WTF where is the ball?", team);
+            BotLog.println("WTF where am I?", team);
             sanityCheck = false;
         }
-        if(opponentZone.mainZone == Zone.MainZone.NONE) {
-            BotLog.println("WTF where is the ball?", team);
+        if(!opponentZone.isPresent() || opponentZone.get().mainZone == Zone.MainZone.NONE) {
+            // BotLog.println("WTF where is the enemy?", team);
             sanityCheck = false;
         }
 
