@@ -140,18 +140,63 @@ public class ArenaModelTest {
     }
 
     @Test
-    public void testSpinningFloorBounce() {
+    public void testSpinningFloorBounceX() {
         ArenaModel model = new ArenaModel();
         BallSlice start = new BallSlice(
                 new Vector3(0, 0, 10),
                 LocalDateTime.now(),
                 new Vector3(),
-                new Vector3(-10, 0, 0));
+                new Vector3(10, 0, 0));
 
         BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(3));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertTrue(ballPath.getEndpoint().velocity.y > 1);
-        Assert.assertTrue(ballPath.getEndpoint().space.y > 1);
+        Assert.assertTrue(ballPath.getEndpoint().velocity.y < -1); // Opposite of game
+        Assert.assertTrue(ballPath.getEndpoint().space.y < -1);
+    }
+
+    @Test
+    public void testSpinningFloorBounceY() {
+        ArenaModel model = new ArenaModel();
+        BallSlice start = new BallSlice(
+                new Vector3(0, 0, 10),
+                LocalDateTime.now(),
+                new Vector3(),
+                new Vector3(0, 10, 0));
+
+        BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(3));
+        System.out.println(ballPath.getEndpoint());
+        Assert.assertTrue(ballPath.getEndpoint().velocity.x > 1); // opposite of game
+        Assert.assertTrue(ballPath.getEndpoint().space.x > 1);
+    }
+
+    @Test
+    public void testSpinningWallBounceX() {
+        ArenaModel model = new ArenaModel();
+        BallSlice start = new BallSlice(
+                new Vector3(30, ArenaModel.BACK_WALL - 5, 30),
+                LocalDateTime.now(),
+                new Vector3(0, 10, 0),
+                new Vector3(0, 0, 10));
+
+        BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(1));
+        System.out.println(ballPath.getEndpoint());
+        Assert.assertTrue(ballPath.getEndpoint().velocity.x > 1);
+        Assert.assertTrue(ballPath.getEndpoint().space.x > 1);
+    }
+
+    @Test
+    public void testSpinningWallBounceY() {
+        ArenaModel model = new ArenaModel();
+        BallSlice start = new BallSlice(
+                new Vector3(ArenaModel.SIDE_WALL - 5, 0, 30),
+                LocalDateTime.now(),
+                new Vector3(10, 0, 0),
+                new Vector3(0, 0, 10));
+
+        BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(1));
+        System.out.println(ballPath.getEndpoint());
+        Assert.assertTrue(ballPath.getEndpoint().velocity.y < -1);
+        Assert.assertTrue(ballPath.getEndpoint().space.y < -1);
     }
 
 }

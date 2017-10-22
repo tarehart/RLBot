@@ -20,12 +20,12 @@ import java.util.Scanner;
 public class PredictedVsActualTest {
 
 
-    private static final double THRESHOLD = 1;
+    private static final double THRESHOLD = 2;
     private ArenaModel arenaModel = new ArenaModel();
 
 
     private BallPath readRecording(String filename) {
-        InputStream in = getClass().getResourceAsStream("/tarehart/rlbot/tuning/ballrecordings/" + filename);
+        InputStream in = getClass().getResourceAsStream("/ballrecordings/" + filename);
         Scanner s = new Scanner(in).useDelimiter("\\A");
         String content = s.hasNext() ? s.next() : "";
 
@@ -34,20 +34,9 @@ public class PredictedVsActualTest {
     }
 
     @Test
-    public void testCornerDiagonal() throws UnsupportedEncodingException {
-        testFile("corner-diagonal.json");
+    public void spinlessBackwall() throws UnsupportedEncodingException {
+        testFile("spinless-backwall.json");
     }
-
-    @Test
-    public void testSideWall() throws UnsupportedEncodingException {
-        testFile("side-wall.json");
-    }
-
-    @Test
-    public void testCornerClear() throws UnsupportedEncodingException {
-        testFile("corner-clear.json");
-    }
-
 
     private void testFile(String filename) throws UnsupportedEncodingException {
 
@@ -71,22 +60,22 @@ public class PredictedVsActualTest {
             }
         }
 
-        List<BallSlice> predicted = predictedPath.getSlices();
+        List<BallSlice> predictedSlices = predictedPath.getSlices();
 
-        List<BallSlice> actualTrimmed = new ArrayList<>(predicted.size());
+        List<BallSlice> actualTrimmed = new ArrayList<>(predictedSlices.size());
 
-        for (int i = 0; i < predicted.size() - 1; i++) {
-            BallSlice spaceTimeVelocity = actualPath.getMotionAt(predicted.get(i).getTime()).get();
-            actualTrimmed.add(spaceTimeVelocity);
-            System.out.println(String.format("Actual: %.4f Predicted: %.4f", spaceTimeVelocity.getVelocity().x, predicted.get(i).getVelocity().x));
+        for (int i = 0; i < predictedSlices.size() - 1; i++) {
+            BallSlice actualSlice = actualPath.getMotionAt(predictedSlices.get(i).getTime()).get();
+            actualTrimmed.add(actualSlice);
+            System.out.println(String.format("A: %s\nP: %s\n", actualSlice, predictedSlices.get(i)));
 
         }
         actualTrimmed.add(actualPath.getEndpoint());
 
-        for (int i = 0; i < predicted.size(); i++) {
+        for (int i = 0; i < predictedSlices.size(); i++) {
 
             Vector3 actualSlice = actualTrimmed.get(i).getSpace();
-            Vector3 actualToPredicted = predicted.get(i).getSpace().minus(actualSlice);
+            Vector3 actualToPredicted = predictedSlices.get(i).getSpace().minus(actualSlice);
             double error = new Vector2(actualToPredicted.x, actualToPredicted.y).magnitude();
             if (error > THRESHOLD) {
                 Duration duration = Duration.between(actualTrimmed.get(0).getTime(), actualTrimmed.get(i).getTime());

@@ -43,7 +43,7 @@ public class BallPath {
                 Vector3 toTween = toNext.scaled(tweenPoint);
                 Vector3 space = current.getSpace().plus(toTween);
                 Vector3 velocity = averageVectors(current.getVelocity(), next.getVelocity(), 1 - tweenPoint);
-                return Optional.of(new BallSlice(new SpaceTime(space, time), velocity));
+                return Optional.of(new BallSlice(space, time, velocity, next.spin));
             }
         }
 
@@ -129,13 +129,18 @@ public class BallPath {
                 double floorGapOfPrev = previous.getSpace().z - ArenaModel.BALL_RADIUS;
                 double floorGapOfCurrent = spt.getSpace().z - ArenaModel.BALL_RADIUS;
 
-                BallSlice bouncePosition = new BallSlice(new Vector3(spt.getSpace().x, spt.getSpace().y, ArenaModel.BALL_RADIUS), spt.getTime(), spt.getVelocity());
+                BallSlice bouncePosition = new BallSlice(
+                        new Vector3(spt.getSpace().x, spt.getSpace().y, ArenaModel.BALL_RADIUS),
+                        spt.getTime(),
+                        spt.getVelocity(),
+                        spt.spin);
                 if (floorGapOfPrev < floorGapOfCurrent) {
                     // TODO: consider interpolating instead of just picking the more accurate.
                     bouncePosition = new BallSlice(
                             new Vector3(previous.getSpace().x, previous.getSpace().y, ArenaModel.BALL_RADIUS),
                             previous.getTime(),
-                            spt.getVelocity());
+                            spt.getVelocity(),
+                            spt.spin);
                 }
 
                 return Optional.of(bouncePosition);
@@ -170,7 +175,7 @@ public class BallPath {
                 double tweenPoint = previous.getSpace().distance(breakPosition) / previous.getSpace().distance(spt.getSpace());
                 LocalDateTime moment = previous.getTime().plus(TimeUtil.toDuration(stepSeconds * tweenPoint));
                 Vector3 velocity = averageVectors(previous.getVelocity(), spt.getVelocity(), 1 - tweenPoint);
-                return Optional.of(new BallSlice(breakPosition, moment, velocity));
+                return Optional.of(new BallSlice(breakPosition, moment, velocity, spt.spin));
             }
         }
 

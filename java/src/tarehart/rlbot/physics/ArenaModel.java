@@ -1,31 +1,21 @@
 package tarehart.rlbot.physics;
 
-import com.bulletphysics.collision.broadphase.AxisSweep3;
-import com.bulletphysics.collision.dispatch.CollisionConfiguration;
-import com.bulletphysics.collision.dispatch.CollisionDispatcher;
-import com.bulletphysics.collision.dispatch.CollisionObject;
-import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.collision.shapes.SphereShape;
-import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
-import com.bulletphysics.dynamics.DynamicsWorld;
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
-import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
-import com.bulletphysics.linearmath.Transform;
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
+import org.ode4j.math.DQuaternion;
+import org.ode4j.math.DQuaternionC;
+import org.ode4j.math.DVector3;
+import org.ode4j.math.DVector3C;
+import org.ode4j.ode.*;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
+import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.Goal;
 import tarehart.rlbot.tuning.BallTelemetry;
 
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -43,7 +33,7 @@ public class ArenaModel {
     private static final int WALL_THICKNESS = 10;
     private static final int WALL_LENGTH = 400;
     public static final float GRAVITY = 13f;
-    public static final float BALL_DRAG = .0305f;
+    public static final float BALL_DRAG = .00063f;
     public static final float BALL_RADIUS = 1.8555f;
 
     public static final Vector2 CORNER_ANGLE_CENTER = new Vector2(70.5, 90.2);
@@ -51,24 +41,83 @@ public class ArenaModel {
     // The diagonal surfaces that merge the floor and the wall--
     // Higher = more diagonal showing.
     public static final float RAIL_HEIGHT = 2.5f;
-    public static final float BALL_RESTITUTION = .583f;
-    public static final float WALL_RESTITUTION = 1f;
-    public static final float WALL_FRICTION = .5f;
-    public static final float BALL_FRICTION = .6f;
+    public static final float BALL_RESTITUTION = .6f;
+    public static final float BALL_FRICTION_PER_VEL = 850;
     public static final int STEPS_PER_SECOND = 10;
     private static final int STEPS_PER_SECOND_HIGH_RES = 50;
+    public static final float MOMENT_OF_INERTIA_BONUS = 1.5f;
 
-    private DynamicsWorld world;
-    private RigidBody ball;
+    private DWorld world;
+    private DSpace space;
+    private DSphere ball;
+    private final DJointGroup contactgroup;
 
     private static Map<Bot.Team, ArenaModel> modelMap = new HashMap<>();
 
+    static {
+        OdeHelper.initODE2(0);
+    }
+
 
     public ArenaModel() {
-        world = initPhysics();
+
+        world = OdeHelper.createWorld();
+        space = OdeHelper.createSimpleSpace();
+        world.setGravity(0, 0, -GRAVITY);
+        world.setDamping(0, 0);
         setupWalls();
         ball = initBallPhysics();
-        world.addRigidBody(ball);
+
+        contactgroup = OdeHelper.createJointGroup();
+    }
+
+    private DSphere initBallPhysics() {
+
+        DSphere sphere = OdeHelper.createSphere(space, BALL_RADIUS);
+        DBody body = OdeHelper.createBody(world);
+        DMass mass = OdeHelper.createMass();
+        mass.setSphere(1, BALL_RADIUS * MOMENT_OF_INERTIA_BONUS); // Huge moment of inertia
+        body.setMass(mass);
+        sphere.setBody(body);
+
+        return sphere;
+    }
+
+    private DGeom.DNearCallback nearCallback = this::nearCallback;
+
+    // this is called by dSpaceCollide when two objects in space are
+    // potentially colliding.
+
+    /**
+     * https://www.ode-wiki.org/wiki/index.php?title=Manual:_Concepts#Physics_model
+     * https://www.ode-wiki.org/wiki/index.php?title=Manual:_Joint_Types_and_Functions#Contact
+     */
+    private void nearCallback (Object data, DGeom o1, DGeom o2) {
+        // only collide things with the ball
+        if (!(o1 == ball || o2 == ball)) {
+            return;
+        }
+
+        DBody b1 = o1.getBody();
+        DBody b2 = o2.getBody();
+
+        DContactBuffer contacts = new DContactBuffer(3);
+        int numContacts = OdeHelper.collide(o1, o2,3, contacts.getGeomBuffer());
+        for (int i = 0; i < numContacts; i++) {
+
+            DContact c = contacts.get(i);
+
+            Vector3 normal = toV3(c.getContactGeom().normal);
+            Vector3 velocity = toV3(ball.getBody().getLinearVel());
+            Vector3 velAlongNormal = VectorUtil.project(velocity, normal);
+
+            c.surface.mode = OdeConstants.dContactBounce;
+            c.surface.mu = BALL_FRICTION_PER_VEL * velAlongNormal.magnitude();
+            c.surface.bounce = BALL_RESTITUTION;
+
+            DJoint joint = OdeHelper.createContactJoint(world, contactgroup, contacts.get(i));
+            joint.attach(b1, b2);
+        }
     }
 
     public static boolean isInBoundsBall(Vector3 location) {
@@ -100,7 +149,7 @@ public class ArenaModel {
             }
             return ballPath;
         } else {
-            BallPath ballPath = arenaModel.simulateBall(new BallSlice(input.ballPosition, startingAt, input.ballVelocity), duration);
+            BallPath ballPath = arenaModel.simulateBall(new BallSlice(input.ballPosition, startingAt, input.ballVelocity, input.ballSpin), duration);
             BallTelemetry.setPath(ballPath, input.team);
             return ballPath;
         }
@@ -108,116 +157,102 @@ public class ArenaModel {
 
     private void setupWalls() {
         // Floor
-        addWallToWorld(new Vector3f(0, 0, 1), new Vector3f(0, 0, 0));
+        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, 0));
 
         // Side walls
-        addWallToWorld(new Vector3f(1, 0, 0), new Vector3f(-SIDE_WALL, 0, 0));
-        addWallToWorld(new Vector3f(-1, 0, 0), new Vector3f(SIDE_WALL, 0, 0));
+        addWallToWorld(new Vector3(1, 0, 0), new Vector3(-SIDE_WALL, 0, 0));
+        addWallToWorld(new Vector3(-1, 0, 0), new Vector3(SIDE_WALL, 0, 0));
 
         // Ceiling
-        addWallToWorld(new Vector3f(0, 0, 1), new Vector3f(0, 0, CEILING + WALL_THICKNESS));
+        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, CEILING + WALL_THICKNESS));
 
 
         float sideOffest = (float) (WALL_LENGTH / 2 + Goal.EXTENT);
         float heightOffset = (float) (WALL_LENGTH / 2 + Goal.GOAL_HEIGHT);
 
         // Wall on the negative side
-        addWallToWorld(new Vector3f(0, 1, 0), new Vector3f(sideOffest, -BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, 1, 0), new Vector3f(-sideOffest, -BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, 1, 0), new Vector3f(0, -BACK_WALL, heightOffset));
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(sideOffest, -BACK_WALL, 0));
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(-sideOffest, -BACK_WALL, 0));
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(0, -BACK_WALL, heightOffset));
 
         // Wall on the positive side
-        addWallToWorld(new Vector3f(0, -1, 0), new Vector3f(sideOffest, BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, -1, 0), new Vector3f(-sideOffest, BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, -1, 0), new Vector3f(0, BACK_WALL, heightOffset));
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(sideOffest, BACK_WALL, 0));
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(-sideOffest, BACK_WALL, 0));
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, heightOffset));
 
 
         // 45 angle corners
-        addWallToWorld(new Vector3f(1, 1, 0), new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3f(-1, 1, 0), new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3f(1, -1, 0), new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3f(-1, -1, 0), new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
+        addWallToWorld(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
+        addWallToWorld(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
+        addWallToWorld(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
+        addWallToWorld(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
 
         // 45 degree angle rails on sides
-        addWallToWorld(new Vector3f(1, 0, 1), new Vector3f(-SIDE_WALL, 0, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(-1, 0, 1), new Vector3f(SIDE_WALL, 0, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(1, 0, 1), new Vector3(-SIDE_WALL, 0, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(-1, 0, 1), new Vector3(SIDE_WALL, 0, RAIL_HEIGHT));
 
         // 45 degree angle rails on back walls, either side of the goal
-        addWallToWorld(new Vector3f(0, 1, 1), new Vector3f(sideOffest, -BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(0, 1, 1), new Vector3f(-sideOffest, -BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(0, -1, 1), new Vector3f(sideOffest, BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(0, -1, 1), new Vector3f(-sideOffest, BACK_WALL, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(sideOffest, -BACK_WALL, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(-sideOffest, -BACK_WALL, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(sideOffest, BACK_WALL, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(-sideOffest, BACK_WALL, RAIL_HEIGHT));
 
         // Floor rails in the corners
         float normalizedVertical = (float) Math.sqrt(2);
         float normalizedFlats = .5f;
         addWallToWorld(
-                new Vector3f(normalizedFlats, normalizedFlats, normalizedVertical),
-                new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3(normalizedFlats, normalizedFlats, normalizedVertical),
+                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
         addWallToWorld(
-                new Vector3f(-normalizedFlats, normalizedFlats, normalizedVertical),
-                new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3(-normalizedFlats, normalizedFlats, normalizedVertical),
+                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
         addWallToWorld(
-                new Vector3f(normalizedFlats, -normalizedFlats, normalizedVertical),
-                new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3(normalizedFlats, -normalizedFlats, normalizedVertical),
+                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
         addWallToWorld(
-                new Vector3f(-normalizedFlats, -normalizedFlats, normalizedVertical),
-                new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3(-normalizedFlats, -normalizedFlats, normalizedVertical),
+                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
 
     }
 
-    private void addWallToWorld(Vector3f normal, Vector3f position) {
+    private void addWallToWorld(Vector3 normal, Vector3 position) {
 
-        normal.normalize();
+        DBody body = OdeHelper.createBody(world);
+        body.setKinematic();
 
-        // A large, flattish box laying on the ground.
-        CollisionShape boxGround = new BoxShape(new Vector3f(WALL_LENGTH / 2, WALL_LENGTH / 2, WALL_THICKNESS /2));
 
-        Transform wallTransform = new Transform();
-        wallTransform.setIdentity();
+        DBox box = OdeHelper.createBox(space, WALL_LENGTH, WALL_LENGTH, WALL_THICKNESS);
+        box.setBody(body);
 
-        Vector3f thicknessTweak = new Vector3f(normal);
-        thicknessTweak.scale(-WALL_THICKNESS / 2);
 
-        Vector3f finalPosition = new Vector3f();
-        finalPosition.add(position);
-        finalPosition.add(thicknessTweak);
-        wallTransform.origin.set(finalPosition);
+        normal = normal.normaliseCopy();
+        Vector3 thicknessTweak = normal.scaled(-WALL_THICKNESS / 2);
 
-        Vector3f straightUp = new Vector3f(0, 0, 1);
-        Quat4f quat = getRotationFrom(straightUp, normal);
-        wallTransform.setRotation(quat);
+        Vector3 finalPosition = position.plus(thicknessTweak);
 
-        RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(
-                0, null, boxGround, new Vector3f());
-        RigidBody wall = new RigidBody(rbInfo);
-        wall.setRestitution(WALL_RESTITUTION);
-        wall.setFriction(WALL_FRICTION);
-        wall.setWorldTransform(wallTransform);
+        body.setPosition(finalPosition.x, finalPosition.y, finalPosition.z);
 
-        world.addRigidBody(wall);
+        Vector3 straightUp = new Vector3(0, 0, 1);
+        DQuaternionC quat = getRotationFrom(straightUp, normal);
+        body.setQuaternion(quat);
     }
 
     // https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
-    private Quat4f getRotationFrom(Vector3f fromVec, Vector3f toVec) {
+    private DQuaternionC getRotationFrom(Vector3 fromVec, Vector3 toVec) {
 
-        if (fromVec.dot(toVec) > .99999) {
-            return new Quat4f(0, 0, 0, 1);
+        if (fromVec.dotProduct(toVec) > .99999) {
+            return new DQuaternion(1, 0, 0, 0);
         }
 
-        Vector3f cross = new Vector3f();
-        cross.cross(fromVec, toVec);
-        float magnitude = (float) (Math.sqrt(fromVec.lengthSquared() * toVec.lengthSquared()) + fromVec.dot(toVec));
-        Quat4f rot = new Quat4f();
-        rot.set(cross.x, cross.y, cross.z, magnitude);
+        Vector3 cross = fromVec.crossProduct(toVec);
+        float magnitude = (float) (Math.sqrt(fromVec.magnitudeSquared() * toVec.magnitudeSquared()) + fromVec.dotProduct(toVec));
+        DQuaternion rot = new DQuaternion(magnitude, cross.x, cross.y, cross.z);
         rot.normalize();
         return rot;
     }
 
     private Vector3 getBallPosition() {
-        Transform trans = new Transform();
-        ball.getWorldTransform(trans);
-        return new Vector3(trans.origin.x, trans.origin.y, trans.origin.z);
+        return toV3(ball.getBody().getPosition());
     }
 
     public BallPath simulateBall(BallSlice start, Duration duration) {
@@ -243,14 +278,10 @@ public class ArenaModel {
             return;
         }
 
-        ball.clearForces();
-        ball.setLinearVelocity(toV3f(start.getVelocity()));
-        ball.setAngularVelocity(toV3f(start.spin));
-        Transform ballTransform = new Transform();
-        ballTransform.setIdentity();
-        ballTransform.origin.set(toV3f(start.getSpace()));
-        ball.setWorldTransform(ballTransform);
-
+        ball.getBody().setForce(0, 0, 0);
+        ball.getBody().setLinearVel(toV3f(start.getVelocity()));
+        ball.getBody().setAngularVel(toV3f(start.spin));
+        ball.getBody().setPosition(toV3f(start.getSpace()));
 
         // Do some simulation
         while (simulationTime.isBefore(endTime)) {
@@ -259,96 +290,39 @@ public class ArenaModel {
                 stepsPerSecond = STEPS_PER_SECOND_HIGH_RES;
             }
 
-            world.stepSimulation(1.0f / stepsPerSecond, 2, 0.5f / stepsPerSecond);
-            simulationTime = simulationTime.plus(TimeUtil.toDuration(1 / stepsPerSecond));
+            float stepSize = 1 / stepsPerSecond;
+
+            space.collide (null, nearCallback);
+            world.step(stepSize);
+            contactgroup.empty();
+
+            simulationTime = simulationTime.plus(TimeUtil.toDuration(stepSize));
             Vector3 ballVelocity = getBallVelocity();
             Vector3 ballSpin = getBallSpin();
             ballPath.addSlice(new BallSlice(getBallPosition(), simulationTime, ballVelocity, ballSpin));
             double speed = ballVelocity.magnitude();
             if (speed < 10) {
-                ball.setFriction(0.1f);
-                ball.setDamping(0, BALL_ANGULAR_DAMPING);
+                ball.getBody().setDamping(0, BALL_ANGULAR_DAMPING);
             } else {
-                ball.setFriction(BALL_FRICTION);
-                ball.setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
+                ball.getBody().setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
             }
         }
     }
 
     private Vector3 getBallVelocity() {
-        Vector3f ballVel = new Vector3f();
-        ball.getLinearVelocity(ballVel);
-        return toV3(ballVel);
+        return toV3(ball.getBody().getLinearVel());
     }
 
     private Vector3 getBallSpin() {
-        Vector3f ballSpin = new Vector3f();
-        ball.getAngularVelocity(ballSpin);
-        return toV3(ballSpin);
+        return toV3(ball.getBody().getAngularVel());
     }
 
-    private static Vector3f toV3f(Vector3 v) {
-        return new Vector3f((float) v.x, (float) v.y, (float) v.z);
+    private static DVector3C toV3f(Vector3 v) {
+        return new DVector3(v.x, v.y, v.z);
     }
 
-    private static Vector3 toV3(Vector3f v) {
-        return new Vector3(v.x, v.y, v.z);
-    }
-
-    private DynamicsWorld initPhysics() {
-        // collision configuration contains default setup for memory, collision
-        // setup. Advanced users can create their own configuration.
-        CollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
-
-        // use the default collision dispatcher. For parallel processing you
-        // can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-        CollisionDispatcher dispatcher = new CollisionDispatcher(
-                collisionConfiguration);
-
-        // the maximum size of the collision world. Make sure objects stay
-        // within these boundaries
-        // Don't make the world AABB size too large, it will harm simulation
-        // quality and performance
-        Vector3f worldAabbMin = new Vector3f(-1000, -1000, -1000);
-        Vector3f worldAabbMax = new Vector3f(1000, 1000, 1000);
-        int maxProxies = 1024;
-        AxisSweep3 overlappingPairCache =
-                new AxisSweep3(worldAabbMin, worldAabbMax, maxProxies);
-
-        SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
-
-        DiscreteDynamicsWorld dynamicsWorld = new DiscreteDynamicsWorld(
-                dispatcher, overlappingPairCache, solver,
-                collisionConfiguration);
-
-        dynamicsWorld.setGravity(new Vector3f(0, 0, -GRAVITY));
-
-        return dynamicsWorld;
-    }
-
-    private RigidBody initBallPhysics() {
-        SphereShape collisionShape = new SphereShape(BALL_RADIUS);
-
-        // Create Dynamic Objects
-        Transform startTransform = new Transform();
-        startTransform.setIdentity();
-
-        float mass = 1f;
-
-        Vector3f localInertia = new Vector3f(0, 0, 0);
-        collisionShape.calculateLocalInertia(mass, localInertia);
-
-        startTransform.origin.set(new Vector3f(0, 0, 0));
-
-        RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(
-                mass, null, collisionShape, localInertia);
-        RigidBody body = new RigidBody(rbInfo);
-        body.setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
-        body.setRestitution(BALL_RESTITUTION);
-        body.setFriction(BALL_FRICTION);
-        body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-
-        return body;
+    private static Vector3 toV3(DVector3C v) {
+        return new Vector3(v.get0(), v.get1(), v.get2());
     }
 
     public static boolean isCarNearWall(CarData car) {

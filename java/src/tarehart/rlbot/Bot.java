@@ -4,6 +4,7 @@ import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.tuning.BallRecorder;
 import tarehart.rlbot.tuning.BallTelemetry;
 import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.ui.Readout;
@@ -11,6 +12,7 @@ import tarehart.rlbot.ui.Readout;
 import javax.swing.*;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.Optional;
 
 public abstract class Bot {
 
@@ -44,10 +46,12 @@ public abstract class Bot {
         ZonePlan zonePlan = new ZonePlan(input);
         ZoneTelemetry.set(zonePlan, input.team);
 
-        //BallRecorder.recordPosition(new SpaceTimeVelocity(input.ballPosition, input.time, input.ballVelocity));
-        //Optional<SpaceTimeVelocity> afterBounce = ballPath.getMotionAfterWallBounce(1);
-        // Just for data gathering / debugging.
-        //afterBounce.ifPresent(stv -> BallRecorder.startRecording(new SpaceTimeVelocity(input.ballPosition, input.time, input.ballVelocity), stv.getTime().plusSeconds(1)));
+//        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
+//        Optional<BallSlice> afterBounce = ballPath.getMotionAfterWallBounce(1);
+//        // Just for data gathering / debugging.
+//        afterBounce.ifPresent(stv -> BallRecorder.startRecording(
+//                new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin),
+//                stv.getTime().plusSeconds(1)));
 
 
         AgentOutput output = getOutput(input);

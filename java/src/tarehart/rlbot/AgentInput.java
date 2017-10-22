@@ -38,7 +38,11 @@ public class AgentInput {
         this.frameCount = frameCount;
 
         PyVector3 angVel = gameTickPacket.gameball.AngularVelocity;
-        this.ballSpin = new Vector3(angVel.X, angVel.Y, angVel.Z);
+
+        // Flip the x-axis, same as all our other vector handling.
+        // According to the game, when the spin vector is pointed at you, the ball is spinning clockwise.
+        // However, we will invert this concept because the ode4j physics engine disagrees.
+        this.ballSpin = new Vector3(angVel.X, -angVel.Y, -angVel.Z);
 
         ballPosition = convert(gameTickPacket.gameball.Location);
         ballVelocity = convert(gameTickPacket.gameball.Velocity);

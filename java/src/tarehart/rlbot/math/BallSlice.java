@@ -13,6 +13,7 @@ public class BallSlice {
     // If the magnitude is 2pi, then it rotates once per second.
     public final Vector3 spin;
 
+    @Deprecated
     public BallSlice(Vector3 space, LocalDateTime time, Vector3 velocity) {
         this(space, time, velocity, new Vector3());
     }
@@ -24,6 +25,7 @@ public class BallSlice {
         this.spin = spin;
     }
 
+    @Deprecated
     public BallSlice(SpaceTime spaceTime, Vector3 velocity) {
         this(spaceTime.space, spaceTime.time, velocity);
     }
