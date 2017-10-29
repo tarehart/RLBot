@@ -23,13 +23,16 @@ public class RotateAndWaitToClearStep implements Step {
     private static final double NEEDS_DEFENSE_THRESHOLD = 10;
     private static final double CENTER_OFFSET = Goal.EXTENT * .5;
     private static final double AWAY_FROM_GOAL = 0;
-    private static final double LIFESPAN = 0.1; // seconds
+    private static final double LIFESPAN = 3;
     private Plan plan;
     private LocalDateTime startTime;
 
     public RotateAndWaitToClearStep() {}
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
+        TacticalSituation tacticalSituation = null;
+        if(TacticsTelemetry.get(input.team).isPresent())
+            tacticalSituation = TacticsTelemetry.get(input.team).get();
 
         if (plan != null && !plan.isComplete()) {
             Optional<AgentOutput> output = plan.getOutput(input);
@@ -42,7 +45,8 @@ public class RotateAndWaitToClearStep implements Step {
             startTime = input.time;
         }
 
-        if (TimeUtil.secondsBetween(startTime, input.time) > LIFESPAN) {
+        if ((tacticalSituation != null && tacticalSituation.waitToClear)
+                || TimeUtil.secondsBetween(startTime, input.time) > LIFESPAN) {
             return Optional.empty(); // Time to reevaluate the plan.
         }
 
