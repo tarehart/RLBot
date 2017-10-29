@@ -16,8 +16,11 @@ def updateInputs(player1_inputs, player2_inputs, display_inputs, p1_is_locked, p
 
 	REFRESH_IN_PROGRESS = 1
 
+	lock_size = 4
+	packet_size = 2044
+
 	# Open shared memory
-	shm = mmap.mmap(0, 2004, "Local\\RLBot")
+	shm = mmap.mmap(0, lock_size + packet_size, "Local\\RLBot")
 	# This lock ensures that a read cannot start while the dll is writing to shared memory.
 	lock = ctypes.c_long(0)
 	
@@ -25,30 +28,30 @@ def updateInputs(player1_inputs, player2_inputs, display_inputs, p1_is_locked, p
 	
 		# First copy blueInputs
 		shm.seek(0) # Move to beginning of shared memory
-		ctypes.memmove(ctypes.addressof(lock), shm.read(4), ctypes.sizeof(lock)) # dll uses InterlockedExchange so this read will return the correct value!
+		ctypes.memmove(ctypes.addressof(lock), shm.read(lock_size), ctypes.sizeof(lock)) # dll uses InterlockedExchange so this read will return the correct value!
 		
 		if (lock.value != REFRESH_IN_PROGRESS):
 			if (not p1_is_locked.value):
 				p1_is_locked.value = 1 # Lock
-				ctypes.memmove(ctypes.addressof(player1_inputs.GameTickPacket), shm.read(2000), ctypes.sizeof(player1_inputs.GameTickPacket)) # copy shared memory into struct
+				ctypes.memmove(ctypes.addressof(player1_inputs.GameTickPacket), shm.read(packet_size), ctypes.sizeof(player1_inputs.GameTickPacket)) # copy shared memory into struct
 				p1_is_locked.value = 0 # Unlock
 		
 		# Now copy orngInputs
 		shm.seek(0)
-		ctypes.memmove(ctypes.addressof(lock), shm.read(4), ctypes.sizeof(lock)) # dll uses InterlockedExchange so this read will return the correct value!
+		ctypes.memmove(ctypes.addressof(lock), shm.read(lock_size), ctypes.sizeof(lock)) # dll uses InterlockedExchange so this read will return the correct value!
 		
 		if (lock.value != REFRESH_IN_PROGRESS):
 			if (not p2_is_locked.value):
 				p2_is_locked.value = 1 # Lock
-				ctypes.memmove(ctypes.addressof(player2_inputs.GameTickPacket), shm.read(2000), ctypes.sizeof(player2_inputs.GameTickPacket)) # copy shared memory into struct
+				ctypes.memmove(ctypes.addressof(player2_inputs.GameTickPacket), shm.read(packet_size), ctypes.sizeof(player2_inputs.GameTickPacket)) # copy shared memory into struct
 				p2_is_locked.value = 0 # Unlock
 				
 		# Now refresh display
 		shm.seek(0) # Move to beginning of shared memory
-		ctypes.memmove(ctypes.addressof(lock), shm.read(4), ctypes.sizeof(lock)) # dll uses InterlockedExchange so this read will return the correct value!
+		ctypes.memmove(ctypes.addressof(lock), shm.read(lock_size), ctypes.sizeof(lock)) # dll uses InterlockedExchange so this read will return the correct value!
 		
 		if (lock.value != REFRESH_IN_PROGRESS):
-			ctypes.memmove(ctypes.addressof(display_inputs.GameTickPacket), shm.read(2000), ctypes.sizeof(display_inputs.GameTickPacket)) # copy shared memory into struct
+			ctypes.memmove(ctypes.addressof(display_inputs.GameTickPacket), shm.read(packet_size), ctypes.sizeof(display_inputs.GameTickPacket)) # copy shared memory into struct
 		
 		time.sleep(0.005) # Sleep time half of agent sleep time
 		
@@ -88,7 +91,9 @@ if __name__ == '__main__':
 	agent2 = importlib.import_module(config.get('Player Configuration', 'p2Agent'))
 	agent1Color = config.get('Player Configuration', 'p1Color')
 	agent2Color = config.get('Player Configuration', 'p2Color')
-	
+	agent1Enabled = "True" == config.get('Player Configuration', 'p1Enabled')
+	agent2Enabled = "True" == config.get('Player Configuration', 'p2Enabled')
+
 	player1GameTickPacket = cStructure.GameTickPacket()
 	player2GameTickPacket = cStructure.GameTickPacket()
 	displayGameTickPacket = cStructure.GameTickPacket()
@@ -103,34 +108,40 @@ if __name__ == '__main__':
 	q1 = Queue(1)
 	q2 = Queue(1)
 	
-	output1 = [16383, 16383, 32767, 0, 0, 0, 0]
-	output2 = [16383, 16383, 32767, 0, 0, 0, 0]
+	output1 = [16383, 16383, 0, 0, 0, 0, 0]
+	output2 = [16383, 16383, 0, 0, 0, 0, 0]
 	
 	rtd = importlib.import_module("displays." + config.get('RLBot Configuration', 'display')).real_time_display()
-	rtd.build_initial_window(agent1.BOT_NAME, agent2.BOT_NAME)
+	rtd.build_initial_window(agent1.BOT_NAME if agent1Enabled else '[Disabled]', agent2.BOT_NAME if agent2Enabled else '[Disabled]')
 
 	
 	p1 = Process(target=updateInputs, args=(player1Inputs, player2Inputs, displayInputs, player1IsLocked, player2IsLocked))
 	p1.start()
-	p2 = Process(target=runAgent, args=(player1Inputs, agent1Color, q1, player1IsLocked, 0))
-	p2.start()
-	p3 = Process(target=runAgent, args=(player2Inputs, agent2Color, q2, player2IsLocked, 1))
-	p3.start()
+
+	if (agent1Enabled):
+		p2 = Process(target=runAgent, args=(player1Inputs, agent1Color, q1, player1IsLocked, 0))
+		p2.start()
+
+	if (agent2Enabled):
+		p3 = Process(target=runAgent, args=(player2Inputs, agent2Color, q2, player2IsLocked, 1))
+		p3.start()
 	
 	while (True):
 		rtd.UpdateDisplay(displayInputs)
-		
-		try:
-			output1 = q1.get()
-			updateFlag = True
-		except Queue.Empty:
-			pass
-			
-		try:
-			output2 = q2.get()
-			updateFlag = True
-		except Queue.Empty:
-			pass
-		
+
+		if (agent1Enabled):
+			try:
+				output1 = q1.get()
+				updateFlag = True
+			except Queue.Empty:
+				pass
+
+		if (agent2Enabled):
+			try:
+				output2 = q2.get()
+				updateFlag = True
+			except Queue.Empty:
+				pass
+
 		rtd.UpdateKeyPresses(output1, output2)
 		time.sleep(0.01)

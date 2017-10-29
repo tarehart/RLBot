@@ -5,7 +5,7 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
@@ -31,7 +31,7 @@ public class WallTouchStep implements Step {
         return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE;
     }
 
-    private static boolean isBallOnWall(SpaceTimeVelocity ballPosition) {
+    private static boolean isBallOnWall(BallSlice ballPosition) {
         return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE;
     }
 
@@ -48,14 +48,14 @@ public class WallTouchStep implements Step {
         DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost, 0);
 
         Optional<SpaceTime> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(car, ballPath, fullAcceleration, new Vector3(), WallTouchStep::isBallOnWall);
-        Optional<SpaceTimeVelocity> ballMotion = interceptOpportunity.flatMap(inter -> ballPath.getMotionAt(inter.time));
+        Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> ballPath.getMotionAt(inter.time));
 
 
         if (!ballMotion.isPresent()) {
             BotLog.println("Failed to make the wall touch because we see no intercepts on the wall", input.team);
             return Optional.empty();
         }
-        SpaceTimeVelocity motion = ballMotion.get();
+        BallSlice motion = ballMotion.get();
 
 
 
@@ -119,16 +119,16 @@ public class WallTouchStep implements Step {
 
     public static boolean hasWallTouchOpportunity(AgentInput input, BallPath ballPath) {
 
-        Optional<SpaceTimeVelocity> nearWallOption = ballPath.findSlice(WallTouchStep::isBallOnWall);
+        Optional<BallSlice> nearWallOption = ballPath.findSlice(WallTouchStep::isBallOnWall);
         if (nearWallOption.isPresent()) {
-            SpaceTimeVelocity nearWall = nearWallOption.get();
+            BallSlice nearWall = nearWallOption.get();
             if (TimeUtil.secondsBetween(input.time, nearWall.getTime()) > 3) {
                 return false; // Not on wall soon enough
             }
 
-            Optional<SpaceTimeVelocity> ballLater = ballPath.getMotionAt(nearWall.getTime().plusSeconds(1));
+            Optional<BallSlice> ballLater = ballPath.getMotionAt(nearWall.getTime().plusSeconds(1));
             if (ballLater.isPresent()) {
-                SpaceTimeVelocity motion = ballLater.get();
+                BallSlice motion = ballLater.get();
                 if (ArenaModel.getDistanceFromWall(motion.getSpace()) > ACCEPTABLE_WALL_DISTANCE) {
                     return false;
                 }

@@ -8,6 +8,11 @@ ReliefBot uses a framework called RLBot.
 
 ## ReliefBot Development Environment Setup
 
+For deluxe instructions, check out https://github.com/aherbig/ReliefBotSetupInstructions,
+courtesy of Andreas, a.k.a. groen.
+
+In brief:
+
 1. Install Java 8 JDK
 2. Install Intellij IDEA
 3. Navigate to this directory on the command line

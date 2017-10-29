@@ -29,7 +29,7 @@ public class ArenaDisplay extends JPanel {
             clipToField(ZoneDefinitions.ORANGEBOX)
     };
     public static final Color REAL_BALL_COLOR = new Color(177, 177, 177);
-    private static final Color PREDICTED_BALL_COLOR = new Color(239, 227, 208);
+    private static final Color PREDICTED_BALL_COLOR = new Color(186, 164, 55, 100);
     public static final double NATURAL_WIDTH = 300;
     public static final int CAR_LENGTH = 4;
     public static final int CAR_WIDTH = 2;
@@ -44,8 +44,8 @@ public class ArenaDisplay extends JPanel {
     public static final Color BLUE_COLOR = new Color(84, 164, 213);
     public static final Color ORANGE_COLOR = new Color(247, 151, 66);
 
-    private CarData orangeCar;
-    private CarData blueCar;
+    private Optional<CarData> orangeCar;
+    private Optional<CarData> blueCar;
     private CarData myCar;
     private Vector3 ball;
     private Vector3 ballPrediction = new Vector3();
@@ -95,11 +95,11 @@ public class ArenaDisplay extends JPanel {
 
         graphics2D.setStroke(new BasicStroke(0));
 
-        drawCar(orangeCar, graphics2D);
-        drawCar(blueCar, graphics2D);
+        orangeCar.ifPresent(c -> drawCar(c, graphics2D));
+        blueCar.ifPresent(c -> drawCar(c, graphics2D));
 
-        drawBall(ballPrediction, graphics2D, PREDICTED_BALL_COLOR);
         drawBall(ball, graphics2D, REAL_BALL_COLOR);
+        drawBall(ballPrediction, graphics2D, PREDICTED_BALL_COLOR);
 
     }
 

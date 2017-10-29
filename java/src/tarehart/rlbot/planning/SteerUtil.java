@@ -28,14 +28,14 @@ public class SteerUtil {
 
         LocalDateTime searchStart = carData.time;
 
-        double groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.getStartPoint());
+        double groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.getStartPoint().space.z, ballPath.getStartPoint().velocity.z);
 
         if (groundBounceEnergy < 50) {
             return Optional.empty();
         }
 
         for (int i = 0; i < 3; i++) {
-            Optional<SpaceTimeVelocity> landingOption = ballPath.getLanding(searchStart);
+            Optional<BallSlice> landingOption = ballPath.getLanding(searchStart);
 
             if (landingOption.isPresent()) {
                 SpaceTime landing = landingOption.get().toSpaceTime();
@@ -56,7 +56,7 @@ public class SteerUtil {
 
         LocalDateTime searchStart = carData.time;
 
-        Optional<SpaceTimeVelocity> landingOption = ballPath.getPlaneBreak(searchStart, new Plane(new Vector3(0, 0, height), new Vector3(0, 0, 1)), true);
+        Optional<BallSlice> landingOption = ballPath.getPlaneBreak(searchStart, new Plane(new Vector3(0, 0, height), new Vector3(0, 0, 1)), true);
 
         if (landingOption.isPresent()) {
             SpaceTime landing = landingOption.get().toSpaceTime();
@@ -123,7 +123,7 @@ public class SteerUtil {
 
         Vector3 myPosition = carData.position;
 
-        for (SpaceTimeVelocity ballMoment: ballPath.getSlices()) {
+        for (BallSlice ballMoment: ballPath.getSlices()) {
             SpaceTime intercept = new SpaceTime(ballMoment.space.plus(interceptModifier), ballMoment.getTime());
             Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterStrike(carData, intercept, strikeProfile);
             if (motionAt.isPresent()) {

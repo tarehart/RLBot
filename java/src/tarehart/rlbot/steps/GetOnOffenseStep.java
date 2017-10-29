@@ -5,7 +5,7 @@ import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
@@ -49,7 +49,7 @@ public class GetOnOffenseStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(2));
 
         Vector3 target = input.ballPosition;
-        SpaceTimeVelocity futureMotion = ballPath.getMotionAt(input.time.plusSeconds(2)).get();
+        BallSlice futureMotion = ballPath.getMotionAt(input.time.plusSeconds(2)).get();
         if (input.ballVelocity.y * (enemyGoal.getCenter().y - input.ballPosition.y) < 0) {
             // if ball is rolling away from the enemy goal
             target = futureMotion.getSpace();

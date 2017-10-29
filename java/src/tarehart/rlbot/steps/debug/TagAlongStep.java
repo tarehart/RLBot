@@ -31,7 +31,13 @@ public class TagAlongStep implements Step {
         }
 
         CarData car = input.getMyCarData();
-        CarData enemyCar = input.getEnemyCarData();
+        Optional<CarData> enemyCarOption = input.getEnemyCarData();
+        if (!enemyCarOption.isPresent()) {
+            return Optional.empty();
+        }
+
+        CarData enemyCar = enemyCarOption.get();
+
         DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost, 0);
 
         Vector2 waypoint = enemyCar.position.plus(enemyCar.orientation.rightVector.scaled(4)).flatten();

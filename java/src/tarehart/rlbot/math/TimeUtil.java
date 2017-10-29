@@ -10,7 +10,7 @@ public class TimeUtil {
     }
 
     public static Duration toDuration(double seconds) {
-        return Duration.ofMillis((long) (seconds * 1000));
+        return Duration.ofNanos(Math.round(seconds * 1E9));
     }
 
     public static double toSeconds(Duration duration) {

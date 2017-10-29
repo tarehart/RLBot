@@ -6,7 +6,7 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
@@ -38,13 +38,13 @@ public class CarryStep implements Step {
 
         BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(2));
 
-        Optional<SpaceTimeVelocity> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
+        Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
         if (motionAfterWallBounce.isPresent() && Duration.between(input.time, motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
             return Optional.empty(); // The dribble step is not in the business of wall reads.
         }
 
         Vector2 futureBallPosition;
-        SpaceTimeVelocity ballFuture = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(leadSeconds))).get();
+        BallSlice ballFuture = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(leadSeconds))).get();
         futureBallPosition = ballFuture.getSpace().flatten();
 
 

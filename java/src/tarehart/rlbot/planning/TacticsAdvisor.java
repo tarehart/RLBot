@@ -6,7 +6,7 @@ import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
@@ -159,9 +159,9 @@ public class TacticsAdvisor {
         Optional<SpaceTime> enemyIntercept = getEnemyIntercept(input, ballPath);
         Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
         CarData myCar = input.getMyCarData();
-        CarData opponentCar = input.getEnemyCarData();
+        Optional<CarData> opponentCar = input.getEnemyCarData();
 
-        SpaceTimeVelocity futureBallMotion = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(LOOKAHEAD_SECONDS))).orElse(ballPath.getEndpoint());
+        BallSlice futureBallMotion = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(LOOKAHEAD_SECONDS))).orElse(ballPath.getEndpoint());
 
         TacticalSituation situation = new TacticalSituation();
         situation.expectedEnemyContact = enemyIntercept.orElse(ballPath.getEndpoint().toSpaceTime());
@@ -176,7 +176,7 @@ public class TacticsAdvisor {
         situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath);
         situation.shotOnGoalAvailable = GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(input.team), ballPath) &&
                 myCar.position.distance(input.ballPosition) < 80;
-        situation.forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition);
+        situation.forceDefensivePosture = opponentCar.map(c -> getForceDefensivePosture(input.team, myCar, c, input.ballPosition)).orElse(false);
         situation.goForKickoff = getGoForKickoff(zonePlan, input.team);
         situation.waitToClear = getWaitToClear(zonePlan, input);
 
@@ -186,7 +186,7 @@ public class TacticsAdvisor {
         return situation;
     }
 
-    private double getDistanceFromEnemyCorner(SpaceTimeVelocity futureBallMotion, double enemyGoalY) {
+    private double getDistanceFromEnemyCorner(BallSlice futureBallMotion, double enemyGoalY) {
         Vector2 positiveCorner = ArenaModel.CORNER_ANGLE_CENTER;
         double goalSign = Math.signum(enemyGoalY);
 
@@ -199,9 +199,7 @@ public class TacticsAdvisor {
     }
 
     private Optional<SpaceTime> getEnemyIntercept(AgentInput input, BallPath ballPath) {
-
-        CarData enemyCar = input.getEnemyCarData();
-        return SteerUtil.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost);
+        return input.getEnemyCarData().flatMap(c -> SteerUtil.getInterceptOpportunityAssumingMaxAccel(c, ballPath, c.boost));
     }
 
     private boolean getForceDefensivePosture(Bot.Team team, CarData myCar, CarData opponentCar, Vector3 ballPosition) {
@@ -230,7 +228,7 @@ public class TacticsAdvisor {
     private boolean getWaitToClear(Optional<ZonePlan> zonePlan, AgentInput input) {
         Vector3 myGoalLocation = GoalUtil.getOwnGoal(input.team).getCenter();
         double myBallDistance = input.ballPosition.distance(input.getMyCarData().position);
-        double enemyBallDistance = input.ballPosition.distance(input.getEnemyCarData().position);
+        double enemyBallDistance = input.getEnemyCarData().map(c -> input.ballPosition.distance(c.position)).orElse(Double.MAX_VALUE);
         double ballDistanceToGoal = input.ballPosition.distance(myGoalLocation);
         double myDistanceToGoal = input.getMyCarData().position.distance(myGoalLocation);
         //double enemyDistanceToGoal = input.getEnemyCarData().position.distance(myGoalLocation);
@@ -252,7 +250,12 @@ public class TacticsAdvisor {
 
     private double measureEnemyApproachError(AgentInput input, SpaceTime enemyContact) {
 
-        CarData enemyCar = input.getEnemyCarData();
+        Optional<CarData> enemyCarData = input.getEnemyCarData();
+        if (!enemyCarData.isPresent()) {
+            return 0;
+        }
+
+        CarData enemyCar = enemyCarData.get();
         Goal myGoal = GoalUtil.getOwnGoal(input.team);
         Vector3 ballToGoal = myGoal.getCenter().minus(enemyContact.space);
 
