@@ -23,8 +23,6 @@ public abstract class Bot {
     private String previousSituation = null;
     ZonePlan previousZonePlan = null;
 
-    private ArenaModel arenaModel;
-
     public enum Team {
         BLUE,
         ORANGE
@@ -33,15 +31,12 @@ public abstract class Bot {
     public Bot(Team team) {
         this.team = team;
         readout = new Readout();
-        arenaModel = new ArenaModel();
     }
 
 
     public AgentOutput processInput(AgentInput input) {
 
-        // Just for now, always calculate ballpath so we can learn some stuff.
-        BallSlice startingSlice = new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin);
-        BallPath ballPath = arenaModel.simulateBall(startingSlice, Duration.ofSeconds(5));
+        BallPath ballPath = ArenaModel.predictBallPath(input, 5);
         BallTelemetry.setPath(ballPath, input.team);
         ZonePlan zonePlan = new ZonePlan(input);
         ZoneTelemetry.set(zonePlan, input.team);

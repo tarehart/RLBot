@@ -44,7 +44,6 @@ public class ArenaModel {
     public static final float BALL_RESTITUTION = .6f;
     public static final float BALL_FRICTION_PER_VEL = 850;
     public static final int STEPS_PER_SECOND = 10;
-    private static final int STEPS_PER_SECOND_HIGH_RES = 50;
     public static final float MOMENT_OF_INERTIA_BONUS = 1.5f;
 
     private DWorld world;
@@ -52,14 +51,15 @@ public class ArenaModel {
     private DSphere ball;
     private final DJointGroup contactgroup;
 
-    private static Map<Bot.Team, ArenaModel> modelMap = new HashMap<>();
+    private static final Map<Bot.Team, ArenaModel> modelMap = new HashMap<>();
+
+    private static final Object lock = new Object();
 
     static {
         OdeHelper.initODE2(0);
     }
 
-
-    public ArenaModel() {
+    private ArenaModel() {
 
         world = OdeHelper.createWorld();
         space = OdeHelper.createSimpleSpace();
@@ -261,20 +261,14 @@ public class ArenaModel {
         return ballPath;
     }
 
-    public BallPath simulateBall(BallSlice start, LocalDateTime endTime) {
-        BallPath ballPath = new BallPath(start);
-        simulateBall(ballPath, endTime);
-        return ballPath;
-    }
-
-    public void extendSimulation(BallPath ballPath, LocalDateTime endTime) {
+    private void extendSimulation(BallPath ballPath, LocalDateTime endTime) {
         simulateBall(ballPath, endTime);
     }
 
     private void simulateBall(BallPath ballPath, LocalDateTime endTime) {
         BallSlice start = ballPath.getEndpoint();
-        LocalDateTime simulationTime = LocalDateTime.from(start.getTime());
-        if (simulationTime.isAfter(endTime)) {
+
+        if (start.getTime().isAfter(endTime)) {
             return;
         }
 
@@ -284,16 +278,19 @@ public class ArenaModel {
         ball.getBody().setPosition(toV3f(start.getSpace()));
 
         // Do some simulation
+        runSimulation(ballPath, start.getTime(), endTime);
+    }
+
+    private void runSimulation(BallPath ballPath, LocalDateTime startTime, LocalDateTime endTime) {
+        LocalDateTime simulationTime = LocalDateTime.from(startTime);
+
         while (simulationTime.isBefore(endTime)) {
-            float stepsPerSecond = STEPS_PER_SECOND;
-            if (simulationTime.isBefore(start.getTime().plusSeconds(1))) {
-                stepsPerSecond = STEPS_PER_SECOND_HIGH_RES;
+            float stepSize = 1.0f / STEPS_PER_SECOND;
+
+            synchronized (lock) {
+                space.collide(null, nearCallback);
+                world.step(stepSize);
             }
-
-            float stepSize = 1 / stepsPerSecond;
-
-            space.collide (null, nearCallback);
-            world.step(stepSize);
             contactgroup.empty();
 
             simulationTime = simulationTime.plus(TimeUtil.toDuration(stepSize));

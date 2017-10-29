@@ -1,6 +1,7 @@
 package tarehart.rlbot.tuning;
 
 import com.google.gson.Gson;
+import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import org.junit.Assert;
@@ -98,7 +99,8 @@ public class PredictedVsActualTest {
     }
 
     private BallPath makePrediction(BallPath backWallActual) {
-        return arenaModel.simulateBall(backWallActual.getStartPoint(), backWallActual.getEndpoint().getTime());
+        Duration duration = Duration.between(backWallActual.getStartPoint().getTime(), backWallActual.getEndpoint().getTime());
+        return arenaModel.simulateBall(backWallActual.getStartPoint(), duration);
     }
 
 }
