@@ -33,7 +33,7 @@ public class ArenaModel {
     private static final int WALL_THICKNESS = 10;
     private static final int WALL_LENGTH = 400;
     public static final float GRAVITY = 13f;
-    public static final float BALL_DRAG = .00063f;
+    public static final float BALL_DRAG = .0015f;
     public static final float BALL_RADIUS = 1.8555f;
 
     public static final Vector2 CORNER_ANGLE_CENTER = new Vector2(70.5, 90.2);
@@ -42,9 +42,8 @@ public class ArenaModel {
     // Higher = more diagonal showing.
     public static final float RAIL_HEIGHT = 2.5f;
     public static final float BALL_RESTITUTION = .6f;
-    public static final float BALL_FRICTION_PER_VEL = 850;
-    public static final int STEPS_PER_SECOND = 10;
-    public static final float MOMENT_OF_INERTIA_BONUS = 1.5f;
+    public static final int STEPS_PER_SECOND = 20;
+    public static final float MOMENT_OF_INERTIA_BONUS = 1.45f;
 
     private DWorld world;
     private DSpace space;
@@ -59,7 +58,11 @@ public class ArenaModel {
         OdeHelper.initODE2(0);
     }
 
-    private ArenaModel() {
+    private static double getFriction(double normalSpeed) {
+        return Math.max(0, 460 * normalSpeed);
+    }
+
+    public ArenaModel() {
 
         world = OdeHelper.createWorld();
         space = OdeHelper.createSimpleSpace();
@@ -79,6 +82,7 @@ public class ArenaModel {
         mass.setSphere(1, BALL_RADIUS * MOMENT_OF_INERTIA_BONUS); // Huge moment of inertia
         body.setMass(mass);
         sphere.setBody(body);
+        body.setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
 
         return sphere;
     }
@@ -101,19 +105,41 @@ public class ArenaModel {
         DBody b1 = o1.getBody();
         DBody b2 = o2.getBody();
 
-        DContactBuffer contacts = new DContactBuffer(3);
-        int numContacts = OdeHelper.collide(o1, o2,3, contacts.getGeomBuffer());
+        DContactBuffer contacts = new DContactBuffer(1);
+        int numContacts = OdeHelper.collide(o1, o2,1, contacts.getGeomBuffer());
         for (int i = 0; i < numContacts; i++) {
 
             DContact c = contacts.get(i);
 
             Vector3 normal = toV3(c.getContactGeom().normal);
             Vector3 velocity = toV3(ball.getBody().getLinearVel());
-            Vector3 velAlongNormal = VectorUtil.project(velocity, normal);
 
+            if (normal.dotProduct(velocity) < 0) {
+                // Ball has already bounced, so don't bother creating a joint.
+                return;
+            }
+
+            // The depth of the contact affects the moment of inertia.
+            // For example, if the ball penetrates the wall a lot, almost to a whole radius,
+            // the ball won't be able to spin because there's extremely low torque.
+
+            // To combat this, move the ball to the surface manually.
+            // ball position += collision normal * depth * -1
+            Vector3 positionModifier = normal.scaled(c.geom.depth * -1);
+            ball.setPosition(ball.getPosition().clone().add(toV3f(positionModifier)));
+
+            c.geom.depth = 0;
             c.surface.mode = OdeConstants.dContactBounce;
-            c.surface.mu = BALL_FRICTION_PER_VEL * velAlongNormal.magnitude();
             c.surface.bounce = BALL_RESTITUTION;
+
+            Vector3 velocityAlongSurface = velocity.projectToPlane(normal);
+            if (!velocityAlongSurface.isZero()) {
+                c.surface.mode |= OdeConstants.dContactFDir1;
+                c.fdir1.set(toV3f(velocityAlongSurface.normaliseCopy()));
+            }
+
+            Vector3 velAlongNormal = VectorUtil.project(velocity, normal);
+            c.surface.mu = getFriction(velAlongNormal.magnitude());
 
             DJoint joint = OdeHelper.createContactJoint(world, contactgroup, contacts.get(i));
             joint.attach(b1, b2);
@@ -297,12 +323,6 @@ public class ArenaModel {
             Vector3 ballVelocity = getBallVelocity();
             Vector3 ballSpin = getBallSpin();
             ballPath.addSlice(new BallSlice(getBallPosition(), simulationTime, ballVelocity, ballSpin));
-            double speed = ballVelocity.magnitude();
-            if (speed < 10) {
-                ball.getBody().setDamping(0, BALL_ANGULAR_DAMPING);
-            } else {
-                ball.getBody().setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
-            }
         }
     }
 

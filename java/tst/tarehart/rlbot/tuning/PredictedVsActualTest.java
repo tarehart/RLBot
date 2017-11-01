@@ -21,7 +21,7 @@ import java.util.Scanner;
 public class PredictedVsActualTest {
 
 
-    private static final double THRESHOLD = 2;
+    private static final double THRESHOLD = 4;
     private ArenaModel arenaModel = new ArenaModel();
 
 
@@ -37,6 +37,11 @@ public class PredictedVsActualTest {
     @Test
     public void spinlessBackwall() throws UnsupportedEncodingException {
         testFile("spinless-backwall.json");
+    }
+
+    @Test
+    public void spinlessGround() throws UnsupportedEncodingException {
+        testFile("spinless-ground.json");
     }
 
     private void testFile(String filename) throws UnsupportedEncodingException {

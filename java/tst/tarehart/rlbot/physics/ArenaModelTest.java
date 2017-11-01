@@ -199,4 +199,48 @@ public class ArenaModelTest {
         Assert.assertTrue(ballPath.getEndpoint().space.y < -1);
     }
 
+    @Test
+    public void testWeirdWallBounce() {
+        ArenaModel model = new ArenaModel();
+        BallSlice start = new BallSlice(
+                new Vector3(19.289791259765625, 77.3377392578125, 7.899403686523438),
+                LocalDateTime.now(),
+                new Vector3(-7.487739868164063, 53.29123046875, 35.5840673828125),
+                new Vector3(0, 0, 0));
+
+        BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(1));
+        System.out.println(ballPath.getEndpoint());
+    }
+
+
+
+    @Test
+    public void testWeirdPartner() {
+        ArenaModel model = new ArenaModel();
+        BallSlice start = new BallSlice(
+                new Vector3(2.2704116821289064, 90.6794921875, 22.1680859375),
+                LocalDateTime.now(),
+                new Vector3(2.068851318359375, 46.4755908203125, 13.106075439453125),
+                new Vector3(0, 0, 0));
+
+        BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(1));
+        System.out.println(ballPath.getEndpoint());
+    }
+
+    @Test
+    public void testNormalPartner() {
+        ArenaModel model = new ArenaModel();
+        BallSlice start = new BallSlice(
+                new Vector3(2.3037684631347655, 91.428837890625, 22.3768359375),
+                LocalDateTime.now(),
+                new Vector3(2.0678350830078127, 46.452763671875, 12.889981689453125),
+                new Vector3(0, 0, 0));
+
+        BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(1));
+        System.out.println(ballPath.getEndpoint());
+    }
+
+
+
+
 }

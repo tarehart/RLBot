@@ -85,4 +85,11 @@ public class Vector2 {
     public static double angle(Vector2 a, Vector2 b) {
         return Math.abs(a.correctionAngle(b));
     }
+
+    @Override
+    public String toString() {
+        return "(" + String.format("%.2f", x)
+                + ", " + String.format("%.2f", y)
+                + ")";
+    }
 }

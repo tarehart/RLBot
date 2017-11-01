@@ -118,7 +118,7 @@ public class AccelerationModel {
 
         while (secondsSoFar < secondsToSimulate) {
 
-            double acceleration = boostRemaining > 0 ? car.orientation.noseVector.flatten().magnitude() * INCREMENTAL_BOOST_ACCELERATION : 0;
+            double acceleration = boostRemaining > 0 ? car.orientation.noseVector.flatten().magnitude() * INCREMENTAL_BOOST_ACCELERATION * 1.1 : 0;
             currentSpeed += acceleration * TIME_STEP;
             if (currentSpeed > SUPERSONIC_SPEED) {
                 currentSpeed = SUPERSONIC_SPEED;

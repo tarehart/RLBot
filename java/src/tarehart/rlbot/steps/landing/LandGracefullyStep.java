@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.landing;
 
+import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
@@ -18,6 +19,7 @@ import tarehart.rlbot.steps.wall.WallTouchStep;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Vector;
 import java.util.function.Function;
 
 public class LandGracefullyStep implements Step {
@@ -82,7 +84,8 @@ public class LandGracefullyStep implements Step {
     }
 
     private static Vector3 getFacingPlane(Vector2 desiredFacing) {
-        return new Vector3(-desiredFacing.y, -desiredFacing.x, 0);
+        Vector2 rightward = VectorUtil.rotateVector(desiredFacing, -Math.PI / 2);
+        return new Vector3(rightward.x, rightward.y, 0);
     }
 
     @Override

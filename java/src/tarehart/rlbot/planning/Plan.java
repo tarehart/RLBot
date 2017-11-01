@@ -33,6 +33,7 @@ public class Plan {
         SAVE(10),
         LANDING(15),
         KICKOFF(50),
+        MENU(75),
         OVERRIDE(100);
 
         private int urgency;

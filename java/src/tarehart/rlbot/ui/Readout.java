@@ -113,9 +113,10 @@ public class Readout {
             if (ballPath != null) {
                 Optional<BallSlice> predictionSpace = ballPath.getMotionAt(predictionTime);
                 if (predictionSpace.isPresent()) {
-                    BallPrediction prediction = new BallPrediction(predictionSpace.get().getSpace(), predictionTime);
+                    BallPrediction prediction = new BallPrediction(predictionSpace.get().getSpace(), predictionTime, ballPath);
                     warehouse.addPrediction(prediction);
                 }
+                previousTime = input.time;
             }
         }
     }

@@ -28,6 +28,7 @@ public class AgentInput {
     public final Vector3 ballSpin;
     public LocalDateTime time;
     public List<FullBoost> fullBoosts = new ArrayList<>(6);
+    public final MatchInfo matchInfo;
 
     public static final int UROT_IN_SEMICIRCLE = 32768;
     public static final double RADIANS_PER_UROT = Math.PI / UROT_IN_SEMICIRCLE;
@@ -35,6 +36,7 @@ public class AgentInput {
 
     public AgentInput(PyGameTickPacket gameTickPacket, Bot.Team team, Chronometer chronometer, SpinTracker spinTracker, long frameCount) {
 
+        this.matchInfo = getMatchInfo(gameTickPacket.gameInfo);
         this.frameCount = frameCount;
 
         PyVector3 angVel = gameTickPacket.gameball.AngularVelocity;
@@ -80,6 +82,15 @@ public class AgentInput {
             confirmedLocation.ifPresent(loc -> fullBoosts.add(new FullBoost(loc, boostInfo.bActive,
                     boostInfo.bActive ? LocalDateTime.from(time) : time.plus(Duration.ofMillis(boostInfo.Timer)))));
         }
+    }
+
+    private MatchInfo getMatchInfo(PyGameInfo gameInfo) {
+        MatchInfo mi = new MatchInfo();
+        mi.matchEnded = gameInfo.bMatchEnded;
+        mi.overTime = gameInfo.bOverTime;
+        mi.roundActive = gameInfo.bRoundActive;
+        mi.timeRemaining = TimeUtil.toDuration(gameInfo.GameTimeRemaining);
+        return mi;
     }
 
     private CarData convert(PyCarInfo pyCar, Bot.Team team, SpinTracker spinTracker, double elapsedSeconds, long frameCount) {

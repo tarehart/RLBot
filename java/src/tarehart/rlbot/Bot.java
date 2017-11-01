@@ -4,6 +4,7 @@ import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.tuning.BallRecorder;
 import tarehart.rlbot.tuning.BallTelemetry;
 import tarehart.rlbot.tuning.BotLog;
@@ -36,20 +37,32 @@ public abstract class Bot {
 
     public AgentOutput processInput(AgentInput input) {
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, 5);
-        BallTelemetry.setPath(ballPath, input.team);
-        ZonePlan zonePlan = new ZonePlan(input);
-        ZoneTelemetry.set(zonePlan, input.team);
+        final AgentOutput output;
+
+        if (input.matchInfo.matchEnded) {
+            currentPlan = new Plan(Plan.Posture.MENU);
+            output = new AgentOutput();
+        } else {
+            BallPath ballPath = ArenaModel.predictBallPath(input, 5);
+            BallTelemetry.setPath(ballPath, input.team);
+            ZonePlan zonePlan = new ZonePlan(input);
+            ZoneTelemetry.set(zonePlan, input.team);
 
 //        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
-//        Optional<BallSlice> afterBounce = ballPath.getMotionAfterWallBounce(1);
-//        // Just for data gathering / debugging.
-//        afterBounce.ifPresent(stv -> BallRecorder.startRecording(
-//                new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin),
-//                stv.getTime().plusSeconds(1)));
+//        if (input.ballVelocity.magnitudeSquared() > 0) {
+//            Optional<BallSlice> afterBounce = ballPath.getMotionAfterWallBounce(1);
+//            // Just for data gathering / debugging.
+//            afterBounce.ifPresent(stv -> BallRecorder.startRecording(
+//                    new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin),
+//                    stv.getTime().plusSeconds(1)));
+//        }
 
-
-        AgentOutput output = getOutput(input);
+            if (input.matchInfo.roundActive) {
+                output = getOutput(input);
+            } else {
+                output = new AgentOutput();
+            }
+        }
 
         Plan.Posture posture = currentPlan != null ? currentPlan.getPosture() : Plan.Posture.NEUTRAL;
         String situation = currentPlan != null ? currentPlan.getSituation() : "";
@@ -57,7 +70,8 @@ public abstract class Bot {
             BotLog.println("[Sitch] " + situation, input.team);
         }
         previousSituation = situation;
-        readout.update(input, posture, situation, BotLog.collect(input.team), BallTelemetry.getPath(input.team).get());
+        Optional<BallPath> finalBallPath = BallTelemetry.getPath(input.team);
+        finalBallPath.ifPresent(ballPath -> readout.update(input, posture, situation, BotLog.collect(input.team), ballPath));
         BallTelemetry.reset(input.team);
 
         return output;

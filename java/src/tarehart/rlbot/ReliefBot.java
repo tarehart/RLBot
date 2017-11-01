@@ -5,6 +5,7 @@ import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.GoForKickoffStep;
 import tarehart.rlbot.steps.defense.GetOnDefenseStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
