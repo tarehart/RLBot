@@ -52,7 +52,6 @@ public class GoForKickoffStep implements Step {
         double distance = car.position.magnitude();
         if (distance < 14) {
             plan = SetPieces.frontFlip();
-            plan.begin();
             return plan.getOutput(input);
         }
 
@@ -93,15 +92,6 @@ public class GoForKickoffStep implements Step {
 
     private static double getNumberDistance(double first, double second){
         return Math.abs(first - second);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override

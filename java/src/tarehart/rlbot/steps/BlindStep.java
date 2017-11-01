@@ -29,15 +29,6 @@ public class BlindStep implements Step {
     }
 
     @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-    }
-
-    @Override
     public String getSituation() {
         return "Muscle memory";
     }

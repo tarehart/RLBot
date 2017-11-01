@@ -8,12 +8,9 @@ import java.util.Optional;
 
 public class IdealDirectedHitStep implements Step {
 
-    private final KickStrategy kickStrategy;
     private Step proxyStep;
 
     public IdealDirectedHitStep(KickStrategy kickStrategy, AgentInput input) {
-        this.kickStrategy = kickStrategy;
-
         DirectedNoseHitStep noseHit = new DirectedNoseHitStep(kickStrategy);
 
         if (noseHit.getOutput(input).isPresent() && Math.abs(noseHit.getEstimatedAngleOfKickFromApproach()) < Math.PI / 2) {
@@ -26,16 +23,6 @@ public class IdealDirectedHitStep implements Step {
     @Override
     public Optional<AgentOutput> getOutput(AgentInput input) {
         return proxyStep.getOutput(input);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return proxyStep.isBlindlyComplete();
-    }
-
-    @Override
-    public void begin() {
-
     }
 
     @Override

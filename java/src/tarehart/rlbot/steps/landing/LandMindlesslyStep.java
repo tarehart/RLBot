@@ -28,15 +28,6 @@ public class LandMindlesslyStep implements Step {
     }
 
     @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-    }
-
-    @Override
     public boolean canInterrupt() {
         return false;
     }

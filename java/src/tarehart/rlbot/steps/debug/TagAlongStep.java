@@ -48,21 +48,10 @@ public class TagAlongStep implements Step {
         if (sensibleFlip.isPresent()) {
             BotLog.println("Front flip toward tag along", input.team);
             this.plan = sensibleFlip.get();
-            this.plan.begin();
             return this.plan.getOutput(input);
         }
 
         return Optional.of(steerPlan.immediateSteer);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-
     }
 
     @Override

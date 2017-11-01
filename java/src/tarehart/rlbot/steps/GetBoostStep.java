@@ -71,7 +71,6 @@ public class GetBoostStep implements Step {
             if (sensibleFlip.isPresent()) {
                 BotLog.println("Flipping toward boost", input.team);
                 plan = sensibleFlip.get();
-                plan.begin();
                 return plan.getOutput(input);
             }
 
@@ -121,16 +120,6 @@ public class GetBoostStep implements Step {
             }
         }
         return location;
-    }
-
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     public static boolean seesOpportunisticBoost(CarData carData, List<FullBoost> boosts) {

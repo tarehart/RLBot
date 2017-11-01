@@ -16,7 +16,6 @@ import java.util.Optional;
 
 public class CatchBallStep implements Step {
 
-    private boolean isComplete = false;
     private int confusionLevel = 0;
     private SpaceTime latestCatchLocation;
     private boolean firstFrame = true;
@@ -37,8 +36,7 @@ public class CatchBallStep implements Step {
         double distance = car.position.distance(input.ballPosition);
 
         if (distance < 2.5 || confusionLevel > 3) {
-            isComplete = true;
-            // We'll still get one last frame out output though
+            return Optional.empty();
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(3));
@@ -62,15 +60,6 @@ public class CatchBallStep implements Step {
         Vector3 target = catchLocation.space.plus(offset);
 
         return SteerUtil.getThereOnTime(car, new SpaceTime(target, catchLocation.time));
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return isComplete;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override

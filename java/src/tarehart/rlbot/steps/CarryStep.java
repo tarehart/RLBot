@@ -140,15 +140,6 @@ public class CarryStep implements Step {
     }
 
     @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-    }
-
-    @Override
     public String getSituation() {
         return "Carrying";
     }

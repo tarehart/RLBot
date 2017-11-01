@@ -110,7 +110,6 @@ public class DribbleStep implements Step {
                 dribble.withAcceleration(1).withBoost();
             } else {
                 plan = SetPieces.frontFlip();
-                plan.begin();
                 return plan.getOutput(input);
             }
         }
@@ -161,15 +160,6 @@ public class DribbleStep implements Step {
         }
 
         return true;
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override

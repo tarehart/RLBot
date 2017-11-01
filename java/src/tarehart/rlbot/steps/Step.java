@@ -13,13 +13,6 @@ public interface Step {
      */
     Optional<AgentOutput> getOutput(AgentInput input);
 
-    /**
-     * Return true if you know that you're complete without even looking at the input.
-     */
-    boolean isBlindlyComplete();
-
-    void begin();
-
     // Describes very briefly what's going on, for UI display
     String getSituation();
 

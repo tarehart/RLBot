@@ -145,7 +145,6 @@ public class DirectedSideHitStep implements Step {
             // Time to launch!
             double strikeForceCorrection = DirectedKickUtil.getAngleOfKickFromApproach(car, kickPlan);
             plan = SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime);
-            plan.begin();
             return plan.getOutput(input);
         } else {
             BotLog.println(String.format("Side flip soon. Distance: %.2f", distance), input.team);
@@ -165,22 +164,11 @@ public class DirectedSideHitStep implements Step {
             if (sensibleFlip.isPresent()) {
                 BotLog.println("Front flip toward side hit", input.team);
                 this.plan = sensibleFlip.get();
-                this.plan.begin();
                 return this.plan.getOutput(input);
             }
         }
 
         return Optional.of(circleTurnOption.immediateSteer);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-
     }
 
     @Override

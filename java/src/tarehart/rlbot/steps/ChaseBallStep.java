@@ -40,14 +40,12 @@ public class ChaseBallStep implements Step {
         if (input.getEnemyCarData().map(c -> c.position.distance(input.ballPosition)).orElse(Double.MAX_VALUE) > 50) {
             if (car.boost < 10 && GetBoostStep.seesOpportunisticBoost(car, input.fullBoosts)) {
                 plan = new Plan().withStep(new GetBoostStep());
-                plan.begin();
                 return plan.getOutput(input);
             }
 
             Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car));
             if (catchOpportunity.isPresent()) {
                 plan = new Plan().withStep(new CatchBallStep(catchOpportunity.get())).withStep(new DribbleStep());
-                plan.begin();
                 return plan.getOutput(input);
             }
         }
@@ -56,20 +54,10 @@ public class ChaseBallStep implements Step {
         Optional<AgentOutput> output = interceptStep.getOutput(input);
         if (output.isPresent()) {
             plan = new Plan().withStep(interceptStep);
-            plan.begin();
             return output;
         }
 
         return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.ballPosition));
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override

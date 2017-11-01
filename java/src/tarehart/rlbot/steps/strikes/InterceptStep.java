@@ -64,7 +64,6 @@ public class InterceptStep implements Step {
         if (launchPlan.isPresent()) {
             plan = launchPlan.get();
             plan.unstoppable();
-            plan.begin();
             return plan.getOutput(input);
         }
 
@@ -134,7 +133,6 @@ public class InterceptStep implements Step {
         if (sensibleFlip.isPresent()) {
             BotLog.println("Front flip toward intercept", input.team);
             this.plan = sensibleFlip.get();
-            this.plan.begin();
             flipOut = this.plan.getOutput(input);
         }
 
@@ -155,16 +153,6 @@ public class InterceptStep implements Step {
             output.withBoost(false);
         }
         return output;
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-
     }
 
     @Override

@@ -122,7 +122,6 @@ public class DirectedNoseHitStep implements Step {
         if (carPositionAtIntercept.z > 2 && Math.abs(estimatedAngleOfKickFromApproach) < Math.PI / 12 && Math.abs(rendezvousCorrection) < Math.PI / 12) {
 
             plan = new Plan().withStep(new InterceptStep(interceptModifier));
-            plan.begin();
             return plan.getOutput(input);
         }
 
@@ -154,21 +153,10 @@ public class DirectedNoseHitStep implements Step {
         if (sensibleFlip.isPresent()) {
             BotLog.println("Front flip toward nose hit", input.team);
             this.plan = sensibleFlip.get();
-            this.plan.begin();
             return this.plan.getOutput(input);
         }
 
         return Optional.of(circleTurnOption.immediateSteer);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-
     }
 
     @Override

@@ -51,12 +51,10 @@ public class LandGracefullyStep implements Step {
 
             if (WallTouchStep.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(4)))) {
                 plan = new Plan().withStep(new WallTouchStep());
-                plan.begin();
                 return plan.getOutput(input);
             }
 
             plan = new Plan().withStep(new DescendFromWallStep());
-            plan.begin();
             return plan.getOutput(input);
         }
 
@@ -66,7 +64,6 @@ public class LandGracefullyStep implements Step {
 
         if (plan == null || plan.isComplete()) {
             plan = planRotation(car, facingFn, input.team);
-            plan.begin();
         }
 
         return plan.getOutput(input);
@@ -86,15 +83,6 @@ public class LandGracefullyStep implements Step {
     private static Vector3 getFacingPlane(Vector2 desiredFacing) {
         Vector2 rightward = VectorUtil.rotateVector(desiredFacing, -Math.PI / 2);
         return new Vector3(rightward.x, rightward.y, 0);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override

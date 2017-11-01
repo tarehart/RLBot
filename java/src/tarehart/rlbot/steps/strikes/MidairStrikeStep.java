@@ -67,7 +67,6 @@ public class MidairStrikeStep implements Step {
             if (confusionCount > 3) {
                 // Front flip out of confusion
                 plan = new Plan().withStep(new TapStep(2, new AgentOutput().withPitch(-1).withJump()));
-                plan.begin();
                 return plan.getOutput(input);
             }
             return Optional.of(new AgentOutput().withBoost());
@@ -86,13 +85,11 @@ public class MidairStrikeStep implements Step {
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD && car.velocity.normaliseCopy().z < .3) {
                 BotLog.println("Front flip strike", input.team);
                 plan = new Plan().withStep(new TapStep(2, new AgentOutput().withPitch(-1).withJump()));
-                plan.begin();
                 return plan.getOutput(input);
             } else {
                 // Dodge to the side
                 BotLog.println("Side flip strike", input.team);
                 plan = new Plan().withStep(new TapStep(2, new AgentOutput().withSteer(correctionAngleRad < 0 ? 1 : -1).withJump()));
-                plan.begin();
                 return plan.getOutput(input);
             }
         }
@@ -165,15 +162,6 @@ public class MidairStrikeStep implements Step {
     private Vector3 convertToVector3WithPitch(Vector2 flat, double zComponent) {
         double xyScaler = (1 - zComponent * zComponent) / (flat.x * flat.x + flat.y * flat.y);
         return new Vector3(flat.x * xyScaler, flat.y * xyScaler, zComponent);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override

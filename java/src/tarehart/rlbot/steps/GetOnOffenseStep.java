@@ -39,7 +39,6 @@ public class GetOnOffenseStep implements Step {
 
         if (car.boost < 10 && GetBoostStep.seesOpportunisticBoost(car, input.fullBoosts)) {
             plan = new Plan().withStep(new GetBoostStep());
-            plan.begin();
             return plan.getOutput(input);
         }
 
@@ -87,7 +86,6 @@ public class GetOnOffenseStep implements Step {
             if (sensibleFlip.isPresent()) {
                 BotLog.println("Front flip onto offense", input.team);
                 this.plan = sensibleFlip.get();
-                this.plan.begin();
                 return this.plan.getOutput(input);
             }
 
@@ -95,15 +93,6 @@ public class GetOnOffenseStep implements Step {
         }
 
         return Optional.of(SteerUtil.steerTowardGroundPosition(car, target));
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override

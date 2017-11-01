@@ -96,17 +96,6 @@ public class WallTouchStep implements Step {
         return tMinus < 0.1 && tMinus > -.4 && linedUp;
     }
 
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-
-    }
-
     @Override
     public boolean canInterrupt() {
         return true;

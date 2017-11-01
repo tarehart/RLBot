@@ -13,7 +13,6 @@ public class Plan {
     private boolean unstoppable;
     private ArrayList<Step> steps = new ArrayList<>();
     private int currentStepIndex = 0;
-    private boolean hasBegun = false;
     private boolean isComplete = false;
 
     public static String concatSituation(String baseSituation, Plan plan) {
@@ -70,16 +69,7 @@ public class Plan {
         return this;
     }
 
-    public void begin() {
-        hasBegun = true;
-        steps.get(currentStepIndex).begin();
-    }
-
     public Optional<AgentOutput> getOutput(AgentInput input) {
-
-        if (!hasBegun) {
-            throw new RuntimeException("Need to call begin on plan!");
-        }
 
         if (isComplete) {
             throw new RuntimeException("Plan is already complete!");
@@ -87,10 +77,6 @@ public class Plan {
 
         while (currentStepIndex < steps.size()) {
             Step currentStep = steps.get(currentStepIndex);
-            if (currentStep.isBlindlyComplete()) {
-                nextStep();
-                continue;
-            }
 
             Optional<AgentOutput> output = currentStep.getOutput(input);
             if (output.isPresent()) {
@@ -106,9 +92,6 @@ public class Plan {
 
     private void nextStep() {
         currentStepIndex++;
-        if (!isComplete()) {
-            steps.get(currentStepIndex).begin();
-        }
     }
 
     public String getSituation() {
@@ -119,14 +102,7 @@ public class Plan {
     }
 
     public boolean isComplete() {
-        if (isComplete || currentStepIndex >= steps.size()) {
-            return true;
-        } else if (currentStepIndex == steps.size() - 1 &&
-                steps.get(currentStepIndex).isBlindlyComplete()) {
-            isComplete = true;
-            return true;
-        }
-        return isComplete;
+        return isComplete || currentStepIndex >= steps.size();
     }
 
     public Posture getPosture() {

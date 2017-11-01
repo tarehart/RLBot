@@ -42,7 +42,6 @@ public class ReliefBot extends Bot {
             // (prevent own goals in "Disable Goal Reset" mode)
             if(!zonePlan.isPresent() || situation.goForKickoff) {
                 currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
-                currentPlan.begin();
             }
         }
 
@@ -51,7 +50,6 @@ public class ReliefBot extends Bot {
                 car.position.z > 5 &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
             currentPlan = new Plan(Plan.Posture.LANDING).withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
-            currentPlan.begin();
         }
 
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
@@ -73,7 +71,6 @@ public class ReliefBot extends Bot {
 
         if (currentPlan == null || currentPlan.isComplete()) {
             currentPlan = tacticsAdvisor.makePlan(input, situation);
-            currentPlan.begin();
         }
 
         if (currentPlan != null) {

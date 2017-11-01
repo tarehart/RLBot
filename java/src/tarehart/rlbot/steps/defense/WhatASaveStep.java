@@ -66,7 +66,6 @@ public class WhatASaveStep implements Step {
             if (Vector2.angle(car.orientation.noseVector.flatten(), carToIntercept.flatten()) < Math.PI / 12) {
 
                 plan = new Plan(Plan.Posture.SAVE).withStep(new InterceptStep(new Vector3(0, Math.signum(goal.getCenter().y) * 1.5, 0)));
-                plan.begin();
                 return plan.getOutput(input);
             } else {
                 return Optional.of(SteerUtil.steerTowardGroundPosition(car, intercept.space));
@@ -74,18 +73,7 @@ public class WhatASaveStep implements Step {
         }
 
         plan = new Plan().withStep(new DirectedSideHitStep(new KickAwayFromOwnGoal()));
-        plan.begin();
         return plan.getOutput(input);
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
-
     }
 
     @Override

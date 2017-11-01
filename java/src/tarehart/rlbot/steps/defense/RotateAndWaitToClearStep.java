@@ -62,20 +62,10 @@ public class RotateAndWaitToClearStep implements Step {
         if (sensibleFlip.isPresent()) {
             BotLog.println("Front flip for defense", input.team);
             plan = sensibleFlip.get();
-            plan.begin();
             return plan.getOutput(input);
         } else {
             return Optional.of(planForCircleTurn.immediateSteer);
         }
-    }
-
-    @Override
-    public boolean isBlindlyComplete() {
-        return false;
-    }
-
-    @Override
-    public void begin() {
     }
 
     @Override
