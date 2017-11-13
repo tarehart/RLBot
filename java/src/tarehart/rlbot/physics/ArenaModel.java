@@ -316,8 +316,8 @@ public class ArenaModel {
             synchronized (lock) {
                 space.collide(null, nearCallback);
                 world.step(stepSize);
+                contactgroup.empty();
             }
-            contactgroup.empty();
 
             simulationTime = simulationTime.plus(TimeUtil.toDuration(stepSize));
             Vector3 ballVelocity = getBallVelocity();

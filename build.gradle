@@ -2,15 +2,32 @@ apply plugin: 'idea'
 apply plugin: 'application'
 apply plugin: 'maven'
 
+
 repositories {
     mavenCentral()
 }
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.3"
+    }
+}
+
+apply plugin: 'com.google.protobuf'
+
+def grpcVersion = '1.7.0'
 
 dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
     compile group: 'net.sf.py4j', name: 'py4j', version: '0.10.6'
     compile group: 'org.ode4j', name: 'core', version: '0.3.1'
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
+    compile "io.grpc:grpc-netty:${grpcVersion}"
+    compile "io.grpc:grpc-protobuf:${grpcVersion}"
+    compile "io.grpc:grpc-stub:${grpcVersion}"
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
@@ -18,11 +35,19 @@ dependencies {
 
 sourceSets {
     main {
-        java.srcDirs = ['java/src']
+        proto.srcDirs = ['v3/grpcsupport/protobuf']
+        java.srcDirs = ['java/src', 'build/generated/source/proto/main/grpc', 'build/generated/source/proto/main/java']
     }
     test {
         java.srcDirs = ['java/tst']
         resources.srcDirs = ['java/resources/tst']
+    }
+}
+
+idea {
+    module {
+        generatedSourceDirs += file('build/generated/source/proto/main/grpc')
+        generatedSourceDirs += file('build/generated/source/proto/main/java')
     }
 }
 
@@ -32,3 +57,21 @@ applicationDistribution.from("$projectDir") {
     into 'README'
     include 'README_Tournament.md', 'ReliefBot.py'
 }
+
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.4.0"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+

@@ -7,8 +7,8 @@ import tarehart.rlbot.planning.SteerUtil;
 
 public class LatencyBot extends Bot {
 
-    public LatencyBot(Team team) {
-        super(team);
+    public LatencyBot(Team team, int playerIndex) {
+        super(team, playerIndex);
     }
 
     @Override

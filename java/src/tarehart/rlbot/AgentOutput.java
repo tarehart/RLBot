@@ -1,5 +1,7 @@
 package tarehart.rlbot;
 
+import rlbot.api.GameData;
+
 public class AgentOutput {
 
     public static final int MAX_TILT = 32767;
@@ -134,5 +136,18 @@ public class AgentOutput {
 
     public double getPitch() {
         return pitchTilt;
+    }
+
+    GameData.ControllerState toControllerState() {
+        return GameData.ControllerState.newBuilder()
+                .setThrottle((float) (acceleration - deceleration))
+                .setSteer((float) steeringTilt)
+                .setYaw(slideDepressed ? 0 : (float) steeringTilt)
+                .setRoll(slideDepressed ? (float) steeringTilt : 0)
+                .setPitch((float) pitchTilt)
+                .setBoost(boostDepressed)
+                .setHandbrake(slideDepressed)
+                .setJump(jumpDepressed)
+                .build();
     }
 }

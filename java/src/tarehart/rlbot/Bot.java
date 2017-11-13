@@ -1,23 +1,20 @@
 package tarehart.rlbot;
 
-import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
-import tarehart.rlbot.steps.BlindStep;
-import tarehart.rlbot.tuning.BallRecorder;
 import tarehart.rlbot.tuning.BallTelemetry;
 import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.ui.Readout;
 
 import javax.swing.*;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
 public abstract class Bot {
 
     private final Team team;
+    private final int playerIndex;
     Plan currentPlan = null;
     ZonePlan currentZonePlan = null;
     private Readout readout;
@@ -29,8 +26,9 @@ public abstract class Bot {
         ORANGE
     }
 
-    public Bot(Team team) {
+    public Bot(Team team, int playerIndex) {
         this.team = team;
+        this.playerIndex = playerIndex;
         readout = new Readout();
     }
 

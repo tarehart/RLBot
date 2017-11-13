@@ -42,9 +42,10 @@ public class Agent {
             // Setup bot from this packet if necessary
             synchronized (this) {
                 if (!bots.containsKey(team)) {
-                    ReliefBot bot = new ReliefBot(team);
+                    int playerIndex = team == Bot.Team.BLUE ? 0 : 1;
+                    ReliefBot bot = new ReliefBot(team, playerIndex);
                     bots.put(team, bot);
-                    statusSummary.markTeamRunning(team, bot.getDebugWindow());
+                    statusSummary.markTeamRunning(team, playerIndex, bot.getDebugWindow());
                 }
             }
 
