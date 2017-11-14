@@ -55,4 +55,26 @@ public class BallSlice {
                 ", spin=" + spin +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BallSlice ballSlice = (BallSlice) o;
+
+        if (!space.equals(ballSlice.space)) return false;
+        if (!time.equals(ballSlice.time)) return false;
+        if (!velocity.equals(ballSlice.velocity)) return false;
+        return spin.equals(ballSlice.spin);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = space.hashCode();
+        result = 31 * result + time.hashCode();
+        result = 31 * result + velocity.hashCode();
+        result = 31 * result + spin.hashCode();
+        return result;
+    }
 }

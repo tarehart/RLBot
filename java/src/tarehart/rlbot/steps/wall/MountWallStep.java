@@ -9,7 +9,6 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.tuning.BallTelemetry;
 
 import java.util.Optional;
 
@@ -24,13 +23,13 @@ public class MountWallStep implements Step {
             return Optional.empty();
         }
 
-        Optional<BallPath> ballPath = BallTelemetry.getPath(input.team);
-        if (!ballPath.isPresent() || !WallTouchStep.hasWallTouchOpportunity(input, ballPath.get())) {
+        BallPath ballPath = ArenaModel.predictBallPath(input);
+        if (!WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
             // Failed to mount the wall in time.
             return Optional.empty();
         }
 
-        BallSlice ballMotion = ballPath.get().getMotionAt(input.time.plusSeconds(3)).orElse(ballPath.get().getEndpoint());
+        BallSlice ballMotion = ballPath.getMotionAt(input.time.plusSeconds(3)).orElse(ballPath.getEndpoint());
         Vector3 ballPositionExaggerated = ballMotion.getSpace().scaled(1.04); // This assumes the ball is close to the wall
 
         return Optional.of(SteerUtil.steerTowardGroundPosition(car, ballPositionExaggerated));

@@ -16,6 +16,8 @@ import tarehart.rlbot.tuning.BotLog;
 import java.time.Duration;
 import java.util.Optional;
 
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class GetOnOffenseStep implements Step {
 
     private Plan plan;
@@ -45,7 +47,7 @@ public class GetOnOffenseStep implements Step {
         Goal enemyGoal = GoalUtil.getEnemyGoal(input.team);
         Goal ownGoal = GoalUtil.getOwnGoal(input.team);
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(2));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Vector3 target = input.ballPosition;
         BallSlice futureMotion = ballPath.getMotionAt(input.time.plusSeconds(2)).get();
@@ -84,7 +86,7 @@ public class GetOnOffenseStep implements Step {
             Vector2 circleTurn = circleTurnOption.get();
             Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurn);
             if (sensibleFlip.isPresent()) {
-                BotLog.println("Front flip onto offense", input.team);
+                println("Front flip onto offense", input.playerIndex);
                 this.plan = sensibleFlip.get();
                 return this.plan.getOutput(input);
             }

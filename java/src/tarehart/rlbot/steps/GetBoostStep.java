@@ -18,6 +18,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class GetBoostStep implements Step {
     private FullBoost targetLocation = null;
 
@@ -69,7 +71,7 @@ public class GetBoostStep implements Step {
 
             Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
             if (sensibleFlip.isPresent()) {
-                BotLog.println("Flipping toward boost", input.team);
+                println("Flipping toward boost", input.playerIndex);
                 plan = sensibleFlip.get();
                 return plan.getOutput(input);
             }
@@ -100,7 +102,7 @@ public class GetBoostStep implements Step {
             return nearestLocation;
         }
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(4));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         Vector3 endpoint = ballPath.getEndpoint().getSpace();
         // Add a defensive bias.
         Vector3 idealPlaceToGetBoost = new Vector3(endpoint.x, 40 * Math.signum(GoalUtil.getOwnGoal(input.team).getCenter().y), 0);

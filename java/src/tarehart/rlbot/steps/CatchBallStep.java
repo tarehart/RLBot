@@ -11,7 +11,6 @@ import tarehart.rlbot.planning.AirTouchPlanner;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
 
-import java.time.Duration;
 import java.util.Optional;
 
 public class CatchBallStep implements Step {
@@ -39,7 +38,7 @@ public class CatchBallStep implements Step {
             return Optional.empty();
         }
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(3));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car));
 
         // Weed out any intercepts after a catch opportunity. Should just catch it.

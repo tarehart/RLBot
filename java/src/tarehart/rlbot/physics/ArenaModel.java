@@ -1,12 +1,14 @@
 package tarehart.rlbot.physics;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.ode4j.math.DQuaternion;
 import org.ode4j.math.DQuaternionC;
 import org.ode4j.math.DVector3;
 import org.ode4j.math.DVector3C;
 import org.ode4j.ode.*;
 import tarehart.rlbot.AgentInput;
-import tarehart.rlbot.Bot;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.TimeUtil;
@@ -14,13 +16,11 @@ import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.Goal;
-import tarehart.rlbot.tuning.BallTelemetry;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 
 public class ArenaModel {
@@ -50,7 +50,19 @@ public class ArenaModel {
     private DSphere ball;
     private final DJointGroup contactgroup;
 
-    private static final Map<Bot.Team, ArenaModel> modelMap = new HashMap<>();
+    private static final ArenaModel arenaModel = new ArenaModel();
+
+    public static final Duration SIMULATION_DURATION = Duration.ofSeconds(6);
+    private static final LoadingCache<BallSlice, BallPath> pathCache = CacheBuilder.newBuilder()
+            .expireAfterAccess(1, TimeUnit.MINUTES)
+            .build(new CacheLoader<BallSlice, BallPath>() {
+                @Override
+                public BallPath load(BallSlice key) throws Exception {
+                    synchronized (lock) {
+                        return arenaModel.simulateBall(key, SIMULATION_DURATION);
+                    }
+                }
+            });
 
     private static final Object lock = new Object();
 
@@ -154,30 +166,11 @@ public class ArenaModel {
         return Math.abs(position.y) > BACK_WALL;
     }
 
-    public static BallPath predictBallPath(AgentInput input, double seconds) {
-        return predictBallPath(input, input.time, TimeUtil.toDuration(seconds));
-    }
-
-    public static BallPath predictBallPath(AgentInput input, LocalDateTime startingAt, Duration duration) {
-
-        if (!modelMap.containsKey(input.team)) {
-            modelMap.put(input.team, new ArenaModel());
-        }
-
-        ArenaModel arenaModel = modelMap.get(input.team);
-
-        Optional<BallPath> pathOption = BallTelemetry.getPath(input.team);
-
-        if (pathOption.isPresent()) {
-            BallPath ballPath = pathOption.get();
-            if (ballPath.getEndpoint().getTime().isBefore(startingAt.plus(duration))) {
-                arenaModel.extendSimulation(ballPath, startingAt.plus(duration));
-            }
-            return ballPath;
-        } else {
-            BallPath ballPath = arenaModel.simulateBall(new BallSlice(input.ballPosition, startingAt, input.ballVelocity, input.ballSpin), duration);
-            BallTelemetry.setPath(ballPath, input.team);
-            return ballPath;
+    public static BallPath predictBallPath(AgentInput input) {
+        try {
+            return pathCache.get(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Failed to compute ball path!", e);
         }
     }
 

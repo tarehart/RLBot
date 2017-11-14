@@ -25,6 +25,7 @@ dependencies {
     compile group: 'net.sf.py4j', name: 'py4j', version: '0.10.6'
     compile group: 'org.ode4j', name: 'core', version: '0.3.1'
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
+    compile 'com.google.guava:guava:23.4-jre'
     compile "io.grpc:grpc-netty:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
     compile "io.grpc:grpc-stub:${grpcVersion}"

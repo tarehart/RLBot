@@ -15,6 +15,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class RotateAndWaitToClearStep implements Step {
     private static final double NEEDS_DEFENSE_THRESHOLD = 10;
     private static final double CENTER_OFFSET = Goal.EXTENT * .5;
@@ -60,7 +62,7 @@ public class RotateAndWaitToClearStep implements Step {
         //TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
         if (sensibleFlip.isPresent()) {
-            BotLog.println("Front flip for defense", input.team);
+            println("Front flip for defense", input.playerIndex);
             plan = sensibleFlip.get();
             return plan.getOutput(input);
         } else {

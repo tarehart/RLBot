@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
+import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DribbleStep implements Step {
 
@@ -57,7 +58,7 @@ public class DribbleStep implements Step {
         double ballSpeed = ballVelocityFlat.magnitude();
         double leadSeconds = .2;
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(2));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
         if (motionAfterWallBounce.isPresent() && Duration.between(input.time, motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
@@ -124,7 +125,7 @@ public class DribbleStep implements Step {
         if (ballToMe.magnitude() > DRIBBLE_DISTANCE) {
             // It got away from us
             if (log) {
-                BotLog.println("Too far to dribble", input.team);
+                println("Too far to dribble", input.playerIndex);
             }
             return false;
         }
@@ -133,28 +134,28 @@ public class DribbleStep implements Step {
                 GoalUtil.getOwnGoal(input.team).getCenter().minus(input.ballPosition).normaliseCopy()) > .9) {
             // Wrong side of ball
             if (log) {
-                BotLog.println("Wrong side of ball for dribble", input.team);
+                println("Wrong side of ball for dribble", input.playerIndex);
             }
             return false;
         }
 
         if (VectorUtil.flatDistance(car.velocity, input.ballVelocity) > 30) {
             if (log) {
-                BotLog.println("Velocity too different to dribble.", input.team);
+                println("Velocity too different to dribble.", input.playerIndex);
             }
             return false;
         }
 
         if (BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 50) {
             if (log) {
-                BotLog.println("Ball bouncing too hard to dribble", input.team);
+                println("Ball bouncing too hard to dribble", input.playerIndex);
             }
             return false;
         }
 
         if (car.position.z > 5) {
             if (log) {
-                BotLog.println("Car too high to dribble", input.team);
+                println("Car too high to dribble", input.playerIndex);
             }
             return false;
         }

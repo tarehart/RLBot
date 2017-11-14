@@ -17,9 +17,7 @@ import tarehart.rlbot.steps.rotation.YawToPlaneStep;
 import tarehart.rlbot.steps.wall.DescendFromWallStep;
 import tarehart.rlbot.steps.wall.WallTouchStep;
 
-import java.time.Duration;
 import java.util.Optional;
-import java.util.Vector;
 import java.util.function.Function;
 
 public class LandGracefullyStep implements Step {
@@ -49,7 +47,7 @@ public class LandGracefullyStep implements Step {
         CarData car = input.getMyCarData();
         if (ArenaModel.isCarOnWall(car) || ArenaModel.isNearFloorEdge(car)) {
 
-            if (WallTouchStep.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(4)))) {
+            if (WallTouchStep.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input))) {
                 plan = new Plan().withStep(new WallTouchStep());
                 return plan.getOutput(input);
             }

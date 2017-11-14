@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
+import static tarehart.rlbot.tuning.BotLog.println;
 
 public class CarryStep implements Step {
 
@@ -36,7 +37,7 @@ public class CarryStep implements Step {
         Vector2 ballVelocityFlat = input.ballVelocity.flatten();
         double leadSeconds = .2;
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(2));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
         if (motionAfterWallBounce.isPresent() && Duration.between(input.time, motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
@@ -90,42 +91,42 @@ public class CarryStep implements Step {
         double xMag = Math.abs(ballInCarCoordinates.x);
         if (xMag > MAX_X_DIFF) {
             if (log) {
-                BotLog.println("Fell off the side", input.team);
+                println("Fell off the side", input.playerIndex);
             }
             return false;
         }
 
         if (ballInCarCoordinates.y > MAX_Y) {
             if (log) {
-                BotLog.println("Fell off the front", input.team);
+                println("Fell off the front", input.playerIndex);
             }
             return false;
         }
 
         if (ballInCarCoordinates.y < MIN_Y) {
             if (log) {
-                BotLog.println("Fell off the back", input.team);
+                println("Fell off the back", input.playerIndex);
             }
             return false;
         }
 
         if (ballInCarCoordinates.z > 3) {
             if (log) {
-                BotLog.println("Ball too high to carry", input.team);
+                println("Ball too high to carry", input.playerIndex);
             }
             return false;
         }
 
         if (ballInCarCoordinates.z < 1) {
             if (log) {
-                BotLog.println("Ball too low to carry", input.team);
+                println("Ball too low to carry", input.playerIndex);
             }
             return false;
         }
 
         if (VectorUtil.flatDistance(car.velocity, input.ballVelocity) > 10) {
             if (log) {
-                BotLog.println("Velocity too different to carry.", input.team);
+                println("Velocity too different to carry.", input.playerIndex);
             }
             return false;
         }

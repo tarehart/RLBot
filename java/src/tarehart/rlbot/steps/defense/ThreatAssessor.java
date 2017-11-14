@@ -39,7 +39,7 @@ public class ThreatAssessor {
         CarData enemyCar = enemyCarOption.get();
 
         Duration simDuration = Duration.ofSeconds(4);
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, simDuration);
+        BallPath ballPath = ArenaModel.predictBallPath(input);
 
         CarData myCar = input.getMyCarData();
 

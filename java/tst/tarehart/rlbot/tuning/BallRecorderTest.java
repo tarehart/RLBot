@@ -2,6 +2,7 @@ package tarehart.rlbot.tuning;
 
 
 import com.google.gson.Gson;
+import org.junit.Ignore;
 import tarehart.rlbot.math.vector.Vector3;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
+@Ignore
 public class BallRecorderTest {
 
     @Test

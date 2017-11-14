@@ -54,7 +54,7 @@ public class GetOnDefenseStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, 3);
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         BallSlice ballMotion = ballPath.getMotionAt(input.time.plusSeconds(3)).get();
 
         Vector3 goalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
@@ -69,7 +69,7 @@ public class GetOnDefenseStep implements Step {
         //TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
         if (sensibleFlip.isPresent()) {
-            BotLog.println("Front flip for defense", input.team);
+            BotLog.println("Front flip for defense", input.playerIndex);
             plan = sensibleFlip.get();
             return plan.getOutput(input);
         } else {

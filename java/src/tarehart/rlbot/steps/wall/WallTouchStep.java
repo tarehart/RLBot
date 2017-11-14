@@ -20,6 +20,10 @@ import tarehart.rlbot.tuning.BotLog;
 import java.time.Duration;
 import java.util.Optional;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class WallTouchStep implements Step {
 
     public static final double ACCEPTABLE_WALL_DISTANCE = ArenaModel.BALL_RADIUS + 5;
@@ -39,12 +43,12 @@ public class WallTouchStep implements Step {
 
         CarData car = input.getMyCarData();
         if (!ArenaModel.isCarOnWall(car)) {
-            BotLog.println("Failed to make the wall touch because the car is not on the wall", input.team);
-            return Optional.empty();
+            println("Failed to make the wall touch because the car is not on the wall", input.playerIndex);
+            return empty();
         }
 
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(4));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost, 0);
 
         Optional<SpaceTime> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(car, ballPath, fullAcceleration, new Vector3(), WallTouchStep::isBallOnWall);
@@ -52,8 +56,8 @@ public class WallTouchStep implements Step {
 
 
         if (!ballMotion.isPresent()) {
-            BotLog.println("Failed to make the wall touch because we see no intercepts on the wall", input.team);
-            return Optional.empty();
+            println("Failed to make the wall touch because we see no intercepts on the wall", input.playerIndex);
+            return empty();
         }
         BallSlice motion = ballMotion.get();
 
@@ -63,14 +67,14 @@ public class WallTouchStep implements Step {
             originalIntercept = motion.getSpace();
         } else {
             if (originalIntercept.distance(motion.getSpace()) > 20) {
-                BotLog.println("Failed to make the wall touch because the intercept changed", input.team);
-                return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
+                println("Failed to make the wall touch because the intercept changed", input.playerIndex);
+                return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
 
         if (readyToJump(input, motion.toSpaceTime())) {
-            BotLog.println("Jumping for wall touch.", input.team);
-            return Optional.of(new AgentOutput().withAcceleration(1).withJump());
+            println("Jumping for wall touch.", input.playerIndex);
+            return of(new AgentOutput().withAcceleration(1).withJump());
         }
 
         return Optional.of(SteerUtil.steerTowardWallPosition(car, motion.space));
@@ -90,7 +94,7 @@ public class WallTouchStep implements Step {
         double tMinus = secondsTillIntercept - wallDistanceAtIntercept / WALL_DEPART_SPEED;
         boolean linedUp = Math.abs(correctionAngleRad) < Math.PI / 8;
         if (tMinus < 3) {
-            BotLog.println("Correction angle: " + correctionAngleRad, input.team);
+            println("Correction angle: " + correctionAngleRad, input.playerIndex);
         }
 
         return tMinus < 0.1 && tMinus > -.4 && linedUp;

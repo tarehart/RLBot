@@ -14,7 +14,7 @@ public class InterceptPlanner {
         if (intercept.space.z > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) {
             AerialChecklist checklist = AirTouchPlanner.checkAerialReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
-                BotLog.println("Performing Aerial!", car.team);
+                BotLog.println("Performing Aerial!", car.playerIndex);
                 return Optional.of(SetPieces.performAerial());
             }
             return Optional.empty();
@@ -23,7 +23,7 @@ public class InterceptPlanner {
         if (intercept.space.z > AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD && AirTouchPlanner.isJumpHitAccessible(car, intercept)) {
             LaunchChecklist checklist = AirTouchPlanner.checkJumpHitReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
-                BotLog.println("Performing JumpHit!", car.team);
+                BotLog.println("Performing JumpHit!", car.playerIndex);
                 return Optional.of(SetPieces.performJumpHit(intercept.space.z));
             }
             return Optional.empty();
@@ -32,7 +32,7 @@ public class InterceptPlanner {
         if (intercept.space.z > AirTouchPlanner.NEEDS_FRONT_FLIP_THRESHOLD && AirTouchPlanner.isFlipHitAccessible(car, intercept)) {
             LaunchChecklist checklist = AirTouchPlanner.checkFlipHitReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
-                BotLog.println("Performing FlipHit!", car.team);
+                BotLog.println("Performing FlipHit!", car.playerIndex);
                 return Optional.of(SetPieces.frontFlip());
             }
             return Optional.empty();

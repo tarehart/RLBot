@@ -16,6 +16,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static java.util.Optional.empty;
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class DirectedNoseHitStep implements Step {
 
     public static final double MAX_NOSE_HIT_ANGLE = Math.PI / 18;
@@ -95,8 +98,8 @@ public class DirectedNoseHitStep implements Step {
             originalIntercept = kickPlan.ballAtIntercept.getSpace();
         } else {
             if (originalIntercept.distance(kickPlan.ballAtIntercept.getSpace()) > 30) {
-                BotLog.println("Failed to make the nose hit", input.team);
-                return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
+                println("Failed to make the nose hit", input.playerIndex);
+                return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
 
@@ -138,8 +141,8 @@ public class DirectedNoseHitStep implements Step {
             // Line up for a nose hit
             circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, circleTerminus, terminusFacing);
             if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0)) < -1) {
-                BotLog.println("Failing nose hit because waypoint is out of bounds", input.team);
-                return Optional.empty();
+                println("Failing nose hit because waypoint is out of bounds", input.playerIndex);
+                return empty();
             }
         }
 
@@ -151,7 +154,7 @@ public class DirectedNoseHitStep implements Step {
 
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint);
         if (sensibleFlip.isPresent()) {
-            BotLog.println("Front flip toward nose hit", input.team);
+            println("Front flip toward nose hit", input.playerIndex);
             this.plan = sensibleFlip.get();
             return this.plan.getOutput(input);
         }

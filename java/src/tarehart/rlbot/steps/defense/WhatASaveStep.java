@@ -35,7 +35,7 @@ public class WhatASaveStep implements Step {
         }
 
         CarData car = input.getMyCarData();
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(5));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         Goal goal = GoalUtil.getOwnGoal(input.team);
         Optional<BallSlice> currentThreat = GoalUtil.predictGoalEvent(goal, ballPath);
         if (!currentThreat.isPresent()) {

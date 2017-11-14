@@ -13,9 +13,14 @@ import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.tuning.BotLog;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static tarehart.rlbot.planning.SteerUtil.steerTowardGroundPosition;
+import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DirectedSideHitStep implements Step {
 
@@ -62,7 +67,7 @@ public class DirectedSideHitStep implements Step {
         }
 
         if (!kickPlanOption.isPresent()) {
-            BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(4));
+            BallPath ballPath = ArenaModel.predictBallPath(input);
             return getNavigation(input, new SteerPlan(input.getMyCarData(), ballPath.getEndpoint().getSpace()));
         }
 
@@ -77,8 +82,8 @@ public class DirectedSideHitStep implements Step {
             originalIntercept = kickPlan.ballAtIntercept.getSpace();
         } else {
             if (originalIntercept.distance(kickPlan.ballAtIntercept.getSpace()) > 30) {
-                BotLog.println("Failed to make the directed kick", input.team);
-                return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
+                println("Failed to make the directed kick", input.playerIndex);
+                return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
 
@@ -147,8 +152,8 @@ public class DirectedSideHitStep implements Step {
             plan = SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime);
             return plan.getOutput(input);
         } else {
-            BotLog.println(String.format("Side flip soon. Distance: %.2f", distance), input.team);
-            return Optional.of(SteerUtil.steerTowardGroundPosition(car, orthogonalPoint));
+            println(format("Side flip soon. Distance: %.2f", distance), input.playerIndex);
+            return of(steerTowardGroundPosition(car, orthogonalPoint));
         }
     }
 
@@ -162,7 +167,7 @@ public class DirectedSideHitStep implements Step {
         if (car.boost == 0) {
             Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint);
             if (sensibleFlip.isPresent()) {
-                BotLog.println("Front flip toward side hit", input.team);
+                println("Front flip toward side hit", input.playerIndex);
                 this.plan = sensibleFlip.get();
                 return this.plan.getOutput(input);
             }

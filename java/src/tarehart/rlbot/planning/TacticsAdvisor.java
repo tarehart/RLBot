@@ -29,6 +29,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static tarehart.rlbot.planning.Plan.Posture;
+import static tarehart.rlbot.planning.Plan.Posture.NEUTRAL;
+import static tarehart.rlbot.planning.Plan.Posture.OFFENSIVE;
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class TacticsAdvisor {
 
     private static final double LOOKAHEAD_SECONDS = 2;
@@ -62,7 +67,7 @@ public class TacticsAdvisor {
         Duration planHorizon = Duration.ofSeconds(5);
 
         CarData car = input.getMyCarData();
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, planHorizon);
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, planHorizon, car.boost);
 
         Optional<Intercept> interceptStepOffering = InterceptStep.getSoonestIntercept(input.getMyCarData(), ballPath, distancePlot, new Vector3());
@@ -138,8 +143,8 @@ public class TacticsAdvisor {
         }
 
         if (DribbleStep.canDribble(input, false) && input.ballVelocity.magnitude() > 15) {
-            BotLog.println("Beginning dribble", input.team);
-            return new Plan(Plan.Posture.OFFENSIVE).withStep(new DribbleStep());
+            println("Beginning dribble", input.playerIndex);
+            return new Plan(OFFENSIVE).withStep(new DribbleStep());
         }  else if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new MountWallStep()).withStep(new WallTouchStep()).withStep(new DescendFromWallStep());
         } else if (DirectedNoseHitStep.canMakeDirectedKick(input, new KickAtEnemyGoal())) {
@@ -147,8 +152,8 @@ public class TacticsAdvisor {
         } else if (car.boost < 50) {
             return new Plan().withStep(new GetBoostStep());
         } else if (GetOnOffenseStep.getYAxisWrongSidedness(input) > 0) {
-            BotLog.println("Getting behind the ball", input.team);
-            return new Plan(Plan.Posture.NEUTRAL).withStep(new GetOnOffenseStep());
+            println("Getting behind the ball", input.playerIndex);
+            return new Plan(NEUTRAL).withStep(new GetOnOffenseStep());
         } else {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new InterceptStep(new Vector3()));
         }

@@ -20,6 +20,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class InterceptStep implements Step {
 
     public static final StrikeProfile AERIAL_STRIKE_PROFILE = new StrikeProfile(0, 0, 0);
@@ -56,7 +58,7 @@ public class InterceptStep implements Step {
             doneMoment = input.time.plus(Duration.ofMillis(1000));
         }
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(4));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), carData.boost, 0);
 
         Optional<Intercept> chosenIntercept = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier);
@@ -73,9 +75,9 @@ public class InterceptStep implements Step {
             } else {
                 if (TimeUtil.secondsBetween(originalIntercept.getTime(), chosenIntercept.get().getTime()) > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
                     if (doneMoment != null) {
-                        BotLog.println("Probably intercepted successfully", input.team);
+                        println("Probably intercepted successfully", input.playerIndex);
                     } else {
-                        BotLog.println("Failed to make the intercept", input.team);
+                        println("Failed to make the intercept", input.playerIndex);
                     }
                     return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
                 }
@@ -131,7 +133,7 @@ public class InterceptStep implements Step {
 
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, intercept.getSpace());
         if (sensibleFlip.isPresent()) {
-            BotLog.println("Front flip toward intercept", input.team);
+            println("Front flip toward intercept", input.playerIndex);
             this.plan = sensibleFlip.get();
             flipOut = this.plan.getOutput(input);
         }

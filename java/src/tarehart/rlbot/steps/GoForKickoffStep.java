@@ -72,21 +72,21 @@ public class GoForKickoffStep implements Step {
     private KickoffType getKickoffType(CarData car) {
         double xPosition = car.position.x;
         if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM){
-            BotLog.println("it be center" , car.team);
+            BotLog.println("it be center" , car.playerIndex);
             return KickoffType.CENTER;
         }
 
         if (getNumberDistance(CHEATER_KICKOFF_X, Math.abs(xPosition)) < WIGGLE_ROOM){
-            BotLog.println("it be cheatin" , car.team);
+            BotLog.println("it be cheatin" , car.playerIndex);
             return KickoffType.CHEATIN;
         }
 
         if (getNumberDistance(DIAGONAL_KICKOFF_X , Math.abs(xPosition)) < WIGGLE_ROOM){
-            BotLog.println("it be slanterd" , car.team);
+            BotLog.println("it be slanterd" , car.playerIndex);
             return KickoffType.SLANTERD;
         }
 
-        BotLog.println("what on earth" , car.team);
+        BotLog.println("what on earth" , car.playerIndex);
         return KickoffType.UNKNOWN;
     }
 

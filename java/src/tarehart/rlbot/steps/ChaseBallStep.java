@@ -12,7 +12,6 @@ import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.strikes.InterceptStep;
 
-import java.time.Duration;
 import java.util.Optional;
 
 public class ChaseBallStep implements Step {
@@ -35,7 +34,7 @@ public class ChaseBallStep implements Step {
         }
 
 
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(3));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
 
         if (input.getEnemyCarData().map(c -> c.position.distance(input.ballPosition)).orElse(Double.MAX_VALUE) > 50) {
             if (car.boost < 10 && GetBoostStep.seesOpportunisticBoost(car, input.fullBoosts)) {

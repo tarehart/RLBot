@@ -10,6 +10,12 @@ import tarehart.rlbot.tuning.BotLog;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static java.lang.String.format;
+import static java.time.LocalDateTime.now;
+import static java.util.Optional.empty;
+import static tarehart.rlbot.math.TimeUtil.secondsBetween;
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class CalibrateStep implements Step {
 
     public static final double TINY_VALUE = .0001;
@@ -27,11 +33,10 @@ public class CalibrateStep implements Step {
 
         if (gameClockStart != null) {
             if (car.spin.yawRate > TINY_VALUE) {
-                BotLog.println(String.format("Game Latency: %s \nWall Latency: %s",
-                        TimeUtil.secondsBetween(gameClockStart, input.time),
-                        TimeUtil.secondsBetween(wallClockStart, LocalDateTime.now())),
-                        input.team);
-                return Optional.empty();
+                println(format("Game Latency: %s \nWall Latency: %s",
+                        secondsBetween(gameClockStart, input.time),
+                        secondsBetween(wallClockStart, now())), input.playerIndex);
+                return empty();
             }
             return Optional.of(new AgentOutput().withSteer(1).withAcceleration(1));
         }

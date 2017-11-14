@@ -8,8 +8,9 @@ import tarehart.rlbot.steps.GoForKickoffStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
 import tarehart.rlbot.tuning.BotLog;
 
-import java.time.Duration;
 import java.util.Optional;
+
+import static tarehart.rlbot.tuning.BotLog.println;
 
 public class ReliefBot extends Bot {
 
@@ -25,7 +26,7 @@ public class ReliefBot extends Bot {
 
         final CarData car = input.getMyCarData();
         Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
-        BallPath ballPath = ArenaModel.predictBallPath(input, input.time, Duration.ofSeconds(7));
+        BallPath ballPath = ArenaModel.predictBallPath(input);
         TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath);
 
 //        if (canInterruptPlanFor(Plan.Posture.OVERRIDE)) {
@@ -50,19 +51,19 @@ public class ReliefBot extends Bot {
         }
 
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
-            BotLog.println("Canceling current plan. Need to go for save!", input.team);
+            println("Canceling current plan. Need to go for save!", input.playerIndex);
             currentPlan = null;
         } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan != null && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
-            BotLog.println("Canceling current plan. Forcing defensive rotation!", input.team);
+            println("Canceling current plan. Forcing defensive rotation!", input.playerIndex);
             currentPlan = null;
         } else if (situation.waitToClear && canInterruptPlanFor(Plan.Posture.WAITTOCLEAR)) {
-            BotLog.println("Canceling current plan. Ball is in the corner and I need to rotate!", input.team);
+            println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex);
             currentPlan = null;
         } else if (situation.needsDefensiveClear && canInterruptPlanFor(Plan.Posture.CLEAR)) {
-            BotLog.println("Canceling current plan. Going for clear!", input.team);
+            println("Canceling current plan. Going for clear!", input.playerIndex);
             currentPlan = null;
         } else if (situation.shotOnGoalAvailable && canInterruptPlanFor(Plan.Posture.OFFENSIVE)) {
-            BotLog.println("Canceling current plan. Shot opportunity!", input.team);
+            println("Canceling current plan. Shot opportunity!", input.playerIndex);
             currentPlan = null;
         }
 

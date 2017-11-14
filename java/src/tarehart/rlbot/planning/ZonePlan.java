@@ -28,21 +28,21 @@ public class ZonePlan {
         myCar = input.getMyCarData();
         opponentCar = input.getEnemyCarData();
 
-        determineZonePlan(input.team);
+        determineZonePlan();
     }
 
 
     //TODO: Actually generate some recommended steps from this
-    private void determineZonePlan(Bot.Team team) {
+    private void determineZonePlan() {
         ballZone = new Zone(getMainZone(ballPosition), getSubZone(ballPosition));
         myZone = new Zone(getMainZone(myCar.position), getSubZone(myCar.position));
         opponentZone = opponentCar.map(c -> new Zone(getMainZone(c.position), getSubZone(c.position)));
 
-        if(!isAnalysisSane(ballZone, myZone, opponentZone, team))
+        if(!isAnalysisSane(ballZone, myZone, opponentZone, myCar.playerIndex))
             return; // Don't even bother coming up with a plan in this case
 
         // Determine if the ball is in my our their box
-        if(team == Bot.Team.BLUE) {
+        if(myCar.team == Bot.Team.BLUE) {
             ballIsInMyBox = this.ballZone.subZone == Zone.SubZone.BLUEBOX;
             ballIsInOpponentBox = this.ballZone.subZone == Zone.SubZone.ORANGEBOX;
         }
@@ -84,14 +84,14 @@ public class ZonePlan {
         return Zone.SubZone.NONE;
     }
 
-    private boolean isAnalysisSane(Zone ballZone, Zone myZone, Optional<Zone> opponentZone, Bot.Team team) {
+    private boolean isAnalysisSane(Zone ballZone, Zone myZone, Optional<Zone> opponentZone, int playerIndex) {
         boolean sanityCheck = true;
         if(ballZone.mainZone == Zone.MainZone.NONE) {
-            BotLog.println("WTF where is the ball?", team);
+            BotLog.println("WTF where is the ball?", playerIndex);
             sanityCheck = false;
         }
         if(myZone.mainZone == Zone.MainZone.NONE) {
-            BotLog.println("WTF where am I?", team);
+            BotLog.println("WTF where am I?", playerIndex);
             sanityCheck = false;
         }
         if(!opponentZone.isPresent() || opponentZone.get().mainZone == Zone.MainZone.NONE) {

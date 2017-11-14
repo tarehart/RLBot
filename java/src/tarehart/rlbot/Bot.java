@@ -3,13 +3,14 @@ package tarehart.rlbot;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
-import tarehart.rlbot.tuning.BallTelemetry;
 import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.ui.Readout;
 
 import javax.swing.*;
 import java.util.Objects;
 import java.util.Optional;
+
+import static tarehart.rlbot.tuning.BotLog.println;
 
 public abstract class Bot {
 
@@ -36,13 +37,13 @@ public abstract class Bot {
     public AgentOutput processInput(AgentInput input) {
 
         final AgentOutput output;
+        Optional<BallPath> ballPath = Optional.empty();
 
         if (input.matchInfo.matchEnded) {
             currentPlan = new Plan(Plan.Posture.MENU);
             output = new AgentOutput();
         } else {
-            BallPath ballPath = ArenaModel.predictBallPath(input, 5);
-            BallTelemetry.setPath(ballPath, input.team);
+            ballPath = Optional.of(ArenaModel.predictBallPath(input));
             ZonePlan zonePlan = new ZonePlan(input);
             ZoneTelemetry.set(zonePlan, input.team);
 
@@ -65,12 +66,10 @@ public abstract class Bot {
         Plan.Posture posture = currentPlan != null ? currentPlan.getPosture() : Plan.Posture.NEUTRAL;
         String situation = currentPlan != null ? currentPlan.getSituation() : "";
         if (!Objects.equals(situation, previousSituation)) {
-            BotLog.println("[Sitch] " + situation, input.team);
+            println("[Sitch] " + situation, input.playerIndex);
         }
         previousSituation = situation;
-        Optional<BallPath> finalBallPath = BallTelemetry.getPath(input.team);
-        finalBallPath.ifPresent(ballPath -> readout.update(input, posture, situation, BotLog.collect(input.team), ballPath));
-        BallTelemetry.reset(input.team);
+        ballPath.ifPresent(bp -> readout.update(input, posture, situation, BotLog.collect(input.playerIndex), bp));
 
         return output;
     }

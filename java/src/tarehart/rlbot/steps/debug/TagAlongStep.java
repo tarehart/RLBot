@@ -16,6 +16,8 @@ import tarehart.rlbot.tuning.BotLog;
 import java.time.Duration;
 import java.util.Optional;
 
+import static tarehart.rlbot.tuning.BotLog.println;
+
 public class TagAlongStep implements Step {
 
     private Plan plan;
@@ -46,7 +48,7 @@ public class TagAlongStep implements Step {
 
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, steerPlan.waypoint);
         if (sensibleFlip.isPresent()) {
-            BotLog.println("Front flip toward tag along", input.team);
+            println("Front flip toward tag along", input.playerIndex);
             this.plan = sensibleFlip.get();
             return this.plan.getOutput(input);
         }

@@ -5,7 +5,6 @@ import tarehart.rlbot.math.vector.Vector3;
 import rlbot.input.*;
 import tarehart.rlbot.input.*;
 import tarehart.rlbot.math.TimeUtil;
-import tarehart.rlbot.math.VectorUtil;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -27,6 +26,7 @@ public class AgentInput {
     public final Bot.Team team;
     public final long frameCount;
     public final Vector3 ballSpin;
+    public final int playerIndex;
     public LocalDateTime time;
     public List<FullBoost> fullBoosts = new ArrayList<>(6);
     public final MatchInfo matchInfo;
@@ -58,6 +58,7 @@ public class AgentInput {
         chronometer.readInput(gameTickPacket.gameInfo, isKickoff);
 
         this.team = team;
+        this.playerIndex = teamToPlayerIndex(team);
         time = chronometer.getGameTime();
 
         Optional<PyCarInfo> blueCarInput = Optional.empty();
@@ -89,7 +90,15 @@ public class AgentInput {
         }
     }
 
+    /**
+     * This is strictly for backwards compatibility. It only works in a 1v1 game.
+     */
+    public static int teamToPlayerIndex(Bot.Team team) {
+        return team == Bot.Team.BLUE ? 0 : 1;
+    }
+
     public AgentInput(GameData.GameTickPacket request, int playerIndex, Chronometer chronometer, SpinTracker spinTracker, long frameCount) {
+        this.playerIndex = playerIndex;
         this.matchInfo = getMatchInfo(request.getGameInfo());
         this.frameCount = frameCount;
 
@@ -133,7 +142,7 @@ public class AgentInput {
     }
 
     private Optional<GameData.PlayerInfo> getSomeCar(List<GameData.PlayerInfo> playersList, Bot.Team team) {
-        int wantedTeam = team == Bot.Team.BLUE ? 0 : 1;
+        int wantedTeam = teamToPlayerIndex(team);
         return playersList.stream().filter(pi -> pi.getTeam() == wantedTeam).findFirst();
     }
 
@@ -169,7 +178,7 @@ public class AgentInput {
         final CarSpin spin = spinTracker.getSpin(team);
 
         return new CarData(position, velocity, orientation, spin, boost,
-                pyCar.bSuperSonic, team, time, frameCount);
+                pyCar.bSuperSonic, team, playerIndex, time, frameCount);
     }
 
     private CarData convert(GameData.PlayerInfo playerInfo, Bot.Team team, SpinTracker spinTracker, double elapsedSeconds, long frameCount) {
@@ -183,7 +192,7 @@ public class AgentInput {
         final CarSpin spin = spinTracker.getSpin(team);
 
         return new CarData(position, velocity, orientation, spin, boost,
-                playerInfo.getIsSupersonic(), team, time, frameCount);
+                playerInfo.getIsSupersonic(), team, playerIndex, time, frameCount);
     }
 
     /**
