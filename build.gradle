@@ -36,7 +36,7 @@ dependencies {
 
 sourceSets {
     main {
-        proto.srcDirs = ['v3/grpcsupport/protobuf']
+        proto.srcDirs = ['grpcsupport/protobuf']
         java.srcDirs = ['java/src', 'build/generated/source/proto/main/grpc', 'build/generated/source/proto/main/java']
     }
     test {
@@ -52,7 +52,7 @@ idea {
     }
 }
 
-mainClassName = 'tarehart.rlbot.AgentEntryPoint'
+mainClassName = 'tarehart.rlbot.GrpcServer'
 
 applicationDistribution.from("$projectDir") {
     into 'README'

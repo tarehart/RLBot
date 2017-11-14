@@ -1,10 +1,9 @@
 package tarehart.rlbot;
 
 import rlbot.api.GameData;
-import tarehart.rlbot.math.vector.Vector3;
-import rlbot.input.*;
 import tarehart.rlbot.input.*;
 import tarehart.rlbot.math.TimeUtil;
+import tarehart.rlbot.math.vector.Vector3;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -34,61 +33,6 @@ public class AgentInput {
     public static final int UROT_IN_SEMICIRCLE = 32768;
     public static final double RADIANS_PER_UROT = Math.PI / UROT_IN_SEMICIRCLE;
     private static final double PACKET_DISTANCE_TO_CLASSIC = 50;
-
-    /**
-     * @deprecated We're migrating to the constructor that uses GameData.GameTickPacket
-     */
-    @Deprecated
-    public AgentInput(PyGameTickPacket gameTickPacket, Bot.Team team, Chronometer chronometer, SpinTracker spinTracker, long frameCount) {
-
-        this.matchInfo = getMatchInfo(gameTickPacket.gameInfo);
-        this.frameCount = frameCount;
-
-        PyVector3 angVel = gameTickPacket.gameball.AngularVelocity;
-
-        // Flip the x-axis, same as all our other vector handling.
-        // According to the game, when the spin vector is pointed at you, the ball is spinning clockwise.
-        // However, we will invert this concept because the ode4j physics engine disagrees.
-        this.ballSpin = new Vector3(angVel.X, -angVel.Y, -angVel.Z);
-
-        ballPosition = convert(gameTickPacket.gameball.Location);
-        ballVelocity = convert(gameTickPacket.gameball.Velocity);
-        boolean isKickoff = ballPosition.flatten().isZero() && ballVelocity.isZero();
-
-        chronometer.readInput(gameTickPacket.gameInfo, isKickoff);
-
-        this.team = team;
-        this.playerIndex = teamToPlayerIndex(team);
-        time = chronometer.getGameTime();
-
-        Optional<PyCarInfo> blueCarInput = Optional.empty();
-        Optional<PyCarInfo> orangeCarInput = Optional.empty();
-
-        for (PyCarInfo pyCar: gameTickPacket.gamecars) {
-            if (pyCar.Team == 0) {
-                blueCarInput = Optional.of(pyCar);
-            } else {
-                orangeCarInput = Optional.of(pyCar);
-            }
-        }
-
-        blueScore = blueCarInput.map(c -> c.Score.Goals).orElse(0) + orangeCarInput.map(c -> c.Score.OwnGoals).orElse(0);
-        orangeScore = orangeCarInput.map(c -> c.Score.Goals).orElse(0) + blueCarInput.map(c -> c.Score.OwnGoals).orElse(0);
-        blueDemo = blueCarInput.map(c -> c.Score.Demolitions).orElse(0);
-        orangeDemo = orangeCarInput.map(c -> c.Score.Demolitions).orElse(0);
-
-        double elapsedSeconds = TimeUtil.toSeconds(chronometer.getTimeDiff());
-
-        blueCar = blueCarInput.map(c -> convert(c, Bot.Team.BLUE, spinTracker, elapsedSeconds, frameCount));
-        orangeCar = orangeCarInput.map(c -> convert(c, Bot.Team.ORANGE, spinTracker, elapsedSeconds, frameCount));
-
-        for (PyBoostInfo boostInfo: gameTickPacket.gameBoosts) {
-            Vector3 location = convert(boostInfo.Location);
-            Optional<Vector3> confirmedLocation = FullBoost.getFullBoostLocation(location);
-            confirmedLocation.ifPresent(loc -> fullBoosts.add(new FullBoost(loc, boostInfo.bActive,
-                    boostInfo.bActive ? LocalDateTime.from(time) : time.plus(Duration.ofMillis(boostInfo.Timer)))));
-        }
-    }
 
     /**
      * This is strictly for backwards compatibility. It only works in a 1v1 game.
@@ -155,32 +99,6 @@ public class AgentInput {
         return mi;
     }
 
-    private MatchInfo getMatchInfo(PyGameInfo gameInfo) {
-        MatchInfo mi = new MatchInfo();
-        mi.matchEnded = gameInfo.bMatchEnded;
-        mi.overTime = gameInfo.bOverTime;
-        mi.roundActive = gameInfo.bRoundActive;
-        mi.timeRemaining = TimeUtil.toDuration(gameInfo.GameTimeRemaining);
-        return mi;
-    }
-
-    private CarData convert(PyCarInfo pyCar, Bot.Team team, SpinTracker spinTracker, double elapsedSeconds, long frameCount) {
-        Vector3 position = convert(pyCar.Location);
-        Vector3 velocity = convert(pyCar.Velocity);
-        CarOrientation orientation = convert(
-                pyCar.Rotation.Pitch * RADIANS_PER_UROT,
-                pyCar.Rotation.Yaw * RADIANS_PER_UROT,
-                pyCar.Rotation.Roll * RADIANS_PER_UROT);
-        double boost = pyCar.Boost;
-
-        spinTracker.readInput(orientation, team, elapsedSeconds);
-
-        final CarSpin spin = spinTracker.getSpin(team);
-
-        return new CarData(position, velocity, orientation, spin, boost,
-                pyCar.bSuperSonic, team, playerIndex, time, frameCount);
-    }
-
     private CarData convert(GameData.PlayerInfo playerInfo, Bot.Team team, SpinTracker spinTracker, double elapsedSeconds, long frameCount) {
         Vector3 position = convert(playerInfo.getLocation());
         Vector3 velocity = convert(playerInfo.getVelocity());
@@ -209,11 +127,6 @@ public class AgentInput {
         double roofZ = Math.cos(roll) * Math.cos(pitch);
 
         return new CarOrientation(new Vector3(noseX, noseY, noseZ), new Vector3(roofX, roofY, roofZ));
-    }
-
-    private Vector3 convert(PyVector3 location) {
-        // Invert the X value so that the axes make more sense.
-        return new Vector3(-location.X / PACKET_DISTANCE_TO_CLASSIC, location.Y / PACKET_DISTANCE_TO_CLASSIC, location.Z / PACKET_DISTANCE_TO_CLASSIC);
     }
 
     private Vector3 convert(GameData.Vector3 location) {
