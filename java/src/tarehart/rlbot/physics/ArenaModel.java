@@ -139,6 +139,7 @@ public class ArenaModel {
             // ball position += collision normal * depth * -1
             Vector3 positionModifier = normal.scaled(c.geom.depth * -1);
             ball.setPosition(ball.getPosition().clone().add(toV3f(positionModifier)));
+            ball.getAABB(); // This forces a recompute.
 
             c.geom.depth = 0;
             c.surface.mode = OdeConstants.dContactBounce;
