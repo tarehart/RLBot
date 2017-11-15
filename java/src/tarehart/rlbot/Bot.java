@@ -77,11 +77,11 @@ public abstract class Bot {
     protected abstract AgentOutput getOutput(AgentInput input);
 
     protected boolean canInterruptPlanFor(Plan.Posture posture) {
-        return currentPlan == null || currentPlan.getPosture().lessUrgentThan(posture) && currentPlan.canInterrupt();
+        return currentPlan == null || currentPlan.isComplete() || currentPlan.getPosture().lessUrgentThan(posture) && currentPlan.canInterrupt();
     }
 
     protected boolean noActivePlanWithPosture(Plan.Posture posture) {
-        return currentPlan == null || currentPlan.getPosture() != posture;
+        return currentPlan == null || currentPlan.isComplete() || currentPlan.getPosture() != posture;
     }
 
     public JFrame getDebugWindow() {

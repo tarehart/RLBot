@@ -30,8 +30,6 @@ public class AgentInput {
     public List<FullBoost> fullBoosts = new ArrayList<>(6);
     public final MatchInfo matchInfo;
 
-    public static final int UROT_IN_SEMICIRCLE = 32768;
-    public static final double RADIANS_PER_UROT = Math.PI / UROT_IN_SEMICIRCLE;
     private static final double PACKET_DISTANCE_TO_CLASSIC = 50;
 
     /**
@@ -109,8 +107,19 @@ public class AgentInput {
 
         final CarSpin spin = spinTracker.getSpin(team);
 
-        return new CarData(position, velocity, orientation, spin, boost,
-                playerInfo.getIsSupersonic(), team, playerIndex, time, frameCount);
+        return new CarData.Builder()
+                .withPosition(position)
+                .withVelocity(velocity)
+                .withOrientation(orientation)
+                .withSpin(spin)
+                .withBoost(boost)
+                .withIsSupersonic(playerInfo.getIsSupersonic())
+                .withHasWheelContact(!playerInfo.getIsMidair())
+                .withTeam(team)
+                .withPlayerIndex(playerIndex)
+                .withTime(time)
+                .withFrameCount(frameCount)
+                .build();
     }
 
     /**

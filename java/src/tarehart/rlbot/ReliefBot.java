@@ -5,6 +5,7 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.GoForKickoffStep;
+import tarehart.rlbot.steps.debug.CalibrateStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
 import tarehart.rlbot.tuning.BotLog;
 
@@ -30,8 +31,7 @@ public class ReliefBot extends Bot {
         TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath);
 
 //        if (canInterruptPlanFor(Plan.Posture.OVERRIDE)) {
-//            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new InterceptStep(new Vector3()));
-//            currentPlan.begin();
+//            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new CalibrateStep());
 //        }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
@@ -39,8 +39,7 @@ public class ReliefBot extends Bot {
             currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
         }
 
-        if (canInterruptPlanFor(Plan.Posture.LANDING) && !ArenaModel.isCarOnWall(car) &&
-                !ArenaModel.isNearFloorEdge(car) &&
+        if (canInterruptPlanFor(Plan.Posture.LANDING) && !car.hasWheelContact &&
                 car.position.z > 5 &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
             currentPlan = new Plan(Plan.Posture.LANDING).withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
