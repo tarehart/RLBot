@@ -348,7 +348,7 @@ public class ArenaModel {
     }
 
     public static boolean isCarOnWall(CarData car) {
-        return isCarNearWall(car) && Math.abs(car.orientation.roofVector.z) < 0.05;
+        return car.hasWheelContact && isCarNearWall(car) && Math.abs(car.orientation.roofVector.z) < 0.05;
     }
 
     public static boolean isNearFloorEdge(CarData car) {

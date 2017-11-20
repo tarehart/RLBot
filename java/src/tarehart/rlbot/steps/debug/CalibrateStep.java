@@ -26,7 +26,7 @@ public class CalibrateStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        if (gameClockStart == null && Math.abs(car.spin.yawRate) < TINY_VALUE && car.position.z < .34) {
+        if (gameClockStart == null && Math.abs(car.spin.yawRate) < TINY_VALUE && car.hasWheelContact) {
             gameClockStart = input.time;
             wallClockStart = LocalDateTime.now();
         }
