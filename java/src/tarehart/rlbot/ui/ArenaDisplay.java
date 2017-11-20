@@ -30,6 +30,7 @@ public class ArenaDisplay extends JPanel {
     };
     public static final Color REAL_BALL_COLOR = new Color(177, 177, 177);
     private static final Color PREDICTED_BALL_COLOR = new Color(186, 164, 55, 100);
+    private static final Color ENEMY_CONTACT_BALL_COLOR = new Color(255, 0, 11, 84);
     public static final double NATURAL_WIDTH = 300;
     public static final int CAR_LENGTH = 4;
     public static final int CAR_WIDTH = 2;
@@ -49,6 +50,7 @@ public class ArenaDisplay extends JPanel {
     private CarData myCar;
     private Vector3 ball;
     private Vector3 ballPrediction = new Vector3();
+    private Vector3 expectedEnemyContact = new Vector3();
 
     public void updateInput(AgentInput input) {
         orangeCar = input.getCarData(Bot.Team.ORANGE);
@@ -59,6 +61,10 @@ public class ArenaDisplay extends JPanel {
 
     public void updateBallPrediction(Vector3 ballPrediction) {
         this.ballPrediction = ballPrediction;
+    }
+
+    public void updateExpectedEnemyContact(Vector3 expectedEnemyContact) {
+        this.expectedEnemyContact = expectedEnemyContact;
     }
 
     @Override
@@ -100,7 +106,7 @@ public class ArenaDisplay extends JPanel {
 
         drawBall(ball, graphics2D, REAL_BALL_COLOR);
         drawBall(ballPrediction, graphics2D, PREDICTED_BALL_COLOR);
-
+        drawBall(expectedEnemyContact, graphics2D, ENEMY_CONTACT_BALL_COLOR);
     }
 
     private void drawWaypoint(Graphics2D graphics2D) {

@@ -95,6 +95,13 @@ public class Readout {
             arenaDisplay.updateBallPrediction(ballPrediction);
         }
 
+        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(input.team);
+
+        if (situationOption.isPresent()) {
+            TacticalSituation tacSituation = situationOption.get();
+            arenaDisplay.updateExpectedEnemyContact(tacSituation.expectedEnemyContact.space);
+        }
+
         updateBallHeightMaxes(input);
         updateTacticsInfo(input);
         updateOmniText(input);
