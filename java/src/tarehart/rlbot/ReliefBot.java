@@ -35,12 +35,8 @@ public class ReliefBot extends Bot {
 //        }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (noActivePlanWithPosture(Plan.Posture.KICKOFF) && input.ballPosition.flatten().magnitudeSquared() == 0) {
-            // Make sure that the bot is on it's own side of the field.
-            // (prevent own goals in "Disable Goal Reset" mode)
-            if(!zonePlan.isPresent() || situation.goForKickoff) {
-                currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
-            }
+        if (noActivePlanWithPosture(Plan.Posture.KICKOFF) && (!zonePlan.isPresent() || situation.goForKickoff)) {
+            currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
         }
 
         if (canInterruptPlanFor(Plan.Posture.LANDING) && !ArenaModel.isCarOnWall(car) &&
@@ -53,7 +49,7 @@ public class ReliefBot extends Bot {
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
             println("Canceling current plan. Need to go for save!", input.playerIndex);
             currentPlan = null;
-        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan != null && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
+        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex);
             currentPlan = null;
         } else if (situation.waitToClear && canInterruptPlanFor(Plan.Posture.WAITTOCLEAR)) {
@@ -72,7 +68,7 @@ public class ReliefBot extends Bot {
         }
 
         if (currentPlan != null) {
-            if (currentPlan.isComplete()) {
+            if (currentPlan.isComplete()) { //REVIEW: Possibly redundant check considering that .makePlan() is called if it is complete
                 currentPlan = null;
             } else {
                 Optional<AgentOutput> output = currentPlan.getOutput(input);

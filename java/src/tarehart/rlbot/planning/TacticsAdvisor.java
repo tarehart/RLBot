@@ -179,10 +179,9 @@ public class TacticsAdvisor {
 
         situation.scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath);
         situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath);
-        situation.shotOnGoalAvailable = GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(input.team), ballPath) &&
-                myCar.position.distance(input.ballPosition) < 80;
-        situation.forceDefensivePosture = opponentCar.map(c -> getForceDefensivePosture(input.team, myCar, c, input.ballPosition)).orElse(false);
-        situation.goForKickoff = getGoForKickoff(zonePlan, input.team);
+        situation.shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, opponentCar, input.ballPosition, ballPath);
+        situation.forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition);
+        situation.goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition);
         situation.waitToClear = getWaitToClear(zonePlan, input);
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
@@ -207,29 +206,37 @@ public class TacticsAdvisor {
         return input.getEnemyCarData().flatMap(c -> SteerUtil.getInterceptOpportunityAssumingMaxAccel(c, ballPath, c.boost));
     }
 
-    private boolean getForceDefensivePosture(Bot.Team team, CarData myCar, CarData opponentCar, Vector3 ballPosition) {
-        if(team == Bot.Team.BLUE) {
-            return myCar.position.y > opponentCar.position.y
-                    && opponentCar.position.y > ballPosition.y;
-        }
-        else {
-            return myCar.position.y < opponentCar.position.y
-                    && opponentCar.position.y < ballPosition.y;
-        }
+    private boolean getForceDefensivePosture(Bot.Team team, CarData myCar, Optional<CarData> opponentCar,
+                                             Vector3 ballPosition) {
+        return opponentCar.map(c -> ZoneUtil.isEnemyOffensiveBreakaway(team, myCar, c, ballPosition)).orElse(false);
     }
 
     // Really only used for avoiding "Disable Goal Reset" own goals
-    private boolean getGoForKickoff(Optional<ZonePlan> zonePlan, Bot.Team team) {
+    private boolean getGoForKickoff(Optional<ZonePlan> zonePlan, Bot.Team team, Vector3 ballPosition) {
         if(zonePlan.isPresent()) {
-            if (team == Bot.Team.BLUE)
-                return zonePlan.get().myZone.mainZone == Zone.MainZone.BLUE;
-            else
-                return zonePlan.get().myZone.mainZone == Zone.MainZone.ORANGE;
+            if(ballPosition.flatten().magnitudeSquared() == 0) {
+                if (team == Bot.Team.BLUE)
+                    return zonePlan.get().myZone.mainZone == Zone.MainZone.BLUE;
+                else
+                    return zonePlan.get().myZone.mainZone == Zone.MainZone.ORANGE;
+            }
         }
 
-        return true;
+        return false;
     }
 
+    // Checks to see if the ball is in the box for a while or if we have a breakaway
+    private boolean getShotOnGoalAvailable(Bot.Team team, CarData myCar, Optional<CarData> opponentCar,
+                                           Vector3 ballPosition, BallPath ballPath) {
+        if(GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(team), ballPath)
+                && myCar.position.distance(ballPosition) < 80) {
+            return true;
+        }
+
+        return opponentCar.map(c -> ZoneUtil.isMyOffensiveBreakaway(team, myCar, c, ballPosition)).orElse(false);
+    }
+
+    // Checks to see if the ball is in the corner and if the opponent is closer to it
     private boolean getWaitToClear(Optional<ZonePlan> zonePlan, AgentInput input) {
         Vector3 myGoalLocation = GoalUtil.getOwnGoal(input.team).getCenter();
         double myBallDistance = input.ballPosition.distance(input.getMyCarData().position);

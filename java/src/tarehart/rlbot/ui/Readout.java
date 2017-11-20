@@ -47,14 +47,13 @@ public class Readout {
     private JLabel waitToClear;
     private JLabel forceDefensivePosture;
     private JTextPane omniText;
+    private JTextField logFilter;
 
     private double maxCarSpeedVal;
 
     private LocalDateTime actualMaxTime = LocalDateTime.now();
     private LocalDateTime predictedMaxTime = LocalDateTime.now();
-
     private PredictionWarehouse warehouse = new PredictionWarehouse();
-
     private LocalDateTime previousTime = null;
 
 
@@ -70,6 +69,22 @@ public class Readout {
         predictionTimeSeconds.setText(String.format("%.2f", predictionTime.getValue() / 1000.0));
         // ballHeightPredicted.setValue(0); // Commented out to avoid flicker. Should always be fresh anyway.
         ballHeightActual.setValue((int) (input.ballPosition.z * HEIGHT_BAR_MULTIPLIER));
+
+        // Filter log before appending
+        String filterValue = logFilter.getText();
+        if (filterValue != null && filterValue.length() > 0) {
+            StringBuilder newLog = new StringBuilder();
+            filterValue = filterValue.toLowerCase();
+            String[] splitLog = log.split("\n");
+
+            for (int i = 0; i < splitLog.length; i++) {
+                if (splitLog[i].toLowerCase().contains(filterValue)) {
+                    newLog.append(splitLog[i] + "\n");
+                }
+            }
+
+            log = newLog.toString();
+        }
         logViewer.append(log);
 
         gatherBallPredictionData(input, ballPath);
@@ -161,13 +176,28 @@ public class Readout {
             enemyOffensiveApproachError.setText(String.format("%.2f", situation.enemyOffensiveApproachError));
             distanceFromEnemyBackWall.setText(String.format("%.2f", situation.distanceFromEnemyBackWall));
             distanceFromEnemyCorner.setText(String.format("%.2f", situation.distanceFromEnemyCorner));
-            needsDefensiveClear.setText(situation.needsDefensiveClear ? "True" : "False");
-            shotOnGoalAvailable.setText(situation.shotOnGoalAvailable ? "True" : "False");
             expectedEnemyContact.setText(situation.expectedEnemyContact.space.toString());
             scoredOnThreat.setText(situation.scoredOnThreat.map(b -> b.space.toString()).orElse("None"));
-            goForKickoff.setText(situation.goForKickoff ? "True" : "False");
-            waitToClear.setText(situation.waitToClear ? "True" : "False");
-            forceDefensivePosture.setText(situation.forceDefensivePosture ? "True" : "False");
+
+            needsDefensiveClear.setText("");
+            needsDefensiveClear.setBackground(situation.needsDefensiveClear ? Color.GREEN : Color.WHITE);
+            needsDefensiveClear.setOpaque(situation.needsDefensiveClear);
+
+            shotOnGoalAvailable.setText("");
+            shotOnGoalAvailable.setBackground(situation.shotOnGoalAvailable ? Color.GREEN : Color.WHITE);
+            shotOnGoalAvailable.setOpaque(situation.shotOnGoalAvailable);
+
+            goForKickoff.setText("");
+            goForKickoff.setBackground(situation.goForKickoff ? Color.GREEN : Color.WHITE);
+            goForKickoff.setOpaque(situation.goForKickoff);
+
+            waitToClear.setText("");
+            waitToClear.setBackground(situation.waitToClear ? Color.GREEN : Color.WHITE);
+            waitToClear.setOpaque(situation.waitToClear);
+
+            forceDefensivePosture.setText("");
+            forceDefensivePosture.setBackground(situation.forceDefensivePosture ? Color.GREEN : Color.WHITE);
+            forceDefensivePosture.setOpaque(situation.forceDefensivePosture);
         }
     }
 
@@ -271,11 +301,6 @@ public class Readout {
         arenaDisplay = new ArenaDisplay();
         arenaDisplay.setBackground(new Color(-263173));
         rootPanel.add(arenaDisplay, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(800, 500), null, null, 0, false));
-        final JScrollPane scrollPane1 = new JScrollPane();
-        rootPanel.add(scrollPane1, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(500, -1), new Dimension(500, -1), new Dimension(-1, 500), 0, false));
-        logViewer = new JTextArea();
-        logViewer.setEditable(false);
-        scrollPane1.setViewportView(logViewer);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         rootPanel.add(panel3, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(247, 246), null, 0, false));
@@ -294,71 +319,84 @@ public class Readout {
         ownGoalFutureProximity.setText("?");
         panel4.add(ownGoalFutureProximity, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label9 = new JLabel();
-        label9.setText("distanceFromEnemyCorner");
-        panel4.add(label9, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        distanceFromEnemyCorner = new JLabel();
-        distanceFromEnemyCorner.setText("?");
-        panel4.add(distanceFromEnemyCorner, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label10 = new JLabel();
-        label10.setText("distanceBallIsBehindUs");
-        panel4.add(label10, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label9.setText("distanceBallIsBehindUs");
+        panel4.add(label9, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         distanceBallIsBehindUs = new JLabel();
         distanceBallIsBehindUs.setText("?");
         panel4.add(distanceBallIsBehindUs, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label11 = new JLabel();
-        label11.setText("needsDefensiveClear");
-        panel4.add(label11, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        needsDefensiveClear = new JLabel();
-        needsDefensiveClear.setText("?");
-        panel4.add(needsDefensiveClear, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label12 = new JLabel();
-        label12.setText("enemyOffensiveApproachError");
-        panel4.add(label12, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label10 = new JLabel();
+        label10.setText("enemyOffensiveApproachError");
+        panel4.add(label10, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         enemyOffensiveApproachError = new JLabel();
         enemyOffensiveApproachError.setText("?");
         panel4.add(enemyOffensiveApproachError, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label13 = new JLabel();
-        label13.setText("shotOnGoalAvailable");
-        panel4.add(label13, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        shotOnGoalAvailable = new JLabel();
-        shotOnGoalAvailable.setText("?");
-        panel4.add(shotOnGoalAvailable, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label14 = new JLabel();
-        label14.setText("distanceFromEnemyBackWall");
-        panel4.add(label14, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label11 = new JLabel();
+        label11.setText("distanceFromEnemyBackWall");
+        panel4.add(label11, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         distanceFromEnemyBackWall = new JLabel();
         distanceFromEnemyBackWall.setText("?");
         panel4.add(distanceFromEnemyBackWall, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label15 = new JLabel();
-        label15.setText("expectedEnemyContact");
-        panel4.add(label15, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label12 = new JLabel();
+        label12.setText("expectedEnemyContact");
+        panel4.add(label12, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         expectedEnemyContact = new JLabel();
         expectedEnemyContact.setText("?");
         panel4.add(expectedEnemyContact, new GridConstraints(5, 1, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label16 = new JLabel();
-        label16.setText("scoredOnThreat");
-        panel4.add(label16, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label13 = new JLabel();
+        label13.setText("scoredOnThreat");
+        panel4.add(label13, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         scoredOnThreat = new JLabel();
         scoredOnThreat.setText("?");
         panel4.add(scoredOnThreat, new GridConstraints(6, 1, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label17 = new JLabel();
-        label17.setText("forceDefensivePosture");
-        panel4.add(label17, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label18 = new JLabel();
-        label18.setText("goForKickoff");
-        panel4.add(label18, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label19 = new JLabel();
-        label19.setText("waitToClear");
-        panel4.add(label19, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        goForKickoff = new JLabel();
-        goForKickoff.setText("?");
-        panel4.add(goForKickoff, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label14 = new JLabel();
+        label14.setText("distanceFromEnemyCorner");
+        panel4.add(label14, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        distanceFromEnemyCorner = new JLabel();
+        distanceFromEnemyCorner.setText("?");
+        panel4.add(distanceFromEnemyCorner, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         waitToClear = new JLabel();
         waitToClear.setText("?");
-        panel4.add(waitToClear, new GridConstraints(4, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(waitToClear, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(30, 10), null, null, 0, false));
+        final JLabel label15 = new JLabel();
+        label15.setText("waitToClear");
+        panel4.add(label15, new GridConstraints(4, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label16 = new JLabel();
+        label16.setText("forceDefensivePosture");
+        panel4.add(label16, new GridConstraints(3, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label17 = new JLabel();
+        label17.setText("shotOnGoalAvailable");
+        panel4.add(label17, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label18 = new JLabel();
+        label18.setText("needsDefensiveClear");
+        panel4.add(label18, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label19 = new JLabel();
+        label19.setText("goForKickoff");
+        panel4.add(label19, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         forceDefensivePosture = new JLabel();
         forceDefensivePosture.setText("?");
-        panel4.add(forceDefensivePosture, new GridConstraints(3, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel4.add(forceDefensivePosture, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(30, 10), null, null, 0, false));
+        shotOnGoalAvailable = new JLabel();
+        shotOnGoalAvailable.setText("?");
+        panel4.add(shotOnGoalAvailable, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(30, 10), null, null, 0, false));
+        needsDefensiveClear = new JLabel();
+        needsDefensiveClear.setText("?");
+        panel4.add(needsDefensiveClear, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(30, 10), null, null, 0, false));
+        goForKickoff = new JLabel();
+        goForKickoff.setText("?");
+        panel4.add(goForKickoff, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(30, 10), null, null, 0, false));
+        final JPanel panel5 = new JPanel();
+        panel5.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
+        rootPanel.add(panel5, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel5.add(scrollPane1, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(500, -1), new Dimension(500, -1), new Dimension(-1, 500), 0, false));
+        logViewer = new JTextArea();
+        logViewer.setEditable(false);
+        scrollPane1.setViewportView(logViewer);
+        final JLabel label20 = new JLabel();
+        label20.setText("Log Filter");
+        panel5.add(label20, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        logFilter = new JTextField();
+        panel5.add(logFilter, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
     }
 
     /**
