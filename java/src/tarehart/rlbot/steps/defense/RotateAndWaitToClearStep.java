@@ -29,6 +29,9 @@ public class RotateAndWaitToClearStep implements Step {
         TacticalSituation tacticalSituation = null;
         if(TacticsTelemetry.get(input.team).isPresent())
             tacticalSituation = TacticsTelemetry.get(input.team).get();
+        CarData myCar = input.getMyCarData();
+        Vector3 myGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
+
 
         if (plan != null && !plan.isComplete()) {
             Optional<AgentOutput> output = plan.getOutput(input);
@@ -49,25 +52,26 @@ public class RotateAndWaitToClearStep implements Step {
 
         Vector3 goalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
         Vector2 targetPosition = new Vector2(Math.signum(input.ballPosition.x) * CENTER_OFFSET, goalCenter.y - (Math.signum(goalCenter.y) * AWAY_FROM_GOAL));
-        Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.x), 0);
 
-        double distance = car.position.flatten().distance(targetPosition);
-        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.boost - 20, distance);
+        // Check to see if we are in net and facing out
+        boolean myCarIsInNet = Math.signum(myCar.position.y) == Math.signum(myGoalCenter.y)
+                && Math.abs(myCar.position.y) > Math.abs(myGoalCenter.y);
+        if (myCarIsInNet) {
+            Vector2 leftPostVector = GoalUtil.getOwnGoal(input.team).getLeftPost().minus(myCar.position).flatten();
+            Vector2 rightPostVector = GoalUtil.getOwnGoal(input.team).getRightPost().minus(myCar.position).flatten();
+            double leftPostCorrection = myCar.orientation.noseVector.flatten().correctionAngle(leftPostVector);
+            double rightPostCorrection = myCar.orientation.noseVector.flatten().correctionAngle(rightPostVector);
 
-        //SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, targetPosition, targetFacing);
+            boolean myCarIsFacingOut = Math.signum(leftPostCorrection) != Math.signum(rightPostCorrection);
+            // If we are in net and facing out, just sit still
+            if(myCarIsFacingOut) {
+                return Optional.of(new AgentOutput());
+            }
+        }
+        
+        // If we aren't in net yet, go there
         AgentOutput planForStraightDrive = SteerUtil.steerTowardGroundPosition(car, targetPosition);
-
-        ////TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
-        //Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
-        //Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, targetPosition);
-        //if (sensibleFlip.isPresent()) {
-        //    println("Front flip for defense", input.playerIndex);
-        //    plan = sensibleFlip.get();
-        //    return plan.getOutput(input);
-        //} else {
-            //return Optional.of(planForCircleTurn.immediateSteer);
-            return Optional.of(planForStraightDrive);
-        //}
+        return Optional.of(planForStraightDrive);
     }
 
     @Override
