@@ -18,10 +18,8 @@ import java.util.Optional;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class RotateAndWaitToClearStep implements Step {
-    private static final double NEEDS_DEFENSE_THRESHOLD = 10;
-    private static final double CENTER_OFFSET = Goal.EXTENT * .5;
-    private static final double AWAY_FROM_GOAL = 0;
-    private static final double LIFESPAN = 3;
+    private static final double CENTER_OFFSET = -5;
+    private static final double AWAY_FROM_GOAL = -2;
     private Plan plan;
     private LocalDateTime startTime;
 
@@ -43,31 +41,33 @@ public class RotateAndWaitToClearStep implements Step {
             startTime = input.time;
         }
 
-        if ((tacticalSituation != null && tacticalSituation.waitToClear)
-                || TimeUtil.secondsBetween(startTime, input.time) > LIFESPAN) {
+        if (tacticalSituation != null && !tacticalSituation.waitToClear) {
             return Optional.empty(); // Time to reevaluate the plan.
         }
 
         CarData car = input.getMyCarData();
 
         Vector3 goalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
-        Vector2 targetPosition = new Vector2(Math.signum(input.ballPosition.x) * CENTER_OFFSET, goalCenter.y - Math.signum(goalCenter.y) * AWAY_FROM_GOAL);
+        Vector2 targetPosition = new Vector2(Math.signum(input.ballPosition.x) * CENTER_OFFSET, goalCenter.y - (Math.signum(goalCenter.y) * AWAY_FROM_GOAL));
         Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.x), 0);
 
         double distance = car.position.flatten().distance(targetPosition);
         DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.boost - 20, distance);
 
-        SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, targetPosition, targetFacing);
+        //SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, targetPosition, targetFacing);
+        AgentOutput planForStraightDrive = SteerUtil.steerTowardGroundPosition(car, targetPosition);
 
-        //TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
-        if (sensibleFlip.isPresent()) {
-            println("Front flip for defense", input.playerIndex);
-            plan = sensibleFlip.get();
-            return plan.getOutput(input);
-        } else {
-            return Optional.of(planForCircleTurn.immediateSteer);
-        }
+        ////TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
+        //Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
+        //Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, targetPosition);
+        //if (sensibleFlip.isPresent()) {
+        //    println("Front flip for defense", input.playerIndex);
+        //    plan = sensibleFlip.get();
+        //    return plan.getOutput(input);
+        //} else {
+            //return Optional.of(planForCircleTurn.immediateSteer);
+            return Optional.of(planForStraightDrive);
+        //}
     }
 
     @Override

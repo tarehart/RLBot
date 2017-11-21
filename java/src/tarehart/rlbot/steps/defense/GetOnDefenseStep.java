@@ -64,16 +64,19 @@ public class GetOnDefenseStep implements Step {
         double distance = car.position.flatten().distance(targetPosition);
         DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.boost - 20, distance);
 
-        SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, targetPosition, targetFacing);
+        //SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, targetPosition, targetFacing);
+        AgentOutput planForStraightDrive = SteerUtil.steerTowardGroundPosition(car, targetPosition);
 
         //TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
+        //Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
+        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, targetPosition);
         if (sensibleFlip.isPresent()) {
             BotLog.println("Front flip for defense", input.playerIndex);
             plan = sensibleFlip.get();
             return plan.getOutput(input);
         } else {
-            return Optional.of(planForCircleTurn.immediateSteer);
+            //return Optional.of(planForCircleTurn.immediateSteer);
+            return Optional.of(planForStraightDrive);
         }
     }
 

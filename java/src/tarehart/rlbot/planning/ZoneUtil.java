@@ -1,6 +1,8 @@
 package tarehart.rlbot.planning;
 
 import tarehart.rlbot.Bot;
+import tarehart.rlbot.math.Polygon;
+import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.input.CarData;
 
@@ -25,4 +27,14 @@ public class ZoneUtil {
             return ballPosition.y < myCar.position.y && myCar.position.y < opponentCar.position.y;
         }
     }
+
+    public static Polygon getShotDefenseZone(Vector3 ballPosition, Vector2 goalCenter) {
+        return new Polygon(new Vector2[] {
+                ballPosition.flatten(),
+                new Vector2(goalCenter.x + Goal.EXTENT, goalCenter.y),
+                new Vector2(goalCenter.x - Goal.EXTENT, goalCenter.y)
+        });
+    }
+
+
 }
