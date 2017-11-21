@@ -7,23 +7,23 @@ public class ZoneDefinitions {
 
     // This zone is used to draw the full outline of the field
     public static final Polygon FULLFIELD = new Polygon(new Vector2[] {
-        new Vector2(-81.93, -71.7),
-        new Vector2(-50.5, -102.4),
+        new Vector2(-81.93, -78.3),
+        new Vector2(-58.36, -102.4),
         new Vector2(-17.27, -102.4),
         new Vector2(-17.27, -119.9),
         new Vector2(17.27, -119.9),
         new Vector2(17.27, -102.4),
-        new Vector2(50.5, -102.4),
-        new Vector2(81.93, -71.7),
-        new Vector2(81.93, 71.7),
-        new Vector2(50.5, 102.4),
+        new Vector2(58.36, -102.4),
+        new Vector2(81.93, -78.3),
+        new Vector2(81.93, 78.3),
+        new Vector2(58.36, 102.4),
         new Vector2(17.27, 102.4),
         new Vector2(17.27, 119.9),
         new Vector2(-17.27, 119.9),
         new Vector2(-17.27, 102.4),
-        new Vector2(-50.5, 102.4),
-        new Vector2(-81.93, 71.7),
-        new Vector2(-81.93, -71.7)
+        new Vector2(-58.36, 102.4),
+        new Vector2(-81.93, 78.3),
+        new Vector2(-81.93, -78.3)
     });
 
     //NOTE: Some Zone boundaries use some rounded values that go outside of the field since that won't
