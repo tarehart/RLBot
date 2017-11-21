@@ -6,9 +6,11 @@ import java.util.Map;
 public class BotLog {
 
     private static Map<Integer, StringBuilder> logMap = new HashMap<>();
+    private static String timeStamp = "";
 
     public static void println(String message, int playerIndex) {
-        getLog(playerIndex).append(message).append("\n");
+
+        getLog(playerIndex).append(timeStamp + message).append("\n");
         System.out.println(message);
     }
 
@@ -17,6 +19,10 @@ public class BotLog {
             logMap.put(playerIndex, new StringBuilder());
         }
         return logMap.get(playerIndex);
+    }
+
+    public static void setTimeStamp(long time) {
+        timeStamp =  time > 0 ? "(" + ((int)time / 60) + ":" + ((int)time%60) + ")" : "";
     }
 
     public static String collect(int playerIndex) {

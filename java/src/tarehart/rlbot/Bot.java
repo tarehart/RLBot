@@ -35,7 +35,7 @@ public abstract class Bot {
 
 
     public AgentOutput processInput(AgentInput input) {
-
+        BotLog.setTimeStamp(input.matchInfo.timeRemaining.getSeconds());
         final AgentOutput output;
         Optional<BallPath> ballPath = Optional.empty();
 

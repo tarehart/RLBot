@@ -36,5 +36,37 @@ public class ZoneUtil {
         });
     }
 
+    public static Polygon getDefensiveReach(Vector3 defender, Vector2 goalCenter) {
+        double extendedDistance = 20;
 
+        Vector2 flatCar = defender.flatten();
+        Vector2 topPost = new Vector2(goalCenter.x + Goal.EXTENT, goalCenter.y);
+        Vector2 bottomPost = new Vector2(goalCenter.x - Goal.EXTENT, goalCenter.y);
+
+        double topSlope = (flatCar.y - topPost.y) / (flatCar.x - topPost.x);
+        double bottomSlope = (flatCar.y - bottomPost.y) / (flatCar.x - bottomPost.x);
+        double topFactor = extendedDistance / Math.sqrt(1 + Math.pow(topSlope, 2));
+        double bottomFactor = extendedDistance / Math.sqrt(1 + Math.pow(bottomSlope, 2));
+
+        Vector2 extendedTop = new Vector2(
+                topPost.x + topFactor,
+                topPost.y + (topFactor * topSlope)
+        );
+        Vector2 extendedBottom = new Vector2(
+                bottomPost.x - bottomFactor,
+                bottomPost.y - (bottomFactor * bottomSlope)
+        );
+        Vector2 topBox = new Vector2(extendedTop.x, Math.signum(defender.y) * 70);
+        Vector2 bottomBox = new Vector2(extendedBottom.x, Math.signum(defender.y) * 70);
+
+        return new Polygon(new Vector2[] {
+                defender.flatten(),
+                topPost,
+                extendedTop,
+                topBox,
+                bottomBox,
+                extendedBottom,
+                bottomPost
+        });
+    }
 }
