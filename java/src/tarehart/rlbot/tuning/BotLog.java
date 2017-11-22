@@ -22,7 +22,9 @@ public class BotLog {
     }
 
     public static void setTimeStamp(long time) {
-        timeStamp =  time > 0 ? "(" + ((int)time / 60) + ":" + ((int)time%60) + ")" : "";
+        String minutes = "" + (int)time / 60;
+        String seconds = String.format("%02d", (int)time % 60);
+        timeStamp =  time > 0 ? "(" + minutes + ":" + seconds + ")" : "";
     }
 
     public static String collect(int playerIndex) {

@@ -17,6 +17,7 @@ public abstract class Bot {
     private final Team team;
     private final int playerIndex;
     Plan currentPlan = null;
+    Plan previousPlan = null;
     ZonePlan currentZonePlan = null;
     private Readout readout;
     private String previousSituation = null;
@@ -69,6 +70,7 @@ public abstract class Bot {
             println("[Sitch] " + situation, input.playerIndex);
         }
         previousSituation = situation;
+        previousPlan = currentPlan;
         ballPath.ifPresent(bp -> readout.update(input, posture, situation, BotLog.collect(input.playerIndex), bp));
 
         return output;
