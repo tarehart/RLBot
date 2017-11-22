@@ -18,7 +18,7 @@ import java.util.Optional;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class RotateAndWaitToClearStep implements Step {
-    private static final double CENTER_OFFSET = -5;
+    private static final double CENTER_OFFSET = -2;
     private static final double AWAY_FROM_GOAL = -2;
     private Plan plan;
     private LocalDateTime startTime;
@@ -51,7 +51,31 @@ public class RotateAndWaitToClearStep implements Step {
         CarData car = input.getMyCarData();
 
         Vector3 goalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
-        Vector2 targetPosition = new Vector2(Math.signum(input.ballPosition.x) * CENTER_OFFSET, goalCenter.y - (Math.signum(goalCenter.y) * AWAY_FROM_GOAL));
+        Vector2 waypoint1 = new Vector2(
+            Math.signum(input.ballPosition.x) * (CENTER_OFFSET - 4),
+            goalCenter.y
+        );
+        Vector2 waypoint2 = new Vector2(
+            Math.signum(input.ballPosition.x) * (CENTER_OFFSET - 2),
+            goalCenter.y - (Math.signum(goalCenter.y) * (AWAY_FROM_GOAL - 3))
+        );
+        Vector2 waypoint3 = new Vector2(
+            Math.signum(input.ballPosition.x) * CENTER_OFFSET,
+            goalCenter.y - (Math.signum(goalCenter.y) * AWAY_FROM_GOAL)
+        );
+
+        Vector2 targetPosition;
+        if(Math.abs(myCar.position.y) < Math.abs(waypoint1.y)) {
+            targetPosition = waypoint1; // Outside of net, go for net entry vector
+        }
+        else if(Math.abs(myCar.position.y) > Math.abs(waypoint1.y) && Math.abs(myCar.position.y) < Math.abs(waypoint2.y))
+        {
+            targetPosition = waypoint2; // Entered net, start turning.
+        }
+        else
+        {
+            targetPosition = waypoint3; // Probably made it to waypoint 2, turn back towards net opening
+        }
 
         // Check to see if we are in net and facing out
         boolean myCarIsInNet = Math.signum(myCar.position.y) == Math.signum(myGoalCenter.y)
@@ -62,15 +86,18 @@ public class RotateAndWaitToClearStep implements Step {
             double leftPostCorrection = myCar.orientation.noseVector.flatten().correctionAngle(leftPostVector);
             double rightPostCorrection = myCar.orientation.noseVector.flatten().correctionAngle(rightPostVector);
 
-            boolean myCarIsFacingOut = Math.signum(leftPostCorrection) != Math.signum(rightPostCorrection);
+            boolean myCarIsFacingOut = Math.signum(leftPostCorrection) != Math.signum(rightPostCorrection)
+                    && Math.abs(leftPostCorrection) < Math.toRadians(80)
+                    && Math.abs(rightPostCorrection) < Math.toRadians(80);
+
             // If we are in net and facing out, just sit still
             if(myCarIsFacingOut) {
                 return Optional.of(new AgentOutput());
             }
         }
-        
+
         // If we aren't in net yet, go there
-        AgentOutput planForStraightDrive = SteerUtil.steerTowardGroundPosition(car, targetPosition);
+        AgentOutput planForStraightDrive = SteerUtil.steerTowardGroundPosition(car, targetPosition, true);
         return Optional.of(planForStraightDrive);
     }
 

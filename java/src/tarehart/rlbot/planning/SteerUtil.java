@@ -163,7 +163,22 @@ public class SteerUtil {
         Vector2 myPositionFlat = carData.position.flatten();
         double distance = position.distance(myPositionFlat);
         double speed = carData.velocity.magnitude();
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic);
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false);
+    }
+
+    public static AgentOutput steerTowardGroundPosition(CarData carData, Vector2 position, boolean noBoosting) {
+
+        if (ArenaModel.isCarOnWall(carData)) {
+            return steerTowardGroundPositionFromWall(carData, position);
+        }
+
+        WaypointTelemetry.set(position, carData.team);
+
+        double correctionAngle = getCorrectionAngleRad(carData, position);
+        Vector2 myPositionFlat = carData.position.flatten();
+        double distance = position.distance(myPositionFlat);
+        double speed = carData.velocity.magnitude();
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, noBoosting);
     }
 
     private static AgentOutput steerTowardGroundPositionFromWall(CarData carData, Vector2 position) {
@@ -184,17 +199,17 @@ public class SteerUtil {
         double correctionAngle = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toPosition, carData.orientation.roofVector);
         double speed = carData.velocity.magnitude();
         double distance = position.distance(carData.position);
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic);
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false);
     }
 
-    private static AgentOutput getSteeringOutput(double correctionAngle, double distance, double speed, boolean isSupersonic) {
+    private static AgentOutput getSteeringOutput(double correctionAngle, double distance, double speed, boolean isSupersonic, boolean noBoosting) {
         double difference = Math.abs(correctionAngle);
         double turnSharpness = difference * 6/Math.PI + difference * speed * .1;
         turnSharpness = (1 - DEAD_ZONE) * turnSharpness + Math.signum(turnSharpness) * DEAD_ZONE;
 
         boolean shouldBrake = distance < 25 && difference > Math.PI / 4 && speed > 25;
         boolean shouldSlide = shouldBrake || difference > Math.PI / 2;
-        boolean shouldBoost = !shouldBrake && difference < Math.PI / 6 && !isSupersonic;
+        boolean shouldBoost = !noBoosting && !shouldBrake && difference < Math.PI / 6 && !isSupersonic;
 
         return new AgentOutput()
                 .withAcceleration(shouldBrake ? 0 : 1)

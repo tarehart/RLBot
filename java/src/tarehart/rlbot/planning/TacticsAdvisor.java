@@ -46,20 +46,16 @@ public class TacticsAdvisor {
         if (situation.scoredOnThreat.isPresent()) {
             return new Plan(Plan.Posture.SAVE).withStep(new WhatASaveStep());
         }
-
+        if(situation.waitToClear) {
+            return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
+        }
         if (situation.forceDefensivePosture) {
             double secondsToOverrideFor = 0.25;
             return new Plan(Plan.Posture.DEFENSIVE).withStep(new GetOnDefenseStep(secondsToOverrideFor));
         }
-
-        if(situation.waitToClear) {
-            return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
-        }
-
         if (situation.needsDefensiveClear) {
             return new Plan(Plan.Posture.CLEAR).withStep(new IdealDirectedHitStep(new KickAwayFromOwnGoal(), input));
         }
-
         if (situation.shotOnGoalAvailable) {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new IdealDirectedHitStep(new KickAtEnemyGoal(), input));
         }
