@@ -5,6 +5,7 @@ from datetime import datetime
 import game_data_struct as gd
 import importlib
 import mmap
+import os
 import rate_limiter
 
 OUTPUT_SHARED_MEMORY_TAG = 'Local\\RLBotOutput'
@@ -39,9 +40,6 @@ class BotManager:
         lock = ctypes.c_long(0)
         game_tick_packet = gd.GameTickPacket() # We want to do a deep copy for game inputs so people don't mess with em
 
-        # Use dll for writing to lock
-        Interlocked = ctypes.CDLL('InterlockedWrapper', use_last_error=True)
-
         # Get bot module
         agent_module = importlib.import_module(self.module_name)
 
@@ -66,14 +64,13 @@ class BotManager:
             ctypes.memmove(ctypes.addressof(lock), game_data_shared_memory.read(ctypes.sizeof(lock)), ctypes.sizeof(lock)) # dll uses InterlockedExchange so this read will return the correct value!
 
             if lock.value != REFRESH_IN_PROGRESS:
+                game_data_shared_memory.seek(4, os.SEEK_CUR) # Move 4 bytes past error code
                 ctypes.memmove(ctypes.addressof(game_tick_packet), game_data_shared_memory.read(ctypes.sizeof(gd.GameTickPacket)),ctypes.sizeof(gd.GameTickPacket))  # copy shared memory into struct
 
             # Call agent
             controller_input = agent.get_output_vector(game_tick_packet)
 
-            # Lock, Write, Unlock
-            Interlocked.InterlockedExchangeWrapper(ctypes.byref(player_input_lock), ctypes.c_long(REFRESH_IN_PROGRESS))
-
+            # Write all player inputs
             player_input.fThrottle = controller_input[0]
             player_input.fSteer = controller_input[1]
             player_input.fPitch = controller_input[2]
@@ -82,8 +79,6 @@ class BotManager:
             player_input.bJump = controller_input[5]
             player_input.bBoost = controller_input[6]
             player_input.bHandbrake = controller_input[7]
-
-            Interlocked.InterlockedExchangeWrapper(ctypes.byref(player_input_lock), ctypes.c_long(REFRESH_NOT_IN_PROGRESS))
 
             # Ratelimit here
             after = datetime.now()
