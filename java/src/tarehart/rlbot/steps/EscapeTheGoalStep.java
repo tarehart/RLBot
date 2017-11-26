@@ -1,16 +1,16 @@
 package tarehart.rlbot.steps;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.planning.SteerUtil;
 
+import java.awt.*;
 import java.util.Optional;
 
 public class EscapeTheGoalStep implements Step {
-
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
         CarData car = input.getMyCarData();
@@ -30,5 +30,10 @@ public class EscapeTheGoalStep implements Step {
     @Override
     public String getSituation() {
         return "Escaping the goal";
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

@@ -1,13 +1,13 @@
 package tarehart.rlbot.steps.landing;
 
-import tarehart.rlbot.math.VectorUtil;
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.input.CarOrientation;
+import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.steps.Step;
@@ -17,6 +17,7 @@ import tarehart.rlbot.steps.rotation.YawToPlaneStep;
 import tarehart.rlbot.steps.wall.DescendFromWallStep;
 import tarehart.rlbot.steps.wall.WallTouchStep;
 
+import java.awt.*;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -32,7 +33,6 @@ public class LandGracefullyStep implements Step {
         Vector2 toBall = (input.ballPosition).minus(input.getMyCarData().position).flatten();
         return toBall.normalized();
     }
-
 
     public LandGracefullyStep() {
         this(input -> input.getMyCarData().velocity.flatten());
@@ -91,5 +91,10 @@ public class LandGracefullyStep implements Step {
     @Override
     public String getSituation() {
         return "Landing gracefully " + (plan != null ? "(" + plan.getSituation() + ")" : "");
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

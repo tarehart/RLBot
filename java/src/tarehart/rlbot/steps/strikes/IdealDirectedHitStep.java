@@ -4,10 +4,10 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.steps.Step;
 
+import java.awt.*;
 import java.util.Optional;
 
 public class IdealDirectedHitStep implements Step {
-
     private Step proxyStep;
 
     public IdealDirectedHitStep(KickStrategy kickStrategy, AgentInput input) {
@@ -33,5 +33,10 @@ public class IdealDirectedHitStep implements Step {
     @Override
     public boolean canInterrupt() {
         return proxyStep.canInterrupt();
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

@@ -3,10 +3,9 @@ package tarehart.rlbot.steps.debug;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -17,7 +16,6 @@ import static tarehart.rlbot.math.TimeUtil.secondsBetween;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class CalibrateStep implements Step {
-
     public static final double TINY_VALUE = .0001;
     private LocalDateTime gameClockStart;
     private LocalDateTime wallClockStart;
@@ -52,5 +50,10 @@ public class CalibrateStep implements Step {
     @Override
     public String getSituation() {
         return "Calibrating";
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

@@ -102,8 +102,6 @@ public class Readout {
             arenaDisplay.updateExpectedEnemyContact(tacSituation.expectedEnemyContact.space);
         }
 
-        arenaDisplay.updateFullBoosts(input.fullBoosts);
-
         updateBallHeightMaxes(input);
         updateTacticsInfo(input);
         updateOmniText(input);

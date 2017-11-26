@@ -1,22 +1,25 @@
 package tarehart.rlbot.steps.strikes;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.*;
+import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.math.TimeUtil;
+import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.AirTouchPlanner;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.tuning.ManeuverMath;
 
 import java.time.Duration;
 import java.util.Optional;
 
 public class DirectedKickUtil {
     private static final double BALL_VELOCITY_INFLUENCE = .3;
-    private static final double SIDE_HIT_SPEED = 20;
 
     public static Optional<DirectedKickPlan> planKick(AgentInput input, KickStrategy kickStrategy, boolean isSideHit) {
         Vector3 interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2);
@@ -41,7 +44,7 @@ public class DirectedKickUtil {
         kickPlan.ballAtIntercept = ballMotion.get();
 
         double secondsTillImpactRoughly = TimeUtil.secondsBetween(input.time, kickPlan.ballAtIntercept.getTime());
-        double impactSpeed = isSideHit ? SIDE_HIT_SPEED :
+        double impactSpeed = isSideHit ? ManeuverMath.DODGE_SPEED :
                 kickPlan.distancePlot.getMotionAfterSeconds(secondsTillImpactRoughly).map(dts -> dts.speed).orElse(AccelerationModel.SUPERSONIC_SPEED);
 
         Vector3 easyForce;

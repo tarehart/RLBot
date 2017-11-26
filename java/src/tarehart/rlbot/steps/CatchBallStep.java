@@ -1,20 +1,20 @@
 package tarehart.rlbot.steps;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.AirTouchPlanner;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
 
+import java.awt.*;
 import java.util.Optional;
 
 public class CatchBallStep implements Step {
-
     private int confusionLevel = 0;
     private SpaceTime latestCatchLocation;
     private boolean firstFrame = true;
@@ -69,5 +69,10 @@ public class CatchBallStep implements Step {
     @Override
     public boolean canInterrupt() {
         return true;
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

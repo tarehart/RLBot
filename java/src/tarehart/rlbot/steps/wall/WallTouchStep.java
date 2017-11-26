@@ -1,13 +1,13 @@
 package tarehart.rlbot.steps.wall;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
@@ -15,8 +15,8 @@ import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -25,7 +25,6 @@ import static java.util.Optional.of;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class WallTouchStep implements Step {
-
     public static final double ACCEPTABLE_WALL_DISTANCE = ArenaModel.BALL_RADIUS + 5;
     public static final double WALL_DEPART_SPEED = 10;
     private static final double MIN_HEIGHT = 10;
@@ -62,7 +61,6 @@ public class WallTouchStep implements Step {
         BallSlice motion = ballMotion.get();
 
 
-
         if (originalIntercept == null) {
             originalIntercept = motion.getSpace();
         } else {
@@ -79,7 +77,6 @@ public class WallTouchStep implements Step {
 
         return Optional.of(SteerUtil.steerTowardWallPosition(car, motion.space));
     }
-
 
     private static boolean readyToJump(AgentInput input, SpaceTime carPositionAtContact) {
 
@@ -132,5 +129,10 @@ public class WallTouchStep implements Step {
         }
 
         return false;
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

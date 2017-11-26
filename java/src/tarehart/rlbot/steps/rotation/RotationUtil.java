@@ -1,10 +1,6 @@
 package tarehart.rlbot.steps.rotation;
 
-import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.math.VectorUtil;
-
-import java.time.Duration;
 
 public class RotationUtil {
 

@@ -20,7 +20,7 @@ public class Plan {
     }
 
     public boolean canInterrupt() {
-        return isComplete() || !unstoppable && steps.get(currentStepIndex).canInterrupt();
+        return isComplete() || !unstoppable && getCurrentStep().canInterrupt();
     }
 
     public enum Posture {
@@ -76,7 +76,7 @@ public class Plan {
         }
 
         while (currentStepIndex < steps.size()) {
-            Step currentStep = steps.get(currentStepIndex);
+            Step currentStep = getCurrentStep();
 
             Optional<AgentOutput> output = currentStep.getOutput(input);
             if (output.isPresent()) {
@@ -90,6 +90,13 @@ public class Plan {
         return Optional.empty();
     }
 
+    /**
+     * You should make sure the plan is not complete before calling this.
+     */
+    public Step getCurrentStep() {
+        return steps.get(currentStepIndex);
+    }
+
     private void nextStep() {
         currentStepIndex++;
     }
@@ -98,7 +105,7 @@ public class Plan {
         if (isComplete()) {
             return "Dead plan";
         }
-        return posture.name() + " " + (currentStepIndex + 1) + ". " + steps.get(currentStepIndex).getSituation();
+        return posture.name() + " " + (currentStepIndex + 1) + ". " + getCurrentStep().getSituation();
     }
 
     public boolean isComplete() {

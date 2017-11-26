@@ -3,19 +3,14 @@ package tarehart.rlbot.steps.defense;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.tuning.BotLog;
 
-import java.time.Duration;
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
-
-import static tarehart.rlbot.tuning.BotLog.println;
 
 public class RotateAndWaitToClearStep implements Step {
     private static final double CENTER_OFFSET = -2;
@@ -23,11 +18,12 @@ public class RotateAndWaitToClearStep implements Step {
     private Plan plan;
     private LocalDateTime startTime;
 
-    public RotateAndWaitToClearStep() {}
+    public RotateAndWaitToClearStep() {
+    }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
         TacticalSituation tacticalSituation = null;
-        if(TacticsTelemetry.get(input.team).isPresent())
+        if (TacticsTelemetry.get(input.team).isPresent())
             tacticalSituation = TacticsTelemetry.get(input.team).get();
         CarData myCar = input.getMyCarData();
         Vector3 myGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
@@ -52,28 +48,24 @@ public class RotateAndWaitToClearStep implements Step {
 
         Vector3 goalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
         Vector2 waypoint1 = new Vector2(
-            Math.signum(input.ballPosition.x) * (CENTER_OFFSET - 4),
-            goalCenter.y
+                Math.signum(input.ballPosition.x) * (CENTER_OFFSET - 4),
+                goalCenter.y
         );
         Vector2 waypoint2 = new Vector2(
-            Math.signum(input.ballPosition.x) * (CENTER_OFFSET - 2),
-            goalCenter.y - (Math.signum(goalCenter.y) * (AWAY_FROM_GOAL - 3))
+                Math.signum(input.ballPosition.x) * (CENTER_OFFSET - 2),
+                goalCenter.y - (Math.signum(goalCenter.y) * (AWAY_FROM_GOAL - 3))
         );
         Vector2 waypoint3 = new Vector2(
-            Math.signum(input.ballPosition.x) * CENTER_OFFSET,
-            goalCenter.y - (Math.signum(goalCenter.y) * AWAY_FROM_GOAL)
+                Math.signum(input.ballPosition.x) * CENTER_OFFSET,
+                goalCenter.y - (Math.signum(goalCenter.y) * AWAY_FROM_GOAL)
         );
 
         Vector2 targetPosition;
-        if(Math.abs(myCar.position.y) < Math.abs(waypoint1.y)) {
+        if (Math.abs(myCar.position.y) < Math.abs(waypoint1.y)) {
             targetPosition = waypoint1; // Outside of net, go for net entry vector
-        }
-        else if(Math.abs(myCar.position.y) > Math.abs(waypoint1.y) && Math.abs(myCar.position.y) < Math.abs(waypoint2.y))
-        {
+        } else if (Math.abs(myCar.position.y) > Math.abs(waypoint1.y) && Math.abs(myCar.position.y) < Math.abs(waypoint2.y)) {
             targetPosition = waypoint2; // Entered net, start turning.
-        }
-        else
-        {
+        } else {
             targetPosition = waypoint3; // Probably made it to waypoint 2, turn back towards net opening
         }
 
@@ -91,7 +83,7 @@ public class RotateAndWaitToClearStep implements Step {
                     && Math.abs(rightPostCorrection) < Math.toRadians(80);
 
             // If we are in net and facing out, just sit still
-            if(myCarIsFacingOut) {
+            if (myCarIsFacingOut) {
                 return Optional.of(new AgentOutput());
             }
         }
@@ -107,7 +99,14 @@ public class RotateAndWaitToClearStep implements Step {
     }
 
     @Override
-    public String getSituation() { return "Rotating and waiting to clear"; }
+    public String getSituation() {
+        return "Rotating and waiting to clear";
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
+    }
 }
 
 

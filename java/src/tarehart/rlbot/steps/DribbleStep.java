@@ -1,14 +1,14 @@
 package tarehart.rlbot.steps;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.BallPhysics;
@@ -16,8 +16,8 @@ import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SetPieces;
 import tarehart.rlbot.planning.SteerUtil;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -26,9 +26,7 @@ import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DribbleStep implements Step {
-
     public static final double DRIBBLE_DISTANCE = 20;
-
     private Plan plan;
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -171,5 +169,10 @@ public class DribbleStep implements Step {
     @Override
     public String getSituation() {
         return "Dribbling";
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

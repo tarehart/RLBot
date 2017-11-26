@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public class ManeuverMath {
 
-    private static final double DODGE_SPEED = 10;
+    public static final double DODGE_SPEED = 10;
 
     public static final double BASE_CAR_Z = 0.3405;
 

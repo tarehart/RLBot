@@ -14,6 +14,7 @@ import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -90,4 +91,8 @@ public class GetOnDefenseStep implements Step {
         return "Getting on defense";
     }
 
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
+    }
 }

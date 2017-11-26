@@ -1,27 +1,24 @@
 package tarehart.rlbot.steps.debug;
 
-import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SteerPlan;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.Duration;
 import java.util.Optional;
 
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class TagAlongStep implements Step {
-
     private Plan plan;
-
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
@@ -64,5 +61,10 @@ public class TagAlongStep implements Step {
     @Override
     public String getSituation() {
         return Plan.concatSituation("Tagging along", plan);
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

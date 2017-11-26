@@ -50,6 +50,7 @@ public class ArenaDisplay extends JPanel {
     public static final Color ORANGE_COLOR = new Color(247, 151, 66);
     public static final Color BOOST_COLOR = new Color(255,207,64);
 
+    private AgentInput input;
     private Optional<CarData> orangeCar;
     private Optional<CarData> blueCar;
     private CarData myCar;
@@ -57,9 +58,9 @@ public class ArenaDisplay extends JPanel {
     private Vector3 ball;
     private Vector3 ballPrediction = new Vector3();
     private Vector3 expectedEnemyContact = new Vector3();
-    private java.util.List<Vector3> fullBoosts = new ArrayList<Vector3>();
 
     public void updateInput(AgentInput input) {
+        this.input = input;
         orangeCar = input.getCarData(Bot.Team.ORANGE);
         blueCar = input.getCarData(Bot.Team.BLUE);
         myCar = input.getMyCarData();
@@ -73,19 +74,6 @@ public class ArenaDisplay extends JPanel {
 
     public void updateExpectedEnemyContact(Vector3 expectedEnemyContact) {
         this.expectedEnemyContact = expectedEnemyContact;
-    }
-
-    public void updateFullBoosts(java.util.List<FullBoost> fullBoosts) {
-        this.fullBoosts.clear();
-
-        if(fullBoosts != null)
-        {
-            fullBoosts.forEach(x-> {
-                if(x.isActive) {
-                    this.fullBoosts.add(x.location);
-                }
-            });
-        }
     }
 
     @Override
@@ -123,9 +111,11 @@ public class ArenaDisplay extends JPanel {
         graphics2D.setColor(new Color(59, 133, 81));
         graphics2D.draw(ZoneDefinitions.FULLFIELD.getAwtArea());
 
-        // Draw the shot defense zones
-        drawShotDefenseZones(situationOption, graphics2D);
-        drawDefensiveReachZones(situationOption, graphics2D);
+        situationOption.ifPresent(situation -> {
+            drawShotDefenseZones(situation, graphics2D);
+            drawDefensiveReachZones(situation, graphics2D);
+            situation.currentPlan.ifPresent(currentPlan -> drawPlan(currentPlan, graphics2D));
+        });
 
         // Draw the steering waypoint
         drawWaypoint(graphics2D);
@@ -144,6 +134,12 @@ public class ArenaDisplay extends JPanel {
 
         // Draw the available full boost pads
         drawBoosts(graphics2D);
+    }
+
+    private void drawPlan(Plan plan, Graphics2D graphics2D) {
+        if (!plan.isComplete()) {
+            plan.getCurrentStep().drawDebugInfo(graphics2D);
+        }
     }
 
     private void drawWaypoint(Graphics2D graphics2D) {
@@ -197,9 +193,11 @@ public class ArenaDisplay extends JPanel {
     }
 
     private void drawBoosts(Graphics2D g) {
-        if(fullBoosts != null){
-            fullBoosts.forEach(x-> drawBoost(x, g));
-        }
+        input.fullBoosts.forEach(fullBoost -> {
+            if (fullBoost.isActive) {
+                drawBoost(fullBoost.location, g);
+            }
+        });
     }
 
     private void drawBoost(Vector3 position, Graphics2D g) {
@@ -212,51 +210,43 @@ public class ArenaDisplay extends JPanel {
         g.fill(transformedBall);
     }
 
-    private void drawShotDefenseZones(Optional<TacticalSituation> situationOption, Graphics2D g) {
-        if (situationOption.isPresent()) {
-            TacticalSituation situation = situationOption.get();
+    private void drawShotDefenseZones(TacticalSituation situation, Graphics2D g) {
+        if(situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) {
+            g.setColor(new Color(255, 0, 0, 79));
+            Vector2 myGoalCenter = GoalUtil.getOwnGoal(myCar.team).getCenter().flatten();
+            Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, myGoalCenter);
+            g.draw(shotDefenseZone.getAwtArea());
+        }
 
-            if(situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) {
-                g.setColor(new Color(255, 0, 0, 79));
-                Vector2 myGoalCenter = GoalUtil.getOwnGoal(myCar.team).getCenter().flatten();
-                Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, myGoalCenter);
-                g.draw(shotDefenseZone.getAwtArea());
-            }
-
-            if(situation.shotOnGoalAvailable) {
-                g.setColor(new Color(0, 255, 0, 79));
-                Vector2 enemyGoalCenter = GoalUtil.getEnemyGoal(myCar.team).getCenter().flatten();
-                Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, enemyGoalCenter);
-                g.draw(shotDefenseZone.getAwtArea());
-            }
+        if(situation.shotOnGoalAvailable) {
+            g.setColor(new Color(0, 255, 0, 79));
+            Vector2 enemyGoalCenter = GoalUtil.getEnemyGoal(myCar.team).getCenter().flatten();
+            Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, enemyGoalCenter);
+            g.draw(shotDefenseZone.getAwtArea());
         }
     }
 
-    private void drawDefensiveReachZones(Optional<TacticalSituation> situationOption, Graphics2D g) {
-        if (situationOption.isPresent()) {
-            TacticalSituation situation = situationOption.get();
+    private void drawDefensiveReachZones(TacticalSituation situation, Graphics2D g) {
+        Vector3 myGoalCenter = GoalUtil.getOwnGoal(myCar.team).getCenter();
+        boolean myCarIsInNet = Math.signum(myCar.position.y) == Math.signum(myGoalCenter.y)
+                && Math.abs(myCar.position.y) > Math.abs(myGoalCenter.y);
 
-            Vector3 myGoalCenter = GoalUtil.getOwnGoal(myCar.team).getCenter();
-            boolean myCarIsInNet = Math.signum(myCar.position.y) == Math.signum(myGoalCenter.y)
-                    && Math.abs(myCar.position.y) > Math.abs(myGoalCenter.y);
+        if((situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) && myCarIsInNet) {
+            g.setColor(new Color(0, 255, 0, 79));
+            Polygon shotDefenseZone = ZoneUtil.getDefensiveReach(myCar.position, myGoalCenter.flatten());
+            g.draw(shotDefenseZone.getAwtArea());
+        }
 
-            if((situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) && myCarIsInNet) {
-                g.setColor(new Color(0, 255, 0, 79));
-                Polygon shotDefenseZone = ZoneUtil.getDefensiveReach(myCar.position, myGoalCenter.flatten());
+        if(enemyCarOptional.isPresent()) {
+            CarData enemyCar = enemyCarOptional.get();
+            Vector3 enemyGoalCenter = GoalUtil.getEnemyGoal(myCar.team).getCenter();
+            boolean enemyCarIsInNet = Math.signum(enemyCar.position.y) == Math.signum(enemyGoalCenter.y)
+                    && Math.abs(enemyCar.position.y) > Math.abs(enemyGoalCenter.y);
+
+            if (situation.shotOnGoalAvailable && enemyCarIsInNet) {
+                g.setColor(new Color(255, 0, 0, 79));
+                Polygon shotDefenseZone = ZoneUtil.getDefensiveReach(enemyCar.position, enemyGoalCenter.flatten());
                 g.draw(shotDefenseZone.getAwtArea());
-            }
-
-            if(enemyCarOptional.isPresent()) {
-                CarData enemyCar = enemyCarOptional.get();
-                Vector3 enemyGoalCenter = GoalUtil.getEnemyGoal(myCar.team).getCenter();
-                boolean enemyCarIsInNet = Math.signum(enemyCar.position.y) == Math.signum(enemyGoalCenter.y)
-                        && Math.abs(enemyCar.position.y) > Math.abs(enemyGoalCenter.y);
-
-                if (situation.shotOnGoalAvailable && enemyCarIsInNet) {
-                    g.setColor(new Color(255, 0, 0, 79));
-                    Polygon shotDefenseZone = ZoneUtil.getDefensiveReach(enemyCar.position, enemyGoalCenter.flatten());
-                    g.draw(shotDefenseZone.getAwtArea());
-                }
             }
         }
     }

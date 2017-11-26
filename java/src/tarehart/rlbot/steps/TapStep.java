@@ -2,8 +2,8 @@ package tarehart.rlbot.steps;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -43,5 +43,10 @@ public class TapStep implements Step {
     @Override
     public String getSituation() {
         return "Muscle memory";
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

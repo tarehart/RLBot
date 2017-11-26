@@ -1,10 +1,10 @@
 package tarehart.rlbot.steps;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.AirTouchPlanner;
@@ -12,10 +12,10 @@ import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.strikes.InterceptStep;
 
+import java.awt.*;
 import java.util.Optional;
 
 public class ChaseBallStep implements Step {
-
     private Plan plan;
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -67,5 +67,10 @@ public class ChaseBallStep implements Step {
     @Override
     public String getSituation() {
         return Plan.concatSituation("Chasing ball", plan);
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

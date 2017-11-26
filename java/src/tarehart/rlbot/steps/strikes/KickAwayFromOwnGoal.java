@@ -1,11 +1,10 @@
 package tarehart.rlbot.steps.strikes;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.VectorUtil;
-import tarehart.rlbot.planning.GoalUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 
 import static tarehart.rlbot.planning.GoalUtil.getOwnGoal;
 

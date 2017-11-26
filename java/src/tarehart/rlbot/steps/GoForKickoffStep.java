@@ -3,23 +3,21 @@ package tarehart.rlbot.steps;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SetPieces;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.util.Optional;
 
 public class GoForKickoffStep implements Step {
-
     private static final double DIAGONAL_KICKOFF_X = 40.98;
     private static final double CHEATER_KICKOFF_X = 5.09;
     private static final double CENTER_KICKOFF_X = 0;
     private static final double WIGGLE_ROOM = 2;
     private static final double CHEATIN_BOOST_Y = 58;
-
     private Plan plan;
     private KickoffType kickoffType;
 
@@ -71,26 +69,26 @@ public class GoForKickoffStep implements Step {
 
     private KickoffType getKickoffType(CarData car) {
         double xPosition = car.position.x;
-        if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM){
-            BotLog.println("it be center" , car.playerIndex);
+        if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM) {
+            BotLog.println("it be center", car.playerIndex);
             return KickoffType.CENTER;
         }
 
-        if (getNumberDistance(CHEATER_KICKOFF_X, Math.abs(xPosition)) < WIGGLE_ROOM){
-            BotLog.println("it be cheatin" , car.playerIndex);
+        if (getNumberDistance(CHEATER_KICKOFF_X, Math.abs(xPosition)) < WIGGLE_ROOM) {
+            BotLog.println("it be cheatin", car.playerIndex);
             return KickoffType.CHEATIN;
         }
 
-        if (getNumberDistance(DIAGONAL_KICKOFF_X , Math.abs(xPosition)) < WIGGLE_ROOM){
-            BotLog.println("it be slanterd" , car.playerIndex);
+        if (getNumberDistance(DIAGONAL_KICKOFF_X, Math.abs(xPosition)) < WIGGLE_ROOM) {
+            BotLog.println("it be slanterd", car.playerIndex);
             return KickoffType.SLANTERD;
         }
 
-        BotLog.println("what on earth" , car.playerIndex);
+        BotLog.println("what on earth", car.playerIndex);
         return KickoffType.UNKNOWN;
     }
 
-    private static double getNumberDistance(double first, double second){
+    private static double getNumberDistance(double first, double second) {
         return Math.abs(first - second);
     }
 
@@ -102,5 +100,10 @@ public class GoForKickoffStep implements Step {
     @Override
     public String getSituation() {
         return Plan.concatSituation("Going for kickoff", plan);
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

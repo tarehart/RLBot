@@ -50,7 +50,7 @@ public class ReliefBot extends Bot {
 
         Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath);
+        TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath, currentPlan);
 
 //        if (canInterruptPlanFor(Plan.Posture.OVERRIDE)) {
 //            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new CalibrateStep());
@@ -70,7 +70,7 @@ public class ReliefBot extends Bot {
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
             println("Canceling current plan. Need to go for save!", input.playerIndex);
             currentPlan = null;
-        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && currentPlan.getPosture() == Plan.Posture.OFFENSIVE) {
+        } else if (zonePlan.isPresent() && situation.forceDefensivePosture && canInterruptPlanFor(Plan.Posture.DEFENSIVE)) {
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex);
             currentPlan = null;
         } else if (situation.waitToClear && canInterruptPlanFor(Plan.Posture.WAITTOCLEAR)) {

@@ -3,6 +3,7 @@ package tarehart.rlbot.steps;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 
+import java.awt.*;
 import java.util.Optional;
 
 public interface Step {
@@ -17,4 +18,6 @@ public interface Step {
     String getSituation();
 
     boolean canInterrupt();
+
+    void drawDebugInfo(Graphics2D graphics);
 }

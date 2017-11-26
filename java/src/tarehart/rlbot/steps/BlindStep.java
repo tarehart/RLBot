@@ -3,6 +3,7 @@ package tarehart.rlbot.steps;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -36,5 +37,10 @@ public class BlindStep implements Step {
     @Override
     public boolean canInterrupt() {
         return false;
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

@@ -1,20 +1,19 @@
 package tarehart.rlbot.steps.rotation;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.steps.Step;
 
+import java.awt.*;
 import java.util.Optional;
 import java.util.function.Function;
 
 
 public abstract class OrientToPlaneStep implements Step {
-
     public static final double SPIN_DECELERATION = 6; // Radians per second per second
-
     private Function<AgentInput, Vector3> planeNormalFn;
     protected Vector3 planeNormal;
     protected boolean allowUpsideDown;
@@ -48,7 +47,6 @@ public abstract class OrientToPlaneStep implements Step {
         return getRadiansSpentDecelerating(angularVelocity) >= Math.abs(radiansRemaining);
     }
 
-
     /**
      * Does not care if we go the "wrong way" and end up upside down.
      */
@@ -64,8 +62,11 @@ public abstract class OrientToPlaneStep implements Step {
     }
 
     protected abstract double getOrientationCorrection(CarData car);
+
     protected abstract double getAngularVelocity(CarData car);
+
     protected abstract AgentOutput accelerate(boolean positiveRadians);
+
     protected abstract double getSpinDeceleration();
 
     private AgentOutput accelerateTowardPlane(CarData car) {
@@ -118,5 +119,10 @@ public abstract class OrientToPlaneStep implements Step {
     @Override
     public boolean canInterrupt() {
         return false;
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

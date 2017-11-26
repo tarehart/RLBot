@@ -155,7 +155,7 @@ public class TacticsAdvisor {
         }
     }
 
-    public TacticalSituation assessSituation(AgentInput input, BallPath ballPath) {
+    public TacticalSituation assessSituation(AgentInput input, BallPath ballPath, Plan currentPlan) {
 
         Optional<SpaceTime> enemyIntercept = getEnemyIntercept(input, ballPath);
         Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
@@ -179,6 +179,7 @@ public class TacticsAdvisor {
         situation.forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition);
         situation.goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition);
         situation.waitToClear = getWaitToClear(zonePlan, input);
+        situation.currentPlan = Optional.ofNullable(currentPlan);
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry.set(situation, input.team);

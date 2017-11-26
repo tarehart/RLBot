@@ -1,20 +1,19 @@
 package tarehart.rlbot.steps.strikes;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.tuning.ManeuverMath;
 
-import javax.swing.text.html.Option;
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -25,19 +24,15 @@ import static tarehart.rlbot.planning.SteerUtil.steerTowardGroundPosition;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DirectedSideHitStep implements Step {
-
     private static final double MANEUVER_SECONDS_PER_RADIAN = .1;
-    private static final double APPROACH_DISTANCE = 1.5;
-
+    private static final double GAP_BEFORE_DODGE = 1.5;
     private static final double DISTANCE_AT_CONTACT = 1.8;
     private Plan plan;
-
     private Vector3 originalIntercept;
     private LocalDateTime doneMoment;
     private KickStrategy kickStrategy;
     private Vector3 interceptModifier = null;
     private double maneuverSeconds = 0;
-
     private boolean finalApproach = false;
 
     public DirectedSideHitStep(KickStrategy kickStrategy) {
@@ -75,7 +70,7 @@ public class DirectedSideHitStep implements Step {
         DirectedKickPlan kickPlan = kickPlanOption.get();
 
         if (interceptModifier == null) {
-            Vector3 nearSide = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + APPROACH_DISTANCE));
+            Vector3 nearSide = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE));
             interceptModifier = new Vector3(nearSide.x, nearSide.y, nearSide.z - 1.4); // Closer to ground
         }
 
@@ -97,7 +92,7 @@ public class DirectedSideHitStep implements Step {
             return performFinalApproach(input, orthogonalPoint, kickPlan, carPositionAtIntercept, strikeDirection);
         }
 
-        Optional<Double> strikeTime = getStrikeTime(carPositionAtIntercept, APPROACH_DISTANCE);
+        Optional<Double> strikeTime = getStrikeTime(carPositionAtIntercept, GAP_BEFORE_DODGE);
         if (!strikeTime.isPresent()) {
             return Optional.empty();
         }
@@ -193,5 +188,10 @@ public class DirectedSideHitStep implements Step {
     @Override
     public String getSituation() {
         return Plan.concatSituation("Directed Side Hit", plan);
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

@@ -1,17 +1,20 @@
 package tarehart.rlbot.steps.strikes;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.*;
+import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPhysics;
-import tarehart.rlbot.planning.*;
+import tarehart.rlbot.planning.Plan;
+import tarehart.rlbot.planning.SteerPlan;
+import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.planning.StrikeProfile;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -20,18 +23,15 @@ import static java.util.Optional.empty;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DirectedNoseHitStep implements Step {
-
     public static final double MAX_NOSE_HIT_ANGLE = Math.PI / 18;
     private static final double MANEUVER_SECONDS_PER_RADIAN = .1;
     private Plan plan;
-
     private Vector3 originalIntercept;
     private LocalDateTime doneMoment;
     private KickStrategy kickStrategy;
     private Vector3 interceptModifier = null;
     private double maneuverSeconds = 0;
     private Double circleBackoff = null;
-
     private double estimatedAngleOfKickFromApproach;
 
     public DirectedNoseHitStep(KickStrategy kickStrategy) {
@@ -46,7 +46,7 @@ public class DirectedNoseHitStep implements Step {
 
         double angle = Vector2.angle(kickDirection, carToBall);
 
-        boolean wrongSide = angle > Math.PI * 2/3;
+        boolean wrongSide = angle > Math.PI * 2 / 3;
 
         return !tooBouncy && !wrongSide;
     }
@@ -117,7 +117,6 @@ public class DirectedNoseHitStep implements Step {
         SteerPlan circleTurnPlan = null;
 
 
-
         if (interceptModifier == null) {
             interceptModifier = kickPlan.plannedKickForce.scaledToMagnitude(-1.4);
         }
@@ -170,5 +169,10 @@ public class DirectedNoseHitStep implements Step {
     @Override
     public String getSituation() {
         return Plan.concatSituation("Directed nose hit", plan);
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

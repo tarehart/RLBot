@@ -1,7 +1,7 @@
 package tarehart.rlbot.steps.strikes;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
 

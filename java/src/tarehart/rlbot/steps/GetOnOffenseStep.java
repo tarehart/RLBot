@@ -1,25 +1,24 @@
 package tarehart.rlbot.steps;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.Duration;
 import java.util.Optional;
 
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class GetOnOffenseStep implements Step {
-
     private Plan plan;
 
     public static double getYAxisWrongSidedness(AgentInput input) {
@@ -56,7 +55,7 @@ public class GetOnOffenseStep implements Step {
             target = futureMotion.getSpace();
         }
 
-        if (futureMotion.getSpace().distance(enemyGoal.getCenter())  < ArenaModel.SIDE_WALL * .8) {
+        if (futureMotion.getSpace().distance(enemyGoal.getCenter()) < ArenaModel.SIDE_WALL * .8) {
             // Get into a strike position, 10 units behind the ball
             Vector3 goalToBall = target.minus(enemyGoal.getCenter());
             Vector3 goalToBallNormal = goalToBall.normaliseCopy();
@@ -68,7 +67,6 @@ public class GetOnOffenseStep implements Step {
             Vector3 goalToBallNormal = goalToBall.normaliseCopy();
             target = target.minus(goalToBallNormal.scaled(10));
         }
-
 
 
         double flatDistance = VectorUtil.flatDistance(target, car.position);
@@ -105,5 +103,10 @@ public class GetOnOffenseStep implements Step {
     @Override
     public String getSituation() {
         return "Getting on offense";
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

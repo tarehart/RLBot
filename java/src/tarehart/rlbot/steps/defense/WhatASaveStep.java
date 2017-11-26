@@ -1,13 +1,13 @@
 package tarehart.rlbot.steps.defense;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
@@ -17,6 +17,7 @@ import tarehart.rlbot.steps.strikes.DirectedSideHitStep;
 import tarehart.rlbot.steps.strikes.InterceptStep;
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal;
 
+import java.awt.*;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -84,5 +85,10 @@ public class WhatASaveStep implements Step {
     @Override
     public String getSituation() {
         return Plan.concatSituation("Making a save", plan);
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

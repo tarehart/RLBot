@@ -1,26 +1,20 @@
 package tarehart.rlbot.steps.strikes;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
-import tarehart.rlbot.math.VectorUtil;
-import tarehart.rlbot.physics.ArenaModel;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
-import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.SteerUtil;
-import tarehart.rlbot.planning.WaypointTelemetry;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.TapStep;
 import tarehart.rlbot.steps.rotation.PitchToPlaneStep;
 import tarehart.rlbot.steps.rotation.YawToPlaneStep;
-import tarehart.rlbot.tuning.BotLog;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -40,7 +34,6 @@ import static tarehart.rlbot.planning.WaypointTelemetry.set;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class MidairStrikeStep implements Step {
-
     private static final double SIDE_DODGE_THRESHOLD = Math.PI / 4;
     public static final int DODGE_TIME = 400;
     public static final double DODGE_DISTANCE = 5;
@@ -186,5 +179,10 @@ public class MidairStrikeStep implements Step {
     @Override
     public String getSituation() {
         return "Finishing aerial";
+    }
+
+    @Override
+    public void drawDebugInfo(Graphics2D graphics) {
+        // Draw nothing.
     }
 }

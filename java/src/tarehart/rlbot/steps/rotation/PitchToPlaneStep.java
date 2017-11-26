@@ -1,8 +1,8 @@
 package tarehart.rlbot.steps.rotation;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.math.vector.Vector3;
 
 public class PitchToPlaneStep extends OrientToPlaneStep {
 
