@@ -37,6 +37,6 @@ public class IdealDirectedHitStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        proxyStep.drawDebugInfo(graphics);
     }
 }

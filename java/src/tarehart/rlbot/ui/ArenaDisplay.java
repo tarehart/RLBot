@@ -118,7 +118,7 @@ public class ArenaDisplay extends JPanel {
         });
 
         // Draw the steering waypoint
-        drawWaypoint(graphics2D);
+        // drawWaypoint(graphics2D);
 
         // Reset the stroke width
         graphics2D.setStroke(new BasicStroke(0));
@@ -179,7 +179,7 @@ public class ArenaDisplay extends JPanel {
         g.scale(1/BOOST_TEXT_SCALE, -1/BOOST_TEXT_SCALE);
     }
 
-    private void drawBall(Vector3 position, Graphics2D g, Color color) {
+    public static void drawBall(Vector3 position, Graphics2D g, Color color) {
 
         Ellipse2D.Double ballShape = new Ellipse2D.Double(-BALL_DRAW_RADIUS, -BALL_DRAW_RADIUS, BALL_DRAW_RADIUS * 2, BALL_DRAW_RADIUS * 2);
         AffineTransform ballTransform = new AffineTransform();
@@ -251,7 +251,7 @@ public class ArenaDisplay extends JPanel {
         }
     }
 
-    private double getHeightScaling(double height) {
+    private static double getHeightScaling(double height) {
         return 1 + height / 40;
     }
 }

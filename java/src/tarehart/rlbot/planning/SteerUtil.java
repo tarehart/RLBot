@@ -356,7 +356,7 @@ public class SteerUtil {
             return planWithinCircle(car, targetPosition, targetFacing, currentSpeed);
         }
 
-        return new SteerPlan(steerTowardGroundPosition(car, tangentPoint), tangentPoint);
+        return new SteerPlan(steerTowardGroundPosition(car, tangentPoint), tangentPoint, new Circle(center, turnRadius));
     }
 
     private static SteerPlan planWithinCircle(CarData car, Vector2 targetPosition, Vector2 targetFacing, double currentSpeed) {
@@ -375,7 +375,7 @@ public class SteerUtil {
 
         if (facing.dotProduct(idealDirection) < .7) {
             AgentOutput output = steerTowardGroundPosition(car, flatPosition.plus(idealDirection));
-            return new SteerPlan(output, targetPosition);
+            return new SteerPlan(output, targetPosition, idealCircle);
         }
 
         Optional<Double> idealSpeedOption = getSpeedForRadius(idealCircle.radius);
@@ -406,6 +406,6 @@ public class SteerUtil {
             output.withSlide(car.frameCount % (framesBetweenSlidePulses + 1) == 0);
         }
 
-        return new SteerPlan(output, targetPosition);
+        return new SteerPlan(output, targetPosition, idealCircle);
     }
 }

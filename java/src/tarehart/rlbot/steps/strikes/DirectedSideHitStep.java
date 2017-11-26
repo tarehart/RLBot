@@ -12,14 +12,18 @@ import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.tuning.ManeuverMath;
+import tarehart.rlbot.ui.ArenaDisplay;
 
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static tarehart.rlbot.planning.SteerUtil.getCorrectionAngleRad;
 import static tarehart.rlbot.planning.SteerUtil.steerTowardGroundPosition;
 import static tarehart.rlbot.tuning.BotLog.println;
 
@@ -34,6 +38,9 @@ public class DirectedSideHitStep implements Step {
     private Vector3 interceptModifier = null;
     private double maneuverSeconds = 0;
     private boolean finalApproach = false;
+    private SteerPlan circleTurnPlan;
+    private CarData car;
+    private DirectedKickPlan kickPlan;
 
     public DirectedSideHitStep(KickStrategy kickStrategy) {
         this.kickStrategy = kickStrategy;
@@ -41,7 +48,7 @@ public class DirectedSideHitStep implements Step {
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
-        CarData car = input.getMyCarData();
+        car = input.getMyCarData();
 
         if (plan != null && !plan.isComplete()) {
             Optional<AgentOutput> output = plan.getOutput(input);
@@ -67,7 +74,7 @@ public class DirectedSideHitStep implements Step {
             return getNavigation(input, new SteerPlan(input.getMyCarData(), ballPath.getEndpoint().getSpace()));
         }
 
-        DirectedKickPlan kickPlan = kickPlanOption.get();
+        kickPlan = kickPlanOption.get();
 
         if (interceptModifier == null) {
             Vector3 nearSide = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE));
@@ -113,6 +120,7 @@ public class DirectedSideHitStep implements Step {
             doneMoment = input.time.plus(TimeUtil.toDuration(strikeTime.get() + .5));
             finalApproach = true;
             maneuverSeconds = 0;
+            circleTurnPlan = null;
             // Done with the circle turn. Drive toward the orthogonal point and wait for the right moment to launch.
             return performFinalApproach(input, orthogonalPoint, kickPlan, carPositionAtIntercept, strikeDirection);
         }
@@ -120,7 +128,7 @@ public class DirectedSideHitStep implements Step {
 
         maneuverSeconds = angle * MANEUVER_SECONDS_PER_RADIAN;
 
-        SteerPlan circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, steerTarget, facingForSideFlip);
+        circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, steerTarget, facingForSideFlip);
 
         return getNavigation(input, circleTurnPlan);
     }
@@ -192,6 +200,13 @@ public class DirectedSideHitStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        if (circleTurnPlan != null) {
+            graphics.setColor(new Color(190, 129, 200));
+            circleTurnPlan.drawDebugInfo(graphics, car);
+        }
+
+        if (kickPlan != null) {
+            kickPlan.drawDebugInfo(graphics);
+        }
     }
 }

@@ -2,6 +2,9 @@ package tarehart.rlbot.math;
 
 import tarehart.rlbot.math.vector.Vector2;
 
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+
 public class Circle {
 
     public Vector2 center;
@@ -39,5 +42,9 @@ public class Circle {
     public static boolean isClockwise(Circle circle, Vector2 tangentPosition, Vector2 tangentDirection) {
         Vector2 tangentToCenter = tangentPosition.minus(circle.center);
         return tangentToCenter.correctionAngle(tangentDirection) < 0;
+    }
+
+    public Shape toShape() {
+        return new Ellipse2D.Double(center.x - radius, center.y - radius, radius * 2, radius * 2);
     }
 }

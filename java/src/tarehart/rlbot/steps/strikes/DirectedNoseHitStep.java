@@ -33,6 +33,9 @@ public class DirectedNoseHitStep implements Step {
     private double maneuverSeconds = 0;
     private Double circleBackoff = null;
     private double estimatedAngleOfKickFromApproach;
+    private SteerPlan circleTurnPlan;
+    private DirectedKickPlan kickPlan;
+    private CarData car;
 
     public DirectedNoseHitStep(KickStrategy kickStrategy) {
         this.kickStrategy = kickStrategy;
@@ -57,7 +60,7 @@ public class DirectedNoseHitStep implements Step {
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
-        CarData car = input.getMyCarData();
+        car = input.getMyCarData();
 
         if (doneMoment == null && car.position.distance(input.ballPosition) < 4.5) {
             // You get a tiny bit more time
@@ -92,7 +95,7 @@ public class DirectedNoseHitStep implements Step {
             return Optional.of(SteerUtil.steerTowardGroundPosition(input.getMyCarData(), input.ballPosition));
         }
 
-        DirectedKickPlan kickPlan = kickPlanOption.get();
+        kickPlan = kickPlanOption.get();
 
         if (originalIntercept == null) {
             originalIntercept = kickPlan.ballAtIntercept.getSpace();
@@ -114,7 +117,7 @@ public class DirectedNoseHitStep implements Step {
         double rendezvousCorrection = SteerUtil.getCorrectionAngleRad(car, carPositionAtIntercept);
 
         Vector2 steerTarget = carPositionAtIntercept.flatten();
-        SteerPlan circleTurnPlan = null;
+        circleTurnPlan = null;
 
 
         if (interceptModifier == null) {
@@ -122,7 +125,7 @@ public class DirectedNoseHitStep implements Step {
         }
 
         if (carPositionAtIntercept.z > 2 && Math.abs(estimatedAngleOfKickFromApproach) < Math.PI / 12 && Math.abs(rendezvousCorrection) < Math.PI / 12) {
-
+            circleTurnPlan = null;
             plan = new Plan().withStep(new InterceptStep(interceptModifier));
             return plan.getOutput(input);
         }
@@ -173,6 +176,13 @@ public class DirectedNoseHitStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        if (circleTurnPlan != null) {
+            graphics.setColor(new Color(138, 164, 200));
+            circleTurnPlan.drawDebugInfo(graphics, car);
+        }
+
+        if (kickPlan != null) {
+            kickPlan.drawDebugInfo(graphics);
+        }
     }
 }
