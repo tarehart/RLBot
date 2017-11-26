@@ -156,7 +156,9 @@ public class Readout {
 
         String text = "" +
                 "Blue Pos: " + input.blueCar.map(c -> c.position).orElse(new Vector3()) + "\n" +
+                "Blue Vel: " + input.blueCar.map(c -> c.velocity).orElse(new Vector3()) + "\n" +
                 "Orng Pos: " + input.orangeCar.map(c -> c.position).orElse(new Vector3()) + "\n" +
+                "Orng Vel: " + input.orangeCar.map(c -> c.velocity).orElse(new Vector3()) + "\n" +
                 "Ball Pos: " + input.ballPosition + "\n" +
                 "\n" +
                 "Blue Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.team == Bot.Team.BLUE)).orElse("Unknown") + "\n" +

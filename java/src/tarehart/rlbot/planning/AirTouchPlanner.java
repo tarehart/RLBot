@@ -5,19 +5,18 @@ import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.steps.strikes.InterceptStep;
+import tarehart.rlbot.tuning.ManeuverMath;
 
 public class AirTouchPlanner {
 
     private static final double AERIAL_RISE_RATE = 8;
-    private static final double JUMP_RISE_RATE = 8;
     public static final double BOOST_NEEDED_FOR_AERIAL = 20;
-    public static final double NEEDS_AERIAL_THRESHOLD = 6;
+    public static final double NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT;
     public static final double MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD;
     public static final double NEEDS_JUMP_HIT_THRESHOLD = 3.6;
-    public static final double NEEDS_FRONT_FLIP_THRESHOLD = 2;
-    public static final double CAR_BASE_HEIGHT = 0.33;
+    public static final double NEEDS_FRONT_FLIP_THRESHOLD = 2.2;
+    public static final double CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z;
     private static final double MAX_FLIP_HIT = NEEDS_JUMP_HIT_THRESHOLD;
-    private static final double MAX_JUMP_SIDE_FLIP = 4;
 
 
     public static AerialChecklist checkAerialReadiness(CarData car, SpaceTime carPositionAtContact) {
@@ -86,7 +85,7 @@ public class AirTouchPlanner {
     }
 
     public static boolean isJumpSideFlipAccessible(CarData carData, SpaceTime intercept) {
-        if (intercept.space.z > MAX_JUMP_SIDE_FLIP) {
+        if (intercept.space.z > ManeuverMath.MASH_JUMP_HEIGHT) {
             return false;
         }
 
@@ -105,7 +104,7 @@ public class AirTouchPlanner {
     }
 
     private static double getJumpLaunchCountdown(double height, double secondsTillIntercept) {
-        double expectedJumpSeconds = (height - CAR_BASE_HEIGHT) / JUMP_RISE_RATE;
+        double expectedJumpSeconds = ManeuverMath.secondsForMashJumpHeight(height).orElse(Double.MAX_VALUE);
         return secondsTillIntercept - expectedJumpSeconds;
     }
 

@@ -12,7 +12,9 @@ import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.tuning.BotLog;
+import tarehart.rlbot.tuning.ManeuverMath;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -26,9 +28,8 @@ public class DirectedSideHitStep implements Step {
 
     private static final double MANEUVER_SECONDS_PER_RADIAN = .1;
     private static final double APPROACH_DISTANCE = 1.5;
-    private static final double SIDE_FLIP_SPEED = 9;
+
     private static final double DISTANCE_AT_CONTACT = 1.8;
-    public static final double JUMP_TIME_PER_HEIGHT = .1;
     private Plan plan;
 
     private Vector3 originalIntercept;
@@ -96,9 +97,12 @@ public class DirectedSideHitStep implements Step {
             return performFinalApproach(input, orthogonalPoint, kickPlan, carPositionAtIntercept, strikeDirection);
         }
 
-        double strikeTime = getStrikeTime(carPositionAtIntercept, APPROACH_DISTANCE);
+        Optional<Double> strikeTime = getStrikeTime(carPositionAtIntercept, APPROACH_DISTANCE);
+        if (!strikeTime.isPresent()) {
+            return Optional.empty();
+        }
         double expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint)).map(m -> m.speed).orElse(40.0);
-        double backoff = expectedSpeed * strikeTime + 1;
+        double backoff = expectedSpeed * strikeTime.get() + 1;
 
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
         Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
@@ -111,7 +115,7 @@ public class DirectedSideHitStep implements Step {
         Vector2 carNose = car.orientation.noseVector.flatten();
         double angle = Vector2.angle(carNose, facingForSideFlip);
         if (distance < backoff + 3 && angle < Math.PI / 8) {
-            doneMoment = input.time.plus(TimeUtil.toDuration(strikeTime + .5));
+            doneMoment = input.time.plus(TimeUtil.toDuration(strikeTime.get() + .5));
             finalApproach = true;
             maneuverSeconds = 0;
             // Done with the circle turn. Drive toward the orthogonal point and wait for the right moment to launch.
@@ -126,9 +130,8 @@ public class DirectedSideHitStep implements Step {
         return getNavigation(input, circleTurnPlan);
     }
 
-    private double getStrikeTime(Vector3 carPositionAtIntercept, double approachDistance) {
-        double jumpTime = getJumpTime(carPositionAtIntercept);
-        return jumpTime + approachDistance / SIDE_FLIP_SPEED;
+    private Optional<Double> getStrikeTime(Vector3 carPositionAtIntercept, double approachDistance) {
+        return getJumpTime(carPositionAtIntercept).map(t -> t + ManeuverMath.secondsForSideFlipTravel(approachDistance));
     }
 
     private Optional<AgentOutput> performFinalApproach(AgentInput input, Vector2 orthogonalPoint, DirectedKickPlan kickPlan, Vector3 carPositionAtIntercept, Vector2 strikeDirection) {
@@ -137,19 +140,25 @@ public class DirectedSideHitStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        double jumpTime = getJumpTime(carPositionAtIntercept);
+        Optional<Double> jumpTime = getJumpTime(carPositionAtIntercept);
+        if (!jumpTime.isPresent()) {
+            return Optional.empty();
+        }
         Vector2 carAtImpact = kickPlan.ballAtIntercept.space.flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT));
         Vector2 toImpact = carAtImpact.minus(car.position.flatten());
         Vector2 projectedApproach = VectorUtil.project(toImpact, car.orientation.rightVector.flatten());
         double realApproachDistance = projectedApproach.magnitude();
-        double strikeTime = getStrikeTime(carPositionAtIntercept, realApproachDistance);
-        double backoff = car.velocity.magnitude() * strikeTime;
+        Optional<Double> strikeTime = getStrikeTime(carPositionAtIntercept, realApproachDistance);
+        if (!strikeTime.isPresent()) {
+            return Optional.empty();
+        }
+        double backoff = car.velocity.magnitude() * strikeTime.get();
 
         double distance = car.position.flatten().distance(orthogonalPoint);
         if (distance < backoff) {
             // Time to launch!
             double strikeForceCorrection = DirectedKickUtil.getAngleOfKickFromApproach(car, kickPlan);
-            plan = SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime);
+            plan = SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime.get());
             return plan.getOutput(input);
         } else {
             println(format("Side flip soon. Distance: %.2f", distance), input.playerIndex);
@@ -157,8 +166,8 @@ public class DirectedSideHitStep implements Step {
         }
     }
 
-    private double getJumpTime(Vector3 carPositionAtIntercept) {
-        return (carPositionAtIntercept.z - AirTouchPlanner.CAR_BASE_HEIGHT - .1) * JUMP_TIME_PER_HEIGHT;
+    private Optional<Double> getJumpTime(Vector3 carPositionAtIntercept) {
+        return ManeuverMath.secondsForMashJumpHeight(carPositionAtIntercept.z);
     }
 
     private Optional<AgentOutput> getNavigation(AgentInput input, SteerPlan circleTurnOption) {

@@ -1,6 +1,7 @@
 package tarehart.rlbot;
 
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
@@ -9,6 +10,8 @@ import tarehart.rlbot.steps.debug.CalibrateStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
 import tarehart.rlbot.tuning.BotLog;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static tarehart.rlbot.tuning.BotLog.println;
@@ -22,10 +25,29 @@ public class ReliefBot extends Bot {
         tacticsAdvisor = new TacticsAdvisor();
     }
 
+    private LocalDateTime startTime;
+
     @Override
     protected AgentOutput getOutput(AgentInput input) {
 
         final CarData car = input.getMyCarData();
+
+//
+//        double enemyHeight = input.getEnemyCarData().get().position.z;
+//        if (enemyHeight > .3407) {
+//            if (startTime == null) {
+//                startTime = input.time;
+//            }
+//            BotLog.println(String.format("%.2f %.2f", TimeUtil.toSeconds(Duration.between(startTime, input.time)), enemyHeight), car.playerIndex);
+//        } else {
+//            if (startTime != null) {
+//                BotLog.println(Duration.between(startTime, input.time).toMillis() + "", car.playerIndex);
+//                startTime = null;
+//            }
+//        }
+//
+//        return new AgentOutput();
+
         Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
         BallPath ballPath = ArenaModel.predictBallPath(input);
         TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath);

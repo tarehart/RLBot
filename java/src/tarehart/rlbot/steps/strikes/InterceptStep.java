@@ -25,8 +25,8 @@ import static tarehart.rlbot.tuning.BotLog.println;
 public class InterceptStep implements Step {
 
     public static final StrikeProfile AERIAL_STRIKE_PROFILE = new StrikeProfile(0, 0, 0);
-    public static final StrikeProfile JUMP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, 1.5);
-    public static final StrikeProfile FLIP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, .9);
+    public static final StrikeProfile JUMP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, .3);
+    public static final StrikeProfile FLIP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, .3);
     public static final double PROBABLY_TOUCHING_THRESHOLD = 5.5;
     private Plan plan;
     private Vector3 interceptModifier;
