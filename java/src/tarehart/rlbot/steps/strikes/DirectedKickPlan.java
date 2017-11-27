@@ -27,10 +27,9 @@ public class DirectedKickPlan {
         ArenaDisplay.drawBall(ballAtIntercept.space, graphics, graphics.getColor());
         graphics.setStroke(new BasicStroke(1));
 
-        Vector2 ballFuture = ballAtIntercept.space.flatten();
-        Vector2 offset = interceptModifier.flatten().plus(ballFuture);
+        Vector2 carAtOffset = getCarPositionAtIntercept().flatten();
         int crossSize = 2;
-        graphics.draw(new Line2D.Double(offset.x - crossSize, offset.y - crossSize, offset.x + crossSize, offset.y + crossSize));
-        graphics.draw(new Line2D.Double(offset.x - crossSize, offset.y + crossSize, offset.x + crossSize, offset.y - crossSize));
+        graphics.draw(new Line2D.Double(carAtOffset.x - crossSize, carAtOffset.y - crossSize, carAtOffset.x + crossSize, carAtOffset.y + crossSize));
+        graphics.draw(new Line2D.Double(carAtOffset.x - crossSize, carAtOffset.y + crossSize, carAtOffset.x + crossSize, carAtOffset.y - crossSize));
     }
 }

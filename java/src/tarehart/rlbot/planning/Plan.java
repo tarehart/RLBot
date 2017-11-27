@@ -115,4 +115,11 @@ public class Plan {
     public Posture getPosture() {
         return posture;
     }
+
+    public static Optional<Plan> activePlan(Plan plan) {
+        if (plan != null && !plan.isComplete()) {
+            return Optional.of(plan);
+        }
+        return Optional.empty();
+    }
 }

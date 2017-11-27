@@ -89,6 +89,6 @@ public class WhatASaveStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        Plan.activePlan(plan).ifPresent(p -> p.getCurrentStep().drawDebugInfo(graphics));
     }
 }

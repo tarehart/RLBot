@@ -33,7 +33,7 @@ public class ArenaDisplay extends JPanel {
     public static final Color REAL_BALL_COLOR = new Color(177, 177, 177);
     private static final Color PREDICTED_BALL_COLOR = new Color(186, 164, 55, 100);
     private static final Color ENEMY_CONTACT_BALL_COLOR = new Color(255, 0, 11, 84);
-    public static final double NATURAL_WIDTH = 300;
+    public static final double NATURAL_WIDTH = 170;
     public static final int CAR_LENGTH = 4;
     public static final int CAR_WIDTH = 2;
 
@@ -80,12 +80,12 @@ public class ArenaDisplay extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Retrieve situation telemetry
-        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(myCar.team);
-
         if (ball == null) {
             return; // This helps the UI not spazz out in the editor.
         }
+
+        // Retrieve situation telemetry
+        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(myCar.team);
 
         //Create a Graphics2D object from g
         Graphics2D graphics2D = (Graphics2D)g;
@@ -99,8 +99,7 @@ public class ArenaDisplay extends JPanel {
         graphics2D.translate(this.getWidth() / 2, this.getHeight() / 2);
         double scale = this.getWidth() / NATURAL_WIDTH;
         graphics2D.scale(scale, scale);
-        graphics2D.scale(-1, 1);
-        graphics2D.rotate(Math.PI / 2);
+        graphics2D.scale(1, -1);
 
         // Draw zone definitions
         graphics2D.setStroke(new BasicStroke(1));
@@ -166,17 +165,6 @@ public class ArenaDisplay extends JPanel {
         // Draw the car
         g.setColor(car.team == Bot.Team.BLUE ? BLUE_COLOR : ORANGE_COLOR);
         g.fill(transformedCar);
-
-        // Draw the boost
-        g.scale(BOOST_TEXT_SCALE, -BOOST_TEXT_SCALE);
-        g.rotate(-Math.PI / 2);
-        DecimalFormat df = new DecimalFormat();
-        float posX = (float)((1/BOOST_TEXT_SCALE) * (car.position.x - 4));
-        float posY = (float)((1/BOOST_TEXT_SCALE) * (car.position.y - 2));
-        //g.setColor(BOOST_COLOR); //TODO: find a better color for this
-        g.drawString(df.format(car.boost), posY, posX);
-        g.rotate(Math.PI / 2);
-        g.scale(1/BOOST_TEXT_SCALE, -1/BOOST_TEXT_SCALE);
     }
 
     public static void drawBall(Vector3 position, Graphics2D g, Color color) {

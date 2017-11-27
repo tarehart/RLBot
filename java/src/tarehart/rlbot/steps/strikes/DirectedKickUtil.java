@@ -51,12 +51,10 @@ public class DirectedKickUtil {
         if (isSideHit) {
             Vector2 carToIntercept = interceptOpportunity.get().space.minus(car.position).flatten();
             Vector2 sideHit = VectorUtil.orthogonal(carToIntercept, v -> v.dotProduct(interceptModifier.flatten()) < 0);
-            easyForce = new Vector3(sideHit.x, sideHit.y, 0);
+            easyForce = new Vector3(sideHit.x, sideHit.y, 0).scaledToMagnitude(impactSpeed);
         } else {
-            easyForce = kickPlan.ballAtIntercept.getSpace().minus(car.position);
+            easyForce = kickPlan.ballAtIntercept.getSpace().minus(car.position).scaledToMagnitude(impactSpeed);
         }
-
-        easyForce.scaledToMagnitude(impactSpeed);
 
         Vector3 easyKick = bump(kickPlan.ballAtIntercept.getVelocity(), easyForce);
         Vector3 kickDirection = kickStrategy.getKickDirection(input, kickPlan.ballAtIntercept.getSpace(), easyKick);
