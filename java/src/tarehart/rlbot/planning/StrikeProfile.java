@@ -14,12 +14,12 @@ public class StrikeProfile {
     /**
      * The amount of time spent speeding up during the final stage
      */
-    public double speedupSeconds;
+    public double dodgeSeconds;
 
 
-    public StrikeProfile(double maneuverSeconds, double speedBoost, double speedupSeconds) {
+    public StrikeProfile(double maneuverSeconds, double speedBoost, double dodgeSeconds) {
         this.maneuverSeconds = maneuverSeconds;
         this.speedBoost = speedBoost;
-        this.speedupSeconds = speedupSeconds;
+        this.dodgeSeconds = dodgeSeconds;
     }
 }

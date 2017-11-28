@@ -43,7 +43,7 @@ public class AccelerationModel {
 
     public static DistancePlot simulateAcceleration(CarData carData, Duration duration, double boostBudget, double flipCutoffDistance) {
 
-        double currentSpeed = carData.velocity.magnitude();
+        double currentSpeed = VectorUtil.project(carData.velocity, carData.orientation.noseVector).magnitude();
         DistancePlot plot = new DistancePlot(new DistanceTimeSpeed(0, 0, currentSpeed));
 
         double boostRemaining = boostBudget;
@@ -102,7 +102,7 @@ public class AccelerationModel {
     }
 
     public static double getFrontFlipDistance(double speed) {
-        return (speed + FRONT_FLIP_SPEED_BOOST / 2) * FRONT_FLIP_SECONDS;
+        return (speed + FRONT_FLIP_SPEED_BOOST) * FRONT_FLIP_SECONDS;
     }
 
     public static DistancePlot simulateAirAcceleration(CarData car, Duration duration) {

@@ -49,15 +49,17 @@ public class TacticsAdvisor {
         if(situation.waitToClear) {
             return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
         }
+        if (situation.needsDefensiveClear) {
+            return new Plan(Plan.Posture.CLEAR).withStep(new IdealDirectedHitStep(new KickAwayFromOwnGoal(), input));
+        }
         if (situation.forceDefensivePosture) {
             double secondsToOverrideFor = 0.25;
             return new Plan(Plan.Posture.DEFENSIVE).withStep(new GetOnDefenseStep(secondsToOverrideFor));
         }
-        if (situation.needsDefensiveClear) {
-            return new Plan(Plan.Posture.CLEAR).withStep(new IdealDirectedHitStep(new KickAwayFromOwnGoal(), input));
-        }
         if (situation.shotOnGoalAvailable) {
-            return new Plan(Plan.Posture.OFFENSIVE).withStep(new IdealDirectedHitStep(new KickAtEnemyGoal(), input));
+            return new FirstViableStepPlan(Plan.Posture.OFFENSIVE)
+                    .withStep(new IdealDirectedHitStep(new KickAtEnemyGoal(), input))
+                    .withStep(new GetOnOffenseStep());
         }
 
         Duration planHorizon = Duration.ofSeconds(5);
@@ -80,11 +82,7 @@ public class TacticsAdvisor {
             return makePlanWithPlentyOfTime(input, situation, ballPath);
         }
 
-        if (raceResult > .5) {
-            return new Plan(Plan.Posture.OFFENSIVE).withStep(new IdealDirectedHitStep(new KickAtEnemyGoal(), input));
-        }
-
-        if (raceResult > -.5) {
+        if (raceResult > -.3) {
 
             if (!interceptStepOffering.isPresent()) {
                 // Nobody is getting to the ball any time soon.

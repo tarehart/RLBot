@@ -22,7 +22,7 @@ public class SteerUtil {
     public static final double TURN_RADIUS_A = .0153;
     public static final double TURN_RADIUS_B = .16;
     public static final int TURN_RADIUS_C = 7;
-    private static final double DEAD_ZONE = .2;
+    private static final double DEAD_ZONE = 0;
 
     public static Optional<SpaceTime> getCatchOpportunity(CarData carData, BallPath ballPath, double boostBudget) {
 
@@ -205,7 +205,7 @@ public class SteerUtil {
     private static AgentOutput getSteeringOutput(double correctionAngle, double distance, double speed, boolean isSupersonic, boolean noBoosting) {
         double difference = Math.abs(correctionAngle);
         double turnSharpness = difference * 6/Math.PI + difference * speed * .1;
-        turnSharpness = (1 - DEAD_ZONE) * turnSharpness + Math.signum(turnSharpness) * DEAD_ZONE;
+        //turnSharpness = (1 - DEAD_ZONE) * turnSharpness + Math.signum(turnSharpness) * DEAD_ZONE;
 
         boolean shouldBrake = distance < 25 && difference > Math.PI / 4 && speed > 25;
         boolean shouldSlide = shouldBrake || difference > Math.PI / 2;
@@ -237,7 +237,7 @@ public class SteerUtil {
             return Optional.empty();
         }
 
-        double distanceCovered = AccelerationModel.getFrontFlipDistance(car.velocity.magnitude());
+        double distanceCovered = AccelerationModel.getFrontFlipDistance(car.velocity.flatten().magnitude());
 
         Vector2 toTarget = target.minus(car.position.flatten());
         double distanceToIntercept = toTarget.magnitude();
@@ -344,7 +344,7 @@ public class SteerUtil {
         Vector2 center = targetPosition.plus(radiusVector);
         double distanceFromCenter = flatPosition.distance(center);
 
-        Vector2 centerToTangent = VectorUtil.orthogonal(toTarget, v -> v.dotProduct(radiusVector) < 0).scaledToMagnitude(turnRadius);
+        Vector2 centerToTangent = VectorUtil.orthogonal(toTarget, v -> v.dotProduct(targetFacing) < 0).scaledToMagnitude(turnRadius);
         Vector2 tangentPoint = center.plus(centerToTangent);
 
         if (distanceFromCenter < turnRadius * 1.1) {
@@ -370,7 +370,7 @@ public class SteerUtil {
 
         boolean clockwise = Circle.isClockwise(idealCircle, targetPosition, targetFacing);
 
-        Vector2 centerToMe = car.position.flatten().minus(idealCircle.center);
+        Vector2 centerToMe = flatPosition.minus(idealCircle.center);
         Vector2 idealDirection = VectorUtil.orthogonal(centerToMe, v -> Circle.isClockwise(idealCircle, flatPosition, v) == clockwise).normalized();
 
         if (facing.dotProduct(idealDirection) < .7) {
@@ -406,6 +406,6 @@ public class SteerUtil {
             output.withSlide(car.frameCount % (framesBetweenSlidePulses + 1) == 0);
         }
 
-        return new SteerPlan(output, targetPosition);
+        return new SteerPlan(output, flatPosition, targetPosition, targetFacing, idealCircle);
     }
 }

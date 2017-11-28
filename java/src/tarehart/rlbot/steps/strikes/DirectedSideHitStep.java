@@ -11,6 +11,7 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.tuning.ManeuverMath;
 import tarehart.rlbot.ui.ArenaDisplay;
 
@@ -106,6 +107,11 @@ public class DirectedSideHitStep implements Step {
         double expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint)).map(m -> m.speed).orElse(40.0);
         double backoff = expectedSpeed * strikeTime.get() + 1;
 
+        if (backoff > car.position.flatten().distance(orthogonalPoint)) {
+            BotLog.println("Failed the side hit.", car.playerIndex);
+            return Optional.empty();
+        }
+
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
         Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
 
@@ -200,6 +206,12 @@ public class DirectedSideHitStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
+
+        if (Plan.activePlan(plan).isPresent()) {
+            plan.getCurrentStep().drawDebugInfo(graphics);
+            return;
+        }
+
         if (circleTurnPlan != null) {
             graphics.setColor(new Color(190, 129, 200));
             circleTurnPlan.drawDebugInfo(graphics, car);

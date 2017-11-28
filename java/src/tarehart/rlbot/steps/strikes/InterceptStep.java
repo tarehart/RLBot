@@ -3,8 +3,10 @@ package tarehart.rlbot.steps.strikes;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.TimeUtil;
+import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
@@ -13,6 +15,7 @@ import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,6 +34,7 @@ public class InterceptStep implements Step {
     private Vector3 interceptModifier;
     private LocalDateTime doneMoment;
     private Intercept originalIntercept;
+    private SpaceTime preStrikePosition;
 
     public InterceptStep(Vector3 interceptModifier) {
         this.interceptModifier = interceptModifier;
@@ -103,7 +107,7 @@ public class InterceptStep implements Step {
             if (budgetInterceptOpportunity.isPresent()) {
                 SpaceTime spaceTime = budgetInterceptOpportunity.get();
                 if (budgetInterceptOpportunity.get().space.z > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) {
-                    return Optional.of(new Intercept(spaceTime.space, spaceTime.time, AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL, AERIAL_STRIKE_PROFILE));
+                    return Optional.of(new Intercept(spaceTime.space, spaceTime.time, AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL, AERIAL_STRIKE_PROFILE, budgetAcceleration));
                 }
             }
         }
@@ -114,7 +118,7 @@ public class InterceptStep implements Step {
         Optional<SpaceTime> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(carData, ballPath, fullAcceleration, interceptModifier, AirTouchPlanner::isJumpHitAccessible, JUMP_HIT_STRIKE_PROFILE);
         if (interceptOpportunity.isPresent()) {
             if (interceptOpportunity.get().space.z > AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD) {
-                return Optional.of(new Intercept(interceptOpportunity.get(), JUMP_HIT_STRIKE_PROFILE));
+                return Optional.of(new Intercept(interceptOpportunity.get(), JUMP_HIT_STRIKE_PROFILE, fullAcceleration));
             }
         }
         return Optional.empty();
@@ -122,7 +126,7 @@ public class InterceptStep implements Step {
 
     private static Optional<Intercept> getFlipHitIntercept(CarData carData, BallPath ballPath, DistancePlot fullAcceleration, Vector3 interceptModifier) {
         Optional<SpaceTime> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(carData, ballPath, fullAcceleration, interceptModifier, AirTouchPlanner::isFlipHitAccessible, FLIP_HIT_STRIKE_PROFILE);
-        return interceptOpportunity.map(spaceTime -> new Intercept(spaceTime, FLIP_HIT_STRIKE_PROFILE));
+        return interceptOpportunity.map(spaceTime -> new Intercept(spaceTime, FLIP_HIT_STRIKE_PROFILE, fullAcceleration));
     }
 
     private AgentOutput getThereOnTime(AgentInput input, Intercept intercept) {
@@ -141,19 +145,25 @@ public class InterceptStep implements Step {
             return flipOut.get();
         }
 
-//        double speed = car.velocity.magnitude();
-//        StrikeProfile strikeProfile = intercept.getStrikeProfile();
-//        double backoffDistance = (strikeProfile.speedBoost + speed) * strikeProfile.speedupSeconds;
-//        Vector3 backoffVector = (Vector3) car.position.minus(intercept.getSpace()).normalized().scaled(backoffDistance);
-//        Vector3 backoffPosition = (Vector3) intercept.getSpace().minus(backoffVector);
-//
-//        SpaceTime preStrikePosition = new SpaceTime(backoffPosition, intercept.getTime().minus(TimeUtil.toDuration(strikeProfile.speedupSeconds)));
+        Optional<DistanceTimeSpeed> motionAfterStrike = intercept.getDistancePlot().getMotionAfterStrike(car, intercept.toSpaceTime(), intercept.getStrikeProfile());
 
-        AgentOutput output = SteerUtil.getThereOnTime(car, intercept.toSpaceTime());
-        if (car.boost <= intercept.getAirBoost() + 5) {
-            output.withBoost(false);
+        if (motionAfterStrike.isPresent()) {
+            double maxDistance = motionAfterStrike.get().distance;
+            double pace = maxDistance / car.position.flatten().distance(intercept.getSpace().flatten());
+
+            AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.getSpace().flatten(), car.boost <= intercept.getAirBoost());
+            if (pace > 1.1) {
+                // Slow down
+                agentOutput.withAcceleration(0).withBoost(false).withDeceleration(Math.max(0, pace - 1.5)); // Hit the brakes, but keep steering!
+            }
+            return agentOutput;
+        } else {
+            AgentOutput output = SteerUtil.getThereOnTime(car, preStrikePosition);
+            if (car.boost <= intercept.getAirBoost() + 5) {
+                output.withBoost(false);
+            }
+            return output;
         }
-        return output;
     }
 
     @Override
@@ -168,6 +178,13 @@ public class InterceptStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        if (preStrikePosition != null) {
+            graphics.setColor(new Color(214, 136, 29));
+            graphics.setStroke(new BasicStroke(1));
+            Vector2 preStrike = preStrikePosition.space.flatten();
+            int crossSize = 2;
+            graphics.draw(new Line2D.Double(preStrike.x - crossSize, preStrike.y - crossSize, preStrike.x + crossSize, preStrike.y + crossSize));
+            graphics.draw(new Line2D.Double(preStrike.x - crossSize, preStrike.y + crossSize, preStrike.x + crossSize, preStrike.y - crossSize));
+        }
     }
 }

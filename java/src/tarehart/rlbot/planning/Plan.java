@@ -9,11 +9,11 @@ import java.util.Optional;
 
 public class Plan {
 
-    private final Posture posture;
-    private boolean unstoppable;
-    private ArrayList<Step> steps = new ArrayList<>();
-    private int currentStepIndex = 0;
-    private boolean isComplete = false;
+    protected final Posture posture;
+    protected boolean unstoppable;
+    protected ArrayList<Step> steps = new ArrayList<>();
+    protected int currentStepIndex = 0;
+    protected boolean isComplete = false;
 
     public static String concatSituation(String baseSituation, Plan plan) {
         return baseSituation + (plan != null && !plan.isComplete() ? "(" + plan.getSituation() + ")" : "");
@@ -97,7 +97,7 @@ public class Plan {
         return steps.get(currentStepIndex);
     }
 
-    private void nextStep() {
+    protected void nextStep() {
         currentStepIndex++;
     }
 

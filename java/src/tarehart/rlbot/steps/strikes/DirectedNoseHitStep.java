@@ -176,6 +176,12 @@ public class DirectedNoseHitStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
+
+        if (Plan.activePlan(plan).isPresent()) {
+            plan.getCurrentStep().drawDebugInfo(graphics);
+            return;
+        }
+
         if (circleTurnPlan != null) {
             graphics.setColor(new Color(138, 164, 200));
             circleTurnPlan.drawDebugInfo(graphics, car);

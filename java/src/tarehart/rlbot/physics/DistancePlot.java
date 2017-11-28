@@ -7,8 +7,6 @@ import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.StrikeProfile;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -81,12 +79,12 @@ public class DistancePlot {
         double totalSeconds = TimeUtil.secondsBetween(carData.time, spaceTime.time);
         double secondsSpentAccelerating = Math.max(0, totalSeconds - orientSeconds);
 
-        if (strikeProfile == null || strikeProfile.speedupSeconds == 0 || strikeProfile.speedBoost == 0) {
+        if (strikeProfile == null || strikeProfile.dodgeSeconds == 0 || strikeProfile.speedBoost == 0) {
             Optional<DistanceTimeSpeed> motion = getMotionAfterSeconds(secondsSpentAccelerating);
             return motion.map(dts -> new DistanceTimeSpeed(dts.distance, totalSeconds, dts.speed));
         }
 
-        double speedupSeconds = strikeProfile.speedupSeconds;
+        double speedupSeconds = strikeProfile.dodgeSeconds;
         double speedBoost = strikeProfile.speedBoost;
         if (secondsSpentAccelerating < speedupSeconds) {
             // Not enough time for a full strike.

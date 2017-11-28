@@ -34,6 +34,9 @@ public class AirTouchPlanner {
 
         LaunchChecklist checklist = new LaunchChecklist();
         checkLaunchReadiness(checklist, car, carPositionAtContact);
+        double jumpTime = ManeuverMath.secondsForMashJumpHeight(carPositionAtContact.space.z).orElse(Double.MAX_VALUE);
+        double jumpHitTime = jumpTime + InterceptStep.FLIP_HIT_STRIKE_PROFILE.dodgeSeconds;
+        checklist.timeForIgnition = TimeUtil.secondsBetween(car.time, carPositionAtContact.time) < jumpHitTime;
         return checklist;
     }
 
@@ -41,7 +44,7 @@ public class AirTouchPlanner {
         LaunchChecklist checklist = new LaunchChecklist();
         checkLaunchReadiness(checklist, car, intercept);
         checklist.notTooClose = true;
-        checklist.timeForIgnition = TimeUtil.secondsBetween(car.time, intercept.time) < InterceptStep.FLIP_HIT_STRIKE_PROFILE.speedupSeconds;
+        checklist.timeForIgnition = TimeUtil.secondsBetween(car.time, intercept.time) < InterceptStep.FLIP_HIT_STRIKE_PROFILE.dodgeSeconds;
         return checklist;
     }
 
