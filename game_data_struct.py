@@ -18,6 +18,11 @@ class Rotator(ctypes.Structure):
                 ("Yaw", ctypes.c_int),
                 ("Roll", ctypes.c_int)]
 
+class Touch(ctypes.Structure):
+    _fields_ = [("wPlayerName", ctypes.c_wchar * MAX_NAME_LENGTH),
+                ("fTimeSeconds", ctypes.c_float),
+                ("sHitLocation", Vector3),
+                ("sHitNormal", Vector3)]
 
 class ScoreInfo(ctypes.Structure):
     _fields_ = [("Score", ctypes.c_int),
@@ -55,7 +60,8 @@ class BallInfo(ctypes.Structure):
                 ("Rotation", Rotator),
                 ("Velocity", Vector3),
                 ("AngularVelocity", Vector3),
-                ("Acceleration", Vector3)]
+                ("Acceleration", Vector3),
+                ("LatestTouch", Touch)]
 
 
 class BoostInfo(ctypes.Structure):
@@ -151,6 +157,8 @@ def print_ball_info(ballInfo):
     print_vector_3(ballInfo.AngularVelocity)
     print("Acceleration:")
     print_vector_3(ballInfo.Acceleration)
+    print("LatestHit:")
+    print_vector_3(ballInfo.LatestTouch.sHitLocation)
 
 
 def print_boost_info(index, boostInfo):
@@ -185,6 +193,53 @@ def print_game_tick_packet_with_lock(gameTickPacket):
     for i in range(gameTickPacket.numBoosts):
         print()
         print_boost_info(i, gameTickPacket.gameBoosts[i])
+
+
+def print_game_tick_packet(gameTickPacket):
+    print("NumCars: " + str(gameTickPacket.numCars))
+    print("NumBoosts: " + str(gameTickPacket.numBoosts))
+    print()
+    print_game_info(gameTickPacket.gameInfo)
+    print()
+    print("Ball Info:")
+    print_ball_info(gameTickPacket.gameball)
+
+    for i in range(gameTickPacket.numCars):
+        print()
+        print_player_info(i, gameTickPacket.gamecars[i])
+
+    for i in range(gameTickPacket.numBoosts):
+        print()
+        print_boost_info(i, gameTickPacket.gameBoosts[i])
+
+
+# This negates all x and y values for balls and cars and rotates yaw 180 degrees.
+def rotate_game_tick_packet_boost_omitted(game_tick_packet):
+    # Negate all x,y values for ball
+    game_tick_packet.gameball.Location.X = -1 * game_tick_packet.gameball.Location.X
+    game_tick_packet.gameball.Location.Y = -1 * game_tick_packet.gameball.Location.Y
+    game_tick_packet.gameball.Velocity.X = -1 * game_tick_packet.gameball.Velocity.X
+    game_tick_packet.gameball.Velocity.Y = -1 * game_tick_packet.gameball.Velocity.Y
+    # Angular velocity is stored on global axis so negating on x and y does make sense!
+    game_tick_packet.gameball.AngularVelocity.X = -1 * game_tick_packet.gameball.AngularVelocity.X
+    game_tick_packet.gameball.AngularVelocity.Y = -1 * game_tick_packet.gameball.AngularVelocity.Y
+    game_tick_packet.gameball.Acceleration.X = -1 * game_tick_packet.gameball.Acceleration.X
+    game_tick_packet.gameball.Acceleration.Y = -1 * game_tick_packet.gameball.Acceleration.Y
+
+    # Rotate Yaw 180 degrees is all that is necessary.
+    ball_yaw = game_tick_packet.gameball.Rotation.Yaw
+    game_tick_packet.gameball.Rotation.Yaw = ball_yaw + 32768 if ball_yaw < 0 else ball_yaw - 32768
+
+    for i in range(game_tick_packet.numCars):
+        game_tick_packet.gamecars[i].Location.X = -1 * game_tick_packet.gamecars[i].Location.X
+        game_tick_packet.gamecars[i].Location.Y = -1 * game_tick_packet.gamecars[i].Location.Y
+        game_tick_packet.gamecars[i].Velocity.X = -1 * game_tick_packet.gamecars[i].Velocity.X
+        game_tick_packet.gamecars[i].Velocity.Y = -1 * game_tick_packet.gamecars[i].Velocity.Y
+        game_tick_packet.gamecars[i].AngularVelocity.X = -1 * game_tick_packet.gamecars[i].AngularVelocity.X
+        game_tick_packet.gamecars[i].AngularVelocity.Y = -1 * game_tick_packet.gamecars[i].AngularVelocity.Y
+
+        car_yaw = game_tick_packet.gamecars[i].Rotation.Yaw
+        game_tick_packet.gamecars[i].Rotation.Yaw = car_yaw + 32768 if car_yaw < 0 else car_yaw - 32768
 
 
 # Running this file will read from shared memory and display contents
