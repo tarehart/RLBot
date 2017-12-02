@@ -30,9 +30,11 @@ public class ArenaDisplay extends JPanel {
             clipToField(ZoneDefinitions.BLUEBOX),
             clipToField(ZoneDefinitions.ORANGEBOX)
     };
-    public static final Color REAL_BALL_COLOR = new Color(177, 177, 177);
-    private static final Color PREDICTED_BALL_COLOR = new Color(186, 164, 55, 100);
-    private static final Color ENEMY_CONTACT_BALL_COLOR = new Color(255, 0, 11, 84);
+    private static final Color NEUTRAL_BALL_COLOR = new Color(177, 177, 177);
+    private static final Color BLUE_BALL_COLOR = new Color(77, 147, 177);
+    private static final Color ORANGE_BALL_COLOR = new Color(226, 159, 63);
+    private Color realBallColor = NEUTRAL_BALL_COLOR;
+    private static final Color ENEMY_CONTACT_BALL_COLOR = new Color(140, 24, 194, 19);
     public static final double NATURAL_WIDTH = 170;
     public static final int CAR_LENGTH = 4;
     public static final int CAR_WIDTH = 2;
@@ -66,6 +68,8 @@ public class ArenaDisplay extends JPanel {
         myCar = input.getMyCarData();
         enemyCarOptional = input.getEnemyCarData();
         ball = input.ballPosition;
+        realBallColor = input.latestBallTouch.map(bt -> bt.team == Bot.Team.BLUE ? BLUE_BALL_COLOR : ORANGE_BALL_COLOR)
+                .orElse(NEUTRAL_BALL_COLOR);
     }
 
     public void updateBallPrediction(Vector3 ballPrediction) {
@@ -127,8 +131,8 @@ public class ArenaDisplay extends JPanel {
         blueCar.ifPresent(c -> drawCar(c, graphics2D));
 
         // Draw the ball (and its prediction ghosts)
-        drawBall(ball, graphics2D, REAL_BALL_COLOR);
-        drawBall(ballPrediction, graphics2D, PREDICTED_BALL_COLOR);
+        drawBall(ball, graphics2D, realBallColor);
+        drawBall(ballPrediction, graphics2D, Color.BLACK, true);
         drawBall(expectedEnemyContact, graphics2D, ENEMY_CONTACT_BALL_COLOR);
 
         // Draw the available full boost pads
@@ -168,6 +172,10 @@ public class ArenaDisplay extends JPanel {
     }
 
     public static void drawBall(Vector3 position, Graphics2D g, Color color) {
+        drawBall(position, g, color, false);
+    }
+
+    private static void drawBall(Vector3 position, Graphics2D g, Color color, boolean outline) {
 
         Ellipse2D.Double ballShape = new Ellipse2D.Double(-BALL_DRAW_RADIUS, -BALL_DRAW_RADIUS, BALL_DRAW_RADIUS * 2, BALL_DRAW_RADIUS * 2);
         AffineTransform ballTransform = new AffineTransform();
@@ -177,7 +185,12 @@ public class ArenaDisplay extends JPanel {
         Shape transformedBall = ballTransform.createTransformedShape(ballShape);
 
         g.setColor(color);
-        g.fill(transformedBall);
+        if (outline) {
+            g.setStroke(new BasicStroke(.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0));
+            g.draw(transformedBall);
+        } else {
+            g.fill(transformedBall);
+        }
     }
 
     private void drawBoosts(Graphics2D g) {

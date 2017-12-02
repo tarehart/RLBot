@@ -51,4 +51,15 @@ public class Chronometer {
         }
         return Duration.ofMillis(100); // This should be extremely rare.
     }
+
+    public LocalDateTime convertGameSeconds(float gameSeconds) {
+
+        if (previousTimeSeconds == null) { // Rare edge case during startup. Just avoid exceptions.
+            return gameTime;
+        }
+
+        float secondsInPast = previousTimeSeconds.floatValue() - gameSeconds;
+
+        return gameTime.minus(TimeUtil.toDuration(secondsInPast));
+    }
 }

@@ -29,6 +29,7 @@ public class AgentInput {
     public LocalDateTime time;
     public List<FullBoost> fullBoosts = new ArrayList<>(6);
     public final MatchInfo matchInfo;
+    public final Optional<BallTouch> latestBallTouch;
 
     private static final double PACKET_DISTANCE_TO_CLASSIC = 50;
 
@@ -59,7 +60,7 @@ public class AgentInput {
 
         GameData.PlayerInfo self = request.getPlayers(playerIndex);
 
-        this.team = self.getTeam() == 0 ? Bot.Team.BLUE : Bot.Team.ORANGE;
+        this.team = teamFromInt(self.getTeam());
         time = chronometer.getGameTime();
 
         Optional<GameData.PlayerInfo> blueCarInput = this.team == Bot.Team.BLUE ? Optional.of(self) : getSomeCar(request.getPlayersList(), Bot.Team.BLUE);
@@ -81,6 +82,37 @@ public class AgentInput {
             confirmedLocation.ifPresent(loc -> fullBoosts.add(new FullBoost(loc, boostInfo.getIsActive(),
                     boostInfo.getIsActive() ? LocalDateTime.from(time) : time.plus(Duration.ofMillis(boostInfo.getTimer())))));
         }
+
+        this.latestBallTouch = getLatestBallTouch(request, chronometer);
+    }
+
+    private Optional<BallTouch> getLatestBallTouch(GameData.GameTickPacket request, Chronometer chronometer) {
+        GameData.Touch latestTouch = request.getBall().getLatestTouch();
+        if (!latestTouch.getPlayerName().isEmpty()) {
+            String toucher = latestTouch.getPlayerName();
+            Optional<GameData.PlayerInfo> toucherInfo = request.getPlayersList().stream()
+                    .filter(pi -> pi.getName().equals(toucher))
+                    .findFirst();
+
+            if (toucherInfo.isPresent()) {
+                GameData.PlayerInfo realToucher = toucherInfo.get();
+                int index = request.getPlayersList().indexOf(realToucher);
+                LocalDateTime touchTime = chronometer.convertGameSeconds(latestTouch.getGameSeconds());
+
+                BallTouch ballTouch = new BallTouch(
+                        teamFromInt(realToucher.getTeam()),
+                        index, touchTime,
+                        convert(latestTouch.getLocation()),
+                        convert(latestTouch.getNormal()));
+
+                return Optional.of(ballTouch);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Bot.Team teamFromInt(int team) {
+        return team == 0 ? Bot.Team.BLUE : Bot.Team.ORANGE;
     }
 
     private Optional<GameData.PlayerInfo> getSomeCar(List<GameData.PlayerInfo> playersList, Bot.Team team) {
