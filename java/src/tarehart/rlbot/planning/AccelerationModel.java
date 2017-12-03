@@ -20,6 +20,7 @@ public class AccelerationModel {
     private static final double FRONT_FLIP_SPEED_BOOST = 10;
     private static final double SUB_MEDIUM_ACCELERATION = 15; // zero to medium in about 2 seconds.
     private static final double INCREMENTAL_BOOST_ACCELERATION = 8;
+    private static final double AIR_BOOST_ACCELERATION = 12;
     private static final double BOOST_CONSUMED_PER_SECOND = 25;
 
 
@@ -105,7 +106,7 @@ public class AccelerationModel {
         return (speed + FRONT_FLIP_SPEED_BOOST) * FRONT_FLIP_SECONDS;
     }
 
-    public static DistancePlot simulateAirAcceleration(CarData car, Duration duration) {
+    public static DistancePlot simulateAirAcceleration(CarData car, Duration duration, Vector3 averageNoseVector) {
         double currentSpeed = car.velocity.flatten().magnitude();
         DistancePlot plot = new DistancePlot(new DistanceTimeSpeed(0, 0, currentSpeed));
 
@@ -118,7 +119,7 @@ public class AccelerationModel {
 
         while (secondsSoFar < secondsToSimulate) {
 
-            double acceleration = boostRemaining > 0 ? car.orientation.noseVector.flatten().magnitude() * INCREMENTAL_BOOST_ACCELERATION * 1.1 : 0;
+            double acceleration = boostRemaining > 0 ? averageNoseVector.flatten().magnitude() * AIR_BOOST_ACCELERATION : 0;
             currentSpeed += acceleration * TIME_STEP;
             if (currentSpeed > SUPERSONIC_SPEED) {
                 currentSpeed = SUPERSONIC_SPEED;

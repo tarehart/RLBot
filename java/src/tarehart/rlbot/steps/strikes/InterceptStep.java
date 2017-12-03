@@ -178,6 +178,12 @@ public class InterceptStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
+
+        if (Plan.activePlan(plan).isPresent()) {
+            plan.getCurrentStep().drawDebugInfo(graphics);
+            return;
+        }
+
         if (preStrikePosition != null) {
             graphics.setColor(new Color(214, 136, 29));
             graphics.setStroke(new BasicStroke(1));

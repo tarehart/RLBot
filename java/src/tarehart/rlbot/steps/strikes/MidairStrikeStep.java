@@ -8,11 +8,13 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
+import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.TapStep;
 import tarehart.rlbot.steps.rotation.PitchToPlaneStep;
 import tarehart.rlbot.steps.rotation.YawToPlaneStep;
+import tarehart.rlbot.ui.ArenaDisplay;
 
 import java.awt.*;
 import java.time.Duration;
@@ -28,6 +30,7 @@ import static tarehart.rlbot.math.TimeUtil.secondsBetween;
 import static tarehart.rlbot.math.VectorUtil.rotateVector;
 import static tarehart.rlbot.physics.ArenaModel.predictBallPath;
 import static tarehart.rlbot.planning.AccelerationModel.simulateAirAcceleration;
+import static tarehart.rlbot.planning.SteerUtil.getAerialIntercept;
 import static tarehart.rlbot.planning.SteerUtil.getCorrectionAngleRad;
 import static tarehart.rlbot.planning.SteerUtil.getInterceptOpportunity;
 import static tarehart.rlbot.planning.WaypointTelemetry.set;
@@ -37,15 +40,16 @@ public class MidairStrikeStep implements Step {
     private static final double SIDE_DODGE_THRESHOLD = Math.PI / 4;
     public static final int DODGE_TIME = 400;
     public static final double DODGE_DISTANCE = 5;
-    private static final Duration maxTimeForAirDodge = Duration.ofMillis(1500);
-    public static final double UPWARD_VELOCITY_MAINTENANCE_ANGLE = .35;
-    public static final double YAW_OVERCORRECT = .2;
-    public static final double PITCH_OVERCORRECT = .3;
+    public static final Duration MAX_TIME_FOR_AIR_DODGE = Duration.ofMillis(1500);
+    public static final double UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25;
+    public static final double YAW_OVERCORRECT = .1;
+    public static final double PITCH_OVERCORRECT = .1;
     private int confusionCount = 0;
     private Plan plan;
     private LocalDateTime lastMomentForDodge;
     private LocalDateTime beginningOfStep;
     private Duration timeInAirAtStart;
+    private SpaceTime intercept;
 
     public MidairStrikeStep(Duration timeInAirAtStart) {
         this.timeInAirAtStart = timeInAirAtStart;
@@ -61,14 +65,14 @@ public class MidairStrikeStep implements Step {
         }
 
         if (lastMomentForDodge == null) {
-            lastMomentForDodge = input.time.plus(maxTimeForAirDodge).minus(timeInAirAtStart);
+            lastMomentForDodge = input.time.plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart);
             beginningOfStep = input.time;
         }
 
         BallPath ballPath = predictBallPath(input);
         CarData car = input.getMyCarData();
-        DistancePlot airAccelPlot = simulateAirAcceleration(car, ofSeconds(5));
-        Optional<SpaceTime> interceptOpportunity = getInterceptOpportunity(car, ballPath, airAccelPlot);
+        Vector3 offset = GoalUtil.getOwnGoal(car.team).getCenter().scaledToMagnitude(4);
+        Optional<SpaceTime> interceptOpportunity = getAerialIntercept(car, ballPath, offset);
         if (!interceptOpportunity.isPresent()) {
             confusionCount++;
             if (confusionCount > 3) {
@@ -78,7 +82,7 @@ public class MidairStrikeStep implements Step {
             }
             return of(new AgentOutput().withBoost());
         }
-        SpaceTime intercept = interceptOpportunity.get();
+        intercept = interceptOpportunity.get();
         set(intercept.space.flatten(), car.team);
         Vector3 carToIntercept = intercept.space.minus(car.position);
         long millisTillIntercept = between(input.time, intercept.time).toMillis();
@@ -183,6 +187,8 @@ public class MidairStrikeStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        if (intercept != null) {
+            ArenaDisplay.drawBall(intercept.space, graphics, new Color(23, 194, 8));
+        }
     }
 }

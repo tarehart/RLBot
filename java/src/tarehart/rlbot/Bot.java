@@ -3,6 +3,7 @@ package tarehart.rlbot;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.steps.WaitForActive;
 import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.ui.Readout;
 
@@ -41,7 +42,7 @@ public abstract class Bot {
         Optional<BallPath> ballPath = Optional.empty();
 
         if (input.matchInfo.matchEnded) {
-            currentPlan = new Plan(Plan.Posture.MENU);
+            currentPlan = new Plan(Plan.Posture.MENU).withStep(new WaitForActive());
             output = new AgentOutput();
         } else {
             ballPath = Optional.of(ArenaModel.predictBallPath(input));
@@ -60,6 +61,7 @@ public abstract class Bot {
             if (input.matchInfo.roundActive) {
                 output = getOutput(input);
             } else {
+                currentPlan = new Plan(Plan.Posture.NEUTRAL).withStep(new WaitForActive());
                 output = new AgentOutput();
             }
         }

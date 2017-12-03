@@ -9,6 +9,8 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.BallPhysics;
 import tarehart.rlbot.physics.DistancePlot;
+import tarehart.rlbot.steps.strikes.InterceptStep;
+import tarehart.rlbot.steps.strikes.MidairStrikeStep;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -133,6 +135,44 @@ public class SteerUtil {
                     if (predicate.test(carData, intercept)) {
                         return Optional.of(intercept);
                     }
+                }
+            } else {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     *
+     * @param carData
+     * @param ballPath
+     * @param interceptModifier an offset from the ball position that the car is trying to reach
+     * @return
+     */
+    public static Optional<SpaceTime> getAerialIntercept(
+            CarData carData,
+            BallPath ballPath,
+            Vector3 interceptModifier) {
+
+        Vector3 myPosition = carData.position;
+
+        for (BallSlice ballMoment: ballPath.getSlices()) {
+            SpaceTime intercept = new SpaceTime(ballMoment.space.plus(interceptModifier), ballMoment.getTime());
+
+            // TODO: this needs to be a bit steeper because the car pitches higher than this to fight gravity.
+            Vector3 averageNoseVector = intercept.space.minus(carData.position).normaliseCopy();
+            Duration duration = Duration.between(carData.time, ballMoment.getTime());
+            DistancePlot acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, averageNoseVector);
+            StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 ?
+                    InterceptStep.JUMP_HIT_STRIKE_PROFILE :
+                    InterceptStep.AERIAL_STRIKE_PROFILE;
+            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterStrike(carData, intercept, strikeProfile);
+            if (motionAt.isPresent()) {
+                DistanceTimeSpeed dts = motionAt.get();
+                double interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space);
+                if (dts.distance > interceptDistance) {
+                    return Optional.of(intercept);
                 }
             } else {
                 return Optional.empty();
