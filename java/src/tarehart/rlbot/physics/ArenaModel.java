@@ -316,7 +316,14 @@ public class ArenaModel {
             simulationTime = simulationTime.plus(TimeUtil.toDuration(stepSize));
             Vector3 ballVelocity = getBallVelocity();
             Vector3 ballSpin = getBallSpin();
-            ballPath.addSlice(new BallSlice(getBallPosition(), simulationTime, ballVelocity, ballSpin));
+            Vector3 ballPosition = getBallPosition();
+            if (Math.abs(ballPosition.y) > BACK_WALL + BALL_RADIUS) {
+                // The ball has crossed the goal plane. Freeze it in place.
+                // This is handy for making the bot not give up on saves / follow through on shots.
+                ball.getBody().setKinematic();
+                ball.getBody().setLinearVel(0, 0, 0);
+            }
+            ballPath.addSlice(new BallSlice(ballPosition, simulationTime, ballVelocity, ballSpin));
         }
     }
 
