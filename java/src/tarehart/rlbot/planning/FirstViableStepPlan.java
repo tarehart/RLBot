@@ -51,4 +51,12 @@ public class FirstViableStepPlan extends Plan {
         return Optional.empty();
     }
 
+    public String getSituation() {
+        if (isComplete()) {
+            return "Dead plan";
+        }
+        boolean committed = frameCount >= FRAMES_TILL_COMMITMENT;
+        return posture.name() + " " + (committed ? "committed" : "sampling") + " - " + getCurrentStep().getSituation();
+    }
+
 }

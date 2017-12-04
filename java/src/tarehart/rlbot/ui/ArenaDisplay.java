@@ -59,7 +59,7 @@ public class ArenaDisplay extends JPanel {
     private Optional<CarData> enemyCarOptional;
     private Vector3 ball;
     private Vector3 ballPrediction = new Vector3();
-    private Vector3 expectedEnemyContact = new Vector3();
+    private Optional<Vector3> expectedEnemyContact = Optional.empty();
 
     public void updateInput(AgentInput input) {
         this.input = input;
@@ -76,8 +76,8 @@ public class ArenaDisplay extends JPanel {
         this.ballPrediction = ballPrediction;
     }
 
-    public void updateExpectedEnemyContact(Vector3 expectedEnemyContact) {
-        this.expectedEnemyContact = expectedEnemyContact;
+    public void updateExpectedEnemyContact(Optional<Intercept> expectedEnemyContact) {
+        this.expectedEnemyContact = expectedEnemyContact.map(Intercept::getSpace);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class ArenaDisplay extends JPanel {
         // Draw the ball (and its prediction ghosts)
         drawBall(ball, graphics2D, realBallColor);
         drawBall(ballPrediction, graphics2D, Color.BLACK, true);
-        drawBall(expectedEnemyContact, graphics2D, ENEMY_CONTACT_BALL_COLOR);
+        expectedEnemyContact.ifPresent(contact -> drawBall(contact, graphics2D, ENEMY_CONTACT_BALL_COLOR));
 
         // Draw the available full boost pads
         drawBoosts(graphics2D);

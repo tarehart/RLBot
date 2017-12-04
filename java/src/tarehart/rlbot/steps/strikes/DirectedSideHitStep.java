@@ -71,11 +71,18 @@ public class DirectedSideHitStep implements Step {
         }
 
         if (!kickPlanOption.isPresent()) {
-            BallPath ballPath = ArenaModel.predictBallPath(input);
-            return getNavigation(input, new SteerPlan(input.getMyCarData(), ballPath.getEndpoint().getSpace()));
+            BotLog.println("Quitting side hit due to failed kick plan.", car.playerIndex);
+            return Optional.empty();
         }
 
         kickPlan = kickPlanOption.get();
+
+        if (input.getEnemyCarData()
+                .map(enemy -> TacticsAdvisor.calculateRaceResult(kickPlan.ballAtIntercept.toSpaceTime(), enemy, kickPlan.ballPath) < -0.5)
+                .orElse(false)) {
+            BotLog.println("Failing side hit because we will lose the race.", car.playerIndex);
+            return Optional.empty();
+        }
 
         if (interceptModifier == null) {
             Vector3 nearSide = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE));

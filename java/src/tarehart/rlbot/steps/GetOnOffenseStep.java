@@ -68,11 +68,6 @@ public class GetOnOffenseStep implements Step {
             target = target.minus(goalToBallNormal.scaled(10));
         }
 
-
-        double flatDistance = VectorUtil.flatDistance(target, car.position);
-        if (getYAxisWrongSidedness(input) < 0) {
-            return Optional.empty();
-        }
         Vector3 targetToBallFuture = futureMotion.getSpace().minus(target);
 
         DistancePlot plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), 0);

@@ -99,7 +99,7 @@ public class Readout {
 
         if (situationOption.isPresent()) {
             TacticalSituation tacSituation = situationOption.get();
-            arenaDisplay.updateExpectedEnemyContact(tacSituation.expectedEnemyContact.space);
+            arenaDisplay.updateExpectedEnemyContact(tacSituation.expectedEnemyContact);
         }
 
         updateBallHeightMaxes(input);
@@ -182,10 +182,10 @@ public class Readout {
 
             ownGoalFutureProximity.setText(String.format("%.2f", situation.ownGoalFutureProximity));
             distanceBallIsBehindUs.setText(String.format("%.2f", situation.distanceBallIsBehindUs));
-            enemyOffensiveApproachError.setText(String.format("%.2f", situation.enemyOffensiveApproachError));
+            enemyOffensiveApproachError.setText(situation.enemyOffensiveApproachError.map(e -> String.format("%.2f", e)).orElse(""));
             distanceFromEnemyBackWall.setText(String.format("%.2f", situation.distanceFromEnemyBackWall));
             distanceFromEnemyCorner.setText(String.format("%.2f", situation.distanceFromEnemyCorner));
-            expectedEnemyContact.setText(situation.expectedEnemyContact.space.toString());
+            expectedEnemyContact.setText(situation.expectedEnemyContact.map(contact -> contact.getSpace().toString()).orElse(""));
             scoredOnThreat.setText(situation.scoredOnThreat.map(b -> b.space.toString()).orElse("None"));
 
             needsDefensiveClear.setText("");

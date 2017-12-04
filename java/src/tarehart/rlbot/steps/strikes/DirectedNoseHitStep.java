@@ -8,11 +8,9 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPhysics;
-import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.SteerPlan;
-import tarehart.rlbot.planning.SteerUtil;
-import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.tuning.BotLog;
 
 import java.awt.*;
 import java.time.Duration;
@@ -92,10 +90,18 @@ public class DirectedNoseHitStep implements Step {
         }
 
         if (!kickPlanOption.isPresent()) {
-            return Optional.of(SteerUtil.steerTowardGroundPosition(input.getMyCarData(), input.ballPosition));
+            BotLog.println("Quitting nose hit due to failed kick plan.", car.playerIndex);
+            return Optional.empty();
         }
 
         kickPlan = kickPlanOption.get();
+
+        if (input.getEnemyCarData()
+                .map(enemy -> TacticsAdvisor.calculateRaceResult(kickPlan.ballAtIntercept.toSpaceTime(), enemy, kickPlan.ballPath) < -0.5)
+                .orElse(false)) {
+            BotLog.println("Failing nose hit because we will lose the race.", car.playerIndex);
+            return Optional.empty();
+        }
 
         if (originalIntercept == null) {
             originalIntercept = kickPlan.ballAtIntercept.getSpace();
