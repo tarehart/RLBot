@@ -4,6 +4,7 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -36,6 +37,18 @@ public class GetOnOffenseStep implements Step {
             }
         }
 
+        Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.playerIndex);
+
+        if (tacticalSituationOption.map(situation -> situation.shotOnGoalAvailable).orElse(false)) {
+            return Optional.empty();
+        }
+
+        BallPath ballPath = ArenaModel.predictBallPath(input);
+
+        SpaceTime ballFuture = tacticalSituationOption.map(situation -> situation.expectedContact.map(Intercept::toSpaceTime))
+                .orElse(ballPath.getMotionAt(input.time.plusSeconds(2)).map(BallSlice::toSpaceTime))
+                .orElse(new SpaceTime(input.ballPosition, input.time));
+
         CarData car = input.getMyCarData();
 
         if (car.boost < 10 && GetBoostStep.seesOpportunisticBoost(car, input.fullBoosts)) {
@@ -46,16 +59,11 @@ public class GetOnOffenseStep implements Step {
         Goal enemyGoal = GoalUtil.getEnemyGoal(input.team);
         Goal ownGoal = GoalUtil.getOwnGoal(input.team);
 
-        BallPath ballPath = ArenaModel.predictBallPath(input);
+        Vector3 target = ballFuture.space;
 
-        Vector3 target = input.ballPosition;
-        BallSlice futureMotion = ballPath.getMotionAt(input.time.plusSeconds(2)).get();
-        if (input.ballVelocity.y * (enemyGoal.getCenter().y - input.ballPosition.y) < 0) {
-            // if ball is rolling away from the enemy goal
-            target = futureMotion.getSpace();
-        }
 
-        if (futureMotion.getSpace().distance(enemyGoal.getCenter()) < ArenaModel.SIDE_WALL * .8) {
+
+        if (Math.abs(target.x) < ArenaModel.SIDE_WALL * .8) {
             // Get into a strike position, 10 units behind the ball
             Vector3 goalToBall = target.minus(enemyGoal.getCenter());
             Vector3 goalToBallNormal = goalToBall.normaliseCopy();
@@ -68,23 +76,15 @@ public class GetOnOffenseStep implements Step {
             target = target.minus(goalToBallNormal.scaled(10));
         }
 
-        Vector3 targetToBallFuture = futureMotion.getSpace().minus(target);
+        if (car.position.distance(target) < 10) {
+            return Optional.empty();
+        }
 
-        DistancePlot plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), 0);
-
-
-        Optional<Vector2> circleTurnOption = SteerUtil.getWaypointForCircleTurn(car, plot, target.flatten(), targetToBallFuture.flatten().normalized());
-
-        if (circleTurnOption.isPresent()) {
-            Vector2 circleTurn = circleTurnOption.get();
-            Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurn);
-            if (sensibleFlip.isPresent()) {
-                println("Front flip onto offense", input.playerIndex);
-                this.plan = sensibleFlip.get();
-                return this.plan.getOutput(input);
-            }
-
-            return Optional.of(SteerUtil.steerTowardGroundPosition(car, circleTurn));
+        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, target);
+        if (sensibleFlip.isPresent()) {
+            println("Front flip toward offense", input.playerIndex);
+            plan = sensibleFlip.get();
+            return plan.getOutput(input);
         }
 
         return Optional.of(SteerUtil.steerTowardGroundPosition(car, target));

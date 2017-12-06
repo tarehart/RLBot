@@ -12,10 +12,7 @@ import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
-import tarehart.rlbot.steps.CatchBallStep;
-import tarehart.rlbot.steps.DribbleStep;
-import tarehart.rlbot.steps.GetBoostStep;
-import tarehart.rlbot.steps.GetOnOffenseStep;
+import tarehart.rlbot.steps.*;
 import tarehart.rlbot.steps.defense.GetOnDefenseStep;
 import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep;
 import tarehart.rlbot.steps.defense.WhatASaveStep;
@@ -23,11 +20,11 @@ import tarehart.rlbot.steps.strikes.*;
 import tarehart.rlbot.steps.wall.DescendFromWallStep;
 import tarehart.rlbot.steps.wall.MountWallStep;
 import tarehart.rlbot.steps.wall.WallTouchStep;
+import tarehart.rlbot.tuning.BotLog;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static tarehart.rlbot.planning.Plan.Posture.NEUTRAL;
 import static tarehart.rlbot.planning.Plan.Posture.OFFENSIVE;
@@ -36,7 +33,7 @@ import static tarehart.rlbot.tuning.BotLog.println;
 public class TacticsAdvisor {
 
     private static final double LOOKAHEAD_SECONDS = 2;
-    private static final Duration PLAN_HORIZON = Duration.ofSeconds(5);
+    private static final Duration PLAN_HORIZON = Duration.ofSeconds(6);
 
     public TacticsAdvisor() {
     }
@@ -59,12 +56,20 @@ public class TacticsAdvisor {
             double secondsToOverrideFor = 0.25;
             return new Plan(Plan.Posture.DEFENSIVE).withStep(new GetOnDefenseStep(secondsToOverrideFor));
         }
+
+        Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
+        Vector3 interceptPosition = situation.expectedContact.map(Intercept::getSpace).orElse(input.ballPosition);
+        Vector3 toOwnGoal = ownGoalCenter.minus(interceptPosition);
+        Vector3 interceptModifier = toOwnGoal.normaliseCopy();
+
         if (situation.shotOnGoalAvailable) {
             return new FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(new DirectedNoseHitStep(new KickAtEnemyGoal()))
                     .withStep(new DirectedSideHitStep(new KickAtEnemyGoal()))
                     .withStep(new DirectedNoseHitStep(new FunnelTowardEnemyGoal()))
-                    .withStep(new GetOnOffenseStep());
+                    .withStep(new InterceptStep(interceptModifier))
+                    .withStep(new CatchBallStep())
+                    .withStep(new ChaseBallStep());
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
@@ -87,11 +92,6 @@ public class TacticsAdvisor {
                 if (GetOnOffenseStep.getYAxisWrongSidedness(input) < 0) {
 
                     // Consider this to be a 50-50. Go hard for the intercept
-                    Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
-                    Vector3 interceptPosition = situation.expectedContact.get().getSpace();
-                    Vector3 toOwnGoal = ownGoalCenter.minus(interceptPosition);
-                    Vector3 interceptModifier = toOwnGoal.normaliseCopy();
-
                     return new Plan(Plan.Posture.OFFENSIVE).withStep(new InterceptStep(interceptModifier));
                 } else {
                     // We're not in a good position to go for a 50-50. Get on defense.
@@ -138,13 +138,12 @@ public class TacticsAdvisor {
 
         CarData car = input.getMyCarData();
 
-        if (situation.distanceFromEnemyBackWall < 20) {
+        if (!generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
             Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, car.boost);
             if (catchOpportunity.isPresent()) {
-                return new Plan(Plan.Posture.OFFENSIVE).withStep(new CatchBallStep(catchOpportunity.get())).withStep(new DribbleStep());
+                return new Plan(Plan.Posture.OFFENSIVE).withStep(new CatchBallStep()).withStep(new DribbleStep());
             }
             return new Plan(Plan.Posture.OFFENSIVE)
-                    .withStep(new DirectedNoseHitStep(new FunnelTowardEnemyGoal()))
                     .withStep(new GetOnOffenseStep());
         }
 
@@ -165,6 +164,22 @@ public class TacticsAdvisor {
         } else {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new InterceptStep(new Vector3()));
         }
+    }
+
+    private boolean generousShotAngle(Goal goal, Optional<Intercept> expectedContact, int playerIndex) {
+        return expectedContact
+                .map(contact -> measureShotTriangle(goal, contact.getSpace().flatten(), playerIndex) > Math.PI / 6)
+                .orElse(false);
+    }
+
+    private double measureShotTriangle(Goal goal, Vector2 position, int playerIndex) {
+        Vector2 toRightPost = goal.getRightPost().flatten().minus(position);
+        Vector2 toLeftPost = goal.getLeftPost().flatten().minus(position);
+
+        double angle = Vector2.angle(toLeftPost, toRightPost);
+        // BotLog.println(String.format("Shot angle: %.2f", angle), playerIndex);
+
+        return angle;
     }
 
     public TacticalSituation assessSituation(AgentInput input, BallPath ballPath, Plan currentPlan) {
@@ -192,14 +207,14 @@ public class TacticsAdvisor {
 
         situation.scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath);
         situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath);
-        situation.shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, opponentCar, input.ballPosition, ballPath);
+        situation.shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, opponentCar, input.ballPosition, ourIntercept);
         situation.forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition);
         situation.goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition);
         situation.waitToClear = getWaitToClear(zonePlan, input);
         situation.currentPlan = Optional.ofNullable(currentPlan);
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
-        TacticsTelemetry.set(situation, input.team);
+        TacticsTelemetry.set(situation, input.playerIndex);
 
         return situation;
     }
@@ -245,9 +260,9 @@ public class TacticsAdvisor {
 
     // Checks to see if the ball is in the box for a while or if we have a breakaway
     private boolean getShotOnGoalAvailable(Bot.Team team, CarData myCar, Optional<CarData> opponentCar,
-                                           Vector3 ballPosition, BallPath ballPath) {
-        if(GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(team), ballPath)
-                && myCar.position.distance(ballPosition) < 80) {
+                                           Vector3 ballPosition, Optional<Intercept> soonestIntercept) {
+
+        if(generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept, myCar.playerIndex)) {
             return true;
         }
 

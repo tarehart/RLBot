@@ -34,7 +34,7 @@ public class InterceptStep implements Step {
     private Vector3 interceptModifier;
     private LocalDateTime doneMoment;
     private Intercept originalIntercept;
-    private SpaceTime preStrikePosition;
+    private Intercept chosenIntercept;
 
     public InterceptStep(Vector3 interceptModifier) {
         this.interceptModifier = interceptModifier;
@@ -64,31 +64,34 @@ public class InterceptStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
         DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), carData.boost, 0);
 
-        Optional<Intercept> chosenIntercept = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier);
-        Optional<Plan> launchPlan = chosenIntercept.flatMap(cept -> InterceptPlanner.planImmediateLaunch(input.getMyCarData(), cept.toSpaceTime()));
+        Optional<Intercept> soonestInterceptOption = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier);
+        if (!soonestInterceptOption.isPresent()) {
+            return Optional.empty();
+        }
+        chosenIntercept = soonestInterceptOption.get();
+
+        Optional<Plan> launchPlan = InterceptPlanner.planImmediateLaunch(input.getMyCarData(), chosenIntercept.toSpaceTime());
         if (launchPlan.isPresent()) {
             plan = launchPlan.get();
             plan.unstoppable();
             return plan.getOutput(input);
         }
 
-        if (chosenIntercept.isPresent()) {
-            if (originalIntercept == null) {
-                originalIntercept = chosenIntercept.get();
-            } else {
-                if (TimeUtil.secondsBetween(originalIntercept.getTime(), chosenIntercept.get().getTime()) > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
-                    if (doneMoment != null) {
-                        println("Probably intercepted successfully", input.playerIndex);
-                    } else {
-                        println("Failed to make the intercept", input.playerIndex);
-                    }
-                    return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
+        if (originalIntercept == null) {
+            originalIntercept = chosenIntercept;
+        } else {
+            if (TimeUtil.secondsBetween(originalIntercept.getTime(), chosenIntercept.getTime()) > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
+                if (doneMoment != null) {
+                    println("Probably intercepted successfully", input.playerIndex);
+                } else {
+                    println("Failed to make the intercept", input.playerIndex);
                 }
+                return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
 
 
-        return chosenIntercept.map(intercept -> getThereOnTime(input, intercept));
+        return Optional.of(getThereOnTime(input, chosenIntercept));
     }
 
     public static Optional<Intercept> getSoonestIntercept(CarData carData, BallPath ballPath, DistancePlot fullAcceleration, Vector3 interceptModifier) {
@@ -158,7 +161,7 @@ public class InterceptStep implements Step {
             }
             return agentOutput;
         } else {
-            AgentOutput output = SteerUtil.getThereOnTime(car, preStrikePosition);
+            AgentOutput output = SteerUtil.getThereOnTime(car, chosenIntercept.toSpaceTime());
             if (car.boost <= intercept.getAirBoost() + 5) {
                 output.withBoost(false);
             }
@@ -184,10 +187,10 @@ public class InterceptStep implements Step {
             return;
         }
 
-        if (preStrikePosition != null) {
+        if (chosenIntercept != null) {
             graphics.setColor(new Color(214, 136, 29));
             graphics.setStroke(new BasicStroke(1));
-            Vector2 preStrike = preStrikePosition.space.flatten();
+            Vector2 preStrike = chosenIntercept.getSpace().flatten();
             int crossSize = 2;
             graphics.draw(new Line2D.Double(preStrike.x - crossSize, preStrike.y - crossSize, preStrike.x + crossSize, preStrike.y + crossSize));
             graphics.draw(new Line2D.Double(preStrike.x - crossSize, preStrike.y + crossSize, preStrike.x + crossSize, preStrike.y - crossSize));

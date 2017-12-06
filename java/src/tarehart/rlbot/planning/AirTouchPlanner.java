@@ -9,7 +9,7 @@ import tarehart.rlbot.tuning.ManeuverMath;
 
 public class AirTouchPlanner {
 
-    private static final double AERIAL_RISE_RATE = 8;
+    private static final double AERIAL_RISE_RATE = 10;
     public static final double BOOST_NEEDED_FOR_AERIAL = 20;
     public static final double NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT;
     public static final double MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD;
@@ -24,7 +24,7 @@ public class AirTouchPlanner {
         AerialChecklist checklist = new AerialChecklist();
         checkLaunchReadiness(checklist, car, carPositionAtContact);
 
-        checklist.notSkidding = car.velocity.normaliseCopy().dotProduct(car.orientation.noseVector) > .99;
+        checklist.notSkidding = car.velocity.isZero() || car.velocity.normaliseCopy().dotProduct(car.orientation.noseVector) > .99;
         checklist.hasBoost = car.boost >= BOOST_NEEDED_FOR_AERIAL;
 
         return checklist;
@@ -59,7 +59,7 @@ public class AirTouchPlanner {
         checklist.notTooClose = isVerticallyAccessible(car, carPositionAtContact);
         checklist.timeForIgnition = tMinus < 0.1;
         checklist.upright = car.orientation.roofVector.dotProduct(new Vector3(0, 0, 1)) > .99;
-        checklist.onTheGround = car.position.z < CAR_BASE_HEIGHT + 0.03; // Add a little wiggle room
+        checklist.onTheGround = car.hasWheelContact;
     }
 
     public static boolean isVerticallyAccessible(CarData carData, SpaceTime intercept) {

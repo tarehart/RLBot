@@ -89,7 +89,7 @@ public class ArenaDisplay extends JPanel {
         }
 
         // Retrieve situation telemetry
-        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(myCar.team);
+        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(myCar.playerIndex);
 
         //Create a Graphics2D object from g
         Graphics2D graphics2D = (Graphics2D)g;

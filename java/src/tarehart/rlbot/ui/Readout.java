@@ -95,7 +95,7 @@ public class Readout {
             arenaDisplay.updateBallPrediction(ballPrediction);
         }
 
-        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(input.team);
+        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(input.playerIndex);
 
         if (situationOption.isPresent()) {
             TacticalSituation tacSituation = situationOption.get();
@@ -175,7 +175,7 @@ public class Readout {
     }
 
     private void updateTacticsInfo(AgentInput input) {
-        Optional<TacticalSituation> situationOpt = TacticsTelemetry.get(input.team);
+        Optional<TacticalSituation> situationOpt = TacticsTelemetry.get(input.playerIndex);
 
         if (situationOpt.isPresent()) {
             TacticalSituation situation = situationOpt.get();

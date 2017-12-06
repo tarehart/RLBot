@@ -146,6 +146,12 @@ public class DirectedNoseHitStep implements Step {
             maneuverSeconds = correctionNeeded * MANEUVER_SECONDS_PER_RADIAN;
             Vector2 terminusFacing = VectorUtil.rotateVector(carToIntercept, correctionNeeded).normalized();
 
+
+            if (Vector2.angle(carToIntercept, terminusFacing) > Math.PI / 3) {
+                // If we're doing more than a quarter turn, this is a waste of time.
+                return Optional.empty();
+            }
+
             // Line up for a nose hit
             circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, circleTerminus, terminusFacing);
             if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0)) < -1) {

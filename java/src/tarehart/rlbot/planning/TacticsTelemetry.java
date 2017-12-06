@@ -6,18 +6,18 @@ import java.util.*;
 
 public class TacticsTelemetry {
 
-    private static Map<Bot.Team, TacticalSituation> tacticalSituations = new HashMap<>();
+    private static Map<Integer, TacticalSituation> tacticalSituations = new HashMap<>();
 
 
-    public static void set(TacticalSituation situation, Bot.Team team) {
-        tacticalSituations.put(team, situation);
+    public static void set(TacticalSituation situation, int playerIndex) {
+        tacticalSituations.put(playerIndex, situation);
     }
 
-    public static void reset(Bot.Team team) {
-        tacticalSituations.remove(team);
+    public static void reset(int playerIndex) {
+        tacticalSituations.remove(playerIndex);
     }
 
-    public static Optional<TacticalSituation> get(Bot.Team team) {
-        return Optional.ofNullable(tacticalSituations.get(team));
+    public static Optional<TacticalSituation> get(int playerIndex) {
+        return Optional.ofNullable(tacticalSituations.get(playerIndex));
     }
 }

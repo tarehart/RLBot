@@ -15,28 +15,14 @@ import java.awt.*;
 import java.util.Optional;
 
 public class CatchBallStep implements Step {
-    private int confusionLevel = 0;
     private SpaceTime latestCatchLocation;
-    private boolean firstFrame = true;
 
-    public CatchBallStep(SpaceTime initialCatchLocation) {
-        latestCatchLocation = initialCatchLocation;
+    public CatchBallStep() {
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
         CarData car = input.getMyCarData();
-
-        if (firstFrame) {
-            firstFrame = false;
-            return Optional.of(playCatch(car, latestCatchLocation));
-        }
-
-        double distance = car.position.distance(input.ballPosition);
-
-        if (distance < 2.5 || confusionLevel > 3) {
-            return Optional.empty();
-        }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
         Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car));
@@ -44,12 +30,10 @@ public class CatchBallStep implements Step {
         // Weed out any intercepts after a catch opportunity. Should just catch it.
         if (catchOpportunity.isPresent()) {
             latestCatchLocation = catchOpportunity.get();
-            confusionLevel = 0;
+            return Optional.of(playCatch(car, latestCatchLocation));
         } else {
-            confusionLevel++;
+            return Optional.empty();
         }
-
-        return Optional.of(playCatch(car, latestCatchLocation));
     }
 
     private AgentOutput playCatch(CarData car, SpaceTime catchLocation) {

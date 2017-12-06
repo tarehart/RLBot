@@ -3,17 +3,15 @@ package tarehart.rlbot.steps;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.planning.AirTouchPlanner;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SteerUtil;
-import tarehart.rlbot.steps.strikes.InterceptStep;
+import tarehart.rlbot.planning.TacticalSituation;
+import tarehart.rlbot.planning.TacticsTelemetry;
 
 import java.awt.*;
 import java.util.Optional;
+
+import static tarehart.rlbot.tuning.BotLog.println;
 
 public class ChaseBallStep implements Step {
     private Plan plan;
@@ -27,33 +25,21 @@ public class ChaseBallStep implements Step {
             }
         }
 
-        CarData car = input.getMyCarData();
+        Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.playerIndex);
 
-        if (car.position.z > 1 && !ArenaModel.isCarNearWall(car)) {
+        if (tacticalSituationOption.map(situation -> situation.expectedContact.isPresent()).orElse(false)) {
+            // There's an intercept, quit this thing.
+            // TODO: sometimes the intercept step fails to pick up on this because its accelration model does no front flips.
             return Optional.empty();
         }
 
+        CarData car = input.getMyCarData();
 
-        BallPath ballPath = ArenaModel.predictBallPath(input);
-
-        if (input.getEnemyCarData().map(c -> c.position.distance(input.ballPosition)).orElse(Double.MAX_VALUE) > 50) {
-            if (car.boost < 10 && GetBoostStep.seesOpportunisticBoost(car, input.fullBoosts)) {
-                plan = new Plan().withStep(new GetBoostStep());
-                return plan.getOutput(input);
-            }
-
-            Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car));
-            if (catchOpportunity.isPresent()) {
-                plan = new Plan().withStep(new CatchBallStep(catchOpportunity.get())).withStep(new DribbleStep());
-                return plan.getOutput(input);
-            }
-        }
-
-        InterceptStep interceptStep = new InterceptStep(new Vector3());
-        Optional<AgentOutput> output = interceptStep.getOutput(input);
-        if (output.isPresent()) {
-            plan = new Plan().withStep(interceptStep);
-            return output;
+        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, input.ballPosition);
+        if (sensibleFlip.isPresent()) {
+            println("Front flip after ball", input.playerIndex);
+            plan = sensibleFlip.get();
+            return plan.getOutput(input);
         }
 
         return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.ballPosition));

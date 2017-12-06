@@ -22,9 +22,6 @@ public class RotateAndWaitToClearStep implements Step {
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
-        TacticalSituation tacticalSituation = null;
-        if (TacticsTelemetry.get(input.team).isPresent())
-            tacticalSituation = TacticsTelemetry.get(input.team).get();
         CarData myCar = input.getMyCarData();
         Vector3 myGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
 
@@ -40,7 +37,7 @@ public class RotateAndWaitToClearStep implements Step {
             startTime = input.time;
         }
 
-        if (tacticalSituation != null && !tacticalSituation.waitToClear) {
+        if (TacticsTelemetry.get(myCar.playerIndex).map(telem -> !telem.waitToClear).orElse(false)) {
             return Optional.empty(); // Time to reevaluate the plan.
         }
 

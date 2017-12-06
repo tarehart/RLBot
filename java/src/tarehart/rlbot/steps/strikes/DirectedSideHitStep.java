@@ -122,6 +122,11 @@ public class DirectedSideHitStep implements Step {
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
         Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
 
+        if (Vector2.angle(carToIntercept, facingForSideFlip) > Math.PI / 3) {
+            // If we're doing more than a quarter turn, this is a waste of time.
+            return Optional.empty();
+        }
+
         Vector2 steerTarget = orthogonalPoint.minus(facingForSideFlip.scaled(backoff));
 
         Vector2 toOrthogonal = orthogonalPoint.minus(car.position.flatten());
