@@ -15,8 +15,7 @@ public class SteerPlan {
 
     public AgentOutput immediateSteer;
     public Vector2 waypoint;
-    private Vector2 targetPosition;
-    private Vector2 targetFacing;
+    private PositionFacing target;
     public Circle circle;
 
     public SteerPlan(AgentOutput immediateSteer, Vector2 waypoint) {
@@ -26,8 +25,7 @@ public class SteerPlan {
     public SteerPlan(AgentOutput immediateSteer, Vector2 waypoint, Vector2 targetPosition, Vector2 targetFacing, Circle circle) {
         this.immediateSteer = immediateSteer;
         this.waypoint = waypoint;
-        this.targetPosition = targetPosition;
-        this.targetFacing = targetFacing;
+        this.target = new PositionFacing(targetPosition, targetFacing);
         this.circle = circle;
     }
 
@@ -49,7 +47,7 @@ public class SteerPlan {
             //graphics.draw(circleShape);
 
             Vector2 centerToWaypoint = waypoint.minus(circle.center);
-            Vector2 centerToFinal = targetPosition.minus(circle.center);
+            Vector2 centerToFinal = target.getPosition().minus(circle.center);
             double waypointAngle = Math.atan2(centerToWaypoint.y, centerToWaypoint.x);
             double waypointDegrees = -waypointAngle * 180 / Math.PI;
             double radians = centerToWaypoint.correctionAngle(centerToFinal);
