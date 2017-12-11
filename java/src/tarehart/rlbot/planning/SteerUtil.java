@@ -100,7 +100,8 @@ public class SteerUtil {
             BiPredicate<CarData, SpaceTime> predicate,
             StrikeProfile strikeProfile) {
 
-        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, strikeProfile, new Vector3(0, 0, 1));
+        Vector3 groundNormal = new Vector3(0, 0, 1);
+        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, strikeProfile, groundNormal);
     }
 
     /**
@@ -274,7 +275,7 @@ public class SteerUtil {
     public static Optional<Plan> getSensibleFlip(CarData car, Vector2 target) {
 
         double speed = car.velocity.flatten().magnitude();
-        if(car.isSupersonic || car.boost > 75 || speed < 10) {
+        if(car.isSupersonic || car.boost > 75 || speed < AccelerationModel.FLIP_THRESHOLD_SPEED) {
             return Optional.empty();
         }
 

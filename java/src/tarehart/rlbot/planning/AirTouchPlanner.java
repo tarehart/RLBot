@@ -87,16 +87,6 @@ public class AirTouchPlanner {
         return tMinus >= -0.1;
     }
 
-    public static boolean isJumpSideFlipAccessible(CarData carData, SpaceTime intercept) {
-        if (intercept.space.z > ManeuverMath.MASH_JUMP_HEIGHT) {
-            return false;
-        }
-
-        double secondsTillIntercept = TimeUtil.secondsBetween(carData.time, intercept.time);
-        double tMinus = getJumpLaunchCountdown(intercept.space.z, secondsTillIntercept);
-        return tMinus >= -0.1;
-    }
-
     public static boolean isFlipHitAccessible(CarData carData, SpaceTime intercept) {
         return intercept.space.z <= MAX_FLIP_HIT;
     }

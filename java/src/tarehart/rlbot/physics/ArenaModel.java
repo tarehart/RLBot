@@ -50,16 +50,16 @@ public class ArenaModel {
     private DSphere ball;
     private final DJointGroup contactgroup;
 
-    private static final ArenaModel arenaModel = new ArenaModel();
-
     public static final Duration SIMULATION_DURATION = Duration.ofSeconds(6);
     private static final LoadingCache<BallSlice, BallPath> pathCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(1, TimeUnit.MINUTES)
+            .maximumSize(100)
             .build(new CacheLoader<BallSlice, BallPath>() {
                 @Override
                 public BallPath load(BallSlice key) throws Exception {
                     synchronized (lock) {
-                        return arenaModel.simulateBall(key, SIMULATION_DURATION);
+                        // Always use a new ArenaModel. There's a nasty bug
+                        // where bounces stop working properly and I can't track it down.
+                        return new ArenaModel().simulateBall(key, SIMULATION_DURATION);
                     }
                 }
             });
@@ -169,7 +169,8 @@ public class ArenaModel {
 
     public static BallPath predictBallPath(AgentInput input) {
         try {
-            return pathCache.get(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
+            BallSlice key = new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin);
+            return pathCache.get(key);
         } catch (ExecutionException e) {
             throw new RuntimeException("Failed to compute ball path!", e);
         }

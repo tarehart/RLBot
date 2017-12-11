@@ -7,6 +7,7 @@ import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.GoForKickoffStep;
 import tarehart.rlbot.steps.debug.CalibrateStep;
+import tarehart.rlbot.steps.debug.TagAlongStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
 import tarehart.rlbot.tuning.BotLog;
 
@@ -53,7 +54,7 @@ public class ReliefBot extends Bot {
         TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath, currentPlan);
 
 //        if (canInterruptPlanFor(Plan.Posture.OVERRIDE)) {
-//            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new CalibrateStep());
+//            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new TagAlongStep());
 //        }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.

@@ -17,6 +17,7 @@ import tarehart.rlbot.steps.defense.GetOnDefenseStep;
 import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep;
 import tarehart.rlbot.steps.defense.WhatASaveStep;
 import tarehart.rlbot.steps.strikes.*;
+import tarehart.rlbot.steps.travel.SlideToPositionStep;
 import tarehart.rlbot.steps.wall.DescendFromWallStep;
 import tarehart.rlbot.steps.wall.MountWallStep;
 import tarehart.rlbot.steps.wall.WallTouchStep;
@@ -39,6 +40,10 @@ public class TacticsAdvisor {
     }
 
     public Plan makePlan(AgentInput input, TacticalSituation situation) {
+
+        if (ArenaModel.isBehindGoalLine(input.getMyCarData().position)) {
+            return new Plan(NEUTRAL).withStep(new EscapeTheGoalStep());
+        }
 
         if (situation.scoredOnThreat.isPresent()) {
             return new Plan(Plan.Posture.SAVE).withStep(new WhatASaveStep());
@@ -63,13 +68,11 @@ public class TacticsAdvisor {
         Vector3 interceptModifier = toOwnGoal.normaliseCopy();
 
         if (situation.shotOnGoalAvailable) {
+
             return new FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(new DirectedNoseHitStep(new KickAtEnemyGoal()))
                     .withStep(new DirectedSideHitStep(new KickAtEnemyGoal()))
-                    .withStep(new DirectedNoseHitStep(new FunnelTowardEnemyGoal()))
-                    .withStep(new InterceptStep(interceptModifier))
-                    .withStep(new CatchBallStep())
-                    .withStep(new ChaseBallStep());
+                    .withStep(new CatchBallStep());
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
@@ -89,7 +92,7 @@ public class TacticsAdvisor {
 
                 // Enemy is threatening us
 
-                if (GetOnOffenseStep.getYAxisWrongSidedness(input) < 0) {
+                if (getYAxisWrongSidedness(input) < 0) {
 
                     // Consider this to be a 50-50. Go hard for the intercept
                     return new Plan(Plan.Posture.OFFENSIVE).withStep(new InterceptStep(interceptModifier));
@@ -143,8 +146,6 @@ public class TacticsAdvisor {
             if (catchOpportunity.isPresent()) {
                 return new Plan(Plan.Posture.OFFENSIVE).withStep(new CatchBallStep()).withStep(new DribbleStep());
             }
-            return new Plan(Plan.Posture.OFFENSIVE)
-                    .withStep(new GetOnOffenseStep());
         }
 
         if (DribbleStep.canDribble(input, false) && input.ballVelocity.magnitude() > 15) {
@@ -152,13 +153,14 @@ public class TacticsAdvisor {
             return new Plan(OFFENSIVE).withStep(new DribbleStep());
         }  else if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new MountWallStep()).withStep(new WallTouchStep()).withStep(new DescendFromWallStep());
-        } else if (DirectedNoseHitStep.canMakeDirectedKick(input, new KickAtEnemyGoal())) {
+        } else if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex) &&
+                DirectedNoseHitStep.canMakeDirectedKick(input, new KickAtEnemyGoal())) {
             return new Plan(Plan.Posture.OFFENSIVE)
                     .withStep(new DirectedNoseHitStep(new KickAtEnemyGoal()))
                     .withStep(new DirectedNoseHitStep(new FunnelTowardEnemyGoal()));
         } else if (car.boost < 50) {
             return new Plan().withStep(new GetBoostStep());
-        } else if (GetOnOffenseStep.getYAxisWrongSidedness(input) > 0) {
+        } else if (getYAxisWrongSidedness(input) > 0) {
             println("Getting behind the ball", input.playerIndex);
             return new Plan(NEUTRAL).withStep(new GetOnOffenseStep());
         } else {
@@ -166,13 +168,23 @@ public class TacticsAdvisor {
         }
     }
 
-    private boolean generousShotAngle(Goal goal, Optional<Intercept> expectedContact, int playerIndex) {
+    public static boolean generousShotAngle(Goal goal, Vector2 expectedContact, int playerIndex) {
+
+        Vector2 goalCenter = goal.getCenter().flatten();
+        Vector2 ballToGoal = goalCenter.minus(expectedContact);
+        boolean generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI / 4;
+        boolean generousTriangle = measureShotTriangle(goal, expectedContact, playerIndex) > Math.PI / 12;
+
+        return generousAngle || generousTriangle;
+    }
+
+    private static boolean generousShotAngle(Goal goal, Optional<Intercept> expectedContact, int playerIndex) {
         return expectedContact
-                .map(contact -> measureShotTriangle(goal, contact.getSpace().flatten(), playerIndex) > Math.PI / 6)
+                .map(contact -> generousShotAngle(goal, contact.getSpace().flatten(), playerIndex))
                 .orElse(false);
     }
 
-    private double measureShotTriangle(Goal goal, Vector2 position, int playerIndex) {
+    private static double measureShotTriangle(Goal goal, Vector2 position, int playerIndex) {
         Vector2 toRightPost = goal.getRightPost().flatten().minus(position);
         Vector2 toLeftPost = goal.getLeftPost().flatten().minus(position);
 
@@ -204,10 +216,11 @@ public class TacticsAdvisor {
         double enemyGoalY = GoalUtil.getEnemyGoal(input.team).getCenter().y;
         situation.distanceFromEnemyBackWall = Math.abs(enemyGoalY - futureBallMotion.space.y);
         situation.distanceFromEnemyCorner = getDistanceFromEnemyCorner(futureBallMotion, enemyGoalY);
+        situation.futureBallMotion = futureBallMotion;
 
         situation.scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath);
         situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath);
-        situation.shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, opponentCar, input.ballPosition, ourIntercept);
+        situation.shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, opponentCar, input.ballPosition, ourIntercept, ballPath);
         situation.forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition);
         situation.goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition);
         situation.waitToClear = getWaitToClear(zonePlan, input);
@@ -260,9 +273,11 @@ public class TacticsAdvisor {
 
     // Checks to see if the ball is in the box for a while or if we have a breakaway
     private boolean getShotOnGoalAvailable(Bot.Team team, CarData myCar, Optional<CarData> opponentCar,
-                                           Vector3 ballPosition, Optional<Intercept> soonestIntercept) {
+                                           Vector3 ballPosition, Optional<Intercept> soonestIntercept, BallPath ballPath) {
 
-        if(generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept, myCar.playerIndex)) {
+        if(myCar.position.distance(ballPosition) < 80 &&
+                GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(team), ballPath) &&
+                generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept, myCar.playerIndex)) {
             return true;
         }
 
@@ -317,6 +332,12 @@ public class TacticsAdvisor {
         Vector3 carToBall = input.ballPosition.minus(car.position);
         Vector3 wrongSideVector = VectorUtil.project(carToBall, ballToGoal);
         return wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal));
+    }
+
+    public static double getYAxisWrongSidedness(AgentInput input) {
+        Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
+        double playerToBallY = input.ballPosition.y - input.getMyCarData().position.y;
+        return playerToBallY * Math.signum(ownGoalCenter.y);
     }
 
 }

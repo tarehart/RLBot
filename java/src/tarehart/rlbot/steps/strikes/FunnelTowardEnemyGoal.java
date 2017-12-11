@@ -25,6 +25,11 @@ public class FunnelTowardEnemyGoal implements KickStrategy {
         return getDirection(input.getMyCarData(), ballPosition, easyKick);
     }
 
+    @Override
+    public boolean looksViable(CarData car, Vector3 ballPosition) {
+        return true;
+    }
+
     private Vector3 getDirection(CarData car, Vector3 ballPosition, Vector3 easyKick) {
         Vector2 easyKickFlat = easyKick.flatten();
         Vector2 idealKick = getIdealDirection(car, ballPosition);

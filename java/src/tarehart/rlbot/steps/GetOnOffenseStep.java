@@ -15,6 +15,7 @@ import tarehart.rlbot.planning.*;
 
 import java.awt.*;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static tarehart.rlbot.tuning.BotLog.println;
@@ -22,13 +23,27 @@ import static tarehart.rlbot.tuning.BotLog.println;
 public class GetOnOffenseStep implements Step {
     private Plan plan;
 
-    public static double getYAxisWrongSidedness(AgentInput input) {
-        Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
-        double playerToBallY = input.ballPosition.y - input.getMyCarData().position.y;
-        return playerToBallY * Math.signum(ownGoalCenter.y);
+    private Duration duration;
+    private LocalDateTime lastMoment;
+
+
+    public GetOnOffenseStep() {
+        this(Duration.ofSeconds(1));
+    }
+
+    public GetOnOffenseStep(Duration duration) {
+        this.duration = duration;
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
+
+        if (lastMoment == null) {
+            lastMoment = input.time.plus(duration);
+        }
+
+        if (input.time.isAfter(lastMoment) && (plan == null || plan.canInterrupt())) {
+            return Optional.empty();
+        }
 
         if (plan != null && !plan.isComplete()) {
             Optional<AgentOutput> output = plan.getOutput(input);
@@ -67,16 +82,17 @@ public class GetOnOffenseStep implements Step {
             // Get into a strike position, 10 units behind the ball
             Vector3 goalToBall = target.minus(enemyGoal.getCenter());
             Vector3 goalToBallNormal = goalToBall.normaliseCopy();
-            target = target.plus(goalToBallNormal.scaled(10));
+            target = target.plus(goalToBallNormal.scaled(30));
 
         } else {
             // Get into a backstop position
             Vector3 goalToBall = target.minus(ownGoal.getCenter());
             Vector3 goalToBallNormal = goalToBall.normaliseCopy();
-            target = target.minus(goalToBallNormal.scaled(10));
+            target = target.minus(goalToBallNormal.scaled(30));
         }
 
-        if (car.position.distance(target) < 10) {
+
+        if (TacticsAdvisor.getYAxisWrongSidedness(input) < 0) {
             return Optional.empty();
         }
 
@@ -102,6 +118,8 @@ public class GetOnOffenseStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        if (Plan.activePlan(plan).isPresent()) {
+            plan.getCurrentStep().drawDebugInfo(graphics);
+        }
     }
 }

@@ -163,7 +163,9 @@ public class Readout {
                 "Orng Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.team == Bot.Team.ORANGE)).orElse("Unknown") + "\n" +
                 "Ball Zone: " + zonePlanOpt.map(zp -> zp.ballZone.toString()).orElse("Unknown") + "\n" +
                 "\n" +
-                "Ball Spin: " + input.ballSpin + "\n";
+                "Ball Spin: " + input.ballSpin + "\n" +
+                "\n" +
+                "Our Boost: " + input.getMyCarData().boost;
 
         this.omniText.setText(text);
     }

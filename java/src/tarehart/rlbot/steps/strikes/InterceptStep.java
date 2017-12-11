@@ -50,6 +50,7 @@ public class InterceptStep implements Step {
         }
 
         if (doneMoment != null && input.time.isAfter(doneMoment)) {
+            println("Probably intercepted successfully", input.playerIndex);
             return Optional.empty();
         }
 
@@ -66,6 +67,7 @@ public class InterceptStep implements Step {
 
         Optional<Intercept> soonestInterceptOption = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier);
         if (!soonestInterceptOption.isPresent()) {
+            println("No intercept option found, aborting.", input.playerIndex);
             return Optional.empty();
         }
         chosenIntercept = soonestInterceptOption.get();

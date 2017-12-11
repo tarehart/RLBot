@@ -9,21 +9,20 @@ import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.planning.AccelerationModel;
-import tarehart.rlbot.planning.AirTouchPlanner;
-import tarehart.rlbot.planning.SteerUtil;
-import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.planning.*;
 import tarehart.rlbot.tuning.ManeuverMath;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 
 public class DirectedKickUtil {
     private static final double BALL_VELOCITY_INFLUENCE = .3;
 
     public static Optional<DirectedKickPlan> planKick(AgentInput input, KickStrategy kickStrategy, boolean isSideHit) {
         Vector3 interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2);
-        return planKick(input, kickStrategy, isSideHit, interceptModifier, new StrikeProfile(.5, 0, 0));
+        StrikeProfile strikeProfile = new StrikeProfile(.5, 0, 0);
+        return planKick(input, kickStrategy, isSideHit, interceptModifier, strikeProfile);
     }
 
     static Optional<DirectedKickPlan> planKick(AgentInput input, KickStrategy kickStrategy, boolean isSideHit, Vector3 interceptModifier, StrikeProfile strikeProfile) {
@@ -33,9 +32,15 @@ public class DirectedKickUtil {
         CarData car = input.getMyCarData();
 
         kickPlan.ballPath = ArenaModel.predictBallPath(input);
-        kickPlan.distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost, 0);
+        kickPlan.distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6), car.boost);
 
-        Optional<SpaceTime> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(car, kickPlan.ballPath, kickPlan.distancePlot, interceptModifier, AirTouchPlanner::isJumpSideFlipAccessible, strikeProfile);
+
+        BiPredicate<CarData, SpaceTime> verticalPredicate = isSideHit ? AirTouchPlanner::isJumpHitAccessible : AirTouchPlanner::isVerticallyAccessible;
+        BiPredicate<CarData, SpaceTime> overallPredicate = (cd, st) -> verticalPredicate.test(cd, st) && kickStrategy.looksViable(cd, st.space);
+
+        Optional<SpaceTime> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(
+                car, kickPlan.ballPath, kickPlan.distancePlot, interceptModifier,
+                overallPredicate, strikeProfile);
         Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> kickPlan.ballPath.getMotionAt(inter.time));
 
         if (!ballMotion.isPresent() || !interceptOpportunity.isPresent()) {

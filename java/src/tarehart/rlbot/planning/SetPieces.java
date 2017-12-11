@@ -16,26 +16,25 @@ public class SetPieces {
 
         return new Plan()
                 .unstoppable()
-                .withStep(new TapStep(2,
+                .withStep(new BlindStep(.05,
                         new AgentOutput()
                                 .withPitch(-1)
                                 .withJump(true)
                                 .withAcceleration(1)))
-                .withStep(new TapStep(2,
+                .withStep(new BlindStep(.05,
                         new AgentOutput()
                                 .withPitch(-1)
                                 .withAcceleration(1)
                 ))
-                .withStep(new TapStep(2,
+                .withStep(new BlindStep(.3,
                         new AgentOutput()
                                 .withJump(true)
                                 .withAcceleration(1)
                                 .withPitch(-1)))
-                .withStep(new BlindStep(
+                .withStep(new BlindStep(.5,
                         new AgentOutput()
                                 .withAcceleration(1)
-                                .withPitch(-1),
-                        Duration.ofMillis(900)
+                                .withPitch(-1)
                 ))
                 .withStep(new LandGracefullyStep());
     }

@@ -12,6 +12,7 @@ import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.steps.travel.SlideToPositionStep;
 import tarehart.rlbot.tuning.BotLog;
 
 import java.awt.*;
@@ -20,10 +21,9 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class GetOnDefenseStep implements Step {
-    private static final double NEEDS_DEFENSE_THRESHOLD = 10;
     private static final double CENTER_OFFSET = Goal.EXTENT * .5;
     private static final double AWAY_FROM_GOAL = 3;
-    private static final double DEFAULT_LIFESPAN = 3;
+    private static final double DEFAULT_LIFESPAN = 1;
     private double lifespan; // seconds
     private Plan plan;
     private LocalDateTime startTime;
@@ -38,6 +38,14 @@ public class GetOnDefenseStep implements Step {
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
+        if (startTime == null) {
+            startTime = input.time;
+        }
+
+        if (TimeUtil.secondsBetween(startTime, input.time) > lifespan && (plan == null || plan.canInterrupt())) {
+            return Optional.empty(); // Time to reevaluate the plan.
+        }
+
         if (plan != null && !plan.isComplete()) {
             Optional<AgentOutput> output = plan.getOutput(input);
             if (output.isPresent()) {
@@ -45,40 +53,19 @@ public class GetOnDefenseStep implements Step {
             }
         }
 
-        if (startTime == null) {
-            startTime = input.time;
-        }
+        plan = new Plan(Plan.Posture.DEFENSIVE).withStep(new SlideToPositionStep(in -> {
 
-        if (TimeUtil.secondsBetween(startTime, input.time) > lifespan) {
-            return Optional.empty(); // Time to reevaluate the plan.
-        }
+            Vector3 goalCenter = GoalUtil.getOwnGoal(in.team).getCenter();
+            Vector3 futureBallPosition = TacticsTelemetry.get(in.playerIndex)
+                    .map(telem -> telem.futureBallMotion.space)
+                    .orElse(in.ballPosition);
 
-        CarData car = input.getMyCarData();
+            Vector2 targetPosition = new Vector2(Math.signum(futureBallPosition.x) * CENTER_OFFSET, goalCenter.y - Math.signum(goalCenter.y) * AWAY_FROM_GOAL);
+            Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.x), 0);
+            return new PositionFacing(targetPosition, targetFacing);
+        }));
 
-        BallPath ballPath = ArenaModel.predictBallPath(input);
-        BallSlice ballMotion = ballPath.getMotionAt(input.time.plusSeconds(3)).get();
-
-        Vector3 goalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
-        Vector2 targetPosition = new Vector2(Math.signum(ballMotion.getSpace().x) * CENTER_OFFSET, goalCenter.y - Math.signum(goalCenter.y) * AWAY_FROM_GOAL);
-        Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.x), 0);
-
-        double distance = car.position.flatten().distance(targetPosition);
-        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.boost - 20, distance);
-
-        //SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, targetPosition, targetFacing);
-        AgentOutput planForStraightDrive = SteerUtil.steerTowardGroundPosition(car, targetPosition);
-
-        //TODO: Make sure that this flip is finished even if the reevaluation time is hit and the plan/posture changes
-        //Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, targetPosition);
-        if (sensibleFlip.isPresent()) {
-            BotLog.println("Front flip for defense", input.playerIndex);
-            plan = sensibleFlip.get();
-            return plan.getOutput(input);
-        } else {
-            //return Optional.of(planForCircleTurn.immediateSteer);
-            return Optional.of(planForStraightDrive);
-        }
+        return plan.getOutput(input);
     }
 
     @Override

@@ -22,6 +22,7 @@ public class AccelerationModel {
     private static final double INCREMENTAL_BOOST_ACCELERATION = 8;
     private static final double AIR_BOOST_ACCELERATION = 12;
     private static final double BOOST_CONSUMED_PER_SECOND = 25;
+    public static final double FLIP_THRESHOLD_SPEED = 20;
 
 
     public static Optional<Double> getTravelSeconds(CarData carData, DistancePlot plot, Vector3 target) {
@@ -35,6 +36,10 @@ public class AccelerationModel {
         Vector3 toTarget = target.minus(carData.position);
         double correctionAngleRad = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toTarget, carData.orientation.roofVector);
         double correctionErr = Math.abs(correctionAngleRad);
+
+        if (correctionErr < Math.PI / 6) {
+            return 0;
+        }
         return correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .005;
     }
 
@@ -56,29 +61,33 @@ public class AccelerationModel {
 
         while (secondsSoFar < secondsToSimulate) {
             double hypotheticalFrontFlipDistance = getFrontFlipDistance(currentSpeed);
-            if (boostRemaining <= 0 && distanceSoFar + hypotheticalFrontFlipDistance < flipCutoffDistance) {
-                secondsSoFar += FRONT_FLIP_SECONDS;
-                distanceSoFar += hypotheticalFrontFlipDistance;
-                currentSpeed += FRONT_FLIP_SPEED_BOOST;
-                plot.addSlice(new DistanceTimeSpeed(distanceSoFar, secondsSoFar, currentSpeed));
-                continue;
-            }
 
-            double acceleration = getAcceleration(currentSpeed, boostRemaining > 0);
-            currentSpeed += acceleration * TIME_STEP;
-            if (currentSpeed > SUPERSONIC_SPEED) {
-                currentSpeed = SUPERSONIC_SPEED;
-            }
-            distanceSoFar += currentSpeed * TIME_STEP;
             secondsSoFar += TIME_STEP;
-            boostRemaining -= BOOST_CONSUMED_PER_SECOND * TIME_STEP;
-            plot.addSlice(new DistanceTimeSpeed(distanceSoFar, secondsSoFar, currentSpeed));
+            distanceSoFar += currentSpeed * TIME_STEP;
 
             if (currentSpeed >= SUPERSONIC_SPEED) {
                 // It gets boring from now on. Put a slice at the very end.
                 double secondsRemaining = secondsToSimulate - secondsSoFar;
                 plot.addSlice(new DistanceTimeSpeed(distanceSoFar + SUPERSONIC_SPEED * secondsRemaining, secondsToSimulate, SUPERSONIC_SPEED));
                 break;
+            } else if (boostRemaining <= 0 && currentSpeed > FLIP_THRESHOLD_SPEED && distanceSoFar + hypotheticalFrontFlipDistance < flipCutoffDistance) {
+                currentSpeed += FRONT_FLIP_SPEED_BOOST;
+                if (currentSpeed > SUPERSONIC_SPEED) {
+                    currentSpeed = SUPERSONIC_SPEED;
+                }
+                plot.addSlice(new DistanceTimeSpeed(distanceSoFar, secondsSoFar, currentSpeed));
+                secondsSoFar += FRONT_FLIP_SECONDS;
+                distanceSoFar += hypotheticalFrontFlipDistance;
+                plot.addSlice(new DistanceTimeSpeed(distanceSoFar, secondsSoFar, currentSpeed));
+
+            } else {
+                double acceleration = getAcceleration(currentSpeed, boostRemaining > 0);
+                currentSpeed += acceleration * TIME_STEP;
+                if (currentSpeed > SUPERSONIC_SPEED) {
+                    currentSpeed = SUPERSONIC_SPEED;
+                }
+                boostRemaining -= BOOST_CONSUMED_PER_SECOND * TIME_STEP;
+                plot.addSlice(new DistanceTimeSpeed(distanceSoFar, secondsSoFar, currentSpeed));
             }
         }
 

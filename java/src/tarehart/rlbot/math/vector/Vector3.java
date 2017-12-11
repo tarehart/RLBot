@@ -101,4 +101,29 @@ public class Vector3 {
                 + ", " + String.format("%.2f", z)
                 + ")";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Vector3 vector3 = (Vector3) o;
+
+        if (Double.compare(vector3.x, x) != 0) return false;
+        if (Double.compare(vector3.y, y) != 0) return false;
+        return Double.compare(vector3.z, z) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(x);
+        result = (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(y);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(z);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
 }

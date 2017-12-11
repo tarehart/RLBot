@@ -28,19 +28,19 @@ public class WhatASaveStep implements Step {
     @Override
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
-        if (plan != null && !plan.isComplete()) {
-            Optional<AgentOutput> output = plan.getOutput(input);
-            if (output.isPresent()) {
-                return output;
-            }
-        }
-
         CarData car = input.getMyCarData();
         BallPath ballPath = ArenaModel.predictBallPath(input);
         Goal goal = GoalUtil.getOwnGoal(input.team);
         Optional<BallSlice> currentThreat = GoalUtil.predictGoalEvent(goal, ballPath);
         if (!currentThreat.isPresent()) {
             return Optional.empty();
+        }
+
+        if (plan != null && !plan.isComplete()) {
+            Optional<AgentOutput> output = plan.getOutput(input);
+            if (output.isPresent()) {
+                return output;
+            }
         }
 
         BallSlice threat = currentThreat.get();

@@ -4,6 +4,8 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
+import tarehart.rlbot.planning.GoalUtil;
+import tarehart.rlbot.planning.TacticsAdvisor;
 
 import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
 
@@ -23,6 +25,11 @@ public class KickAtEnemyGoal implements KickStrategy {
     @Override
     public Vector3 getKickDirection(AgentInput input, Vector3 ballPosition, Vector3 easyKick) {
         return getDirection(input.getMyCarData(), ballPosition, easyKick);
+    }
+
+    @Override
+    public boolean looksViable(CarData car, Vector3 ballPosition) {
+        return TacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.team), ballPosition.flatten(), car.playerIndex);
     }
 
     private Vector3 getDirection(CarData car, Vector3 ballPosition, Vector3 easyKick) {

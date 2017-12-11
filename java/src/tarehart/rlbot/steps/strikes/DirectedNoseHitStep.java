@@ -3,6 +3,9 @@ package tarehart.rlbot.steps.strikes;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.math.DistanceTimeSpeed;
+import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -96,13 +99,6 @@ public class DirectedNoseHitStep implements Step {
 
         kickPlan = kickPlanOption.get();
 
-        if (input.getEnemyCarData()
-                .map(enemy -> TacticsAdvisor.calculateRaceResult(kickPlan.ballAtIntercept.toSpaceTime(), enemy, kickPlan.ballPath) < -0.5)
-                .orElse(false)) {
-            BotLog.println("Failing nose hit because we will lose the race.", car.playerIndex);
-            return Optional.empty();
-        }
-
         if (originalIntercept == null) {
             originalIntercept = kickPlan.ballAtIntercept.getSpace();
         } else {
@@ -147,9 +143,23 @@ public class DirectedNoseHitStep implements Step {
             Vector2 terminusFacing = VectorUtil.rotateVector(carToIntercept, correctionNeeded).normalized();
 
 
-            if (Vector2.angle(carToIntercept, terminusFacing) > Math.PI / 3) {
-                // If we're doing more than a quarter turn, this is a waste of time.
+            if (Vector2.angle(carToIntercept, terminusFacing) > 2 * Math.PI / 3) {
+                // If we're planning to turn a huge amount, this is a waste of time.
                 return Optional.empty();
+            }
+
+            double secondsTillIntercept = TimeUtil.secondsBetween(input.time, kickPlan.ballAtIntercept.getTime());
+
+            double asapSeconds = kickPlan.distancePlot
+                    .getMotionAfterStrike(
+                        car,
+                        kickPlan.ballAtIntercept.toSpaceTime(),
+                        new StrikeProfile(maneuverSeconds, 10, .3))
+                    .map(DistanceTimeSpeed::getTime)
+                    .orElse(secondsTillIntercept);
+
+            if (secondsTillIntercept > asapSeconds) {
+                return Optional.of(new AgentOutput()); // TODO: improve on this.
             }
 
             // Line up for a nose hit

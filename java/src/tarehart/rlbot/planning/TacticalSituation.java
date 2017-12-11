@@ -21,4 +21,5 @@ public class TacticalSituation {
     public boolean goForKickoff;
     public boolean waitToClear;
     public Optional<Plan> currentPlan;
+    public BallSlice futureBallMotion;
 }

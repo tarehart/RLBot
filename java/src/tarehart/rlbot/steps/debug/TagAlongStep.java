@@ -5,11 +5,10 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.physics.DistancePlot;
-import tarehart.rlbot.planning.AccelerationModel;
-import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.SteerPlan;
-import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.planning.*;
+import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.steps.travel.SlideToPositionStep;
 
 import java.awt.*;
 import java.time.Duration;
@@ -29,28 +28,17 @@ public class TagAlongStep implements Step {
             }
         }
 
-        CarData car = input.getMyCarData();
-        Optional<CarData> enemyCarOption = input.getEnemyCarData();
-        if (!enemyCarOption.isPresent()) {
-            return Optional.empty();
-        }
+        plan = new Plan().withStep(new SlideToPositionStep(in -> {
+            Optional<CarData> enemyCarOption = in.getEnemyCarData();
+            CarData enemyCar = enemyCarOption.get();
 
-        CarData enemyCar = enemyCarOption.get();
+            Vector2 waypoint = enemyCar.position.plus(enemyCar.orientation.rightVector.scaled(4)).flatten();
+            Vector2 targetFacing = enemyCar.orientation.noseVector.flatten();
+            return new PositionFacing(waypoint, targetFacing);
+        })).withStep(new BlindStep(new AgentOutput().withAcceleration(1), Duration.ofSeconds(3)));
 
-        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost, 0);
+        return plan.getOutput(input);
 
-        Vector2 waypoint = enemyCar.position.plus(enemyCar.orientation.rightVector.scaled(4)).flatten();
-        Vector2 targetFacing = enemyCar.orientation.noseVector.flatten();
-        SteerPlan steerPlan = SteerUtil.getPlanForCircleTurn(car, fullAcceleration, waypoint, targetFacing);
-
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, steerPlan.waypoint);
-        if (sensibleFlip.isPresent()) {
-            println("Front flip toward tag along", input.playerIndex);
-            this.plan = sensibleFlip.get();
-            return this.plan.getOutput(input);
-        }
-
-        return Optional.of(steerPlan.immediateSteer);
     }
 
     @Override
@@ -65,6 +53,8 @@ public class TagAlongStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
+        if (Plan.activePlan(plan).isPresent()) {
+            plan.getCurrentStep().drawDebugInfo(graphics);
+        }
     }
 }

@@ -8,16 +8,12 @@ import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.tuning.ManeuverMath;
-import tarehart.rlbot.ui.ArenaDisplay;
 
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -31,7 +27,7 @@ import static tarehart.rlbot.tuning.BotLog.println;
 public class DirectedSideHitStep implements Step {
     private static final double MANEUVER_SECONDS_PER_RADIAN = .1;
     private static final double GAP_BEFORE_DODGE = 1.5;
-    private static final double DISTANCE_AT_CONTACT = 1.8;
+    private static final double DISTANCE_AT_CONTACT = 2;
     private Plan plan;
     private Vector3 originalIntercept;
     private LocalDateTime doneMoment;
@@ -76,13 +72,6 @@ public class DirectedSideHitStep implements Step {
         }
 
         kickPlan = kickPlanOption.get();
-
-        if (input.getEnemyCarData()
-                .map(enemy -> TacticsAdvisor.calculateRaceResult(kickPlan.ballAtIntercept.toSpaceTime(), enemy, kickPlan.ballPath) < -0.5)
-                .orElse(false)) {
-            BotLog.println("Failing side hit because we will lose the race.", car.playerIndex);
-            return Optional.empty();
-        }
 
         if (interceptModifier == null) {
             Vector3 nearSide = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE));
