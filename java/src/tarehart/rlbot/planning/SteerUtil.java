@@ -274,6 +274,14 @@ public class SteerUtil {
 
     public static Optional<Plan> getSensibleFlip(CarData car, Vector2 target) {
 
+        Vector2 toTarget = target.minus(car.position.flatten());
+        if (toTarget.magnitude() > 40 &&
+                Vector2.angle(car.orientation.noseVector.flatten(), toTarget) > 3 * Math.PI / 4 &&
+                (car.velocity.flatten().dotProduct(toTarget) > 0 || car.velocity.magnitude() < 5)) {
+
+            return Optional.of(SetPieces.halfFlip(target));
+        }
+
         double speed = car.velocity.flatten().magnitude();
         if(car.isSupersonic || car.boost > 75 || speed < AccelerationModel.FLIP_THRESHOLD_SPEED) {
             return Optional.empty();
@@ -281,7 +289,7 @@ public class SteerUtil {
 
         double distanceCovered = AccelerationModel.getFrontFlipDistance(speed);
 
-        Vector2 toTarget = target.minus(car.position.flatten());
+
         double distanceToIntercept = toTarget.magnitude();
         if (distanceToIntercept > distanceCovered + 10) {
 

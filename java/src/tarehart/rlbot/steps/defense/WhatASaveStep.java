@@ -63,14 +63,8 @@ public class WhatASaveStep implements Step {
         Vector3 carToIntercept = intercept.space.minus(car.position);
         double carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten());
         if (Math.abs(carApproachVsBallApproach) > Math.PI / 5) {
-
-            if (Vector2.angle(car.orientation.noseVector.flatten(), carToIntercept.flatten()) < Math.PI / 12) {
-
-                plan = new Plan(Plan.Posture.SAVE).withStep(new InterceptStep(new Vector3(0, Math.signum(goal.getCenter().y) * 1.5, 0)));
-                return plan.getOutput(input);
-            } else {
-                return Optional.of(SteerUtil.steerTowardGroundPosition(car, intercept.space));
-            }
+            plan = new Plan(Plan.Posture.SAVE).withStep(new InterceptStep(new Vector3(0, Math.signum(goal.getCenter().y) * 1.5, 0)));
+            return plan.getOutput(input);
         }
 
         plan = new Plan().withStep(new DirectedSideHitStep(new KickAwayFromOwnGoal()));

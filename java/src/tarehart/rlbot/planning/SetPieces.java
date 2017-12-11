@@ -2,11 +2,13 @@ package tarehart.rlbot.planning;
 
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.math.TimeUtil;
+import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.TapStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
 import tarehart.rlbot.steps.landing.LandMindlesslyStep;
 import tarehart.rlbot.steps.strikes.MidairStrikeStep;
+import tarehart.rlbot.steps.travel.LineUpInReverseStep;
 
 import java.time.Duration;
 
@@ -37,6 +39,42 @@ public class SetPieces {
                                 .withPitch(-1)
                 ))
                 .withStep(new LandGracefullyStep());
+    }
+
+    public static Plan halfFlip(Vector2 waypoint) {
+
+        return new Plan()
+                .unstoppable()
+                .withStep(new LineUpInReverseStep(waypoint))
+                .withStep(new BlindStep(.05,
+                        new AgentOutput()
+                                .withPitch(1)
+                                .withJump(true)
+                                .withAcceleration(-1)))
+                .withStep(new BlindStep(.05,
+                        new AgentOutput()
+                                .withPitch(1)
+                                .withAcceleration(-1)
+                ))
+                .withStep(new BlindStep(.05,
+                        new AgentOutput()
+                                .withJump(true)
+                                .withPitch(1)))
+                .withStep(new BlindStep(.15,
+                        new AgentOutput()
+                                .withPitch(1)))
+                .withStep(new BlindStep(.4,
+                        new AgentOutput()
+                                .withBoost()
+                                .withPitch(-1)
+                ))
+                .withStep(new BlindStep(.5,
+                        new AgentOutput()
+                                .withBoost()
+                                .withPitch(-1)
+                                .withSteer(1)
+                                .withSlide()
+                ));
     }
 
     public static Plan performAerial() {
