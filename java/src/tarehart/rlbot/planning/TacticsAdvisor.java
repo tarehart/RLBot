@@ -41,12 +41,11 @@ public class TacticsAdvisor {
 
     public Plan makePlan(AgentInput input, TacticalSituation situation) {
 
-        if (ArenaModel.isBehindGoalLine(input.getMyCarData().position)) {
-            return new Plan(NEUTRAL).withStep(new EscapeTheGoalStep());
-        }
-
         if (situation.scoredOnThreat.isPresent()) {
             return new Plan(Plan.Posture.SAVE).withStep(new WhatASaveStep());
+        }
+        if (ArenaModel.isBehindGoalLine(input.getMyCarData().position)) {
+            return new Plan(NEUTRAL).withStep(new EscapeTheGoalStep());
         }
         if(situation.waitToClear) {
             return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
