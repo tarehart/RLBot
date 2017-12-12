@@ -1,19 +1,19 @@
 package tarehart.rlbot.planning;
 
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.*;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.BallPhysics;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.steps.strikes.InterceptStep;
 import tarehart.rlbot.steps.strikes.MidairStrikeStep;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 
@@ -28,7 +28,7 @@ public class SteerUtil {
 
     public static Optional<SpaceTime> getCatchOpportunity(CarData carData, BallPath ballPath, double boostBudget) {
 
-        LocalDateTime searchStart = carData.time;
+        GameTime searchStart = carData.time;
 
         double groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.getStartPoint().space.z, ballPath.getStartPoint().velocity.z);
 
@@ -56,7 +56,7 @@ public class SteerUtil {
 
     public static Optional<SpaceTime> getVolleyOpportunity(CarData carData, BallPath ballPath, double boostBudget, double height) {
 
-        LocalDateTime searchStart = carData.time;
+        GameTime searchStart = carData.time;
 
         Optional<BallSlice> landingOption = ballPath.getPlaneBreak(searchStart, new Plane(new Vector3(0, 0, height), new Vector3(0, 0, 1)), true);
 

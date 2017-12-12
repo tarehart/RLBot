@@ -1,14 +1,13 @@
 package tarehart.rlbot.planning;
 
+import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
+import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.AgentInput;
-import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.BallSlice;
-import tarehart.rlbot.math.TimeUtil;
-import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
@@ -17,14 +16,12 @@ import tarehart.rlbot.steps.defense.GetOnDefenseStep;
 import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep;
 import tarehart.rlbot.steps.defense.WhatASaveStep;
 import tarehart.rlbot.steps.strikes.*;
-import tarehart.rlbot.steps.travel.SlideToPositionStep;
 import tarehart.rlbot.steps.wall.DescendFromWallStep;
 import tarehart.rlbot.steps.wall.MountWallStep;
 import tarehart.rlbot.steps.wall.WallTouchStep;
-import tarehart.rlbot.tuning.BotLog;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static tarehart.rlbot.planning.Plan.Posture.NEUTRAL;
@@ -123,14 +120,14 @@ public class TacticsAdvisor {
         return calculateRaceResult(Optional.of(myIntercept.time), enemyIntercept.map(Intercept::getTime));
     }
 
-    private static double calculateRaceResult(Optional<LocalDateTime> ourContact, Optional<LocalDateTime> enemyContact) {
+    private static double calculateRaceResult(Optional<GameTime> ourContact, Optional<GameTime> enemyContact) {
         final double raceResult;
         if (!enemyContact.isPresent()) {
             return 3;
         } else if (!ourContact.isPresent()) {
             raceResult = -3;
         } else {
-            raceResult = TimeUtil.secondsBetween(ourContact.get(), enemyContact.get());
+            raceResult = Duration.between(ourContact.get(), enemyContact.get()).getSeconds();
         }
 
         return raceResult;
@@ -204,7 +201,7 @@ public class TacticsAdvisor {
         CarData myCar = input.getMyCarData();
         Optional<CarData> opponentCar = input.getEnemyCarData();
 
-        BallSlice futureBallMotion = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(LOOKAHEAD_SECONDS))).orElse(ballPath.getEndpoint());
+        BallSlice futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(LOOKAHEAD_SECONDS)).orElse(ballPath.getEndpoint());
 
         TacticalSituation situation = new TacticalSituation();
         situation.expectedContact = ourIntercept;

@@ -1,19 +1,18 @@
 package tarehart.rlbot.planning;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.DistancePlot;
-
-import java.time.LocalDateTime;
+import tarehart.rlbot.time.GameTime;
 
 public class Intercept {
     private Vector3 space;
-    private LocalDateTime time;
+    private GameTime time;
     private double airBoost;
     private StrikeProfile strikeProfile;
     private DistancePlot distancePlot;
 
-    public Intercept(Vector3 space, LocalDateTime time, double airBoost, StrikeProfile strikeProfile, DistancePlot distancePlot) {
+    public Intercept(Vector3 space, GameTime time, double airBoost, StrikeProfile strikeProfile, DistancePlot distancePlot) {
         this.space = space;
         this.time = time;
         this.airBoost = airBoost;
@@ -33,7 +32,7 @@ public class Intercept {
         return space;
     }
 
-    public LocalDateTime getTime() {
+    public GameTime getTime() {
         return time;
     }
 

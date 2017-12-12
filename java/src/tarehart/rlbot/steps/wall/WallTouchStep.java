@@ -5,7 +5,6 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
@@ -15,9 +14,9 @@ import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.time.Duration;
 
 import java.awt.*;
-import java.time.Duration;
 import java.util.Optional;
 
 import static java.util.Optional.empty;
@@ -86,7 +85,7 @@ public class WallTouchStep implements Step {
         CarData car = input.getMyCarData();
         Vector3 toPosition = carPositionAtContact.space.minus(car.position);
         double correctionAngleRad = VectorUtil.getCorrectionAngle(car.orientation.noseVector, toPosition, car.orientation.roofVector);
-        double secondsTillIntercept = TimeUtil.secondsBetween(input.time, carPositionAtContact.time);
+        double secondsTillIntercept = Duration.between(input.time, carPositionAtContact.time).getSeconds();
         double wallDistanceAtIntercept = ArenaModel.getDistanceFromWall(carPositionAtContact.space);
         double tMinus = secondsTillIntercept - wallDistanceAtIntercept / WALL_DEPART_SPEED;
         boolean linedUp = Math.abs(correctionAngleRad) < Math.PI / 8;
@@ -112,7 +111,7 @@ public class WallTouchStep implements Step {
         Optional<BallSlice> nearWallOption = ballPath.findSlice(WallTouchStep::isBallOnWall);
         if (nearWallOption.isPresent()) {
             BallSlice nearWall = nearWallOption.get();
-            if (TimeUtil.secondsBetween(input.time, nearWall.getTime()) > 3) {
+            if (Duration.between(input.time, nearWall.getTime()).getSeconds() > 3) {
                 return false; // Not on wall soon enough
             }
 

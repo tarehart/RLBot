@@ -1,13 +1,12 @@
 package tarehart.rlbot.input;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector3;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class SpinTracker {
 

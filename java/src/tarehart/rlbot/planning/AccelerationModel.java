@@ -1,13 +1,12 @@
 package tarehart.rlbot.planning;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.DistancePlot;
+import tarehart.rlbot.time.Duration;
 
-import java.time.Duration;
 import java.util.Optional;
 
 public class AccelerationModel {
@@ -57,7 +56,7 @@ public class AccelerationModel {
         double distanceSoFar = 0;
         double secondsSoFar = 0;
 
-        double secondsToSimulate = TimeUtil.toSeconds(duration);
+        double secondsToSimulate = duration.getSeconds();
 
         while (secondsSoFar < secondsToSimulate) {
             double hypotheticalFrontFlipDistance = getFrontFlipDistance(currentSpeed);
@@ -124,7 +123,7 @@ public class AccelerationModel {
         double distanceSoFar = 0;
         double secondsSoFar = 0;
 
-        double secondsToSimulate = TimeUtil.toSeconds(duration);
+        double secondsToSimulate = duration.getSeconds();
 
         while (secondsSoFar < secondsToSimulate) {
 

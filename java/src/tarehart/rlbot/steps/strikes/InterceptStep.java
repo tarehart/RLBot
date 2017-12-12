@@ -5,7 +5,6 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
@@ -13,11 +12,11 @@ import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -32,7 +31,7 @@ public class InterceptStep implements Step {
     public static final double PROBABLY_TOUCHING_THRESHOLD = 5.5;
     private Plan plan;
     private Vector3 interceptModifier;
-    private LocalDateTime doneMoment;
+    private GameTime doneMoment;
     private Intercept originalIntercept;
     private Intercept chosenIntercept;
 
@@ -82,7 +81,7 @@ public class InterceptStep implements Step {
         if (originalIntercept == null) {
             originalIntercept = chosenIntercept;
         } else {
-            if (TimeUtil.secondsBetween(originalIntercept.getTime(), chosenIntercept.getTime()) > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
+            if (Duration.between(originalIntercept.getTime(), chosenIntercept.getTime()).getSeconds() > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
                 if (doneMoment != null) {
                     println("Probably intercepted successfully", input.playerIndex);
                 } else {

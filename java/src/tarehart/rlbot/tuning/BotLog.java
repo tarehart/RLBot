@@ -1,5 +1,7 @@
 package tarehart.rlbot.tuning;
 
+import tarehart.rlbot.time.GameTime;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,10 +23,11 @@ public class BotLog {
         return logMap.get(playerIndex);
     }
 
-    public static void setTimeStamp(long time) {
-        String minutes = "" + (int)time / 60;
-        String seconds = String.format("%02d", (int)time % 60);
-        timeStamp =  time > 0 ? "(" + minutes + ":" + seconds + ")" : "";
+    public static void setTimeStamp(GameTime time) {
+
+        String minutes = "" + time.toMillis() / 60_000;
+        String seconds = String.format("%02d", (time.toMillis() / 1000) % 60);
+        timeStamp =  time.toMillis() > 0 ? "(" + minutes + ":" + seconds + ")" : "";
     }
 
     public static String collect(int playerIndex) {

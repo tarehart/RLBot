@@ -2,7 +2,9 @@ package tarehart.rlbot;
 
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.planning.*;
+import tarehart.rlbot.planning.Plan;
+import tarehart.rlbot.planning.ZonePlan;
+import tarehart.rlbot.planning.ZoneTelemetry;
 import tarehart.rlbot.steps.WaitForActive;
 import tarehart.rlbot.tuning.BotLog;
 import tarehart.rlbot.ui.Readout;
@@ -37,7 +39,7 @@ public abstract class Bot {
 
 
     public AgentOutput processInput(AgentInput input) {
-        BotLog.setTimeStamp(input.matchInfo.timeRemaining.getSeconds());
+        BotLog.setTimeStamp(input.time);
         final AgentOutput output;
         Optional<BallPath> ballPath = Optional.empty();
 

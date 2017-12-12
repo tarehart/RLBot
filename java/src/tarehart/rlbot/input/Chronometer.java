@@ -1,47 +1,24 @@
 package tarehart.rlbot.input;
 
-import rlbot.api.GameData;
-import tarehart.rlbot.math.TimeUtil;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
 public class Chronometer {
 
-    private LocalDateTime gameTime;
-    private LocalDateTime previousGameTime;
-
-    private Double previousGameTimeRemaining = null;
-    private Double previousTimeSeconds = null;
+    private GameTime gameTime;
+    private GameTime previousGameTime;
 
     public Chronometer() {
-        gameTime = LocalDateTime.now();
+        gameTime = GameTime.now();
         previousGameTime = null;
     }
 
-    public void readInput(GameData.GameInfo timeInfo, boolean isKickoff) {
-        readInput(timeInfo.getGameTimeRemaining(), timeInfo.getSecondsElapsed(), isKickoff);
+    public void readInput(double gameSeconds) {
+        previousGameTime = gameTime;
+        gameTime = GameTime.fromGameSeconds(gameSeconds);
     }
 
-    private void readInput(double gameTimeRemaining, double secondsElapsed, boolean isKickoff) {
-
-        if (previousGameTimeRemaining != null && previousTimeSeconds != null) {
-            double deltaSeconds;
-            if (gameTimeRemaining > 0 && !isKickoff) {
-                deltaSeconds = Math.abs(previousGameTimeRemaining - gameTimeRemaining);
-            } else {
-                deltaSeconds = secondsElapsed - previousTimeSeconds;
-            }
-
-            previousGameTime = gameTime;
-            gameTime = gameTime.plus(TimeUtil.toDuration(deltaSeconds));
-        }
-
-        previousGameTimeRemaining = gameTimeRemaining;
-        previousTimeSeconds = secondsElapsed;
-    }
-
-    public LocalDateTime getGameTime() {
+    public GameTime getGameTime() {
         return gameTime;
     }
 
@@ -50,16 +27,5 @@ public class Chronometer {
             return Duration.between(previousGameTime, gameTime);
         }
         return Duration.ofMillis(100); // This should be extremely rare.
-    }
-
-    public LocalDateTime convertGameSeconds(float gameSeconds) {
-
-        if (previousTimeSeconds == null) { // Rare edge case during startup. Just avoid exceptions.
-            return gameTime;
-        }
-
-        float secondsInPast = previousTimeSeconds.floatValue() - gameSeconds;
-
-        return gameTime.minus(TimeUtil.toDuration(secondsInPast));
     }
 }

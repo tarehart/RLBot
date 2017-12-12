@@ -2,16 +2,16 @@ package tarehart.rlbot.steps;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
+import tarehart.rlbot.time.GameTime;
 
 import java.awt.*;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class TapStep implements Step {
     private AgentOutput output;
     private int numFrames;
     private int frameCount;
-    private LocalDateTime previousTime;
+    private GameTime previousTime;
 
     public TapStep(AgentOutput output) {
         this(1, output);

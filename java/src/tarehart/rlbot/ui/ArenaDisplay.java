@@ -3,7 +3,6 @@ package tarehart.rlbot.ui;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.input.FullBoost;
 import tarehart.rlbot.math.Polygon;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -12,8 +11,6 @@ import tarehart.rlbot.planning.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.*;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 

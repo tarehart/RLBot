@@ -1,6 +1,6 @@
 package tarehart.rlbot.input;
 
-import java.time.Duration;
+import tarehart.rlbot.time.Duration;
 
 public class MatchInfo {
     public Duration timeRemaining;

@@ -13,10 +13,7 @@ import tarehart.rlbot.steps.Step;
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.Optional;
-import java.util.Vector;
 import java.util.function.Function;
-
-import static tarehart.rlbot.tuning.BotLog.println;
 
 public class SlideToPositionStep implements Step {
 

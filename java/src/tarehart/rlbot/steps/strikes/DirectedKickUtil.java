@@ -4,15 +4,17 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.planning.*;
+import tarehart.rlbot.planning.AccelerationModel;
+import tarehart.rlbot.planning.AirTouchPlanner;
+import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.tuning.ManeuverMath;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 
@@ -48,7 +50,7 @@ public class DirectedKickUtil {
         }
         kickPlan.ballAtIntercept = ballMotion.get();
 
-        double secondsTillImpactRoughly = TimeUtil.secondsBetween(input.time, kickPlan.ballAtIntercept.getTime());
+        double secondsTillImpactRoughly = Duration.between(input.time, kickPlan.ballAtIntercept.getTime()).getSeconds();
         double impactSpeed = isSideHit ? ManeuverMath.DODGE_SPEED :
                 kickPlan.distancePlot.getMotionAfterSeconds(secondsTillImpactRoughly).map(dts -> dts.speed).orElse(AccelerationModel.SUPERSONIC_SPEED);
 

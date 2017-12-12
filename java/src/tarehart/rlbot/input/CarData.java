@@ -1,9 +1,8 @@
 package tarehart.rlbot.input;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.Bot;
-
-import java.time.LocalDateTime;
+import tarehart.rlbot.math.vector.Vector3;
+import tarehart.rlbot.time.GameTime;
 
 public class CarData {
     public final Vector3 position;
@@ -14,7 +13,7 @@ public class CarData {
     public final boolean isSupersonic;
     public final Bot.Team team;
     public final int playerIndex;
-    public final LocalDateTime time;
+    public final GameTime time;
     public final long frameCount;
     public final boolean hasWheelContact;
 
@@ -42,7 +41,7 @@ public class CarData {
         private boolean isSupersonic;
         private Bot.Team team;
         private int playerIndex;
-        private LocalDateTime time;
+        private GameTime time;
         private long frameCount;
         private boolean hasWheelContact;
 
@@ -89,7 +88,7 @@ public class CarData {
             return this;
         }
 
-        public Builder withTime(LocalDateTime time) {
+        public Builder withTime(GameTime time) {
             this.time = time;
             return this;
         }

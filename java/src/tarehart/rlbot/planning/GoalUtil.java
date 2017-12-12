@@ -2,7 +2,6 @@ package tarehart.rlbot.planning;
 
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.math.BallSlice;
-import tarehart.rlbot.math.Plane;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
 

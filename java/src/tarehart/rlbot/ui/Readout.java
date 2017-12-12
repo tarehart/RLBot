@@ -3,20 +3,20 @@ package tarehart.rlbot.ui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import tarehart.rlbot.Bot;
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.AgentInput;
+import tarehart.rlbot.Bot;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.tuning.BallPrediction;
 import tarehart.rlbot.tuning.PredictionWarehouse;
 
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class Readout {
@@ -51,10 +51,10 @@ public class Readout {
 
     private double maxCarSpeedVal;
 
-    private LocalDateTime actualMaxTime = LocalDateTime.now();
-    private LocalDateTime predictedMaxTime = LocalDateTime.now();
+    private GameTime actualMaxTime = GameTime.now();
+    private GameTime predictedMaxTime = GameTime.now();
     private PredictionWarehouse warehouse = new PredictionWarehouse();
-    private LocalDateTime previousTime = null;
+    private GameTime previousTime = null;
 
 
     public Readout() {
@@ -129,7 +129,7 @@ public class Readout {
 
     private void gatherBallPredictionData(AgentInput input, BallPath ballPath) {
         int predictionMillis = predictionTime.getValue();
-        LocalDateTime predictionTime = input.time.plus(Duration.ofMillis(predictionMillis));
+        GameTime predictionTime = input.time.plus(Duration.ofMillis(predictionMillis));
 
         if (previousTime == null || !previousTime.equals(input.time)) {
             if (ballPath != null) {

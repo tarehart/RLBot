@@ -4,7 +4,6 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.input.FullBoost;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -12,9 +11,9 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.time.Duration;
 
 import java.awt.*;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,7 +89,7 @@ public class GetBoostStep implements Step {
         for (FullBoost boost : input.fullBoosts) {
             Optional<Double> travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.location);
             if (travelSeconds.isPresent() && travelSeconds.get() < minTime &&
-                    (boost.isActive || travelSeconds.get() - TimeUtil.secondsBetween(input.time, boost.activeTime) > 1)) {
+                    (boost.isActive || travelSeconds.get() - Duration.between(input.time, boost.activeTime).getSeconds() > 1)) {
 
                 minTime = travelSeconds.get();
                 nearestLocation = boost;

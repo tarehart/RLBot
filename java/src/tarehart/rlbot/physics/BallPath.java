@@ -1,11 +1,13 @@
 package tarehart.rlbot.physics;
 
+import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.Plane;
+import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.math.*;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +29,7 @@ public class BallPath {
         return path;
     }
 
-    public Optional<BallSlice> getMotionAt(LocalDateTime time) {
+    public Optional<BallSlice> getMotionAt(GameTime time) {
         if (time.isBefore(path.get(0).getTime()) || time.isAfter(path.get(path.size() - 1).getTime())) {
             return Optional.empty();
         }
@@ -109,7 +111,7 @@ public class BallPath {
         return path.get(path.size() - 1);
     }
 
-    public Optional<BallSlice> getLanding(LocalDateTime startOfSearch) {
+    public Optional<BallSlice> getLanding(GameTime startOfSearch) {
 
         for (int i = 1; i < path.size(); i++) {
             BallSlice spt = path.get(i);
@@ -150,7 +152,7 @@ public class BallPath {
         return Optional.empty();
     }
 
-    public Optional<BallSlice> getPlaneBreak(LocalDateTime searchStart, Plane plane, boolean directionSensitive) {
+    public Optional<BallSlice> getPlaneBreak(GameTime searchStart, Plane plane, boolean directionSensitive) {
         for (int i = 1; i < path.size(); i++) {
             BallSlice spt = path.get(i);
 
@@ -171,9 +173,9 @@ public class BallPath {
 
                 Vector3 breakPosition = planeBreak.get();
 
-                double stepSeconds = TimeUtil.secondsBetween(previous.getTime(), spt.getTime());
+                double stepSeconds = Duration.between(previous.getTime(), spt.getTime()).getSeconds();
                 double tweenPoint = previous.getSpace().distance(breakPosition) / previous.getSpace().distance(spt.getSpace());
-                LocalDateTime moment = previous.getTime().plus(TimeUtil.toDuration(stepSeconds * tweenPoint));
+                GameTime moment = previous.getTime().plusSeconds(stepSeconds * tweenPoint);
                 Vector3 velocity = averageVectors(previous.getVelocity(), spt.getVelocity(), 1 - tweenPoint);
                 return Optional.of(new BallSlice(breakPosition, moment, velocity, spt.spin));
             }
@@ -195,7 +197,7 @@ public class BallPath {
         return Optional.empty();
     }
 
-    public Optional<BallSlice> findSlice(Predicate<BallSlice> decider, LocalDateTime timeLimit) {
+    public Optional<BallSlice> findSlice(Predicate<BallSlice> decider, GameTime timeLimit) {
         for (int i = 1; i < path.size(); i++) {
             BallSlice slice = path.get(i);
             if (slice.getTime().isAfter(timeLimit)) {

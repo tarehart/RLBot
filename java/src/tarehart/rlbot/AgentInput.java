@@ -2,11 +2,10 @@ package tarehart.rlbot;
 
 import rlbot.api.GameData;
 import tarehart.rlbot.input.*;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.vector.Vector3;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +25,7 @@ public class AgentInput {
     public final long frameCount;
     public final Vector3 ballSpin;
     public final int playerIndex;
-    public LocalDateTime time;
+    public GameTime time;
     public List<FullBoost> fullBoosts = new ArrayList<>(6);
     public final MatchInfo matchInfo;
     public final Optional<BallTouch> latestBallTouch;
@@ -54,9 +53,8 @@ public class AgentInput {
 
         ballPosition = convert(request.getBall().getLocation());
         ballVelocity = convert(request.getBall().getVelocity());
-        boolean isKickoff = ballPosition.flatten().isZero() && ballVelocity.isZero();
 
-        chronometer.readInput(request.getGameInfo(), isKickoff);
+        chronometer.readInput(request.getGameInfo().getSecondsElapsed());
 
         GameData.PlayerInfo self = request.getPlayers(playerIndex);
 
@@ -71,7 +69,7 @@ public class AgentInput {
         blueDemo = blueCarInput.map(c -> c.getScoreInfo().getDemolitions()).orElse(0);
         orangeDemo = orangeCarInput.map(c -> c.getScoreInfo().getDemolitions()).orElse(0);
 
-        double elapsedSeconds = TimeUtil.toSeconds(chronometer.getTimeDiff());
+        double elapsedSeconds = chronometer.getTimeDiff().getSeconds();
 
         blueCar = blueCarInput.map(c -> convert(c, Bot.Team.BLUE, spinTracker, elapsedSeconds, frameCount));
         orangeCar = orangeCarInput.map(c -> convert(c, Bot.Team.ORANGE, spinTracker, elapsedSeconds, frameCount));
@@ -80,7 +78,7 @@ public class AgentInput {
             Vector3 location = convert(boostInfo.getLocation());
             Optional<Vector3> confirmedLocation = FullBoost.getFullBoostLocation(location);
             confirmedLocation.ifPresent(loc -> fullBoosts.add(new FullBoost(loc, boostInfo.getIsActive(),
-                    boostInfo.getIsActive() ? LocalDateTime.from(time) : time.plus(Duration.ofMillis(boostInfo.getTimer())))));
+                    boostInfo.getIsActive() ? GameTime.from(time) : time.plus(Duration.ofMillis(boostInfo.getTimer())))));
         }
 
         this.latestBallTouch = getLatestBallTouch(request, chronometer);
@@ -97,7 +95,7 @@ public class AgentInput {
             if (toucherInfo.isPresent()) {
                 GameData.PlayerInfo realToucher = toucherInfo.get();
                 int index = request.getPlayersList().indexOf(realToucher);
-                LocalDateTime touchTime = chronometer.convertGameSeconds(latestTouch.getGameSeconds());
+                GameTime touchTime = GameTime.fromGameSeconds(latestTouch.getGameSeconds());
 
                 BallTouch ballTouch = new BallTouch(
                         teamFromInt(realToucher.getTeam()),
@@ -125,7 +123,7 @@ public class AgentInput {
         mi.matchEnded = gameInfo.getIsMatchEnded();
         mi.overTime = gameInfo.getIsOvertime();
         mi.roundActive = gameInfo.getIsRoundActive();
-        mi.timeRemaining = TimeUtil.toDuration(gameInfo.getGameTimeRemaining());
+        mi.timeRemaining = Duration.ofSeconds(gameInfo.getGameTimeRemaining());
         return mi;
     }
 

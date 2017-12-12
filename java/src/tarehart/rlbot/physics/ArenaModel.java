@@ -11,16 +11,14 @@ import org.ode4j.ode.*;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.Goal;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 
 public class ArenaModel {
@@ -282,11 +280,11 @@ public class ArenaModel {
         return ballPath;
     }
 
-    private void extendSimulation(BallPath ballPath, LocalDateTime endTime) {
+    private void extendSimulation(BallPath ballPath, GameTime endTime) {
         simulateBall(ballPath, endTime);
     }
 
-    private void simulateBall(BallPath ballPath, LocalDateTime endTime) {
+    private void simulateBall(BallPath ballPath, GameTime endTime) {
         BallSlice start = ballPath.getEndpoint();
 
         if (start.getTime().isAfter(endTime)) {
@@ -302,8 +300,8 @@ public class ArenaModel {
         runSimulation(ballPath, start.getTime(), endTime);
     }
 
-    private void runSimulation(BallPath ballPath, LocalDateTime startTime, LocalDateTime endTime) {
-        LocalDateTime simulationTime = LocalDateTime.from(startTime);
+    private void runSimulation(BallPath ballPath, GameTime startTime, GameTime endTime) {
+        GameTime simulationTime = GameTime.from(startTime);
 
         while (simulationTime.isBefore(endTime)) {
             float stepSize = 1.0f / STEPS_PER_SECOND;
@@ -314,7 +312,7 @@ public class ArenaModel {
                 contactgroup.empty();
             }
 
-            simulationTime = simulationTime.plus(TimeUtil.toDuration(stepSize));
+            simulationTime = simulationTime.plusSeconds(stepSize);
             Vector3 ballVelocity = getBallVelocity();
             Vector3 ballSpin = getBallSpin();
             Vector3 ballPosition = getBallPosition();

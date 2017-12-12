@@ -2,7 +2,6 @@ package tarehart.rlbot;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import py4j.GatewayServer;
 import tarehart.rlbot.ui.StatusSummary;
 
 import javax.swing.*;

@@ -1,6 +1,5 @@
 package tarehart.rlbot.planning;
 
-import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.BallSlice;
 
 import java.util.Optional;

@@ -2,22 +2,15 @@ package tarehart.rlbot.steps.defense;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
-import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.BallSlice;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.travel.SlideToPositionStep;
-import tarehart.rlbot.tuning.BotLog;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
 import java.awt.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class GetOnDefenseStep implements Step {
@@ -26,7 +19,7 @@ public class GetOnDefenseStep implements Step {
     private static final double DEFAULT_LIFESPAN = 1;
     private double lifespan; // seconds
     private Plan plan;
-    private LocalDateTime startTime;
+    private GameTime startTime;
 
     public GetOnDefenseStep() {
         this(DEFAULT_LIFESPAN);
@@ -42,7 +35,7 @@ public class GetOnDefenseStep implements Step {
             startTime = input.time;
         }
 
-        if (TimeUtil.secondsBetween(startTime, input.time) > lifespan && (plan == null || plan.canInterrupt())) {
+        if (Duration.between(startTime, input.time).getSeconds() > lifespan && (plan == null || plan.canInterrupt())) {
             return Optional.empty(); // Time to reevaluate the plan.
         }
 

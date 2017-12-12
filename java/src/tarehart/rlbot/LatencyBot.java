@@ -1,13 +1,11 @@
 package tarehart.rlbot;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.VectorUtil;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.debug.CalibrateStep;
-
-import java.util.Optional;
 
 public class LatencyBot extends Bot {
 

@@ -4,17 +4,15 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.physics.DistancePlot;
-import tarehart.rlbot.planning.*;
+import tarehart.rlbot.planning.Plan;
+import tarehart.rlbot.planning.PositionFacing;
 import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.travel.SlideToPositionStep;
+import tarehart.rlbot.time.Duration;
 
 import java.awt.*;
-import java.time.Duration;
 import java.util.Optional;
-
-import static tarehart.rlbot.tuning.BotLog.println;
 
 public class TagAlongStep implements Step {
     private Plan plan;

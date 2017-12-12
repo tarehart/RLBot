@@ -4,20 +4,21 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;
-import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPhysics;
-import tarehart.rlbot.planning.*;
+import tarehart.rlbot.planning.Plan;
+import tarehart.rlbot.planning.SteerPlan;
+import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.planning.StrikeProfile;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.tuning.BotLog;
 
 import java.awt.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static java.util.Optional.empty;
@@ -28,7 +29,7 @@ public class DirectedNoseHitStep implements Step {
     private static final double MANEUVER_SECONDS_PER_RADIAN = .1;
     private Plan plan;
     private Vector3 originalIntercept;
-    private LocalDateTime doneMoment;
+    private GameTime doneMoment;
     private KickStrategy kickStrategy;
     private Vector3 interceptModifier = null;
     private double maneuverSeconds = 0;
@@ -148,7 +149,7 @@ public class DirectedNoseHitStep implements Step {
                 return Optional.empty();
             }
 
-            double secondsTillIntercept = TimeUtil.secondsBetween(input.time, kickPlan.ballAtIntercept.getTime());
+            double secondsTillIntercept = Duration.between(input.time, kickPlan.ballAtIntercept.getTime()).getSeconds();
 
             double asapSeconds = kickPlan.distancePlot
                     .getMotionAfterStrike(

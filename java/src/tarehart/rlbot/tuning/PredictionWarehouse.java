@@ -1,6 +1,7 @@
 package tarehart.rlbot.tuning;
 
-import java.time.LocalDateTime;
+import tarehart.rlbot.time.GameTime;
+
 import java.util.LinkedList;
 import java.util.Optional;
 
@@ -8,7 +9,7 @@ public class PredictionWarehouse {
 
     private LinkedList<BallPrediction> ballPredictions = new LinkedList<>();
 
-    public Optional<BallPrediction> getPredictionOfMoment(LocalDateTime moment) {
+    public Optional<BallPrediction> getPredictionOfMoment(GameTime moment) {
         if (ballPredictions.isEmpty()) {
             return Optional.empty();
         }

@@ -1,18 +1,17 @@
 package tarehart.rlbot.tuning;
 
 import com.google.gson.Gson;
-import tarehart.rlbot.math.TimeUtil;
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
 import org.junit.Assert;
 import org.junit.Test;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
+import tarehart.rlbot.time.Duration;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,15 +33,18 @@ public class PredictedVsActualTest {
         return gson.fromJson(content, BallPath.class);
     }
 
-    @Test
-    public void spinlessBackwall() throws UnsupportedEncodingException {
-        testFile("spinless-backwall.json");
-    }
 
-    @Test
-    public void spinlessGround() throws UnsupportedEncodingException {
-        testFile("spinless-ground.json");
-    }
+    // These files were deleted because the format became obsolete. We should record some new ones.
+
+//    @Test
+//    public void spinlessBackwall() throws UnsupportedEncodingException {
+//        testFile("spinless-backwall.json");
+//    }
+//
+//    @Test
+//    public void spinlessGround() throws UnsupportedEncodingException {
+//        testFile("spinless-ground.json");
+//    }
 
     private void testFile(String filename) throws UnsupportedEncodingException {
 

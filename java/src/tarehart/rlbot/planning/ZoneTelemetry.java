@@ -2,7 +2,9 @@ package tarehart.rlbot.planning;
 
 import tarehart.rlbot.Bot;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class ZoneTelemetry {
 

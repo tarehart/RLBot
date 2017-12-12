@@ -4,20 +4,18 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
+import tarehart.rlbot.tuning.BotLog;
 
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static java.lang.String.format;
-import static java.time.LocalDateTime.now;
-import static java.util.Optional.empty;
-import static tarehart.rlbot.math.TimeUtil.secondsBetween;
-import static tarehart.rlbot.tuning.BotLog.println;
 
 public class CalibrateStep implements Step {
     public static final double TINY_VALUE = .0001;
-    private LocalDateTime gameClockStart;
+    private GameTime gameClockStart;
     private LocalDateTime wallClockStart;
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -31,10 +29,10 @@ public class CalibrateStep implements Step {
 
         if (gameClockStart != null) {
             if (car.spin.yawRate > TINY_VALUE) {
-                println(format("Game Latency: %s \nWall Latency: %s",
-                        secondsBetween(gameClockStart, input.time),
-                        secondsBetween(wallClockStart, now())), input.playerIndex);
-                return empty();
+                BotLog.println(String.format("Game Latency: %s \nWall Latency: %s",
+                        Duration.between(gameClockStart, input.time).getSeconds(),
+                        java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), input.playerIndex);
+                return Optional.empty();
             }
             return Optional.of(new AgentOutput().withSteer(1).withAcceleration(1));
         }

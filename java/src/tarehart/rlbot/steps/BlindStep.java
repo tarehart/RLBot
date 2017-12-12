@@ -2,22 +2,21 @@ package tarehart.rlbot.steps;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
-import tarehart.rlbot.math.TimeUtil;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
 import java.awt.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class BlindStep implements Step {
     private AgentOutput output;
     private Duration duration;
-    private LocalDateTime scheduledEndTime;
+    private GameTime scheduledEndTime;
 
 
     public BlindStep(double seconds, AgentOutput output) {
         this.output = output;
-        this.duration = TimeUtil.toDuration(seconds);
+        this.duration = Duration.ofSeconds(seconds);
     }
 
     public BlindStep(AgentOutput output, Duration duration) {

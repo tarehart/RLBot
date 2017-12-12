@@ -7,32 +7,26 @@ import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.TapStep;
 import tarehart.rlbot.steps.rotation.PitchToPlaneStep;
 import tarehart.rlbot.steps.rotation.YawToPlaneStep;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.ui.ArenaDisplay;
 
 import java.awt.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static java.lang.Math.*;
-import static java.time.Duration.between;
-import static java.time.Duration.ofSeconds;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static tarehart.rlbot.math.TimeUtil.secondsBetween;
 import static tarehart.rlbot.math.VectorUtil.rotateVector;
 import static tarehart.rlbot.physics.ArenaModel.predictBallPath;
-import static tarehart.rlbot.planning.AccelerationModel.simulateAirAcceleration;
 import static tarehart.rlbot.planning.SteerUtil.getAerialIntercept;
 import static tarehart.rlbot.planning.SteerUtil.getCorrectionAngleRad;
-import static tarehart.rlbot.planning.SteerUtil.getInterceptOpportunity;
 import static tarehart.rlbot.planning.WaypointTelemetry.set;
 import static tarehart.rlbot.tuning.BotLog.println;
 
@@ -46,8 +40,8 @@ public class MidairStrikeStep implements Step {
     public static final double PITCH_OVERCORRECT = .1;
     private int confusionCount = 0;
     private Plan plan;
-    private LocalDateTime lastMomentForDodge;
-    private LocalDateTime beginningOfStep;
+    private GameTime lastMomentForDodge;
+    private GameTime beginningOfStep;
     private Duration timeInAirAtStart;
     private SpaceTime intercept;
 
@@ -85,7 +79,7 @@ public class MidairStrikeStep implements Step {
         intercept = interceptOpportunity.get();
         set(intercept.space.flatten(), car.team);
         Vector3 carToIntercept = intercept.space.minus(car.position);
-        long millisTillIntercept = between(input.time, intercept.time).toMillis();
+        long millisTillIntercept = Duration.between(input.time, intercept.time).toMillis();
         double distance = car.position.distance(input.ballPosition);
         println("Midair strike running... Distance: " + distance, input.playerIndex);
 
@@ -106,7 +100,7 @@ public class MidairStrikeStep implements Step {
         }
 
         double rightDirection = carToIntercept.normaliseCopy().dotProduct(car.velocity.normaliseCopy());
-        double secondsSoFar = secondsBetween(beginningOfStep, input.time);
+        double secondsSoFar = Duration.between(beginningOfStep, input.time).getSeconds();
 
         if (millisTillIntercept > DODGE_TIME && secondsSoFar > 2 && rightDirection < .6 || rightDirection < 0) {
             println("Failed aerial on bad angle", input.playerIndex);

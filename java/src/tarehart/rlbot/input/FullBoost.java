@@ -1,8 +1,8 @@
 package tarehart.rlbot.input;
 
 import tarehart.rlbot.math.vector.Vector3;
+import tarehart.rlbot.time.GameTime;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -24,9 +24,9 @@ public class FullBoost {
 
     public Vector3 location;
     public boolean isActive;
-    public LocalDateTime activeTime;
+    public GameTime activeTime;
 
-    public FullBoost(Vector3 location, boolean isActive, LocalDateTime activeTime) {
+    public FullBoost(Vector3 location, boolean isActive, GameTime activeTime) {
         this.location = location;
         this.isActive = isActive;
         this.activeTime = activeTime;

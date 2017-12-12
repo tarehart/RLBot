@@ -1,11 +1,10 @@
 package tarehart.rlbot.planning;
 
+import tarehart.rlbot.AgentOutput;
+import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.Circle;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.AgentOutput;
-import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.VectorUtil;
 
 import java.awt.*;
 import java.awt.geom.Arc2D;

@@ -5,17 +5,14 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.VectorUtil;
-import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
 import java.awt.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static tarehart.rlbot.tuning.BotLog.println;
@@ -24,7 +21,7 @@ public class GetOnOffenseStep implements Step {
     private Plan plan;
 
     private Duration duration;
-    private LocalDateTime lastMoment;
+    private GameTime lastMoment;
 
 
     public GetOnOffenseStep() {

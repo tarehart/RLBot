@@ -6,7 +6,6 @@ import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
-import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
@@ -16,9 +15,9 @@ import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.strikes.DirectedSideHitStep;
 import tarehart.rlbot.steps.strikes.InterceptStep;
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal;
+import tarehart.rlbot.time.Duration;
 
 import java.awt.*;
-import java.time.Duration;
 import java.util.Optional;
 
 public class WhatASaveStep implements Step {

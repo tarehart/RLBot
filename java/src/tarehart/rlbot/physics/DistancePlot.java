@@ -3,9 +3,9 @@ package tarehart.rlbot.physics;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.time.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +76,7 @@ public class DistancePlot {
 
         double orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, spaceTime.space);
 
-        double totalSeconds = TimeUtil.secondsBetween(carData.time, spaceTime.time);
+        double totalSeconds = Duration.between(carData.time, spaceTime.time).getSeconds();
         double secondsSpentAccelerating = Math.max(0, totalSeconds - orientSeconds);
 
         if (strikeProfile == null || strikeProfile.dodgeSeconds == 0 || strikeProfile.speedBoost == 0) {

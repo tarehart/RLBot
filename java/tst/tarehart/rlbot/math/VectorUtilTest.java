@@ -1,10 +1,8 @@
 package tarehart.rlbot.math;
 
-import tarehart.rlbot.math.vector.Vector3;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import tarehart.rlbot.math.vector.Vector3;
 
 public class VectorUtilTest {
     @Test

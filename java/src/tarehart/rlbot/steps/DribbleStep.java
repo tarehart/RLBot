@@ -5,7 +5,6 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -16,10 +15,10 @@ import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.Plan;
 import tarehart.rlbot.planning.SetPieces;
 import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
 import java.awt.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
@@ -64,7 +63,7 @@ public class DribbleStep implements Step {
         }
 
         Vector2 futureBallPosition;
-        BallSlice ballFuture = ballPath.getMotionAt(input.time.plus(TimeUtil.toDuration(leadSeconds))).get();
+        BallSlice ballFuture = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds)).get();
         futureBallPosition = ballFuture.getSpace().flatten();
 
 
@@ -91,7 +90,7 @@ public class DribbleStep implements Step {
         Vector2 carToPressurePoint = pressurePoint.minus(myPositonFlat);
         Vector2 carToBall = futureBallPosition.minus(myPositonFlat);
 
-        LocalDateTime hurryUp = input.time.plus(TimeUtil.toDuration(leadSeconds));
+        GameTime hurryUp = input.time.plusSeconds(leadSeconds);
 
         boolean hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.ballPosition.z > 2;
         if (!hasLineOfSight) {

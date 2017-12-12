@@ -1,12 +1,11 @@
 package tarehart.rlbot.math;
 
 import tarehart.rlbot.math.vector.Vector3;
-
-import java.time.LocalDateTime;
+import tarehart.rlbot.time.GameTime;
 
 public class BallSlice {
     public final Vector3 space;
-    public final LocalDateTime time;
+    public final GameTime time;
     public final Vector3 velocity;
 
     // This is the axis of rotation. The magnitude represents the rate.
@@ -14,11 +13,11 @@ public class BallSlice {
     public final Vector3 spin;
 
     @Deprecated
-    public BallSlice(Vector3 space, LocalDateTime time, Vector3 velocity) {
+    public BallSlice(Vector3 space, GameTime time, Vector3 velocity) {
         this(space, time, velocity, new Vector3());
     }
 
-    public BallSlice(Vector3 space, LocalDateTime time, Vector3 velocity, Vector3 spin) {
+    public BallSlice(Vector3 space, GameTime time, Vector3 velocity, Vector3 spin) {
         this.space = space;
         this.time = time;
         this.velocity = velocity;
@@ -38,7 +37,7 @@ public class BallSlice {
         return velocity;
     }
 
-    public LocalDateTime getTime() {
+    public GameTime getTime() {
         return time;
     }
 

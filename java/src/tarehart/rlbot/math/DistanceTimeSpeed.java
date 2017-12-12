@@ -1,7 +1,5 @@
 package tarehart.rlbot.math;
 
-import java.time.LocalDateTime;
-
 public class DistanceTimeSpeed {
 
     public double distance;

@@ -1,10 +1,10 @@
 package tarehart.rlbot.planning;
 
-import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.TimeUtil;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.steps.strikes.InterceptStep;
+import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.tuning.ManeuverMath;
 
 public class AirTouchPlanner {
@@ -36,7 +36,7 @@ public class AirTouchPlanner {
         checkLaunchReadiness(checklist, car, carPositionAtContact);
         double jumpTime = ManeuverMath.secondsForMashJumpHeight(carPositionAtContact.space.z).orElse(Double.MAX_VALUE);
         double jumpHitTime = jumpTime + InterceptStep.FLIP_HIT_STRIKE_PROFILE.dodgeSeconds;
-        checklist.timeForIgnition = TimeUtil.secondsBetween(car.time, carPositionAtContact.time) < jumpHitTime;
+        checklist.timeForIgnition = Duration.between(car.time, carPositionAtContact.time).getSeconds() < jumpHitTime;
         return checklist;
     }
 
@@ -44,14 +44,14 @@ public class AirTouchPlanner {
         LaunchChecklist checklist = new LaunchChecklist();
         checkLaunchReadiness(checklist, car, intercept);
         checklist.notTooClose = true;
-        checklist.timeForIgnition = TimeUtil.secondsBetween(car.time, intercept.time) < InterceptStep.FLIP_HIT_STRIKE_PROFILE.dodgeSeconds;
+        checklist.timeForIgnition = Duration.between(car.time, intercept.time).getSeconds() < InterceptStep.FLIP_HIT_STRIKE_PROFILE.dodgeSeconds;
         return checklist;
     }
 
     private static void checkLaunchReadiness(LaunchChecklist checklist, CarData car, SpaceTime carPositionAtContact) {
 
         double correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, carPositionAtContact.space);
-        double secondsTillIntercept = TimeUtil.secondsBetween(car.time, carPositionAtContact.time);
+        double secondsTillIntercept = Duration.between(car.time, carPositionAtContact.time).getSeconds();
         double tMinus = getAerialLaunchCountdown(carPositionAtContact.space.z, secondsTillIntercept);
 
         checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 60;
@@ -63,7 +63,7 @@ public class AirTouchPlanner {
     }
 
     public static boolean isVerticallyAccessible(CarData carData, SpaceTime intercept) {
-        double secondsTillIntercept = TimeUtil.secondsBetween(carData.time, intercept.time);
+        double secondsTillIntercept = Duration.between(carData.time, intercept.time).getSeconds();
 
         if (intercept.space.z < NEEDS_AERIAL_THRESHOLD) {
             double tMinus = getJumpLaunchCountdown(intercept.space.z, secondsTillIntercept);
@@ -82,7 +82,7 @@ public class AirTouchPlanner {
             return false;
         }
 
-        double secondsTillIntercept = TimeUtil.secondsBetween(carData.time, intercept.time);
+        double secondsTillIntercept = Duration.between(carData.time, intercept.time).getSeconds();
         double tMinus = getJumpLaunchCountdown(intercept.space.z, secondsTillIntercept);
         return tMinus >= -0.1;
     }
