@@ -24,6 +24,7 @@ import tarehart.rlbot.time.GameTime;
 
 import java.util.Optional;
 
+import static tarehart.rlbot.planning.Plan.Posture.ESCAPEGOAL;
 import static tarehart.rlbot.planning.Plan.Posture.NEUTRAL;
 import static tarehart.rlbot.planning.Plan.Posture.OFFENSIVE;
 import static tarehart.rlbot.tuning.BotLog.println;
@@ -42,7 +43,7 @@ public class TacticsAdvisor {
             return new Plan(Plan.Posture.SAVE).withStep(new WhatASaveStep());
         }
         if (ArenaModel.isBehindGoalLine(input.getMyCarData().position)) {
-            return new Plan(NEUTRAL).withStep(new EscapeTheGoalStep());
+            return new Plan(ESCAPEGOAL).withStep(new EscapeTheGoalStep());
         }
         if(situation.waitToClear) {
             return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());

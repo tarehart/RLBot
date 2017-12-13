@@ -28,6 +28,7 @@ public class Plan {
         OFFENSIVE(1),
         DEFENSIVE(5),
         CLEAR(8),
+        ESCAPEGOAL(8),
         WAITTOCLEAR(9),
         SAVE(10),
         LANDING(15),

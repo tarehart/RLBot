@@ -23,10 +23,6 @@ public class EscapeTheGoalStep implements Step {
             return Optional.empty();
         }
 
-        if (TacticsTelemetry.get(car.playerIndex).map(telem -> !telem.waitToClear).orElse(false)) {
-            return Optional.empty(); // Time to reevaluate the plan.
-        }
-
         Vector3 target = TacticsTelemetry.get(car.playerIndex).map(telem -> telem.futureBallMotion.space).orElse(new Vector3());
         Vector3 toTarget = target.minus(car.position);
         Goal nearestGoal = GoalUtil.getNearestGoal(car.position);

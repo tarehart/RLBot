@@ -159,6 +159,10 @@ public class InterceptStep implements Step {
             if (pace > 1.1) {
                 // Slow down
                 agentOutput.withAcceleration(0).withBoost(false).withDeceleration(Math.max(0, pace - 1.5)); // Hit the brakes, but keep steering!
+                if (car.orientation.noseVector.dotProduct(car.velocity) < 0) {
+                    // car is going backwards
+                    agentOutput.withDeceleration(0).withSteer(0);
+                }
             }
             return agentOutput;
         } else {

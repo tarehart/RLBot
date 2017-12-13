@@ -33,7 +33,6 @@ public class DirectedNoseHitStep implements Step {
     private KickStrategy kickStrategy;
     private Vector3 interceptModifier = null;
     private double maneuverSeconds = 0;
-    private Double circleBackoff = null;
     private double estimatedAngleOfKickFromApproach;
     private SteerPlan circleTurnPlan;
     private DirectedKickPlan kickPlan;
@@ -109,9 +108,9 @@ public class DirectedNoseHitStep implements Step {
             }
         }
 
-        if (circleBackoff == null) {
-            circleBackoff = car.position.distance(kickPlan.ballAtIntercept.getSpace()) > 60 ? 5.0 : 1.0;
-        }
+
+        Double circleBackoff = 3 + kickPlan.ballAtIntercept.getSpace().z * 3; // Take more of a straight runway if the ball is high up.
+
 
         Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten().normalized();
         Vector3 carPositionAtIntercept = kickPlan.getCarPositionAtIntercept();
@@ -127,7 +126,7 @@ public class DirectedNoseHitStep implements Step {
             interceptModifier = kickPlan.plannedKickForce.scaledToMagnitude(-1.4);
         }
 
-        if (carPositionAtIntercept.z > 2 && Math.abs(estimatedAngleOfKickFromApproach) < Math.PI / 12 && Math.abs(rendezvousCorrection) < Math.PI / 12) {
+        if (carPositionAtIntercept.z > 2 && Math.abs(estimatedAngleOfKickFromApproach) < Math.PI / 20 && Math.abs(rendezvousCorrection) < Math.PI / 20) {
             circleTurnPlan = null;
             plan = new Plan().withStep(new InterceptStep(interceptModifier));
             return plan.getOutput(input);
