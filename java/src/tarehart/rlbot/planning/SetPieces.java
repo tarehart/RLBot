@@ -75,15 +75,41 @@ public class SetPieces {
                 ));
     }
 
-    public static Plan performAerial() {
-        Duration tiltBackDuration = Duration.ofMillis(390);
+    public static Plan performAerial(double tiltBackSeconds) {
+        Duration tiltBackDuration = Duration.ofSeconds(tiltBackSeconds);
 
         return new Plan()
                 .withStep(new BlindStep(
                         new AgentOutput()
-                            .withJump(true)
-                            .withPitch(1),
+                                .withJump(true)
+                                .withPitch(1),
                         tiltBackDuration
+                ))
+                .withStep(new MidairStrikeStep(tiltBackDuration))
+                .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
+    }
+
+    public static Plan performDoubleJumpAerial(double tiltBackSeconds) {
+        Duration tiltBackDuration = Duration.ofSeconds(tiltBackSeconds);
+
+        return new Plan()
+                .withStep(new BlindStep(
+                        new AgentOutput()
+                                .withJump(true)
+                                .withPitch(1),
+                        tiltBackDuration
+                ))
+                .withStep(new BlindStep(
+                        new AgentOutput()
+                                .withPitch(1)
+                                .withBoost(true),
+                        Duration.ofSeconds(.05)
+                ))
+                .withStep(new BlindStep(
+                        new AgentOutput()
+                                .withBoost(true)
+                                .withJump(true),
+                        Duration.ofSeconds(.05)
                 ))
                 .withStep(new MidairStrikeStep(tiltBackDuration))
                 .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
