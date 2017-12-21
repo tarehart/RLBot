@@ -19,7 +19,7 @@ public class AccelerationModel {
     private static final double FRONT_FLIP_SPEED_BOOST = 10;
     private static final double SUB_MEDIUM_ACCELERATION = 15; // zero to medium in about 2 seconds.
     private static final double INCREMENTAL_BOOST_ACCELERATION = 8;
-    private static final double AIR_BOOST_ACCELERATION = 12;
+    private static final double AIR_BOOST_ACCELERATION = 20;
     private static final double BOOST_CONSUMED_PER_SECOND = 25;
     public static final double FLIP_THRESHOLD_SPEED = 20;
 

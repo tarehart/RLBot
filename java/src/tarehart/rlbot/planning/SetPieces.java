@@ -204,4 +204,33 @@ public class SetPieces {
                                 .withSteer(flipLeft ? -1 : 1)))
                 .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
     }
+
+    public static Plan jumpSuperHigh(double howHigh) {
+        return new Plan()
+                .withStep(new BlindStep(
+                        new AgentOutput()
+                                .withJump(true)
+                                .withPitch(1),
+                        Duration.ofSeconds(.3)
+                ))
+                .withStep(new BlindStep(
+                        new AgentOutput()
+                                .withPitch(1)
+                                .withBoost(true),
+                        Duration.ofSeconds(.05)
+                ))
+                .withStep(new BlindStep(
+                        new AgentOutput()
+                                .withBoost(true)
+                                .withJump(true),
+                        Duration.ofSeconds(.05)
+                ))
+                .withStep(new BlindStep(
+                        new AgentOutput()
+                                .withJump(true)
+                                .withBoost(true),
+                        Duration.ofSeconds(howHigh / 10)
+                ))
+                .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
+    }
 }

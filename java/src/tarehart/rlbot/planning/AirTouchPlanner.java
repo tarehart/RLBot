@@ -10,6 +10,7 @@ import tarehart.rlbot.tuning.ManeuverMath;
 public class AirTouchPlanner {
 
     private static final double AERIAL_RISE_RATE = 10;
+    private static final double SUPER_JUMP_RISE_RATE = 11;
     public static final double BOOST_NEEDED_FOR_AERIAL = 20;
     public static final double NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT;
     public static final double MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD;
@@ -94,6 +95,10 @@ public class AirTouchPlanner {
     private static double getAerialLaunchCountdown(double height, double secondsTillIntercept) {
         double expectedAerialSeconds = (height - CAR_BASE_HEIGHT) / AERIAL_RISE_RATE;
         return secondsTillIntercept - expectedAerialSeconds;
+    }
+
+    public static double expectedSecondsForSuperJump(double height) {
+        return (height - CAR_BASE_HEIGHT) / SUPER_JUMP_RISE_RATE;
     }
 
     private static double getJumpLaunchCountdown(double height, double secondsTillIntercept) {

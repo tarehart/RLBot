@@ -106,7 +106,10 @@ public class InterceptStep implements Step {
 
     private static Optional<Intercept> getAerialIntercept(CarData carData, BallPath ballPath, Vector3 interceptModifier) {
         if (carData.boost >= AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL) {
-            DistancePlot budgetAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), AirTouchPlanner.getBoostBudget(carData), 0);
+
+            Vector3 averageNoseVector = ballPath.getMotionAt(carData.time.plusSeconds(1)).get().space.minus(carData.position).normaliseCopy();
+
+            DistancePlot budgetAcceleration = AccelerationModel.simulateAirAcceleration(carData, Duration.ofSeconds(4), averageNoseVector);
             Optional<SpaceTime> budgetInterceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(carData, ballPath, budgetAcceleration, interceptModifier, AirTouchPlanner::isVerticallyAccessible, AERIAL_STRIKE_PROFILE);
             if (budgetInterceptOpportunity.isPresent()) {
                 SpaceTime spaceTime = budgetInterceptOpportunity.get();

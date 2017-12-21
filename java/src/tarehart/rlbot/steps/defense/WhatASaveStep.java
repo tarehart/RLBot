@@ -23,6 +23,7 @@ import java.util.Optional;
 public class WhatASaveStep implements Step {
     private Plan plan;
     private Double whichPost;
+    private boolean goingForSuperJump;
 
     @Override
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -61,12 +62,30 @@ public class WhatASaveStep implements Step {
 
         Vector3 carToIntercept = intercept.space.minus(car.position);
         double carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten());
+
+        Optional<BallSlice> overHeadSlice = ballPath.findSlice((ballSlice -> {
+            return car.position.flatten().distance(ballSlice.space.flatten()) < ArenaModel.BALL_RADIUS;
+        }));
+
+        if (overHeadSlice.isPresent() && (goingForSuperJump || AirTouchPlanner.isVerticallyAccessible(car, overHeadSlice.get().toSpaceTime()))) {
+
+            goingForSuperJump = true;
+
+            double overheadHeight = overHeadSlice.get().space.z;
+            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.time, overHeadSlice.get().time).getSeconds()) {
+                plan = SetPieces.jumpSuperHigh(overheadHeight);
+                return plan.getOutput(input);
+            } else {
+                return Optional.of(new AgentOutput());
+            }
+        }
+
         if (Math.abs(carApproachVsBallApproach) > Math.PI / 5) {
             plan = new Plan(Plan.Posture.SAVE).withStep(new InterceptStep(new Vector3(0, Math.signum(goal.getCenter().y) * 1.5, 0)));
             return plan.getOutput(input);
         }
 
-        plan = new Plan().withStep(new DirectedSideHitStep(new KickAwayFromOwnGoal()));
+        plan = new FirstViableStepPlan(Plan.Posture.SAVE).withStep(new DirectedSideHitStep(new KickAwayFromOwnGoal())).withStep(new InterceptStep(new Vector3(0, 0, -1)));
         return plan.getOutput(input);
     }
 

@@ -2,6 +2,8 @@ package tarehart.rlbot.planning;
 
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.steps.strikes.MidairStrikeStep;
+import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.tuning.BotLog;
 
 import java.util.Optional;
@@ -17,9 +19,14 @@ public class InterceptPlanner {
                 BotLog.println("Performing Aerial!", car.playerIndex);
 
                 double groundDistance = car.position.flatten().distance(intercept.space.flatten());
-                double radiansForTilt = Math.atan2(height, groundDistance);
+                double radiansForTilt = Math.atan2(height, groundDistance) + MidairStrikeStep.UPWARD_VELOCITY_MAINTENANCE_ANGLE;
 
-                return Optional.of(SetPieces.performAerial(radiansForTilt * .7));
+                double tiltBackSeconds = radiansForTilt * .35;
+
+                if (Duration.between(car.time, intercept.time).getSeconds() > 1.5 && intercept.space.z > 10) {
+                    return Optional.of(SetPieces.performDoubleJumpAerial(tiltBackSeconds));
+                }
+                return Optional.of(SetPieces.performAerial(tiltBackSeconds));
             }
             return Optional.empty();
         }
