@@ -175,85 +175,84 @@ public class ArenaModel {
     }
 
     private void setupWalls() {
+
+        DBody arenaBody = OdeHelper.createBody(world);
+        arenaBody.setKinematic();
+
         // Floor
-        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, 0));
+        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, 0), arenaBody);
 
         // Side walls
-        addWallToWorld(new Vector3(1, 0, 0), new Vector3(-SIDE_WALL, 0, 0));
-        addWallToWorld(new Vector3(-1, 0, 0), new Vector3(SIDE_WALL, 0, 0));
+        addWallToWorld(new Vector3(1, 0, 0), new Vector3(-SIDE_WALL, 0, 0), arenaBody);
+        addWallToWorld(new Vector3(-1, 0, 0), new Vector3(SIDE_WALL, 0, 0), arenaBody);
 
         // Ceiling
-        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, CEILING + WALL_THICKNESS));
+        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, CEILING + WALL_THICKNESS), arenaBody);
 
 
         float sideOffest = (float) (WALL_LENGTH / 2 + Goal.EXTENT);
         float heightOffset = (float) (WALL_LENGTH / 2 + Goal.GOAL_HEIGHT);
 
         // Wall on the negative side
-        addWallToWorld(new Vector3(0, 1, 0), new Vector3(sideOffest, -BACK_WALL, 0));
-        addWallToWorld(new Vector3(0, 1, 0), new Vector3(-sideOffest, -BACK_WALL, 0));
-        addWallToWorld(new Vector3(0, 1, 0), new Vector3(0, -BACK_WALL, heightOffset));
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(sideOffest, -BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(-sideOffest, -BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(0, -BACK_WALL, heightOffset), arenaBody);
 
         // Wall on the positive side
-        addWallToWorld(new Vector3(0, -1, 0), new Vector3(sideOffest, BACK_WALL, 0));
-        addWallToWorld(new Vector3(0, -1, 0), new Vector3(-sideOffest, BACK_WALL, 0));
-        addWallToWorld(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, heightOffset));
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(sideOffest, BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(-sideOffest, BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, heightOffset), arenaBody);
 
 
         // 45 angle corners
-        addWallToWorld(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
+        addWallToWorld(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0), arenaBody);
+        addWallToWorld(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0), arenaBody);
+        addWallToWorld(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0), arenaBody);
+        addWallToWorld(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0), arenaBody);
 
         // 45 degree angle rails on sides
-        addWallToWorld(new Vector3(1, 0, 1), new Vector3(-SIDE_WALL, 0, RAIL_HEIGHT));
-        addWallToWorld(new Vector3(-1, 0, 1), new Vector3(SIDE_WALL, 0, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(1, 0, 1), new Vector3(-SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(-1, 0, 1), new Vector3(SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
 
         // 45 degree angle rails on back walls, either side of the goal
-        addWallToWorld(new Vector3(0, 1, 1), new Vector3(sideOffest, -BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3(0, 1, 1), new Vector3(-sideOffest, -BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3(0, -1, 1), new Vector3(sideOffest, BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3(0, -1, 1), new Vector3(-sideOffest, BACK_WALL, RAIL_HEIGHT));
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(sideOffest, -BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(-sideOffest, -BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(sideOffest, BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(-sideOffest, BACK_WALL, RAIL_HEIGHT), arenaBody);
 
         // Floor rails in the corners
         float normalizedVertical = (float) Math.sqrt(2);
         float normalizedFlats = .5f;
         addWallToWorld(
                 new Vector3(normalizedFlats, normalizedFlats, normalizedVertical),
-                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
         addWallToWorld(
                 new Vector3(-normalizedFlats, normalizedFlats, normalizedVertical),
-                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
         addWallToWorld(
                 new Vector3(normalizedFlats, -normalizedFlats, normalizedVertical),
-                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
         addWallToWorld(
                 new Vector3(-normalizedFlats, -normalizedFlats, normalizedVertical),
-                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT));
+                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
 
     }
 
-    private void addWallToWorld(Vector3 normal, Vector3 position) {
-
-        DBody body = OdeHelper.createBody(world);
-        body.setKinematic();
-
+    private void addWallToWorld(Vector3 normal, Vector3 position, DBody body) {
 
         DBox box = OdeHelper.createBox(space, WALL_LENGTH, WALL_LENGTH, WALL_THICKNESS);
         box.setBody(body);
-
 
         normal = normal.normaliseCopy();
         Vector3 thicknessTweak = normal.scaled(-WALL_THICKNESS / 2);
 
         Vector3 finalPosition = position.plus(thicknessTweak);
 
-        body.setPosition(finalPosition.x, finalPosition.y, finalPosition.z);
+        box.setOffsetPosition(finalPosition.x, finalPosition.y, finalPosition.z);
 
         Vector3 straightUp = new Vector3(0, 0, 1);
         DQuaternionC quat = getRotationFrom(straightUp, normal);
-        body.setQuaternion(quat);
+        box.setOffsetQuaternion(quat);
     }
 
     // https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
