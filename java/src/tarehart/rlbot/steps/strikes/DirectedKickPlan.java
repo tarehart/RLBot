@@ -17,6 +17,7 @@ public class DirectedKickPlan {
     public Vector3 interceptModifier;
     public Vector3 desiredBallVelocity;
     public Vector3 plannedKickForce;
+    public Vector2 launchPad;
 
     public Vector3 getCarPositionAtIntercept() {
         return ballAtIntercept.getSpace().plus(interceptModifier);

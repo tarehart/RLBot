@@ -73,29 +73,6 @@ public class AgentOutput {
         return this;
     }
 
-
-    public int[] toPython() {
-        return new int[] {
-                convertMagnitudeWithNegatives(steeringTilt),
-                convertMagnitudeWithNegatives(pitchTilt),
-                convertMagnitudeOnlyPositive(acceleration),
-                convertMagnitudeOnlyPositive(deceleration),
-                jumpDepressed ? 1 : 0,
-                boostDepressed ? 1 : 0,
-                slideDepressed ? 1 : 0
-        };
-    }
-
-    private int convertMagnitudeWithNegatives(double tilt) {
-        double normalized = (tilt + 1) / 2;
-        return convertMagnitudeOnlyPositive(normalized);
-    }
-
-    private int convertMagnitudeOnlyPositive(double normalized) {
-        double intScaled = normalized * MAX_TILT;
-        return (int) Math.round(intScaled);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

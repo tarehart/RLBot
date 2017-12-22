@@ -92,4 +92,8 @@ public class Vector2 {
                 + ", " + String.format("%.2f", y)
                 + ")";
     }
+
+    public Vector3 toVector3() {
+        return new Vector3(x, y, 0);
+    }
 }

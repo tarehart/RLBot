@@ -72,7 +72,13 @@ public class SteerUtil {
 
     private static boolean canGetUnder(CarData carData, SpaceTime spaceTime, double boostBudget) {
         DistancePlot plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), boostBudget, carData.position.distance(spaceTime.space));
-        Optional<DistanceTimeSpeed> dts = plot.getMotionAfterStrike(carData, spaceTime, null);
+
+        Optional<DistanceTimeSpeed> dts = plot.getMotionAfterDuration(
+                carData,
+                spaceTime.space,
+                Duration.between(carData.time, spaceTime.time),
+                new StrikeProfile(0, 0, 0));
+
         double requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.space);
         return dts.filter(travel -> travel.distance > requiredDistance).isPresent();
     }
@@ -89,7 +95,7 @@ public class SteerUtil {
 
     public static Optional<SpaceTime> getFilteredInterceptOpportunity(
             CarData carData, BallPath ballPath, DistancePlot acceleration, Vector3 interceptModifier, BiPredicate<CarData, SpaceTime> predicate) {
-        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, null);
+        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, new StrikeProfile(0, 0, 0));
     }
 
     public static Optional<SpaceTime> getFilteredInterceptOpportunity(
@@ -128,7 +134,7 @@ public class SteerUtil {
 
         for (BallSlice ballMoment: ballPath.getSlices()) {
             SpaceTime intercept = new SpaceTime(ballMoment.space.plus(interceptModifier), ballMoment.getTime());
-            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterStrike(carData, intercept, strikeProfile);
+            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, intercept.space, Duration.between(carData.time, intercept.time), strikeProfile);
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
                 double interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space, planeNormal);
@@ -168,7 +174,10 @@ public class SteerUtil {
             StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 ?
                     InterceptStep.JUMP_HIT_STRIKE_PROFILE :
                     InterceptStep.AERIAL_STRIKE_PROFILE;
-            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterStrike(carData, intercept, strikeProfile);
+
+            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(
+                    carData, intercept.space, Duration.between(carData.time, intercept.time), strikeProfile);
+
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
                 double interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space);

@@ -52,7 +52,7 @@ public class DirectedKickUtil {
 
         double secondsTillImpactRoughly = Duration.between(input.time, kickPlan.ballAtIntercept.getTime()).getSeconds();
         double impactSpeed = isSideHit ? ManeuverMath.DODGE_SPEED :
-                kickPlan.distancePlot.getMotionAfterSeconds(secondsTillImpactRoughly).map(dts -> dts.speed).orElse(AccelerationModel.SUPERSONIC_SPEED);
+                kickPlan.distancePlot.getMotionAfterDuration(secondsTillImpactRoughly).map(dts -> dts.speed).orElse(AccelerationModel.SUPERSONIC_SPEED);
 
         Vector3 easyForce;
         if (isSideHit) {
@@ -80,6 +80,11 @@ public class DirectedKickUtil {
                     kickPlan.desiredBallVelocity.x - transverseBallVelocity.x * BALL_VELOCITY_INFLUENCE,
                     kickPlan.desiredBallVelocity.y - transverseBallVelocity.y * BALL_VELOCITY_INFLUENCE,
                     kickPlan.desiredBallVelocity.z);
+        }
+
+        if (!isSideHit) {
+            double backoff = 3 + kickPlan.ballAtIntercept.getSpace().z;
+            kickPlan.launchPad = kickPlan.ballAtIntercept.getSpace().flatten().minus(kickPlan.plannedKickForce.flatten().scaledToMagnitude(backoff));
         }
 
         return Optional.of(kickPlan);

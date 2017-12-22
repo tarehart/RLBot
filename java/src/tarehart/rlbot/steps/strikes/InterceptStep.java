@@ -152,7 +152,8 @@ public class InterceptStep implements Step {
             return flipOut.get();
         }
 
-        Optional<DistanceTimeSpeed> motionAfterStrike = intercept.getDistancePlot().getMotionAfterStrike(car, intercept.toSpaceTime(), intercept.getStrikeProfile());
+        Optional<DistanceTimeSpeed> motionAfterStrike = intercept.getDistancePlot()
+                .getMotionAfterDuration(car, intercept.getSpace(), Duration.between(car.time, intercept.getTime()), intercept.getStrikeProfile());
 
         if (motionAfterStrike.isPresent()) {
             double maxDistance = motionAfterStrike.get().distance;

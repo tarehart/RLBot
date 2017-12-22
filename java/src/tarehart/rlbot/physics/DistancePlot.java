@@ -2,7 +2,7 @@ package tarehart.rlbot.physics;
 
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;
-import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.AccelerationModel;
 import tarehart.rlbot.planning.StrikeProfile;
 import tarehart.rlbot.time.Duration;
@@ -27,7 +27,7 @@ public class DistancePlot {
         return plot;
     }
 
-    public Optional<DistanceTimeSpeed> getMotionAfterSeconds(double time) {
+    public Optional<DistanceTimeSpeed> getMotionAfterDuration(double time) {
         if (time < plot.get(0).getTime() || time > plot.get(plot.size() - 1).getTime()) {
             return Optional.empty();
         }
@@ -69,18 +69,25 @@ public class DistancePlot {
         return motionAt.map(DistanceTimeSpeed::getTime);
     }
 
-    /**
-     * The spacetime is used to infer allotted time and correction angle, NOT distance.
-     */
-    public Optional<DistanceTimeSpeed> getMotionAfterStrike(CarData carData, SpaceTime spaceTime, StrikeProfile strikeProfile) {
+    public Optional<DistanceTimeSpeed> getMotionUponArrival(CarData carData, Vector3 destination, StrikeProfile strikeProfile) {
 
-        double orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, spaceTime.space);
+        double orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination) + strikeProfile.maneuverSeconds;
+        double distance = carData.position.flatten().distance(destination.flatten());
 
-        double totalSeconds = Duration.between(carData.time, spaceTime.time).getSeconds();
+        return getMotionAfterDistance(distance).map(dts -> new DistanceTimeSpeed(dts.distance, dts.time + orientSeconds, dts.speed));
+
+        // TODO: incorporate the speedup from the strike profile.
+    }
+
+    public Optional<DistanceTimeSpeed> getMotionAfterDuration(CarData carData, Vector3 target, Duration time, StrikeProfile strikeProfile) {
+
+        double orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, target) + strikeProfile.maneuverSeconds;
+
+        double totalSeconds = time.getSeconds();
         double secondsSpentAccelerating = Math.max(0, totalSeconds - orientSeconds);
 
-        if (strikeProfile == null || strikeProfile.dodgeSeconds == 0 || strikeProfile.speedBoost == 0) {
-            Optional<DistanceTimeSpeed> motion = getMotionAfterSeconds(secondsSpentAccelerating);
+        if (strikeProfile.dodgeSeconds == 0 || strikeProfile.speedBoost == 0) {
+            Optional<DistanceTimeSpeed> motion = getMotionAfterDuration(secondsSpentAccelerating);
             return motion.map(dts -> new DistanceTimeSpeed(dts.distance, totalSeconds, dts.speed));
         }
 
@@ -94,7 +101,7 @@ public class DistancePlot {
         }
 
         double accelSecondsBeforeStrike = secondsSpentAccelerating - speedupSeconds;
-        Optional<DistanceTimeSpeed> dtsOption = getMotionAfterSeconds(accelSecondsBeforeStrike);
+        Optional<DistanceTimeSpeed> dtsOption = getMotionAfterDuration(accelSecondsBeforeStrike);
 
         if (dtsOption.isPresent()) {
             DistanceTimeSpeed dts = dtsOption.get();
