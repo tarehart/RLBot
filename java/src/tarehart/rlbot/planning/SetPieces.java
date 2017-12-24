@@ -9,6 +9,7 @@ import tarehart.rlbot.steps.landing.LandMindlesslyStep;
 import tarehart.rlbot.steps.strikes.MidairStrikeStep;
 import tarehart.rlbot.steps.travel.LineUpInReverseStep;
 import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.tuning.ManeuverMath;
 
 public class SetPieces {
 
@@ -117,23 +118,23 @@ public class SetPieces {
 
     public static Plan performJumpHit(double strikeHeight) {
 
-        long totalRiseMillis = Math.min(500, (long) (strikeHeight * 80));
-        long pitchBackPortion = Math.min(360, totalRiseMillis);
-        long driftUpPortion = totalRiseMillis - pitchBackPortion;
+        Double jumpSeconds = ManeuverMath.secondsForMashJumpHeight(strikeHeight).orElse(ManeuverMath.MASH_JUMP_HEIGHT);
+        double pitchBackPortion = Math.min(.36, jumpSeconds);
+        double driftUpPortion = jumpSeconds - pitchBackPortion;
 
         Plan plan = new Plan()
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withJump(true)
                                 .withPitch(1),
-                        Duration.ofMillis(pitchBackPortion)
+                        Duration.ofSeconds(pitchBackPortion)
                 ));
 
         if (driftUpPortion > 0) {
             plan.withStep(new BlindStep(
                     new AgentOutput()
                             .withJump(true),
-                    Duration.ofMillis(driftUpPortion)
+                    Duration.ofSeconds(driftUpPortion)
             ));
         }
 

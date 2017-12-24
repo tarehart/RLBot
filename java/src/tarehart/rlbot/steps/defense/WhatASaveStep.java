@@ -58,9 +58,10 @@ public class WhatASaveStep implements Step {
         DistancePlot plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.boost, distance - 15);
 
 
-        SpaceTime intercept = SteerUtil.getInterceptOpportunity(car, ballPath, plot).orElse(threat.toSpaceTime());
+        Intercept intercept = SteerUtil.getInterceptOpportunity(car, ballPath, plot)
+                .orElse(new Intercept(threat.toSpaceTime(), new StrikeProfile(0, 0, 0), plot));
 
-        Vector3 carToIntercept = intercept.space.minus(car.position);
+        Vector3 carToIntercept = intercept.getSpace().minus(car.position);
         double carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten());
 
         Optional<BallSlice> overHeadSlice = ballPath.findSlice((ballSlice -> {

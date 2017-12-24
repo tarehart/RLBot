@@ -8,10 +8,7 @@ import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.planning.AccelerationModel;
-import tarehart.rlbot.planning.AirTouchPlanner;
-import tarehart.rlbot.planning.SteerUtil;
-import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.planning.*;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.tuning.ManeuverMath;
 
@@ -40,10 +37,10 @@ public class DirectedKickUtil {
         BiPredicate<CarData, SpaceTime> verticalPredicate = isSideHit ? AirTouchPlanner::isJumpHitAccessible : AirTouchPlanner::isVerticallyAccessible;
         BiPredicate<CarData, SpaceTime> overallPredicate = (cd, st) -> verticalPredicate.test(cd, st) && kickStrategy.looksViable(cd, st.space);
 
-        Optional<SpaceTime> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(
+        Optional<Intercept> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(
                 car, kickPlan.ballPath, kickPlan.distancePlot, interceptModifier,
-                overallPredicate, strikeProfile);
-        Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> kickPlan.ballPath.getMotionAt(inter.time));
+                overallPredicate, (space) -> strikeProfile);
+        Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> kickPlan.ballPath.getMotionAt(inter.getTime()));
 
         if (!ballMotion.isPresent() || !interceptOpportunity.isPresent()) {
             return Optional.empty();
@@ -56,7 +53,7 @@ public class DirectedKickUtil {
 
         Vector3 easyForce;
         if (isSideHit) {
-            Vector2 carToIntercept = interceptOpportunity.get().space.minus(car.position).flatten();
+            Vector2 carToIntercept = interceptOpportunity.get().getSpace().minus(car.position).flatten();
             Vector2 sideHit = VectorUtil.orthogonal(carToIntercept, v -> v.dotProduct(interceptModifier.flatten()) < 0);
             easyForce = new Vector3(sideHit.x, sideHit.y, 0).scaledToMagnitude(impactSpeed);
         } else {

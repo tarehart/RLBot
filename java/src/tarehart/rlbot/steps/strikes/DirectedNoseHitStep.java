@@ -9,11 +9,9 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPhysics;
-import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.SteerPlan;
-import tarehart.rlbot.planning.SteerUtil;
-import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.steps.travel.SlideToPositionStep;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.tuning.BotLog;
@@ -138,11 +136,11 @@ public class DirectedNoseHitStep implements Step {
 
             double correctionNeeded = Math.max(0, Math.abs(estimatedAngleOfKickFromApproach) - (MAX_NOSE_HIT_ANGLE * Math.signum(estimatedAngleOfKickFromApproach)));
             double freshManeuverSeconds = getManeuverSeconds(correctionNeeded, car);
-            boolean manueverSecondsStable = Math.abs(worstCaseManeuverSeconds - freshManeuverSeconds) < .1;
+            boolean maneuverSecondsStable = Math.abs(worstCaseManeuverSeconds - freshManeuverSeconds) < .1;
             worstCaseManeuverSeconds = Math.max(worstCaseManeuverSeconds, freshManeuverSeconds);
 
 
-            if (manueverSecondsStable && Vector2.angle(carToIntercept, strikeForceFlat) > 2 * Math.PI / 3) {
+            if (maneuverSecondsStable && Vector2.angle(carToIntercept, strikeForceFlat) > 2 * Math.PI / 3) {
                 // If we're planning to turn a huge amount, this is a waste of time.
                 return Optional.empty();
             }
@@ -157,11 +155,11 @@ public class DirectedNoseHitStep implements Step {
                     .map(DistanceTimeSpeed::getTime)
                     .orElse(secondsTillIntercept);
 
-//            if (secondsTillIntercept > asapSeconds) {
-//                return Optional.of(SteerUtil.steerTowardGroundPosition(car,
-//                        carPositionAtInterceptFlat.minus(strikeForceFlat.scaled(circleBackoff * secondsTillIntercept / asapSeconds)))
-//                        .withBoost(false));
-//            }
+            if (secondsTillIntercept > asapSeconds + .5) {
+                plan = new Plan(Plan.Posture.OFFENSIVE)
+                        .withStep(new SlideToPositionStep((in) -> new PositionFacing(circleTerminus, strikeForceFlat)));
+                return plan.getOutput(input);
+            }
 
             // Line up for a nose hit
             circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, circleTerminus, strikeForceFlat);

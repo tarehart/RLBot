@@ -9,8 +9,10 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.Goal;
 import tarehart.rlbot.planning.GoalUtil;
+import tarehart.rlbot.planning.Intercept;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
 import java.util.Optional;
 
@@ -42,8 +44,8 @@ public class ThreatAssessor {
 
         CarData myCar = input.getMyCarData();
 
-        Optional<SpaceTime> myInterceptOption = SteerUtil.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.boost);
-        Optional<SpaceTime> enemyInterceptOption = SteerUtil.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost);
+        Optional<Intercept> myInterceptOption = SteerUtil.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.boost);
+        Optional<Intercept> enemyInterceptOption = SteerUtil.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost);
 
         if (!enemyInterceptOption.isPresent()) {
             return 0;
@@ -53,10 +55,10 @@ public class ThreatAssessor {
             return 3;
         }
 
-        SpaceTime myIntercept = myInterceptOption.get();
-        SpaceTime enemyIntercept = enemyInterceptOption.get();
+        Intercept myIntercept = myInterceptOption.get();
+        Intercept enemyIntercept = enemyInterceptOption.get();
 
-        return Duration.between(myIntercept.time, enemyIntercept.time).getSeconds();
+        return Duration.between(myIntercept.getTime(), enemyIntercept.getTime()).getSeconds();
     }
 
     private double measureEnemyPosture(AgentInput input) {
