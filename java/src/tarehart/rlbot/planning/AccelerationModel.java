@@ -17,9 +17,9 @@ public class AccelerationModel {
 
     private static final Double TIME_STEP = 0.1;
     private static final double FRONT_FLIP_SPEED_BOOST = 10;
-    private static final double SUB_MEDIUM_ACCELERATION = 15; // zero to medium in about 2 seconds.
-    private static final double INCREMENTAL_BOOST_ACCELERATION = 8;
-    private static final double AIR_BOOST_ACCELERATION = 20;
+    private static final double INCREMENTAL_BOOST_ACCELERATION = 15;
+
+    private static final double AIR_BOOST_ACCELERATION = 21.163;
     private static final double BOOST_CONSUMED_PER_SECOND = 25;
     public static final double FLIP_THRESHOLD_SPEED = 20;
 
@@ -100,8 +100,10 @@ public class AccelerationModel {
         }
 
         double accel = 0;
-        if (currentSpeed < MEDIUM_SPEED) {
-            accel += SUB_MEDIUM_ACCELERATION;
+        if (currentSpeed < 20) {
+            accel = 30 - currentSpeed * 1.27;
+        } else if (currentSpeed < MEDIUM_SPEED || hasBoost) {
+            accel = 4.58;
         }
         if (hasBoost) {
             accel += INCREMENTAL_BOOST_ACCELERATION;

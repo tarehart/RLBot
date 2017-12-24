@@ -92,14 +92,14 @@ public class ZoneDefinitions {
     });
     public static final Polygon ORANGEBOX = new Polygon(new Vector2[] {
        new Vector2(50, 70),
-       new Vector2(50, 102.1),
-       new Vector2(-50, 102.1),
+       new Vector2(50, 120),
+       new Vector2(-50, 120),
        new Vector2(-50, 70)
     });
     public static final Polygon BLUEBOX = new Polygon(new Vector2[] {
        new Vector2(50, -70),
-       new Vector2(50, -102.1),
-       new Vector2(-50, -102.1),
+       new Vector2(50, -120),
+       new Vector2(-50, -120),
        new Vector2(-50, -70)
     });
 }
