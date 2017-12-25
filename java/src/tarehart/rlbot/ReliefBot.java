@@ -4,7 +4,9 @@ import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.steps.GetBoostStep;
 import tarehart.rlbot.steps.GoForKickoffStep;
+import tarehart.rlbot.steps.demolition.DemolishEnemyStep;
 import tarehart.rlbot.steps.landing.LandGracefullyStep;
 import tarehart.rlbot.time.GameTime;
 
@@ -49,7 +51,7 @@ public class ReliefBot extends Bot {
         TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath, currentPlan);
 
 //        if (canInterruptPlanFor(Plan.Posture.OVERRIDE)) {
-//            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new TagAlongStep());
+//            currentPlan = new Plan(Plan.Posture.OVERRIDE).withStep(new GetBoostStep()).withStep(new DemolishEnemyStep());
 //        }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.

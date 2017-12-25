@@ -16,6 +16,7 @@ public class CarData {
     public final GameTime time;
     public final long frameCount;
     public final boolean hasWheelContact;
+    public boolean isDemolished;
 
     private CarData(Builder builder) {
         position = builder.position;
@@ -29,6 +30,7 @@ public class CarData {
         time = builder.time;
         frameCount = builder.frameCount;
         hasWheelContact = builder.hasWheelContact;
+        isDemolished = builder.isDemolished;
     }
 
 
@@ -44,6 +46,7 @@ public class CarData {
         private GameTime time;
         private long frameCount;
         private boolean hasWheelContact;
+        private boolean isDemolished;
 
         public Builder() {
         }
@@ -100,6 +103,11 @@ public class CarData {
 
         public Builder withHasWheelContact(boolean hasWheelContact) {
             this.hasWheelContact = hasWheelContact;
+            return this;
+        }
+
+        public Builder withIsDemolished(boolean isDemolished) {
+            this.isDemolished = isDemolished;
             return this;
         }
 

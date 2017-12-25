@@ -149,6 +149,7 @@ public class AgentInput {
                 .withPlayerIndex(playerIndex)
                 .withTime(time)
                 .withFrameCount(frameCount)
+                .withIsDemolished(playerInfo.getIsDemolished())
                 .build();
     }
 
