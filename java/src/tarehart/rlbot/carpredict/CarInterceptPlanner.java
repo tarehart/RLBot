@@ -25,7 +25,7 @@ public class CarInterceptPlanner {
         for (int i = 0; i < enemyPath.getSlices().size(); i++) {
             CarSlice slice = enemyPath.getSlices().get(i);
             SpaceTime spaceTime = new SpaceTime(slice.space, slice.getTime());
-            StrikeProfile strikeProfile = new StrikeProfile(0, 0, 0);
+            StrikeProfile strikeProfile = new StrikeProfile();
             Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile);
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();

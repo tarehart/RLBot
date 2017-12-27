@@ -89,7 +89,7 @@ public class GetOnOffenseStep implements Step {
         }
 
 
-        if (TacticsAdvisor.getYAxisWrongSidedness(input) < 0) {
+        if (TacticsAdvisor.getYAxisWrongSidedness(car, ballFuture.space) < 0) {
             return Optional.empty();
         }
 

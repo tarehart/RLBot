@@ -79,7 +79,7 @@ public class SteerUtil {
                 carData,
                 spaceTime.space,
                 Duration.between(carData.time, spaceTime.time),
-                new StrikeProfile(0, 0, 0));
+                new StrikeProfile());
 
         double requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.space);
         return dts.filter(travel -> travel.distance > requiredDistance).isPresent();
@@ -97,7 +97,7 @@ public class SteerUtil {
 
     public static Optional<Intercept> getFilteredInterceptOpportunity(
             CarData carData, BallPath ballPath, DistancePlot acceleration, Vector3 interceptModifier, BiPredicate<CarData, SpaceTime> predicate) {
-        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, (space) -> new StrikeProfile(0, 0, 0));
+        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, (space) -> new StrikeProfile());
     }
 
     public static Optional<Intercept> getFilteredInterceptOpportunity(
@@ -176,12 +176,11 @@ public class SteerUtil {
         for (BallSlice ballMoment: ballPath.getSlices()) {
             SpaceTime intercept = new SpaceTime(ballMoment.space.plus(interceptModifier), ballMoment.getTime());
 
-            // TODO: this needs to be a bit steeper because the car pitches higher than this to fight gravity.
-            Vector3 averageNoseVector = intercept.space.minus(carData.position).normaliseCopy();
+            double averageNoseAngle = MidairStrikeStep.getDesiredVerticalAngle(carData.velocity, intercept.space.minus(carData.position));
             Duration duration = Duration.between(carData.time, ballMoment.getTime());
-            DistancePlot acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, averageNoseVector);
-            StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 ?
-                    new StrikeProfile(0, 10, .3) :
+            DistancePlot acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle));
+            StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 && averageNoseAngle < .5 ?
+                    new StrikeProfile(0, 10, .15, StrikeProfile.Style.AERIAL) :
                     InterceptStep.AERIAL_STRIKE_PROFILE;
 
             Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(
@@ -439,10 +438,10 @@ public class SteerUtil {
         Vector2 centerToMe = flatPosition.minus(idealCircle.center);
         Vector2 idealDirection = VectorUtil.orthogonal(centerToMe, v -> Circle.isClockwise(idealCircle, flatPosition, v) == clockwise).normalized();
 
-        if (facing.dotProduct(idealDirection) < .7) {
-            AgentOutput output = steerTowardGroundPosition(car, flatPosition.plus(idealDirection));
-            return new SteerPlan(output, targetPosition);
-        }
+//        if (facing.dotProduct(idealDirection) < .7) {
+//            AgentOutput output = steerTowardGroundPosition(car, flatPosition.plus(idealDirection));
+//            return new SteerPlan(output, targetPosition);
+//        }
 
         Optional<Double> idealSpeedOption = getSpeedForRadius(idealCircle.radius);
 

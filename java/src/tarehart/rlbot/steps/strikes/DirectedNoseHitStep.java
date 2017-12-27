@@ -4,14 +4,12 @@ import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;
-import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPhysics;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
-import tarehart.rlbot.steps.travel.SlideToPositionStep;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.tuning.BotLog;
@@ -29,11 +27,11 @@ public class DirectedNoseHitStep implements Step {
     private GameTime doneMoment;
     private KickStrategy kickStrategy;
     private Vector3 interceptModifier = null;
-    private double worstCaseManeuverSeconds = 0;
-    private double estimatedAngleOfKickFromApproach;
+    private double carLaunchpadInterceptAngle;
     private SteerPlan circleTurnPlan;
     private DirectedKickPlan kickPlan;
     private CarData car;
+    private GameTime earliestPossibleIntercept;
 
     public DirectedNoseHitStep(KickStrategy kickStrategy) {
         this.kickStrategy = kickStrategy;
@@ -52,8 +50,8 @@ public class DirectedNoseHitStep implements Step {
         return !tooBouncy && !wrongSide;
     }
 
-    public double getEstimatedAngleOfKickFromApproach() {
-        return estimatedAngleOfKickFromApproach;
+    public double getCarLaunchpadInterceptAngle() {
+        return carLaunchpadInterceptAngle;
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -63,6 +61,10 @@ public class DirectedNoseHitStep implements Step {
         if (doneMoment == null && car.position.distance(input.ballPosition) < 4.5) {
             // You get a tiny bit more time
             doneMoment = input.time.plus(Duration.ofMillis(200));
+        }
+
+        if (earliestPossibleIntercept == null) {
+            earliestPossibleIntercept = input.time;
         }
 
         if (plan != null && !plan.isComplete()) {
@@ -82,9 +84,13 @@ public class DirectedNoseHitStep implements Step {
 
         final Optional<DirectedKickPlan> kickPlanOption;
         if (interceptModifier != null) {
-
-            StrikeProfile strikeProfile = new StrikeProfile(worstCaseManeuverSeconds, 0, 0);
-            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, false, interceptModifier, strikeProfile);
+            kickPlanOption = DirectedKickUtil.planKick(
+                    input,
+                    kickStrategy,
+                    false,
+                    interceptModifier,
+                    (space) -> new StrikeProfile(),
+                    earliestPossibleIntercept);
         } else {
             kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, false);
         }
@@ -105,17 +111,17 @@ public class DirectedNoseHitStep implements Step {
             }
         }
 
-
-        Double circleBackoff = 3 + kickPlan.ballAtIntercept.getSpace().z * 3; // Take more of a straight runway if the ball is high up.
+        Double circleBackoff = kickPlan.launchPad.distance(kickPlan.intercept.getSpace().flatten());
 
 
         Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten().normalized();
-        Vector3 carPositionAtIntercept = kickPlan.getCarPositionAtIntercept();
-        Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
-        Vector2 carPositionAtInterceptFlat = carPositionAtIntercept.flatten();
-        Vector2 circleTerminus = carPositionAtInterceptFlat.minus(strikeForceFlat.scaled(circleBackoff));
-        estimatedAngleOfKickFromApproach = getAngleOfKickFromApproach(car, kickPlan, circleTerminus);
-        double rendezvousCorrection = SteerUtil.getCorrectionAngleRad(car, circleTerminus);
+        Vector3 interceptLocation = kickPlan.intercept.getSpace();
+        Vector2 carToIntercept = interceptLocation.minus(car.position).flatten();
+        Vector2 interceptLocationFlat = interceptLocation.flatten();
+
+        carLaunchpadInterceptAngle = measureCarLaunchpadInterceptAngle(car, kickPlan);
+        double positionCorrectionForStrike = carToIntercept.correctionAngle(strikeForceFlat);
+        double orientationCorrectionForStrike = car.orientation.noseVector.flatten().correctionAngle(strikeForceFlat);
 
         circleTurnPlan = null;
 
@@ -124,56 +130,64 @@ public class DirectedNoseHitStep implements Step {
             interceptModifier = kickPlan.plannedKickForce.scaledToMagnitude(-1.4);
         }
 
-        if (carPositionAtIntercept.z > 2 && Math.abs(estimatedAngleOfKickFromApproach) < Math.PI / 20 && Math.abs(rendezvousCorrection) < Math.PI / 20) {
+        if (interceptLocation.z > 2 && Math.abs(positionCorrectionForStrike) < Math.PI / 12 && Math.abs(orientationCorrectionForStrike) < Math.PI / 12) {
             circleTurnPlan = null;
-            plan = new Plan().withStep(new InterceptStep(interceptModifier));
+            plan = new Plan().withStep(new InterceptStep(interceptModifier, (c, st) -> !st.time.isBefore(earliestPossibleIntercept)));
             return plan.getOutput(input);
         }
 
-        if (Math.abs(estimatedAngleOfKickFromApproach) < MAX_NOSE_HIT_ANGLE) {
-            circleTurnPlan = new SteerPlan(SteerUtil.steerTowardGroundPosition(car, carPositionAtInterceptFlat), carPositionAtInterceptFlat);
-        } else {
 
-            double correctionNeeded = Math.max(0, Math.abs(estimatedAngleOfKickFromApproach) - (MAX_NOSE_HIT_ANGLE * Math.signum(estimatedAngleOfKickFromApproach)));
-            double freshManeuverSeconds = getManeuverSeconds(correctionNeeded, car);
-            boolean maneuverSecondsStable = Math.abs(worstCaseManeuverSeconds - freshManeuverSeconds) < .1;
-            worstCaseManeuverSeconds = Math.max(worstCaseManeuverSeconds, freshManeuverSeconds);
+        double freshManeuverSeconds = getManeuverSeconds();
+        GameTime earliestThisTime = kickPlan.intercept.getTime().plusSeconds(freshManeuverSeconds).minus(kickPlan.intercept.getSpareTime());
+        double timeMismatch = Duration.between(earliestPossibleIntercept, earliestThisTime).getSeconds();
 
-
-            if (maneuverSecondsStable && Vector2.angle(carToIntercept, strikeForceFlat) > 2 * Math.PI / 3) {
-                // If we're planning to turn a huge amount, this is a waste of time.
-                return Optional.empty();
-            }
-
-            double secondsTillIntercept = Duration.between(input.time, kickPlan.ballAtIntercept.getTime()).getSeconds();
-
-            double asapSeconds = kickPlan.distancePlot
-                    .getMotionUponArrival(
-                        car,
-                        kickPlan.ballAtIntercept.getSpace(),
-                        new StrikeProfile(freshManeuverSeconds, 10, .3))
-                    .map(DistanceTimeSpeed::getTime)
-                    .orElse(secondsTillIntercept);
-
-            if (secondsTillIntercept > asapSeconds + .5) {
-                plan = new Plan(Plan.Posture.OFFENSIVE)
-                        .withStep(new SlideToPositionStep((in) -> new PositionFacing(circleTerminus, strikeForceFlat)));
-                return plan.getOutput(input);
-            }
-
-            // Line up for a nose hit
-            circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, circleTerminus, strikeForceFlat);
-            if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0)) < -1) {
-                println("Failing nose hit because waypoint is out of bounds", input.playerIndex);
-                return empty();
-            }
+        if (Math.abs(timeMismatch) < .2 && positionCorrectionForStrike > Math.PI / 3 && carToIntercept.magnitude() > 20) {
+            // If we're planning to turn a huge amount, this is a waste of time.
+            return Optional.empty();
         }
+
+        // If you're facing the intercept, but the circle backoff wants you to backtrack, you should just wait
+        // for a later intercept instead.
+        boolean waitForLaterIntercept = Math.abs(carLaunchpadInterceptAngle) > Math.PI / 2 && Math.abs(orientationCorrectionForStrike) < Math.PI / 2;
+
+        if (waitForLaterIntercept) {
+            earliestPossibleIntercept = earliestPossibleIntercept.plusSeconds(.5);
+        } else if (kickPlan.intercept.getSpace().z < AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD) {
+            earliestPossibleIntercept = earliestPossibleIntercept.plusSeconds(timeMismatch / 2);
+        } else if (Math.abs(positionCorrectionForStrike) < MAX_NOSE_HIT_ANGLE) {
+            circleTurnPlan = new SteerPlan(SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat), interceptLocationFlat);
+            return getNavigation(input, circleTurnPlan);
+        }
+
+        double secondsTillIntercept = Duration.between(input.time, kickPlan.ballAtIntercept.getTime()).getSeconds();
+
+        double asapSeconds = kickPlan.distancePlot
+                .getMotionUponArrival(
+                    car,
+                    kickPlan.ballAtIntercept.getSpace(),
+                    new StrikeProfile())
+                .map(DistanceTimeSpeed::getTime)
+                .orElse(secondsTillIntercept);
+
+//            if (secondsTillIntercept > asapSeconds + .5) {
+//                plan = new Plan(Plan.Posture.OFFENSIVE)
+//                        .withStep(new SlideToPositionStep((in) -> new PositionFacing(circleTerminus, strikeForceFlat)));
+//                return plan.getOutput(input);
+//            }
+
+        // Line up for a nose hit
+        circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, kickPlan.launchPad, strikeForceFlat);
+        if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0)) < -1) {
+            println("Failing nose hit because waypoint is out of bounds", input.playerIndex);
+            return empty();
+        }
+
 
         return getNavigation(input, circleTurnPlan);
     }
 
-    private double getManeuverSeconds(double curveRideAngle, CarData car) {
-        double seconds = curveRideAngle * .1;
+    private double getManeuverSeconds() {
+        double seconds = carLaunchpadInterceptAngle * .1;
         if (circleTurnPlan != null) {
             double noseToWaypoint = Vector2.angle(circleTurnPlan.waypoint.minus(car.position.flatten()), car.orientation.noseVector.flatten());
             seconds += noseToWaypoint * .4;
@@ -181,9 +195,13 @@ public class DirectedNoseHitStep implements Step {
         return seconds;
     }
 
-    private static double getAngleOfKickFromApproach(CarData car, DirectedKickPlan kickPlan, Vector2 launchPad) {
+    /**
+     * First you drive from where you are now to the launchpad.
+     * Then you have to
+     */
+    private static double measureCarLaunchpadInterceptAngle(CarData car, DirectedKickPlan kickPlan) {
         Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten();
-        Vector2 carToLaunchPad = launchPad.minus(car.position.flatten());
+        Vector2 carToLaunchPad = kickPlan.launchPad.minus(car.position.flatten());
         return carToLaunchPad.correctionAngle(strikeForceFlat);
     }
 
@@ -215,7 +233,6 @@ public class DirectedNoseHitStep implements Step {
 
         if (Plan.activePlan(plan).isPresent()) {
             plan.getCurrentStep().drawDebugInfo(graphics);
-            return;
         }
 
         if (circleTurnPlan != null) {

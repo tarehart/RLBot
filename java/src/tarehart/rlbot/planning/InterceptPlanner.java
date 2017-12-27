@@ -10,28 +10,29 @@ import java.util.Optional;
 
 public class InterceptPlanner {
 
-    public static Optional<Plan> planImmediateLaunch(CarData car, SpaceTime intercept) {
+    public static Optional<Plan> planImmediateLaunch(CarData car, Intercept intercept) {
 
-        double height = intercept.space.z;
-        if (height > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) {
+        double height = intercept.getSpace().z;
+        StrikeProfile.Style strikeStyle = intercept.getStrikeProfile().style;
+        if (strikeStyle == StrikeProfile.Style.AERIAL) {
             AerialChecklist checklist = AirTouchPlanner.checkAerialReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
                 BotLog.println("Performing Aerial!", car.playerIndex);
 
-                double groundDistance = car.position.flatten().distance(intercept.space.flatten());
+                double groundDistance = car.position.flatten().distance(intercept.getSpace().flatten());
                 double radiansForTilt = Math.atan2(height, groundDistance) + MidairStrikeStep.UPWARD_VELOCITY_MAINTENANCE_ANGLE;
 
                 double tiltBackSeconds = radiansForTilt * .35;
 
-                if (Duration.between(car.time, intercept.time).getSeconds() > 1.5 && intercept.space.z > 10) {
-                    return Optional.of(SetPieces.performDoubleJumpAerial(tiltBackSeconds));
+                if (Duration.between(car.time, intercept.getTime()).getSeconds() > 1.5 && intercept.getSpace().z > 10) {
+                    return Optional.of(SetPieces.performDoubleJumpAerial(tiltBackSeconds * .8));
                 }
                 return Optional.of(SetPieces.performAerial(tiltBackSeconds));
             }
             return Optional.empty();
         }
 
-        if (height > AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD && AirTouchPlanner.isJumpHitAccessible(car, intercept)) {
+        if (strikeStyle == StrikeProfile.Style.JUMP_HIT) {
             LaunchChecklist checklist = AirTouchPlanner.checkJumpHitReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
                 BotLog.println("Performing JumpHit!", car.playerIndex);
@@ -40,7 +41,7 @@ public class InterceptPlanner {
             return Optional.empty();
         }
 
-        if (height > AirTouchPlanner.NEEDS_FRONT_FLIP_THRESHOLD && AirTouchPlanner.isFlipHitAccessible(car, intercept)) {
+        if (strikeStyle == StrikeProfile.Style.FLIP_HIT) {
             LaunchChecklist checklist = AirTouchPlanner.checkFlipHitReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
                 BotLog.println("Performing FlipHit!", car.playerIndex);

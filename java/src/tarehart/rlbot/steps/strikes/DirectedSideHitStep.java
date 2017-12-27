@@ -58,8 +58,8 @@ public class DirectedSideHitStep implements Step {
 
         final Optional<DirectedKickPlan> kickPlanOption;
         if (interceptModifier != null) {
-            StrikeProfile strikeProfile = new StrikeProfile(maneuverSeconds, 0, 0);
-            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, strikeProfile);
+            StrikeProfile strikeProfile = new StrikeProfile(maneuverSeconds, 0, 0, StrikeProfile.Style.SIDE_HIT);
+            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, (space) -> strikeProfile, input.time);
         } else {
             kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true);
         }
@@ -86,7 +86,7 @@ public class DirectedSideHitStep implements Step {
         }
 
         Vector2 strikeDirection = kickPlan.plannedKickForce.flatten().normalized();
-        Vector3 carPositionAtIntercept = kickPlan.getCarPositionAtIntercept();
+        Vector3 carPositionAtIntercept = kickPlan.intercept.getSpace();
 
         Vector2 orthogonalPoint = carPositionAtIntercept.flatten();
 

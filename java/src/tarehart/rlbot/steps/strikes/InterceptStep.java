@@ -22,21 +22,28 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class InterceptStep implements Step {
-    public static final StrikeProfile AERIAL_STRIKE_PROFILE = new StrikeProfile(0, 0, 0);
-    public static final StrikeProfile FLIP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, .3);
+    public static final StrikeProfile AERIAL_STRIKE_PROFILE = new StrikeProfile(0, 0, 0, StrikeProfile.Style.AERIAL);
+    public static final StrikeProfile FLIP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, .3, StrikeProfile.Style.FLIP_HIT);
     public static final double PROBABLY_TOUCHING_THRESHOLD = 5.5;
     private Plan plan;
     private Vector3 interceptModifier;
     private GameTime doneMoment;
     private Intercept originalIntercept;
     private Intercept chosenIntercept;
+    private BiPredicate<CarData, SpaceTime> interceptPredicate;
 
     public InterceptStep(Vector3 interceptModifier) {
+        this(interceptModifier, (c, st) -> true);
+    }
+
+    public InterceptStep(Vector3 interceptModifier, BiPredicate<CarData, SpaceTime> predicate) {
         this.interceptModifier = interceptModifier;
+        this.interceptPredicate = predicate;
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -62,16 +69,16 @@ public class InterceptStep implements Step {
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), carData.boost, 0);
+        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(7), carData.boost, 0);
 
-        Optional<Intercept> soonestInterceptOption = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier);
+        Optional<Intercept> soonestInterceptOption = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate);
         if (!soonestInterceptOption.isPresent()) {
             println("No intercept option found, aborting.", input.playerIndex);
             return Optional.empty();
         }
         chosenIntercept = soonestInterceptOption.get();
 
-        Optional<Plan> launchPlan = InterceptPlanner.planImmediateLaunch(input.getMyCarData(), chosenIntercept.toSpaceTime());
+        Optional<Plan> launchPlan = InterceptPlanner.planImmediateLaunch(input.getMyCarData(), chosenIntercept);
         if (launchPlan.isPresent()) {
             plan = launchPlan.get();
             plan.unstoppable();
@@ -95,36 +102,42 @@ public class InterceptStep implements Step {
         return Optional.of(getThereOnTime(input, chosenIntercept));
     }
 
-    public static Optional<Intercept> getSoonestIntercept(CarData carData, BallPath ballPath, DistancePlot fullAcceleration, Vector3 interceptModifier) {
+    public static Optional<Intercept> getSoonestIntercept(
+            CarData carData,
+            BallPath ballPath,
+            DistancePlot fullAcceleration,
+            Vector3 interceptModifier,
+            BiPredicate<CarData, SpaceTime> interceptPredicate) {
         List<Intercept> interceptOptions = new ArrayList<>();
-        getAerialIntercept(carData, ballPath, interceptModifier).ifPresent(interceptOptions::add);
-        getJumpHitIntercept(carData, ballPath, fullAcceleration, interceptModifier).ifPresent(interceptOptions::add);
-        getFlipHitIntercept(carData, ballPath, fullAcceleration, interceptModifier).ifPresent(interceptOptions::add);
+        getAerialIntercept(carData, ballPath, interceptModifier, interceptPredicate).ifPresent(interceptOptions::add);
+        getJumpHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate).ifPresent(interceptOptions::add);
+        getFlipHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate).ifPresent(interceptOptions::add);
 
         return interceptOptions.stream().sorted(Comparator.comparing(Intercept::getTime)).findFirst();
     }
 
-    private static Optional<Intercept> getAerialIntercept(CarData carData, BallPath ballPath, Vector3 interceptModifier) {
+    private static Optional<Intercept> getAerialIntercept(CarData carData, BallPath ballPath, Vector3 interceptModifier, BiPredicate<CarData, SpaceTime> interceptPredicate) {
         if (carData.boost >= AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL) {
 
-            Vector3 averageNoseVector = ballPath.getMotionAt(carData.time.plusSeconds(1)).get().space.minus(carData.position).normaliseCopy();
+            double distance = carData.position.flatten().distance(ballPath.getStartPoint().space.flatten());
+            Vector3 averageNoseVector = ballPath.getMotionAt(carData.time.plusSeconds(distance * .02)).get().space.minus(carData.position).normaliseCopy();
 
-            DistancePlot budgetAcceleration = AccelerationModel.simulateAirAcceleration(carData, Duration.ofSeconds(4), averageNoseVector);
-            return SteerUtil.getFilteredInterceptOpportunity(carData, ballPath, budgetAcceleration, interceptModifier, AirTouchPlanner::isVerticallyAccessible, (space) -> AERIAL_STRIKE_PROFILE);
+            DistancePlot budgetAcceleration = AccelerationModel.simulateAirAcceleration(carData, Duration.ofSeconds(4), averageNoseVector.flatten().magnitude());
+
+            return SteerUtil.getFilteredInterceptOpportunity(carData, ballPath, budgetAcceleration, interceptModifier,
+                    interceptPredicate.and(AirTouchPlanner::isVerticallyAccessible), (space) -> AERIAL_STRIKE_PROFILE);
         }
         return Optional.empty();
     }
 
-    private static Optional<Intercept> getJumpHitIntercept(CarData carData, BallPath ballPath, DistancePlot fullAcceleration, Vector3 interceptModifier) {
+    private static Optional<Intercept> getJumpHitIntercept(CarData carData, BallPath ballPath, DistancePlot fullAcceleration, Vector3 interceptModifier, BiPredicate<CarData, SpaceTime> interceptPredicate) {
         return SteerUtil.getFilteredInterceptOpportunity(
-                carData, ballPath, fullAcceleration, interceptModifier, AirTouchPlanner::isJumpHitAccessible, (space) -> {
-                    double jumpTime = ManeuverMath.secondsForMashJumpHeight(space.z).orElse(ManeuverMath.MASH_JUMP_HEIGHT);
-                    return new StrikeProfile(jumpTime, 10, .3);
-                });
+                carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate.and(AirTouchPlanner::isJumpHitAccessible), AirTouchPlanner::getJumpHitStrikeProfile);
     }
 
-    private static Optional<Intercept> getFlipHitIntercept(CarData carData, BallPath ballPath, DistancePlot fullAcceleration, Vector3 interceptModifier) {
-        return SteerUtil.getFilteredInterceptOpportunity(carData, ballPath, fullAcceleration, interceptModifier, AirTouchPlanner::isFlipHitAccessible, (space) -> FLIP_HIT_STRIKE_PROFILE);
+    private static Optional<Intercept> getFlipHitIntercept(CarData carData, BallPath ballPath, DistancePlot fullAcceleration, Vector3 interceptModifier, BiPredicate<CarData, SpaceTime> interceptPredicate) {
+        return SteerUtil.getFilteredInterceptOpportunity(carData, ballPath, fullAcceleration, interceptModifier,
+                interceptPredicate.and(AirTouchPlanner::isFlipHitAccessible), (space) -> FLIP_HIT_STRIKE_PROFILE);
     }
 
     private AgentOutput getThereOnTime(AgentInput input, Intercept intercept) {
@@ -184,7 +197,6 @@ public class InterceptStep implements Step {
 
         if (Plan.activePlan(plan).isPresent()) {
             plan.getCurrentStep().drawDebugInfo(graphics);
-            return;
         }
 
         if (chosenIntercept != null) {

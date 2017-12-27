@@ -20,7 +20,20 @@ import tarehart.rlbot.time.GameTime;
 
 import java.util.concurrent.ExecutionException;
 
+/*
+TODO: Start using a real arena mesh.
+it's not that hard to get, i'm just using this tool to decrypt .upk files
+https://www.reddit.com/r/RocketLeague/comments/5751g0/i_fixed_the_decryptor_tool_we_now_have_exact/
+then using umodel to scroll through the models and export .psk files
+http://www.gildor.org/en/projects/umodel
+i'm using blender it has an addon to import psk files
 
+-Marvin
+
+TODO: Try using the libgdx wrapper around the bullet physics engine instead of ODE:
+https://github.com/libgdx/libgdx/wiki/Bullet-physics
+This gives us a much clearer path to importing the arena model, and possibly better performance.
+ */
 public class ArenaModel {
 
     public static final float SIDE_WALL = 81.92f;

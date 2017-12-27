@@ -1,6 +1,17 @@
 package tarehart.rlbot.planning;
 
+import tarehart.rlbot.time.Duration;
+
 public class StrikeProfile {
+
+    public enum Style {
+        RAM,
+        FLIP_HIT,
+        SIDE_HIT,
+        JUMP_HIT,
+        AERIAL
+    }
+
     /**
      * the extra approach time added by final maneuvers before striking the ball
      */
@@ -16,10 +27,21 @@ public class StrikeProfile {
      */
     public double dodgeSeconds;
 
+    public Style style;
 
-    public StrikeProfile(double maneuverSeconds, double speedBoost, double dodgeSeconds) {
+
+    public StrikeProfile(double maneuverSeconds, double speedBoost, double dodgeSeconds, Style style) {
         this.maneuverSeconds = maneuverSeconds;
         this.speedBoost = speedBoost;
         this.dodgeSeconds = dodgeSeconds;
+        this.style = style;
+    }
+
+    public StrikeProfile() {
+        this(0, 0, 0, Style.RAM);
+    }
+
+    public Duration getTotalDuration() {
+        return Duration.ofSeconds(maneuverSeconds + dodgeSeconds);
     }
 }

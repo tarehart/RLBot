@@ -19,7 +19,7 @@ public class AccelerationModel {
     private static final double FRONT_FLIP_SPEED_BOOST = 10;
     private static final double INCREMENTAL_BOOST_ACCELERATION = 15;
 
-    private static final double AIR_BOOST_ACCELERATION = 21.163;
+    private static final double AIR_BOOST_ACCELERATION = 19; // It's a tiny bit faster, but account for course correction wiggle
     private static final double BOOST_CONSUMED_PER_SECOND = 25;
     public static final double FLIP_THRESHOLD_SPEED = 20;
 
@@ -116,7 +116,7 @@ public class AccelerationModel {
         return (speed + FRONT_FLIP_SPEED_BOOST) * FRONT_FLIP_SECONDS;
     }
 
-    public static DistancePlot simulateAirAcceleration(CarData car, Duration duration, Vector3 averageNoseVector) {
+    public static DistancePlot simulateAirAcceleration(CarData car, Duration duration, double horizontalPitchComponent) {
         double currentSpeed = car.velocity.flatten().magnitude();
         DistancePlot plot = new DistancePlot(new DistanceTimeSpeed(0, 0, currentSpeed));
 
@@ -129,7 +129,7 @@ public class AccelerationModel {
 
         while (secondsSoFar < secondsToSimulate) {
 
-            double acceleration = boostRemaining > 0 ? averageNoseVector.flatten().magnitude() * AIR_BOOST_ACCELERATION : 0;
+            double acceleration = boostRemaining > 0 ? horizontalPitchComponent * AIR_BOOST_ACCELERATION : 0;
             currentSpeed += acceleration * TIME_STEP;
             if (currentSpeed > SUPERSONIC_SPEED) {
                 currentSpeed = SUPERSONIC_SPEED;

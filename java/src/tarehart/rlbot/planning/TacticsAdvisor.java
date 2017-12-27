@@ -23,6 +23,7 @@ import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 
 import java.util.Optional;
+import java.util.function.BiPredicate;
 
 import static tarehart.rlbot.planning.Plan.Posture.ESCAPEGOAL;
 import static tarehart.rlbot.planning.Plan.Posture.NEUTRAL;
@@ -141,7 +142,7 @@ public class TacticsAdvisor {
         if (!generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
             Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, car.boost);
             if (catchOpportunity.isPresent()) {
-                return new Plan(Plan.Posture.OFFENSIVE).withStep(new CatchBallStep()).withStep(new DribbleStep());
+                return new Plan(Plan.Posture.OFFENSIVE).withStep(new CatchBallStep());
             }
         }
 
@@ -152,9 +153,10 @@ public class TacticsAdvisor {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new MountWallStep()).withStep(new WallTouchStep()).withStep(new DescendFromWallStep());
         } else if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex) &&
                 DirectedNoseHitStep.canMakeDirectedKick(input, new KickAtEnemyGoal())) {
-            return new Plan(Plan.Posture.OFFENSIVE)
+            return new FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(new DirectedNoseHitStep(new KickAtEnemyGoal()))
-                    .withStep(new DirectedNoseHitStep(new FunnelTowardEnemyGoal()));
+                    .withStep(new DirectedNoseHitStep(new FunnelTowardEnemyGoal()))
+                    .withStep(new GetOnOffenseStep());
         } else if (car.boost < 50) {
             return new Plan().withStep(new GetBoostStep());
         } else if (getYAxisWrongSidedness(input) > 0) {
@@ -246,7 +248,7 @@ public class TacticsAdvisor {
 
     private static Optional<Intercept> getSoonestIntercept(CarData car, BallPath ballPath) {
         DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, PLAN_HORIZON, car.boost);
-        return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, new Vector3());
+        return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, new Vector3(), (c, st) -> true);
     }
 
     private boolean getForceDefensivePosture(Bot.Team team, CarData myCar, Optional<CarData> opponentCar,
@@ -334,6 +336,12 @@ public class TacticsAdvisor {
     public static double getYAxisWrongSidedness(AgentInput input) {
         Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
         double playerToBallY = input.ballPosition.y - input.getMyCarData().position.y;
+        return playerToBallY * Math.signum(ownGoalCenter.y);
+    }
+
+    public static double getYAxisWrongSidedness(CarData car, Vector3 ball) {
+        Vector3 ownGoalCenter = GoalUtil.getOwnGoal(car.team).getCenter();
+        double playerToBallY = ball.y - car.position.y;
         return playerToBallY * Math.signum(ownGoalCenter.y);
     }
 

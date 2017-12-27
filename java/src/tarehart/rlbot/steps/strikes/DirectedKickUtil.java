@@ -10,21 +10,30 @@ import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.tuning.ManeuverMath;
 
 import java.util.Optional;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 
 public class DirectedKickUtil {
     private static final double BALL_VELOCITY_INFLUENCE = .3;
 
     public static Optional<DirectedKickPlan> planKick(AgentInput input, KickStrategy kickStrategy, boolean isSideHit) {
         Vector3 interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2);
-        StrikeProfile strikeProfile = new StrikeProfile(.5, 0, 0);
-        return planKick(input, kickStrategy, isSideHit, interceptModifier, strikeProfile);
+        StrikeProfile strikeProfile = new StrikeProfile();
+        return planKick(input, kickStrategy, isSideHit, interceptModifier, (space) -> strikeProfile, input.time);
     }
 
-    static Optional<DirectedKickPlan> planKick(AgentInput input, KickStrategy kickStrategy, boolean isSideHit, Vector3 interceptModifier, StrikeProfile strikeProfile) {
+    static Optional<DirectedKickPlan> planKick(
+            AgentInput input,
+            KickStrategy kickStrategy,
+            boolean isSideHit,
+            Vector3 interceptModifier,
+            Function<Vector3, StrikeProfile> strikeFn,
+            GameTime earliestPossibleIntercept) {
+
         final DirectedKickPlan kickPlan = new DirectedKickPlan();
         kickPlan.interceptModifier = interceptModifier;
 
@@ -35,16 +44,19 @@ public class DirectedKickUtil {
 
 
         BiPredicate<CarData, SpaceTime> verticalPredicate = isSideHit ? AirTouchPlanner::isJumpHitAccessible : AirTouchPlanner::isVerticallyAccessible;
-        BiPredicate<CarData, SpaceTime> overallPredicate = (cd, st) -> verticalPredicate.test(cd, st) && kickStrategy.looksViable(cd, st.space);
+        BiPredicate<CarData, SpaceTime> overallPredicate = (cd, st) -> !st.time.isBefore(earliestPossibleIntercept) &&
+                verticalPredicate.test(cd, st) &&
+                kickStrategy.looksViable(cd, st.space);
 
         Optional<Intercept> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(
                 car, kickPlan.ballPath, kickPlan.distancePlot, interceptModifier,
-                overallPredicate, (space) -> strikeProfile);
+                overallPredicate, strikeFn);
         Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> kickPlan.ballPath.getMotionAt(inter.getTime()));
 
         if (!ballMotion.isPresent() || !interceptOpportunity.isPresent()) {
             return Optional.empty();
         }
+        kickPlan.intercept = interceptOpportunity.get();
         kickPlan.ballAtIntercept = ballMotion.get();
 
         double secondsTillImpactRoughly = Duration.between(input.time, kickPlan.ballAtIntercept.getTime()).getSeconds();
@@ -106,7 +118,7 @@ public class DirectedKickUtil {
 
     static double getAngleOfKickFromApproach(CarData car, DirectedKickPlan kickPlan) {
         Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten();
-        Vector3 carPositionAtIntercept = kickPlan.getCarPositionAtIntercept();
+        Vector3 carPositionAtIntercept = kickPlan.intercept.getSpace();
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
         return carToIntercept.correctionAngle(strikeForceFlat);
     }
