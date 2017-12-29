@@ -11,9 +11,9 @@ public class CarPredictor {
     public static CarPath predictCarMotion(CarData car, Duration duration) {
 
         Vector3 velocity = new Vector3(
-                car.velocity.x,
-                car.velocity.y,
-                car.hasWheelContact && Math.abs(car.velocity.z) < .2  ? 0 : car.velocity.z);
+                car.velocity.getX(),
+                car.velocity.getY(),
+                car.hasWheelContact && Math.abs(car.velocity.getZ()) < .2  ? 0 : car.velocity.getZ());
 
         CarSlice initialSlice = new CarSlice(car.position, car.time, velocity, car.orientation);
 

@@ -27,20 +27,20 @@ public class DistancePlot {
         return plot;
     }
 
-    public Optional<DistanceTimeSpeed> getMotionAfterDuration(double time) {
-        if (time < plot.get(0).getTime() || time > plot.get(plot.size() - 1).getTime()) {
+    public Optional<DistanceTimeSpeed> getMotionAfterDuration(Duration time) {
+        if (time.compareTo(plot.get(0).getTime()) < 0 || time.compareTo(plot.get(plot.size() - 1).getTime()) > 0) {
             return Optional.empty();
         }
 
         for (int i = 0; i < plot.size() - 1; i++) {
             DistanceTimeSpeed current = plot.get(i);
             DistanceTimeSpeed next = plot.get(i + 1);
-            if (next.getTime() > time) {
+            if (next.getTime().compareTo(time) > 0) {
 
-                double simulationStepSeconds = next.getTime() - current.getTime();
-                double tweenPoint = (time - current.getTime()) / simulationStepSeconds;
-                double distance = (1 - tweenPoint) * current.distance + tweenPoint * next.distance;
-                double speed = (1 - tweenPoint) * current.speed + tweenPoint * next.speed;
+                double simulationStepSeconds = next.getTime().getSeconds() - current.getTime().getSeconds();
+                double tweenPoint = (time.getSeconds() - current.getTime().getSeconds()) / simulationStepSeconds;
+                double distance = (1 - tweenPoint) * current.getDistance() + tweenPoint * next.getDistance();
+                double speed = (1 - tweenPoint) * current.getSpeed() + tweenPoint * next.getSpeed();
                 return Optional.of(new DistanceTimeSpeed(distance, time, speed));
             }
         }
@@ -53,18 +53,18 @@ public class DistancePlot {
         for (int i = 0; i < plot.size() - 1; i++) {
             DistanceTimeSpeed current = plot.get(i);
             DistanceTimeSpeed next = plot.get(i + 1);
-            if (next.distance > distance) {
-                double simulationStepSeconds = next.getTime() - current.getTime();
-                double tweenPoint = (distance - current.distance) / (next.distance - current.distance);
-                double moment = current.getTime() + simulationStepSeconds * tweenPoint;
-                double speed = (1 - tweenPoint) * current.speed + tweenPoint * next.speed;
+            if (next.getDistance() > distance) {
+                double simulationStepSeconds = next.getTime().getSeconds() - current.getTime().getSeconds();
+                double tweenPoint = (distance - current.getDistance()) / (next.getDistance() - current.getDistance());
+                Duration moment = current.getTime().plusSeconds(simulationStepSeconds * tweenPoint);
+                double speed = (1 - tweenPoint) * current.getSpeed() + tweenPoint * next.getSpeed();
                 return Optional.of(new DistanceTimeSpeed(distance, moment, speed));
             }
         }
         return Optional.empty();
     }
 
-    public Optional<Double> getTravelTime(double distance) {
+    public Optional<Duration> getTravelTime(double distance) {
         Optional<DistanceTimeSpeed> motionAt = getMotionAfterDistance(distance);
         return motionAt.map(DistanceTimeSpeed::getTime);
     }
@@ -74,7 +74,7 @@ public class DistancePlot {
         double orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination) + strikeProfile.maneuverSeconds;
         double distance = carData.position.flatten().distance(destination.flatten());
 
-        return getMotionAfterDistance(distance).map(dts -> new DistanceTimeSpeed(dts.distance, dts.time + orientSeconds, dts.speed));
+        return getMotionAfterDistance(distance).map(dts -> new DistanceTimeSpeed(dts.getDistance(), dts.getTime().plusSeconds(orientSeconds), dts.getSpeed()));
 
         // TODO: incorporate the speedup from the strike profile.
     }
@@ -87,27 +87,27 @@ public class DistancePlot {
         double secondsSpentAccelerating = Math.max(0, totalSeconds - orientSeconds);
 
         if (strikeProfile.dodgeSeconds == 0 || strikeProfile.speedBoost == 0) {
-            Optional<DistanceTimeSpeed> motion = getMotionAfterDuration(secondsSpentAccelerating);
-            return motion.map(dts -> new DistanceTimeSpeed(dts.distance, totalSeconds, dts.speed));
+            Optional<DistanceTimeSpeed> motion = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating));
+            return motion.map(dts -> new DistanceTimeSpeed(dts.getDistance(), time, dts.getSpeed()));
         }
 
         double speedupSeconds = strikeProfile.dodgeSeconds;
         double speedBoost = strikeProfile.speedBoost;
         if (secondsSpentAccelerating < speedupSeconds) {
             // Not enough time for a full strike.
-            double beginningSpeed = plot.get(0).speed;
+            double beginningSpeed = plot.get(0).getSpeed();
             double increasedSpeed = Math.min(beginningSpeed + speedBoost, AccelerationModel.SUPERSONIC_SPEED);
-            return Optional.of(new DistanceTimeSpeed(increasedSpeed * secondsSpentAccelerating, totalSeconds, increasedSpeed));
+            return Optional.of(new DistanceTimeSpeed(increasedSpeed * secondsSpentAccelerating, time, increasedSpeed));
         }
 
         double accelSecondsBeforeStrike = secondsSpentAccelerating - speedupSeconds;
-        Optional<DistanceTimeSpeed> dtsOption = getMotionAfterDuration(accelSecondsBeforeStrike);
+        Optional<DistanceTimeSpeed> dtsOption = getMotionAfterDuration(Duration.ofSeconds(accelSecondsBeforeStrike));
 
         if (dtsOption.isPresent()) {
             DistanceTimeSpeed dts = dtsOption.get();
-            double beginningSpeed = dts.speed;
+            double beginningSpeed = dts.getSpeed();
             double increasedSpeed = Math.min(beginningSpeed + speedBoost, AccelerationModel.SUPERSONIC_SPEED);
-            return Optional.of(new DistanceTimeSpeed(dts.distance + increasedSpeed * speedupSeconds, totalSeconds, increasedSpeed));
+            return Optional.of(new DistanceTimeSpeed(dts.getDistance() + increasedSpeed * speedupSeconds, time, increasedSpeed));
         } else {
             // We ran out of data in the distance plot.
             return Optional.empty();

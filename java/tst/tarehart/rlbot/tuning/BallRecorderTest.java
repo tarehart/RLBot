@@ -32,7 +32,7 @@ public class BallRecorderTest {
         Path path = list.sorted().findFirst().get();
         String json = Files.readAllLines(path).get(0);
         BallPath ballPath = new Gson().fromJson(json, BallPath.class);
-        Assert.assertEquals(2, ballPath.getEndpoint().getSpace().z, 0.0001);
+        Assert.assertEquals(2, ballPath.getEndpoint().getSpace().getZ(), 0.0001);
 
     }
 

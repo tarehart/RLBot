@@ -172,7 +172,7 @@ public class TacticsAdvisor {
 
         Vector2 goalCenter = goal.getCenter().flatten();
         Vector2 ballToGoal = goalCenter.minus(expectedContact);
-        boolean generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI / 4;
+        boolean generousAngle = Vector2.Companion.angle(goalCenter, ballToGoal) < Math.PI / 4;
         boolean generousTriangle = measureShotTriangle(goal, expectedContact, playerIndex) > Math.PI / 12;
 
         return generousAngle || generousTriangle;
@@ -188,7 +188,7 @@ public class TacticsAdvisor {
         Vector2 toRightPost = goal.getRightPost().flatten().minus(position);
         Vector2 toLeftPost = goal.getLeftPost().flatten().minus(position);
 
-        double angle = Vector2.angle(toLeftPost, toRightPost);
+        double angle = Vector2.Companion.angle(toLeftPost, toRightPost);
         // BotLog.println(String.format("Shot angle: %.2f", angle), playerIndex);
 
         return angle;
@@ -213,8 +213,8 @@ public class TacticsAdvisor {
         situation.ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).getCenter(), futureBallMotion.getSpace());
         situation.distanceBallIsBehindUs = measureOutOfPosition(input);
         situation.enemyOffensiveApproachError = situation.expectedEnemyContact.map(contact -> measureEnemyApproachError(input, contact.toSpaceTime()));
-        double enemyGoalY = GoalUtil.getEnemyGoal(input.team).getCenter().y;
-        situation.distanceFromEnemyBackWall = Math.abs(enemyGoalY - futureBallMotion.space.y);
+        double enemyGoalY = GoalUtil.getEnemyGoal(input.team).getCenter().getY();
+        situation.distanceFromEnemyBackWall = Math.abs(enemyGoalY - futureBallMotion.space.getY());
         situation.distanceFromEnemyCorner = getDistanceFromEnemyCorner(futureBallMotion, enemyGoalY);
         situation.futureBallMotion = futureBallMotion;
 
@@ -236,8 +236,8 @@ public class TacticsAdvisor {
         Vector2 positiveCorner = ArenaModel.CORNER_ANGLE_CENTER;
         double goalSign = Math.signum(enemyGoalY);
 
-        Vector2 corner1 = new Vector2(positiveCorner.x, positiveCorner.y * goalSign);
-        Vector2 corner2 = new Vector2(-positiveCorner.x, positiveCorner.y * goalSign);
+        Vector2 corner1 = new Vector2(positiveCorner.getX(), positiveCorner.getY() * goalSign);
+        Vector2 corner2 = new Vector2(-positiveCorner.getX(), positiveCorner.getY() * goalSign);
 
         Vector2 ballFutureFlat = futureBallMotion.space.flatten();
 
@@ -262,9 +262,9 @@ public class TacticsAdvisor {
         if(zonePlan.isPresent()) {
             if(ballPosition.flatten().magnitudeSquared() == 0) {
                 if (team == Bot.Team.BLUE)
-                    return zonePlan.get().myZone.mainZone == Zone.MainZone.BLUE;
+                    return zonePlan.get().getMyZone().mainZone == Zone.MainZone.BLUE;
                 else
-                    return zonePlan.get().myZone.mainZone == Zone.MainZone.ORANGE;
+                    return zonePlan.get().getMyZone().mainZone == Zone.MainZone.ORANGE;
             }
         }
 
@@ -296,13 +296,13 @@ public class TacticsAdvisor {
         if(zonePlan.isPresent()
             && (myBallDistance > enemyBallDistance // Enemy is closer
                 || myDistanceToGoal > ballDistanceToGoal) // Wrong side of the ball
-            && (zonePlan.get().ballZone.subZone == Zone.SubZone.TOPCORNER
-                || zonePlan.get().ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
+            && (zonePlan.get().getBallZone().subZone == Zone.SubZone.TOPCORNER
+                || zonePlan.get().getBallZone().subZone == Zone.SubZone.BOTTOMCORNER)) {
 
             if (input.team == Bot.Team.BLUE)
-                return zonePlan.get().ballZone.mainZone == Zone.MainZone.BLUE;
+                return zonePlan.get().getBallZone().mainZone == Zone.MainZone.BLUE;
             else
-                return zonePlan.get().ballZone.mainZone == Zone.MainZone.ORANGE;
+                return zonePlan.get().getBallZone().mainZone == Zone.MainZone.ORANGE;
         }
 
         return false;
@@ -321,7 +321,7 @@ public class TacticsAdvisor {
 
         Vector3 carToBall = enemyContact.space.minus(enemyCar.position);
 
-        return Vector2.angle(ballToGoal.flatten(), carToBall.flatten());
+        return Vector2.Companion.angle(ballToGoal.flatten(), carToBall.flatten());
     }
 
 
@@ -336,14 +336,14 @@ public class TacticsAdvisor {
 
     public static double getYAxisWrongSidedness(AgentInput input) {
         Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
-        double playerToBallY = input.ballPosition.y - input.getMyCarData().position.y;
-        return playerToBallY * Math.signum(ownGoalCenter.y);
+        double playerToBallY = input.ballPosition.getY() - input.getMyCarData().position.getY();
+        return playerToBallY * Math.signum(ownGoalCenter.getY());
     }
 
     public static double getYAxisWrongSidedness(CarData car, Vector3 ball) {
         Vector3 ownGoalCenter = GoalUtil.getOwnGoal(car.team).getCenter();
-        double playerToBallY = ball.y - car.position.y;
-        return playerToBallY * Math.signum(ownGoalCenter.y);
+        double playerToBallY = ball.getY() - car.position.getY();
+        return playerToBallY * Math.signum(ownGoalCenter.getY());
     }
 
 }

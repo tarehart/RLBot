@@ -78,7 +78,7 @@ public class DribbleStep implements Step {
             double velocityCorrectionAngle = ballVelocityFlat.correctionAngle(ballToGoal);
             double angleTweak = Math.min(Math.PI / 6, Math.max(-Math.PI / 6, velocityCorrectionAngle * ballSpeed / 10));
             pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normalized();
-            approachDistance = VectorUtil.project(toBallFlat, new Vector2(pushDirection.y, -pushDirection.x)).magnitude() * 1.6 + .8;
+            approachDistance = VectorUtil.project(toBallFlat, new Vector2(pushDirection.getY(), -pushDirection.getX())).magnitude() * 1.6 + .8;
             approachDistance = Math.min(approachDistance, 4);
             pressurePoint = futureBallPosition.minus(pushDirection.normalized().scaled(approachDistance));
         } else {
@@ -92,18 +92,18 @@ public class DribbleStep implements Step {
 
         GameTime hurryUp = input.time.plusSeconds(leadSeconds);
 
-        boolean hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.ballPosition.z > 2;
+        boolean hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.ballPosition.getZ() > 2;
         if (!hasLineOfSight) {
             // Steer toward a farther-back waypoint.
             Vector2 fallBack = VectorUtil.orthogonal(pushDirection, v -> v.dotProduct(ballToGoal) < 0).scaledToMagnitude(5);
 
-            return Optional.of(SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(fallBack.x, fallBack.y, 0), hurryUp)));
+            return Optional.of(SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(fallBack.getX(), fallBack.getY(), 0), hurryUp)));
         }
 
-        AgentOutput dribble = SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(pressurePoint.x, pressurePoint.y, 0), hurryUp));
+        AgentOutput dribble = SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
         if (carToPressurePoint.normalized().dotProduct(ballToGoal.normalized()) > .80 &&
-                flatDistance > 3 && flatDistance < 5 && input.ballPosition.z < 2 && approachDistance < 2
-                && Vector2.angle(myDirectionFlat, carToPressurePoint) < Math.PI / 12) {
+                flatDistance > 3 && flatDistance < 5 && input.ballPosition.getZ() < 2 && approachDistance < 2
+                && Vector2.Companion.angle(myDirectionFlat, carToPressurePoint) < Math.PI / 12) {
             if (car.boost > 0) {
                 dribble.withAcceleration(1).withBoost();
             } else {
@@ -143,14 +143,14 @@ public class DribbleStep implements Step {
             return false;
         }
 
-        if (BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 50) {
+        if (BallPhysics.getGroundBounceEnergy(input.ballPosition.getZ(), input.ballVelocity.getZ()) > 50) {
             if (log) {
                 println("Ball bouncing too hard to dribble", input.playerIndex);
             }
             return false;
         }
 
-        if (car.position.z > 5) {
+        if (car.position.getZ() > 5) {
             if (log) {
                 println("Car too high to dribble", input.playerIndex);
             }

@@ -58,7 +58,7 @@ public class SlideToPositionStep implements Step {
             }
 
 
-            double angle = Vector2.angle(toTarget, car.orientation.noseVector.flatten());
+            double angle = Vector2.Companion.angle(toTarget, car.orientation.noseVector.flatten());
             if (angle < Math.PI / 12) {
                 phase = TRAVEL;
             } else {
@@ -132,8 +132,8 @@ public class SlideToPositionStep implements Step {
                 graphics.setStroke(new BasicStroke(1));
                 Vector2 position = target.getPosition();
                 int crossSize = 2;
-                graphics.draw(new Line2D.Double(position.x - crossSize, position.y - crossSize, position.x + crossSize, position.y + crossSize));
-                graphics.draw(new Line2D.Double(position.x - crossSize, position.y + crossSize, position.x + crossSize, position.y - crossSize));
+                graphics.draw(new Line2D.Double(position.getX() - crossSize, position.getY() - crossSize, position.getX() + crossSize, position.getY() + crossSize));
+                graphics.draw(new Line2D.Double(position.getX() - crossSize, position.getY() + crossSize, position.getX() + crossSize, position.getY() - crossSize));
         }
     }
 }

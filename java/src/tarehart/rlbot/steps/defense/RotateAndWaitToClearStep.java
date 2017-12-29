@@ -46,8 +46,8 @@ public class RotateAndWaitToClearStep implements Step {
                             .map(telem -> telem.futureBallMotion.space)
                             .orElse(in.ballPosition);
 
-                    Vector2 targetPosition = new Vector2(Math.signum(futureBallPosition.x) * CENTER_OFFSET, goalCenter.y - Math.signum(goalCenter.y) * AWAY_FROM_GOAL);
-                    Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.x), 0);
+                    Vector2 targetPosition = new Vector2(Math.signum(futureBallPosition.getX()) * CENTER_OFFSET, goalCenter.getY() - Math.signum(goalCenter.getY()) * AWAY_FROM_GOAL);
+                    Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.getX()), 0);
                     return new PositionFacing(targetPosition, targetFacing);
                 }))
                 .withStep(new BlindStep(1, new AgentOutput()));

@@ -171,11 +171,11 @@ public class ArenaModel {
     }
 
     public static boolean isInBoundsBall(Vector3 location) {
-        return Math.abs(location.x) < SIDE_WALL - BALL_RADIUS && Math.abs(location.y) < BACK_WALL - BALL_RADIUS;
+        return Math.abs(location.getX()) < SIDE_WALL - BALL_RADIUS && Math.abs(location.getY()) < BACK_WALL - BALL_RADIUS;
     }
 
     public static boolean isBehindGoalLine(Vector3 position) {
-        return Math.abs(position.y) > BACK_WALL;
+        return Math.abs(position.getY()) > BACK_WALL;
     }
 
     public static BallPath predictBallPath(AgentInput input) {
@@ -218,10 +218,10 @@ public class ArenaModel {
 
 
         // 45 angle corners
-        addWallToWorld(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0), arenaBody);
-        addWallToWorld(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0), arenaBody);
-        addWallToWorld(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0), arenaBody);
-        addWallToWorld(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0), arenaBody);
+        addWallToWorld(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
+        addWallToWorld(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
+        addWallToWorld(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
+        addWallToWorld(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
 
         // 45 degree angle rails on sides
         addWallToWorld(new Vector3(1, 0, 1), new Vector3(-SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
@@ -238,16 +238,16 @@ public class ArenaModel {
         float normalizedFlats = .5f;
         addWallToWorld(
                 new Vector3(normalizedFlats, normalizedFlats, normalizedVertical),
-                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
+                new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
         addWallToWorld(
                 new Vector3(-normalizedFlats, normalizedFlats, normalizedVertical),
-                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
+                new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
         addWallToWorld(
                 new Vector3(normalizedFlats, -normalizedFlats, normalizedVertical),
-                new Vector3((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
+                new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
         addWallToWorld(
                 new Vector3(-normalizedFlats, -normalizedFlats, normalizedVertical),
-                new Vector3((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, RAIL_HEIGHT), arenaBody);
+                new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
 
     }
 
@@ -261,7 +261,7 @@ public class ArenaModel {
 
         Vector3 finalPosition = position.plus(thicknessTweak);
 
-        box.setOffsetPosition(finalPosition.x, finalPosition.y, finalPosition.z);
+        box.setOffsetPosition(finalPosition.getX(), finalPosition.getY(), finalPosition.getZ());
 
         Vector3 straightUp = new Vector3(0, 0, 1);
         DQuaternionC quat = getRotationFrom(straightUp, normal);
@@ -277,7 +277,7 @@ public class ArenaModel {
 
         Vector3 cross = fromVec.crossProduct(toVec);
         float magnitude = (float) (Math.sqrt(fromVec.magnitudeSquared() * toVec.magnitudeSquared()) + fromVec.dotProduct(toVec));
-        DQuaternion rot = new DQuaternion(magnitude, cross.x, cross.y, cross.z);
+        DQuaternion rot = new DQuaternion(magnitude, cross.getX(), cross.getY(), cross.getZ());
         rot.normalize();
         return rot;
     }
@@ -328,7 +328,7 @@ public class ArenaModel {
             Vector3 ballVelocity = getBallVelocity();
             Vector3 ballSpin = getBallSpin();
             Vector3 ballPosition = getBallPosition();
-            if (Math.abs(ballPosition.y) > BACK_WALL + BALL_RADIUS) {
+            if (Math.abs(ballPosition.getY()) > BACK_WALL + BALL_RADIUS) {
                 // The ball has crossed the goal plane. Freeze it in place.
                 // This is handy for making the bot not give up on saves / follow through on shots.
                 ball.getBody().setKinematic();
@@ -347,7 +347,7 @@ public class ArenaModel {
     }
 
     private static DVector3C toV3f(Vector3 v) {
-        return new DVector3(v.x, v.y, v.z);
+        return new DVector3(v.getX(), v.getY(), v.getZ());
     }
 
     private static Vector3 toV3(DVector3C v) {
@@ -359,17 +359,17 @@ public class ArenaModel {
     }
 
     public static double getDistanceFromWall(Vector3 position) {
-        double sideWall = SIDE_WALL - Math.abs(position.x);
-        double backWall = BACK_WALL - Math.abs(position.y);
-        double diagonal = CORNER_ANGLE_CENTER.x + CORNER_ANGLE_CENTER.y - Math.abs(position.x) - Math.abs(position.y);
+        double sideWall = SIDE_WALL - Math.abs(position.getX());
+        double backWall = BACK_WALL - Math.abs(position.getY());
+        double diagonal = CORNER_ANGLE_CENTER.getX() + CORNER_ANGLE_CENTER.getY() - Math.abs(position.getX()) - Math.abs(position.getY());
         return Math.min(Math.min(sideWall, backWall), diagonal);
     }
 
     public static boolean isCarOnWall(CarData car) {
-        return car.hasWheelContact && isCarNearWall(car) && Math.abs(car.orientation.roofVector.z) < 0.05;
+        return car.hasWheelContact && isCarNearWall(car) && Math.abs(car.orientation.roofVector.getZ()) < 0.05;
     }
 
     public static boolean isNearFloorEdge(CarData car) {
-        return Math.abs(car.position.x) > Goal.EXTENT && getDistanceFromWall(car.position) + car.position.z < 6;
+        return Math.abs(car.position.getX()) > Goal.EXTENT && getDistanceFromWall(car.position) + car.position.getZ() < 6;
     }
 }

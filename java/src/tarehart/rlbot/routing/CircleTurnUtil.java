@@ -19,27 +19,27 @@ public class CircleTurnUtil {
         Vector2 facing = car.orientation.noseVector.flatten();
 
         Vector2 flatPosition = car.position.flatten();
-        Circle idealCircle = Circle.getCircleFromPoints(targetTail, targetNose, flatPosition);
+        Circle idealCircle = Circle.Companion.getCircleFromPoints(targetTail, targetNose, flatPosition);
 
-        boolean clockwise = Circle.isClockwise(idealCircle, targetPosition, targetFacing);
+        boolean clockwise = Circle.Companion.isClockwise(idealCircle, targetPosition, targetFacing);
 
-        Vector2 centerToMe = flatPosition.minus(idealCircle.center);
-        Vector2 idealDirection = VectorUtil.orthogonal(centerToMe, v -> Circle.isClockwise(idealCircle, flatPosition, v) == clockwise).normalized();
+        Vector2 centerToMe = flatPosition.minus(idealCircle.getCenter());
+        Vector2 idealDirection = VectorUtil.orthogonal(centerToMe, v -> Circle.Companion.isClockwise(idealCircle, flatPosition, v) == clockwise).normalized();
 
 //        if (facing.dotProduct(idealDirection) < .7) {
 //            AgentOutput output = steerTowardGroundPosition(car, flatPosition.plus(idealDirection));
 //            return new SteerPlan(output, targetPosition);
 //        }
 
-        Optional<Double> idealSpeedOption = getSpeedForRadius(idealCircle.radius);
+        Optional<Double> idealSpeedOption = getSpeedForRadius(idealCircle.getRadius());
 
         double idealSpeed = idealSpeedOption.orElse(5.0);
 
         double speedRatio = currentSpeed / idealSpeed; // Ideally should be 1
 
         double lookaheadRadians = Math.PI / 20;
-        Vector2 centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(idealCircle.center), lookaheadRadians * (clockwise ? -1 : 1));
-        Vector2 steerTarget = idealCircle.center.plus(centerToSteerTarget);
+        Vector2 centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(idealCircle.getCenter()), lookaheadRadians * (clockwise ? -1 : 1));
+        Vector2 steerTarget = idealCircle.getCenter().plus(centerToSteerTarget);
 
         AgentOutput output = SteerUtil.steerTowardGroundPosition(car, steerTarget).withBoost(false).withSlide(false).withDeceleration(0).withAcceleration(1);
 
@@ -96,7 +96,7 @@ public class CircleTurnUtil {
 
         double distance = car.position.flatten().distance(targetPosition);
         double maxSpeed = distancePlot.getMotionAfterDistance(distance)
-                .map(dts -> dts.speed)
+                .map(dts -> dts.getSpeed())
                 .orElse(AccelerationModel.SUPERSONIC_SPEED);
         double idealSpeed = getIdealCircleSpeed(car, targetFacing);
         double currentSpeed = car.velocity.magnitude();

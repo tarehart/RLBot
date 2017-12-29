@@ -76,7 +76,7 @@ public class GetOnOffenseStep implements Step {
 
 
 
-        if (Math.abs(target.x) < ArenaModel.SIDE_WALL * .8) {
+        if (Math.abs(target.getX()) < ArenaModel.SIDE_WALL * .8) {
             // Get into a strike position, 10 units behind the ball
             Vector3 goalToBall = target.minus(enemyGoal.getCenter());
             Vector3 goalToBallNormal = goalToBall.normaliseCopy();

@@ -28,7 +28,7 @@ public class DirectedKickPlan {
 
         Vector2 carAtOffset = intercept.getSpace().flatten();
         int crossSize = 2;
-        graphics.draw(new Line2D.Double(carAtOffset.x - crossSize, carAtOffset.y - crossSize, carAtOffset.x + crossSize, carAtOffset.y + crossSize));
-        graphics.draw(new Line2D.Double(carAtOffset.x - crossSize, carAtOffset.y + crossSize, carAtOffset.x + crossSize, carAtOffset.y - crossSize));
+        graphics.draw(new Line2D.Double(carAtOffset.getX() - crossSize, carAtOffset.getY() - crossSize, carAtOffset.getX() + crossSize, carAtOffset.getY() + crossSize));
+        graphics.draw(new Line2D.Double(carAtOffset.getX() - crossSize, carAtOffset.getY() + crossSize, carAtOffset.getX() + crossSize, carAtOffset.getY() - crossSize));
     }
 }

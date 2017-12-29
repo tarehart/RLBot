@@ -32,11 +32,11 @@ public class WallTouchStep implements Step {
     private Vector3 originalIntercept;
 
     private static boolean isBallOnWall(CarData car, SpaceTime ballPosition) {
-        return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE;
+        return ballPosition.space.getZ() > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE;
     }
 
     private static boolean isBallOnWall(BallSlice ballPosition) {
-        return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE;
+        return ballPosition.space.getZ() > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE;
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {

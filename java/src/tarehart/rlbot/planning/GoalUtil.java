@@ -31,6 +31,6 @@ public class GoalUtil {
     }
 
     public static Goal getNearestGoal(Vector3 position) {
-        return position.y > 0 ? ORANGE_GOAL : BLUE_GOAL;
+        return position.getY() > 0 ? ORANGE_GOAL : BLUE_GOAL;
     }
 }

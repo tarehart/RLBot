@@ -49,12 +49,12 @@ public class VectorUtil {
 
     public static Vector2 rotateVector(Vector2 vec, double radians) {
         return new Vector2(
-                vec.x * Math.cos(radians) - vec.y * Math.sin(radians),
-                vec.x * Math.sin(radians) + vec.y * Math.cos(radians));
+                vec.getX() * Math.cos(radians) - vec.getY() * Math.sin(radians),
+                vec.getX() * Math.sin(radians) + vec.getY() * Math.cos(radians));
     }
 
     public static Vector2 orthogonal(Vector2 vec) {
-        return new Vector2(vec.y, -vec.x);
+        return new Vector2(vec.getY(), -vec.getX());
     }
 
     /**

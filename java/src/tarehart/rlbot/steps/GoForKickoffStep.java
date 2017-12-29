@@ -53,10 +53,10 @@ public class GoForKickoffStep implements Step {
             return plan.getOutput(input);
         }
 
-        double ySide = Math.signum(car.position.y);
+        double ySide = Math.signum(car.position.getY());
 
         Vector2 target;
-        if (kickoffType == KickoffType.CHEATIN && Math.abs(car.position.y) > CHEATIN_BOOST_Y + 10) {
+        if (kickoffType == KickoffType.CHEATIN && Math.abs(car.position.getY()) > CHEATIN_BOOST_Y + 10) {
             // Steer toward boost
             target = new Vector2(0, ySide * CHEATIN_BOOST_Y);
         } else if (distance > 30) {
@@ -68,7 +68,7 @@ public class GoForKickoffStep implements Step {
     }
 
     private KickoffType getKickoffType(CarData car) {
-        double xPosition = car.position.x;
+        double xPosition = car.position.getX();
         if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM) {
             BotLog.println("it be center", car.playerIndex);
             return KickoffType.CENTER;

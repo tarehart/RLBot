@@ -77,12 +77,12 @@ public class InterceptCalculator {
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
                 double interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space, planeNormal);
-                if (dts.distance > interceptDistance) {
+                if (dts.getDistance() > interceptDistance) {
                     if (firstMomentInRange == null) {
                         firstMomentInRange = spaceTime.time;
                     }
                     if (predicate.test(carData, spaceTime)) {
-                        double boostNeeded = spaceTime.space.z > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD ? AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL : 0;
+                        double boostNeeded = spaceTime.space.getZ() > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD ? AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL : 0;
                         Duration spareTime = Duration.between(firstMomentInRange, spaceTime.time);
                         return Optional.of(new Intercept(spaceTime.space, spaceTime.time, boostNeeded, strikeProfile, acceleration, spareTime));
                     }
@@ -124,7 +124,7 @@ public class InterceptCalculator {
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
                 double interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space);
-                if (dts.distance > interceptDistance) {
+                if (dts.getDistance() > interceptDistance) {
                     return Optional.of(intercept);
                 }
             } else {

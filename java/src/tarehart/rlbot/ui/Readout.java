@@ -68,7 +68,7 @@ public class Readout {
         situationText.setText(situation);
         predictionTimeSeconds.setText(String.format("%.2f", predictionTime.getValue() / 1000.0));
         // ballHeightPredicted.setValue(0); // Commented out to avoid flicker. Should always be fresh anyway.
-        ballHeightActual.setValue((int) (input.ballPosition.z * HEIGHT_BAR_MULTIPLIER));
+        ballHeightActual.setValue((int) (input.ballPosition.getZ() * HEIGHT_BAR_MULTIPLIER));
 
         // Filter log before appending
         String filterValue = logFilter.getText();
@@ -91,7 +91,7 @@ public class Readout {
         Optional<Vector3> ballPredictionOption = getBallPrediction(input);
         if (ballPredictionOption.isPresent()) {
             Vector3 ballPrediction = ballPredictionOption.get();
-            ballHeightPredicted.setValue((int) (ballPrediction.z * HEIGHT_BAR_MULTIPLIER));
+            ballHeightPredicted.setValue((int) (ballPrediction.getZ() * HEIGHT_BAR_MULTIPLIER));
             arenaDisplay.updateBallPrediction(ballPrediction);
         }
 
@@ -161,7 +161,7 @@ public class Readout {
                 "\n" +
                 "Blue Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.team == Bot.Team.BLUE)).orElse("Unknown") + "\n" +
                 "Orng Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.team == Bot.Team.ORANGE)).orElse("Unknown") + "\n" +
-                "Ball Zone: " + zonePlanOpt.map(zp -> zp.ballZone.toString()).orElse("Unknown") + "\n" +
+                "Ball Zone: " + zonePlanOpt.map(zp -> zp.getBallZone().toString()).orElse("Unknown") + "\n" +
                 "\n" +
                 "Ball Spin: " + input.ballSpin + "\n" +
                 "\n" +
@@ -171,8 +171,8 @@ public class Readout {
     }
 
     private String printCarZone(ZonePlan zp, boolean ownZone) {
-        Zone zone = ownZone ? zp.myZone :
-                zp.opponentZone.isPresent() ? zp.opponentZone.get() : new Zone(Zone.MainZone.NONE, Zone.SubZone.NONE);
+        Zone zone = ownZone ? zp.getMyZone() :
+                zp.getOpponentZone() != null ? zp.getOpponentZone() : new Zone(Zone.MainZone.NONE, Zone.SubZone.NONE);
         return zone.mainZone + " " + zone.subZone;
     }
 

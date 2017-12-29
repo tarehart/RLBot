@@ -149,7 +149,7 @@ public class ArenaDisplay extends JPanel {
             graphics2D.setColor(new Color(186, 238, 216));
             graphics2D.setStroke(new BasicStroke(1));
             Vector2 waypoint = waypointOption.get();
-            Line2D.Double line = new Line2D.Double(myCar.position.x, myCar.position.y, waypoint.x, waypoint.y);
+            Line2D.Double line = new Line2D.Double(myCar.position.getX(), myCar.position.getY(), waypoint.getX(), waypoint.getY());
             graphics2D.draw(line);
         }
     }
@@ -158,9 +158,9 @@ public class ArenaDisplay extends JPanel {
         // Determine size and rotation of car
         Rectangle2D carShape = new Rectangle2D.Double(-CAR_LENGTH / 2, -CAR_WIDTH / 2, CAR_LENGTH, CAR_WIDTH);
         AffineTransform carTransformation = new AffineTransform();
-        carTransformation.translate(car.position.x, car.position.y);
-        carTransformation.rotate(car.orientation.noseVector.x, car.orientation.noseVector.y);
-        double scale = getHeightScaling(car.position.z);
+        carTransformation.translate(car.position.getX(), car.position.getY());
+        carTransformation.rotate(car.orientation.noseVector.getX(), car.orientation.noseVector.getY());
+        double scale = getHeightScaling(car.position.getZ());
         carTransformation.scale(scale, scale);
         Shape transformedCar = carTransformation.createTransformedShape(carShape);
 
@@ -177,8 +177,8 @@ public class ArenaDisplay extends JPanel {
 
         Ellipse2D.Double ballShape = new Ellipse2D.Double(-BALL_DRAW_RADIUS, -BALL_DRAW_RADIUS, BALL_DRAW_RADIUS * 2, BALL_DRAW_RADIUS * 2);
         AffineTransform ballTransform = new AffineTransform();
-        double scale = getHeightScaling(position.z);
-        ballTransform.translate(position.x, position.y);
+        double scale = getHeightScaling(position.getZ());
+        ballTransform.translate(position.getX(), position.getY());
         ballTransform.scale(scale, scale);
         Shape transformedBall = ballTransform.createTransformedShape(ballShape);
 
@@ -202,7 +202,7 @@ public class ArenaDisplay extends JPanel {
     private void drawBoost(Vector3 position, Graphics2D g) {
         Ellipse2D.Double ballShape = new Ellipse2D.Double(-BOOST_DRAW_RADIUS, -BOOST_DRAW_RADIUS, BOOST_DRAW_RADIUS * 2, BOOST_DRAW_RADIUS * 2);
         AffineTransform ballTransform = new AffineTransform();
-        ballTransform.translate(position.x, position.y);
+        ballTransform.translate(position.getX(), position.getY());
         Shape transformedBall = ballTransform.createTransformedShape(ballShape);
 
         g.setColor(BOOST_COLOR);
@@ -227,8 +227,8 @@ public class ArenaDisplay extends JPanel {
 
     private void drawDefensiveReachZones(TacticalSituation situation, Graphics2D g) {
         Vector3 myGoalCenter = GoalUtil.getOwnGoal(myCar.team).getCenter();
-        boolean myCarIsInNet = Math.signum(myCar.position.y) == Math.signum(myGoalCenter.y)
-                && Math.abs(myCar.position.y) > Math.abs(myGoalCenter.y);
+        boolean myCarIsInNet = Math.signum(myCar.position.getY()) == Math.signum(myGoalCenter.getY())
+                && Math.abs(myCar.position.getY()) > Math.abs(myGoalCenter.getY());
 
         if((situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) && myCarIsInNet) {
             g.setColor(new Color(0, 255, 0, 79));
@@ -239,8 +239,8 @@ public class ArenaDisplay extends JPanel {
         if(enemyCarOptional.isPresent()) {
             CarData enemyCar = enemyCarOptional.get();
             Vector3 enemyGoalCenter = GoalUtil.getEnemyGoal(myCar.team).getCenter();
-            boolean enemyCarIsInNet = Math.signum(enemyCar.position.y) == Math.signum(enemyGoalCenter.y)
-                    && Math.abs(enemyCar.position.y) > Math.abs(enemyGoalCenter.y);
+            boolean enemyCarIsInNet = Math.signum(enemyCar.position.getY()) == Math.signum(enemyGoalCenter.getY())
+                    && Math.abs(enemyCar.position.getY()) > Math.abs(enemyGoalCenter.getY());
 
             if (situation.shotOnGoalAvailable && enemyCarIsInNet) {
                 g.setColor(new Color(255, 0, 0, 79));

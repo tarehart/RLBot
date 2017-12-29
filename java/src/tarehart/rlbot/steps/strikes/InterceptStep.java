@@ -161,7 +161,7 @@ public class InterceptStep implements Step {
                 .getMotionAfterDuration(car, intercept.getSpace(), Duration.between(car.time, intercept.getTime()), intercept.getStrikeProfile());
 
         if (motionAfterStrike.isPresent()) {
-            double maxDistance = motionAfterStrike.get().distance;
+            double maxDistance = motionAfterStrike.get().getDistance();
             double pace = maxDistance / car.position.flatten().distance(intercept.getSpace().flatten());
 
             AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.getSpace().flatten(), car.boost <= intercept.getAirBoost());
@@ -205,8 +205,8 @@ public class InterceptStep implements Step {
             graphics.setStroke(new BasicStroke(1));
             Vector2 preStrike = chosenIntercept.getSpace().flatten();
             int crossSize = 2;
-            graphics.draw(new Line2D.Double(preStrike.x - crossSize, preStrike.y - crossSize, preStrike.x + crossSize, preStrike.y + crossSize));
-            graphics.draw(new Line2D.Double(preStrike.x - crossSize, preStrike.y + crossSize, preStrike.x + crossSize, preStrike.y - crossSize));
+            graphics.draw(new Line2D.Double(preStrike.getX() - crossSize, preStrike.getY() - crossSize, preStrike.getX() + crossSize, preStrike.getY() + crossSize));
+            graphics.draw(new Line2D.Double(preStrike.getX() - crossSize, preStrike.getY() + crossSize, preStrike.getX() + crossSize, preStrike.getY() - crossSize));
         }
     }
 }

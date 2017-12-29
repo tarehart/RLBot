@@ -15,12 +15,12 @@ public class LandMindlesslyStep implements Step {
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
         CarData car = input.getMyCarData();
-        if (car.position.z < .40f || ArenaModel.isCarNearWall(car) && car.position.z < 5) {
+        if (car.position.getZ() < .40f || ArenaModel.isCarNearWall(car) && car.position.getZ() < 5) {
             return Optional.empty();
         }
 
         if (ArenaModel.isCarOnWall(car)) {
-            Vector3 groundBeneathMe = new Vector3(car.position.x, car.position.y, 0);
+            Vector3 groundBeneathMe = new Vector3(car.position.getX(), car.position.getY(), 0);
             return Optional.of(SteerUtil.steerTowardWallPosition(car, groundBeneathMe));
         }
 

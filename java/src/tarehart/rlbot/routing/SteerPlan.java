@@ -34,16 +34,16 @@ public class SteerPlan {
     public void drawDebugInfo(Graphics2D graphics, CarData car) {
 
         graphics.setStroke(new BasicStroke(1));
-        graphics.draw(new Line2D.Double(car.position.x, car.position.y, waypoint.x, waypoint.y));
+        graphics.draw(new Line2D.Double(car.position.getX(), car.position.getY(), waypoint.getX(), waypoint.getY()));
         if (circle != null) {
             Shape circleShape = circle.toShape();
 
 
             //graphics.draw(circleShape);
 
-            Vector2 centerToWaypoint = waypoint.minus(circle.center);
-            Vector2 centerToFinal = target.getPosition().minus(circle.center);
-            double waypointAngle = Math.atan2(centerToWaypoint.y, centerToWaypoint.x);
+            Vector2 centerToWaypoint = waypoint.minus(circle.getCenter());
+            Vector2 centerToFinal = target.getPosition().minus(circle.getCenter());
+            double waypointAngle = Math.atan2(centerToWaypoint.getY(), centerToWaypoint.getX());
             double waypointDegrees = -waypointAngle * 180 / Math.PI;
             double radians = centerToWaypoint.correctionAngle(centerToFinal);
             double extent = -radians * 180 / Math.PI;

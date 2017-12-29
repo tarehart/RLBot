@@ -31,9 +31,9 @@ public class Goal {
 
         double adjustedExtent = EXTENT - ArenaModel.BALL_RADIUS - padding;
         double adjustedHeight = GOAL_HEIGHT - ArenaModel.BALL_RADIUS - padding;
-        double x = Math.min(adjustedExtent, Math.max(-adjustedExtent, ballPosition.x));
-        double z = Math.min(adjustedHeight, Math.max(ArenaModel.BALL_RADIUS, ballPosition.z));
-        return new Vector3(x, center.y, z);
+        double x = Math.min(adjustedExtent, Math.max(-adjustedExtent, ballPosition.getX()));
+        double z = Math.min(adjustedHeight, Math.max(ArenaModel.BALL_RADIUS, ballPosition.getZ()));
+        return new Vector3(x, center.getY(), z);
     }
 
     public Plane getThreatPlane() {
@@ -59,7 +59,7 @@ public class Goal {
      * From shooter's perspective
      */
     public Vector3 getLeftPost(double padding) {
-        return new Vector3(center.x - (EXTENT - padding) * Math.signum(center.y), center.y, center.z);
+        return new Vector3(center.getX() - (EXTENT - padding) * Math.signum(center.getY()), center.getY(), center.getZ());
     }
 
     /**
@@ -73,7 +73,7 @@ public class Goal {
      * From shooter's perspective
      */
     public Vector3 getRightPost(double padding) {
-        return new Vector3(center.x + (EXTENT - padding) * Math.signum(center.y), center.y, center.z);
+        return new Vector3(center.getX() + (EXTENT - padding) * Math.signum(center.getY()), center.getY(), center.getZ());
     }
 
     public boolean isInBox(Vector3 position) {

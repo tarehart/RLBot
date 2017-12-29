@@ -34,26 +34,26 @@ public class FunnelTowardEnemyGoal implements KickStrategy {
         Vector2 easyKickFlat = easyKick.flatten();
         Vector2 idealKick = getIdealDirection(car, ballPosition);
 
-        if (Vector2.angle(easyKickFlat, idealKick) < Math.PI / 8) {
+        if (Vector2.Companion.angle(easyKickFlat, idealKick) < Math.PI / 8) {
             return easyKick;
         }
 
-        return new Vector3(idealKick.x, idealKick.y, 0);
+        return new Vector3(idealKick.getX(), idealKick.getY(), 0);
     }
 
     private Vector2 getIdealDirection(CarData car, Vector3 ballPosition) {
         Goal enemyGoal = GoalUtil.getEnemyGoal(car.team);
-        if (enemyGoal.getCenter().y * ballPosition.y < 0) {
+        if (enemyGoal.getCenter().getY() * ballPosition.getY() < 0) {
             // Ball is not on the enemy side. Strange that you're using this strat.
-            return new Vector2(0, Math.signum(enemyGoal.getCenter().y));
+            return new Vector2(0, Math.signum(enemyGoal.getCenter().getY()));
         }
 
-        if (Math.abs(ballPosition.x) > 60) {
-            return new Vector2(0, Math.signum(ballPosition.y)); // bounce off corner toward goal
+        if (Math.abs(ballPosition.getX()) > 60) {
+            return new Vector2(0, Math.signum(ballPosition.getY())); // bounce off corner toward goal
         }
 
         Vector3 toEnemyGoal = enemyGoal.getCenter().minus(ballPosition);
-        Vector3 angleUpWall = new Vector3(Math.signum(toEnemyGoal.x), Math.signum(enemyGoal.getCenter().y), 0);
+        Vector3 angleUpWall = new Vector3(Math.signum(toEnemyGoal.getX()), Math.signum(enemyGoal.getCenter().getY()), 0);
         return angleUpWall.flatten().normalized();
     }
 }

@@ -56,7 +56,7 @@ public class LandGracefullyStep implements Step {
             return plan.getOutput(input);
         }
 
-        if (car.position.z < NEEDS_LANDING_HEIGHT || ArenaModel.isBehindGoalLine(car.position)) {
+        if (car.position.getZ() < NEEDS_LANDING_HEIGHT || ArenaModel.isBehindGoalLine(car.position)) {
             return Optional.empty();
         }
 
@@ -70,7 +70,7 @@ public class LandGracefullyStep implements Step {
     private static Plan planRotation(CarData car, Function<AgentInput, Vector2> facingFn, Bot.Team team) {
 
         CarOrientation current = car.orientation;
-        boolean pitchFirst = Math.abs(car.spin.pitchRate) > 1 || Math.abs(current.roofVector.z) > SIN_45;
+        boolean pitchFirst = Math.abs(car.spin.pitchRate) > 1 || Math.abs(current.roofVector.getZ()) > SIN_45;
 
         return new Plan()
                 .withStep(pitchFirst ? new PitchToPlaneStep(UP_VECTOR, true) : new YawToPlaneStep(UP_VECTOR, true))
@@ -80,7 +80,7 @@ public class LandGracefullyStep implements Step {
 
     private static Vector3 getFacingPlane(Vector2 desiredFacing) {
         Vector2 rightward = VectorUtil.rotateVector(desiredFacing, -Math.PI / 2);
-        return new Vector3(rightward.x, rightward.y, 0);
+        return new Vector3(rightward.getX(), rightward.getY(), 0);
     }
 
     @Override

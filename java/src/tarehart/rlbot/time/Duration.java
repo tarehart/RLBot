@@ -40,4 +40,12 @@ public class Duration implements Comparable<Duration> {
     public Duration plusSeconds(double seconds) {
         return new Duration(millis + (long) (seconds * 1000));
     }
+
+    public Duration minus(Duration other) {
+        return Duration.ofMillis(millis - other.millis);
+    }
+
+    public Duration plus(Duration other) {
+        return Duration.ofMillis(millis + other.millis);
+    }
 }

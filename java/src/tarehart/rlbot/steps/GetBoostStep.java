@@ -90,11 +90,11 @@ public class GetBoostStep implements Step {
         CarData carData = input.getMyCarData();
         DistancePlot distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), carData.boost);
         for (FullBoost boost : input.fullBoosts) {
-            Optional<Double> travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.location);
-            if (travelSeconds.isPresent() && travelSeconds.get() < minTime &&
-                    (boost.isActive || travelSeconds.get() - Duration.between(input.time, boost.activeTime).getSeconds() > 1)) {
+            Optional<Duration> travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.location);
+            if (travelSeconds.isPresent() && travelSeconds.get().getSeconds() < minTime &&
+                    (boost.isActive || travelSeconds.get().minus(Duration.between(input.time, boost.activeTime)).getSeconds() > 1)) {
 
-                minTime = travelSeconds.get();
+                minTime = travelSeconds.get().getSeconds();
                 nearestLocation = boost;
             }
         }
@@ -105,7 +105,7 @@ public class GetBoostStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
         Vector3 endpoint = ballPath.getEndpoint().getSpace();
         // Add a defensive bias.
-        Vector3 idealPlaceToGetBoost = new Vector3(endpoint.x, 40 * Math.signum(GoalUtil.getOwnGoal(input.team).getCenter().y), 0);
+        Vector3 idealPlaceToGetBoost = new Vector3(endpoint.getX(), 40 * Math.signum(GoalUtil.getOwnGoal(input.team).getCenter().getY()), 0);
         return getNearestBoost(input.fullBoosts, idealPlaceToGetBoost);
     }
 

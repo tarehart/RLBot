@@ -54,7 +54,7 @@ public class WhatASaveStep implements Step {
             Vector3 carToThreat = threat.space.minus(car.position);
             double carApproachVsBallApproach = carToThreat.flatten().correctionAngle(input.ballVelocity.flatten());
             // When carApproachVsBallApproach < 0, car is to the right of the ball, angle wise. Right is positive X when we're on the positive Y side of the field.
-            whichPost = Math.signum(-carApproachVsBallApproach * threat.space.y);
+            whichPost = Math.signum(-carApproachVsBallApproach * threat.space.getY());
 
         }
 
@@ -76,7 +76,7 @@ public class WhatASaveStep implements Step {
 
             goingForSuperJump = true;
 
-            double overheadHeight = overHeadSlice.get().space.z;
+            double overheadHeight = overHeadSlice.get().space.getZ();
             if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.time, overHeadSlice.get().time).getSeconds()) {
                 plan = SetPieces.jumpSuperHigh(overheadHeight);
                 return plan.getOutput(input);
@@ -86,7 +86,7 @@ public class WhatASaveStep implements Step {
         }
 
         if (Math.abs(carApproachVsBallApproach) > Math.PI / 5) {
-            plan = new Plan(Plan.Posture.SAVE).withStep(new InterceptStep(new Vector3(0, Math.signum(goal.getCenter().y) * 1.5, 0)));
+            plan = new Plan(Plan.Posture.SAVE).withStep(new InterceptStep(new Vector3(0, Math.signum(goal.getCenter().getY()) * 1.5, 0)));
             return plan.getOutput(input);
         }
 

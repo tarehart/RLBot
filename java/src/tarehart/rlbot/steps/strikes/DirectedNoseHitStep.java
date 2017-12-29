@@ -42,12 +42,12 @@ public class DirectedNoseHitStep implements Step {
     }
 
     public static boolean canMakeDirectedKick(AgentInput input, KickStrategy kickStrategy) {
-        boolean tooBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 30;
+        boolean tooBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.getZ(), input.ballVelocity.getZ()) > 30;
 
         Vector2 kickDirection = kickStrategy.getKickDirection(input).flatten();
         Vector2 carToBall = input.ballPosition.minus(input.getMyCarData().position).flatten();
 
-        double angle = Vector2.angle(kickDirection, carToBall);
+        double angle = Vector2.Companion.angle(kickDirection, carToBall);
 
         boolean wrongSide = angle > Math.PI * 2 / 3;
 
@@ -134,7 +134,7 @@ public class DirectedNoseHitStep implements Step {
             interceptModifier = kickPlan.plannedKickForce.scaledToMagnitude(-1.4);
         }
 
-        if (interceptLocation.z > 2 && Math.abs(positionCorrectionForStrike) < Math.PI / 12 && Math.abs(orientationCorrectionForStrike) < Math.PI / 12) {
+        if (interceptLocation.getZ() > 2 && Math.abs(positionCorrectionForStrike) < Math.PI / 12 && Math.abs(orientationCorrectionForStrike) < Math.PI / 12) {
             circleTurnPlan = null;
             plan = new Plan().withStep(new InterceptStep(interceptModifier, (c, st) -> !st.time.isBefore(earliestPossibleIntercept)));
             return plan.getOutput(input);
@@ -156,14 +156,12 @@ public class DirectedNoseHitStep implements Step {
 
         if (waitForLaterIntercept) {
             earliestPossibleIntercept = earliestPossibleIntercept.plusSeconds(.5);
-        } else if (kickPlan.intercept.getSpace().z < AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD) {
+        } else if (kickPlan.intercept.getSpace().getZ() < AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD) {
             earliestPossibleIntercept = earliestPossibleIntercept.plusSeconds(timeMismatch / 2);
         } else if (Math.abs(positionCorrectionForStrike) < MAX_NOSE_HIT_ANGLE) {
             circleTurnPlan = new SteerPlan(SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat), interceptLocationFlat);
             return getNavigation(input, circleTurnPlan);
         }
-
-        double secondsTillIntercept = Duration.between(input.time, kickPlan.ballAtIntercept.getTime()).getSeconds();
 
         double asapSeconds = kickPlan.distancePlot
                 .getMotionUponArrival(
@@ -171,7 +169,7 @@ public class DirectedNoseHitStep implements Step {
                     kickPlan.ballAtIntercept.getSpace(),
                     new StrikeProfile())
                 .map(DistanceTimeSpeed::getTime)
-                .orElse(secondsTillIntercept);
+                .orElse(Duration.between(input.time, kickPlan.ballAtIntercept.getTime())).getSeconds();
 
 //            if (secondsTillIntercept > asapSeconds + .5) {
 //                plan = new Plan(Plan.Posture.OFFENSIVE)
@@ -181,7 +179,7 @@ public class DirectedNoseHitStep implements Step {
 
         // Line up for a nose hit
         circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, kickPlan.launchPad, strikeForceFlat);
-        if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0)) < -1) {
+        if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.getX(), circleTurnPlan.waypoint.getY(), 0)) < -1) {
             println("Failing nose hit because waypoint is out of bounds", input.playerIndex);
             return empty();
         }
@@ -193,7 +191,7 @@ public class DirectedNoseHitStep implements Step {
     private double getManeuverSeconds() {
         double seconds = carLaunchpadInterceptAngle * .1;
         if (circleTurnPlan != null) {
-            double noseToWaypoint = Vector2.angle(circleTurnPlan.waypoint.minus(car.position.flatten()), car.orientation.noseVector.flatten());
+            double noseToWaypoint = Vector2.Companion.angle(circleTurnPlan.waypoint.minus(car.position.flatten()), car.orientation.noseVector.flatten());
             seconds += noseToWaypoint * .4;
         }
         return seconds;

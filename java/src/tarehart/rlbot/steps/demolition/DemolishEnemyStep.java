@@ -50,7 +50,7 @@ public class DemolishEnemyStep implements Step {
 
             double secondsTillContact = Duration.between(car.time, carIntercept.time).getSeconds();
 
-            if (secondsTillContact < .5 && !enemyCar.hasWheelContact && (enemyHadWheelContact || enemyCar.position.z - car.position.z > 1)) {
+            if (secondsTillContact < .5 && !enemyCar.hasWheelContact && (enemyHadWheelContact || enemyCar.position.getZ() - car.position.getZ() > 1)) {
                 steering.withJump();
                 if (!car.hasWheelContact) {
                     steering.withSteer(0); // Avoid dodging accidentally.

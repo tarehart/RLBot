@@ -30,7 +30,7 @@ public class SteerUtil {
 
         GameTime searchStart = carData.time;
 
-        double groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.getStartPoint().space.z, ballPath.getStartPoint().velocity.z);
+        double groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.getStartPoint().space.getZ(), ballPath.getStartPoint().velocity.getZ());
 
         if (groundBounceEnergy < 50) {
             return Optional.empty();
@@ -80,7 +80,7 @@ public class SteerUtil {
                 new StrikeProfile());
 
         double requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.space);
-        return dts.filter(travel -> travel.distance > requiredDistance).isPresent();
+        return dts.filter(travel -> travel.getDistance() > requiredDistance).isPresent();
     }
 
     public static double getCorrectionAngleRad(CarData carData, Vector3 target) {
@@ -125,12 +125,12 @@ public class SteerUtil {
 
     private static AgentOutput steerTowardGroundPositionFromWall(CarData carData, Vector2 position) {
         Vector2 toPositionFlat = position.minus(carData.position.flatten());
-        Vector3 carShadow = new Vector3(carData.position.x, carData.position.y, 0);
-        double heightOnWall = carData.position.z;
+        Vector3 carShadow = new Vector3(carData.position.getX(), carData.position.getY(), 0);
+        double heightOnWall = carData.position.getZ();
         Vector3 wallNormal = carData.orientation.roofVector;
         double distanceOntoField = VectorUtil.project(toPositionFlat, wallNormal.flatten()).magnitude();
         double wallWeight = heightOnWall / (heightOnWall + distanceOntoField);
-        Vector3 toPositionAlongSeam = new Vector3(toPositionFlat.x, toPositionFlat.y, 0).projectToPlane(wallNormal);
+        Vector3 toPositionAlongSeam = new Vector3(toPositionFlat.getX(), toPositionFlat.getY(), 0).projectToPlane(wallNormal);
         Vector3 seamPosition = carShadow.plus(toPositionAlongSeam.scaled(wallWeight));
 
         return steerTowardWallPosition(carData, seamPosition);
@@ -177,7 +177,7 @@ public class SteerUtil {
 
         Vector2 toTarget = target.minus(car.position.flatten());
         if (toTarget.magnitude() > 40 &&
-                Vector2.angle(car.orientation.noseVector.flatten(), toTarget) > 3 * Math.PI / 4 &&
+                Vector2.Companion.angle(car.orientation.noseVector.flatten(), toTarget) > 3 * Math.PI / 4 &&
                 (car.velocity.flatten().dotProduct(toTarget) > 0 || car.velocity.magnitude() < 5)) {
 
             return Optional.of(SetPieces.halfFlip(target));

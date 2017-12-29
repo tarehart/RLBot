@@ -12,7 +12,7 @@ public class StrikePlanner {
 
     public static Optional<Plan> planImmediateLaunch(CarData car, Intercept intercept) {
 
-        double height = intercept.getSpace().z;
+        double height = intercept.getSpace().getZ();
         StrikeProfile.Style strikeStyle = intercept.getStrikeProfile().style;
         if (strikeStyle == StrikeProfile.Style.AERIAL) {
             AerialChecklist checklist = AirTouchPlanner.checkAerialReadiness(car, intercept);
@@ -24,7 +24,7 @@ public class StrikePlanner {
 
                 double tiltBackSeconds = radiansForTilt * .35;
 
-                if (Duration.between(car.time, intercept.getTime()).getSeconds() > 1.5 && intercept.getSpace().z > 10) {
+                if (Duration.between(car.time, intercept.getTime()).getSeconds() > 1.5 && intercept.getSpace().getZ() > 10) {
                     return Optional.of(SetPieces.performDoubleJumpAerial(tiltBackSeconds * .8));
                 }
                 return Optional.of(SetPieces.performAerial(tiltBackSeconds));

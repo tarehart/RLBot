@@ -32,7 +32,7 @@ public class ArenaModelTest {
         float nextToBackWall = ArenaModel.BACK_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(0, nextToBackWall, 30), GameTime.now(), new Vector3()), Duration.ofSeconds(1));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertEquals(nextToBackWall, ballPath.getEndpoint().getSpace().y, .001);
+        Assert.assertEquals(nextToBackWall, ballPath.getEndpoint().getSpace().getY(), .001);
     }
 
     @Test
@@ -40,8 +40,8 @@ public class ArenaModelTest {
         ArenaModel model = new ArenaModel();
         float nextToBackWall = ArenaModel.BACK_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(Goal.EXTENT + 5, nextToBackWall, 30), GameTime.now(), new Vector3()), Duration.ofSeconds(4));
-        System.out.println(nextToBackWall - ballPath.getEndpoint().getSpace().y);
-        Assert.assertTrue(nextToBackWall - ballPath.getEndpoint().getSpace().y > 10);
+        System.out.println(nextToBackWall - ballPath.getEndpoint().getSpace().getY());
+        Assert.assertTrue(nextToBackWall - ballPath.getEndpoint().getSpace().getY() > 10);
     }
 
     @Test
@@ -50,8 +50,8 @@ public class ArenaModelTest {
         float nextToBackWall = ArenaModel.BACK_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(0, nextToBackWall, 30), GameTime.now(), new Vector3()), Duration.ofSeconds(4));
         System.out.println(ballPath.getEndpoint().getSpace());
-        Assert.assertEquals(0, ballPath.getEndpoint().space.x, .01);
-        Assert.assertEquals(nextToBackWall, ballPath.getEndpoint().space.y, .01);
+        Assert.assertEquals(0, ballPath.getEndpoint().space.getX(), .01);
+        Assert.assertEquals(nextToBackWall, ballPath.getEndpoint().space.getY(), .01);
     }
 
     @Test
@@ -59,8 +59,8 @@ public class ArenaModelTest {
         ArenaModel model = new ArenaModel();
         float nextToSideWall = ArenaModel.SIDE_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(nextToSideWall, 0, 30), GameTime.now(), new Vector3()), Duration.ofSeconds(4));
-        System.out.println(nextToSideWall - ballPath.getEndpoint().getSpace().x);
-        Assert.assertTrue(nextToSideWall - ballPath.getEndpoint().getSpace().x > 10);
+        System.out.println(nextToSideWall - ballPath.getEndpoint().getSpace().getX());
+        Assert.assertTrue(nextToSideWall - ballPath.getEndpoint().getSpace().getX() > 10);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class ArenaModelTest {
         float nextToSideWall = ArenaModel.SIDE_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(nextToSideWall, 0, 30), GameTime.now(), new Vector3()), Duration.ofSeconds(1));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertEquals(nextToSideWall, ballPath.getEndpoint().getSpace().x, .001);
+        Assert.assertEquals(nextToSideWall, ballPath.getEndpoint().getSpace().getX(), .001);
     }
 
     @Test
@@ -78,13 +78,13 @@ public class ArenaModelTest {
         float nextToSideWall = ArenaModel.SIDE_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(nextToSideWall - 10, 0, 30), GameTime.now(), new Vector3(20, 0, 0)), Duration.ofSeconds(1));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertEquals(0, ballPath.getEndpoint().getSpace().y, .001);
-        Assert.assertTrue(ballPath.getEndpoint().getVelocity().x < -10);
-        Assert.assertTrue(ballPath.getEndpoint().getVelocity().x > -20);
+        Assert.assertEquals(0, ballPath.getEndpoint().getSpace().getY(), .001);
+        Assert.assertTrue(ballPath.getEndpoint().getVelocity().getX() < -10);
+        Assert.assertTrue(ballPath.getEndpoint().getVelocity().getX() > -20);
 
         Optional<BallSlice> motionAfterBounce = ballPath.getMotionAfterWallBounce(1);
         Assert.assertTrue(motionAfterBounce.isPresent());
-        Assert.assertEquals(nextToSideWall, motionAfterBounce.get().getSpace().x, 3);
+        Assert.assertEquals(nextToSideWall, motionAfterBounce.get().getSpace().getX(), 3);
     }
 
     @Test
@@ -94,7 +94,7 @@ public class ArenaModelTest {
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(0, 0, 30), now, new Vector3(0, 10, 0)), Duration.ofMillis(200));
         System.out.println(ballPath.getEndpoint());
 
-        double yVal = ballPath.getMotionAt(now.plus(Duration.ofMillis(100))).get().getSpace().y;
+        double yVal = ballPath.getMotionAt(now.plus(Duration.ofMillis(100))).get().getSpace().getY();
         Assert.assertTrue(yVal < 1);
     }
 
@@ -104,14 +104,14 @@ public class ArenaModelTest {
         float nextToSideWall = ArenaModel.SIDE_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(0, 0, 30), GameTime.now(), new Vector3(60, 0, 5)), Duration.ofSeconds(2));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertEquals(0, ballPath.getEndpoint().getSpace().y, .6); // This is a bit weird to be honest
-        Assert.assertTrue(ballPath.getEndpoint().getVelocity().x < -10);
-        Assert.assertTrue(ballPath.getEndpoint().getVelocity().x > -60);
+        Assert.assertEquals(0, ballPath.getEndpoint().getSpace().getY(), .6); // This is a bit weird to be honest
+        Assert.assertTrue(ballPath.getEndpoint().getVelocity().getX() < -10);
+        Assert.assertTrue(ballPath.getEndpoint().getVelocity().getX() > -60);
 
         Optional<BallSlice> motionAfterBounce = ballPath.getMotionAfterWallBounce(1);
         Assert.assertTrue(motionAfterBounce.isPresent());
-        System.out.println(nextToSideWall - motionAfterBounce.get().getSpace().x);
-        Assert.assertTrue(nextToSideWall - motionAfterBounce.get().getSpace().x < 2.5);
+        System.out.println(nextToSideWall - motionAfterBounce.get().getSpace().getX());
+        Assert.assertTrue(nextToSideWall - motionAfterBounce.get().getSpace().getX() < 2.5);
     }
 
     @Test
@@ -120,7 +120,7 @@ public class ArenaModelTest {
         float nextToSideWall = ArenaModel.SIDE_WALL - ArenaModel.BALL_RADIUS;
         BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(nextToSideWall, ArenaModel.BACK_WALL * .7, 30), GameTime.now(), new Vector3(0, 30, 0)), Duration.ofSeconds(3));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertTrue(nextToSideWall - ballPath.getEndpoint().getSpace().x > 10);
+        Assert.assertTrue(nextToSideWall - ballPath.getEndpoint().getSpace().getX() > 10);
     }
 
     @Test
@@ -150,8 +150,8 @@ public class ArenaModelTest {
 
         BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(3));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertTrue(ballPath.getEndpoint().velocity.y < -1); // Opposite of game
-        Assert.assertTrue(ballPath.getEndpoint().space.y < -1);
+        Assert.assertTrue(ballPath.getEndpoint().velocity.getY() < -1); // Opposite of game
+        Assert.assertTrue(ballPath.getEndpoint().space.getY() < -1);
     }
 
     @Test
@@ -165,8 +165,8 @@ public class ArenaModelTest {
 
         BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(3));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertTrue(ballPath.getEndpoint().velocity.x > 1); // opposite of game
-        Assert.assertTrue(ballPath.getEndpoint().space.x > 1);
+        Assert.assertTrue(ballPath.getEndpoint().velocity.getX() > 1); // opposite of game
+        Assert.assertTrue(ballPath.getEndpoint().space.getX() > 1);
     }
 
     @Test
@@ -180,8 +180,8 @@ public class ArenaModelTest {
 
         BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(1));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertTrue(ballPath.getEndpoint().velocity.x > 1);
-        Assert.assertTrue(ballPath.getEndpoint().space.x > 1);
+        Assert.assertTrue(ballPath.getEndpoint().velocity.getX() > 1);
+        Assert.assertTrue(ballPath.getEndpoint().space.getX() > 1);
     }
 
     @Test
@@ -195,8 +195,8 @@ public class ArenaModelTest {
 
         BallPath ballPath = model.simulateBall(start, Duration.ofSeconds(1));
         System.out.println(ballPath.getEndpoint());
-        Assert.assertTrue(ballPath.getEndpoint().velocity.y < -1);
-        Assert.assertTrue(ballPath.getEndpoint().space.y < -1);
+        Assert.assertTrue(ballPath.getEndpoint().velocity.getY() < -1);
+        Assert.assertTrue(ballPath.getEndpoint().space.getY() < -1);
     }
 
     @Test

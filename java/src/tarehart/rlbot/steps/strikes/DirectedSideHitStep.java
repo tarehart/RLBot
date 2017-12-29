@@ -76,7 +76,7 @@ public class DirectedSideHitStep implements Step {
 
         if (interceptModifier == null) {
             Vector3 nearSide = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE));
-            interceptModifier = new Vector3(nearSide.x, nearSide.y, nearSide.z - 1.4); // Closer to ground
+            interceptModifier = new Vector3(nearSide.getX(), nearSide.getY(), nearSide.getZ() - 1.4); // Closer to ground
         }
 
         if (originalIntercept == null) {
@@ -101,7 +101,7 @@ public class DirectedSideHitStep implements Step {
         if (!strikeTime.isPresent()) {
             return Optional.empty();
         }
-        double expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint)).map(m -> m.speed).orElse(40.0);
+        double expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint)).map(m -> m.getSpeed()).orElse(40.0);
         double backoff = expectedSpeed * strikeTime.get().getSeconds() + 1;
 
         if (backoff > car.position.flatten().distance(orthogonalPoint)) {
@@ -112,7 +112,7 @@ public class DirectedSideHitStep implements Step {
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
         Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
 
-        if (Vector2.angle(carToIntercept, facingForSideFlip) > Math.PI / 3) {
+        if (Vector2.Companion.angle(carToIntercept, facingForSideFlip) > Math.PI / 3) {
             // If we're doing more than a quarter turn, this is a waste of time.
             return Optional.empty();
         }
@@ -123,7 +123,7 @@ public class DirectedSideHitStep implements Step {
 
         double distance = toOrthogonal.magnitude();
         Vector2 carNose = car.orientation.noseVector.flatten();
-        double angle = Vector2.angle(carNose, facingForSideFlip);
+        double angle = Vector2.Companion.angle(carNose, facingForSideFlip);
         if (distance < backoff + 3 && angle < Math.PI / 8) {
             doneMoment = input.time.plus(strikeTime.get()).plusSeconds(.5);
             finalApproach = true;
@@ -178,7 +178,7 @@ public class DirectedSideHitStep implements Step {
     }
 
     private Optional<Duration> getJumpTime(Vector3 carPositionAtIntercept) {
-        return ManeuverMath.secondsForMashJumpHeight(carPositionAtIntercept.z).map(Duration::ofSeconds);
+        return ManeuverMath.secondsForMashJumpHeight(carPositionAtIntercept.getZ()).map(Duration::ofSeconds);
     }
 
     private Optional<AgentOutput> getNavigation(AgentInput input, SteerPlan circleTurnOption) {

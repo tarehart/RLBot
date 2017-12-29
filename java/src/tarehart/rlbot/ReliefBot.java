@@ -60,7 +60,7 @@ public class ReliefBot extends Bot {
         }
 
         if (canInterruptPlanFor(Plan.Posture.LANDING) && !car.hasWheelContact &&
-                car.position.z > 5 &&
+                car.position.getZ() > 5 &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
             currentPlan = new Plan(Plan.Posture.LANDING).withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
         }

@@ -41,11 +41,11 @@ public class KickAtEnemyGoal implements KickStrategy {
         double leftCornerCorrection = easyKickFlat.correctionAngle(toLeftCorner);
         if (rightCornerCorrection < 0 && leftCornerCorrection > 0) {
             // The easy kick is already on target. Go with the easy kick.
-            return new Vector3(easyKickFlat.x, easyKickFlat.y, 0);
+            return new Vector3(easyKickFlat.getX(), easyKickFlat.getY(), 0);
         } else if (Math.abs(rightCornerCorrection) < Math.abs(leftCornerCorrection)) {
-            return new Vector3(toRightCorner.x, toRightCorner.y, 0);
+            return new Vector3(toRightCorner.getX(), toRightCorner.getY(), 0);
         } else {
-            return new Vector3(toLeftCorner.x, toLeftCorner.y, 0);
+            return new Vector3(toLeftCorner.getX(), toLeftCorner.getY(), 0);
         }
     }
 }

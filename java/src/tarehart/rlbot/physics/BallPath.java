@@ -96,11 +96,11 @@ public class BallPath {
         Vector2 prev = previousVelocity.flatten();
         Vector2 curr = currentVelocity.flatten();
 
-        return Vector2.angle(prev, curr) > Math.PI / 6;
+        return Vector2.Companion.angle(prev, curr) > Math.PI / 6;
     }
 
     private boolean isFloorBounce(Vector3 previousVelocity, Vector3 currentVelocity) {
-        return previousVelocity.z < 0 && currentVelocity.z > 0;
+        return previousVelocity.getZ() < 0 && currentVelocity.getZ() > 0;
     }
 
     public BallSlice getStartPoint() {
@@ -128,18 +128,18 @@ public class BallPath {
                     return Optional.empty();
                 }
 
-                double floorGapOfPrev = previous.getSpace().z - ArenaModel.BALL_RADIUS;
-                double floorGapOfCurrent = spt.getSpace().z - ArenaModel.BALL_RADIUS;
+                double floorGapOfPrev = previous.getSpace().getZ() - ArenaModel.BALL_RADIUS;
+                double floorGapOfCurrent = spt.getSpace().getZ() - ArenaModel.BALL_RADIUS;
 
                 BallSlice bouncePosition = new BallSlice(
-                        new Vector3(spt.getSpace().x, spt.getSpace().y, ArenaModel.BALL_RADIUS),
+                        new Vector3(spt.getSpace().getX(), spt.getSpace().getY(), ArenaModel.BALL_RADIUS),
                         spt.getTime(),
                         spt.getVelocity(),
                         spt.spin);
                 if (floorGapOfPrev < floorGapOfCurrent) {
                     // TODO: consider interpolating instead of just picking the more accurate.
                     bouncePosition = new BallSlice(
-                            new Vector3(previous.getSpace().x, previous.getSpace().y, ArenaModel.BALL_RADIUS),
+                            new Vector3(previous.getSpace().getX(), previous.getSpace().getY(), ArenaModel.BALL_RADIUS),
                             previous.getTime(),
                             spt.getVelocity(),
                             spt.spin);

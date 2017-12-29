@@ -62,7 +62,7 @@ public class CarryStep implements Step {
 
         GameTime hurryUp = input.time.plusSeconds(leadSeconds);
 
-        AgentOutput dribble = SteerUtil.getThereOnTime(input.getMyCarData(), new SpaceTime(new Vector3(pressurePoint.x, pressurePoint.y, 0), hurryUp));
+        AgentOutput dribble = SteerUtil.getThereOnTime(input.getMyCarData(), new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
         return Optional.of(dribble);
     }
 
@@ -76,8 +76,8 @@ public class CarryStep implements Step {
 
         Vector2 carToPositionRotated = VectorUtil.rotateVector(carToPosition, -carYaw);
 
-        double zDiff = worldPosition.z - car.position.z;
-        return new Vector3(carToPositionRotated.x, carToPositionRotated.y, zDiff);
+        double zDiff = worldPosition.getZ() - car.position.getZ();
+        return new Vector3(carToPositionRotated.getX(), carToPositionRotated.getY(), zDiff);
     }
 
     public static boolean canCarry(AgentInput input, boolean log) {
@@ -85,7 +85,7 @@ public class CarryStep implements Step {
         CarData car = input.getMyCarData();
         Vector3 ballInCarCoordinates = positionInCarCoordinates(car, input.ballPosition);
 
-        double xMag = Math.abs(ballInCarCoordinates.x);
+        double xMag = Math.abs(ballInCarCoordinates.getX());
         if (xMag > MAX_X_DIFF) {
             if (log) {
                 println("Fell off the side", input.playerIndex);
@@ -93,28 +93,28 @@ public class CarryStep implements Step {
             return false;
         }
 
-        if (ballInCarCoordinates.y > MAX_Y) {
+        if (ballInCarCoordinates.getY() > MAX_Y) {
             if (log) {
                 println("Fell off the front", input.playerIndex);
             }
             return false;
         }
 
-        if (ballInCarCoordinates.y < MIN_Y) {
+        if (ballInCarCoordinates.getY() < MIN_Y) {
             if (log) {
                 println("Fell off the back", input.playerIndex);
             }
             return false;
         }
 
-        if (ballInCarCoordinates.z > 3) {
+        if (ballInCarCoordinates.getZ() > 3) {
             if (log) {
                 println("Ball too high to carry", input.playerIndex);
             }
             return false;
         }
 
-        if (ballInCarCoordinates.z < 1) {
+        if (ballInCarCoordinates.getZ() < 1) {
             if (log) {
                 println("Ball too low to carry", input.playerIndex);
             }

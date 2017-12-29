@@ -30,7 +30,7 @@ public class CarInterceptPlanner {
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
                 double interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space);
-                if (dts.distance + CAR_CONTACT_DISTANCE > interceptDistance) {
+                if (dts.getDistance() + CAR_CONTACT_DISTANCE > interceptDistance) {
                     if (i > 0) {
                         // Take the average of the current slice and the previous slice to avoid systematic pessimism.
                         CarSlice previousSlice = enemyPath.getSlices().get(i - 1);

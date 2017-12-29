@@ -72,7 +72,7 @@ public class MidairStrikeStep implements Step {
             Vector3 goalToBall = intercept.space.minus(GoalUtil.getEnemyGoal(car.team).getNearestEntrance(intercept.space, 4));
             offset = goalToBall.scaledToMagnitude(2.5);
             if (goalToBall.magnitude() > 50) {
-                offset = new Vector3(offset.x, offset.y, -.2);
+                offset = new Vector3(offset.getX(), offset.getY(), -.2);
             }
         }
         Optional<SpaceTime> interceptOpportunity = getAerialIntercept(car, ballPath, offset);
@@ -176,15 +176,15 @@ public class MidairStrikeStep implements Step {
      * @return A unit vector in two dimensions, with positive x, and z equal to unitDirection z.
      */
     private static Vector2 getPitchVector(Vector3 unitDirection) {
-        return new Vector2(Math.sqrt(1 - unitDirection.z * unitDirection.z), unitDirection.z);
+        return new Vector2(Math.sqrt(1 - unitDirection.getZ() * unitDirection.getZ()), unitDirection.getZ());
     }
 
     /**
      * Return a unit vector with the given z component, and the same flat angle as flatDirection.
      */
     private Vector3 convertToVector3WithPitch(Vector2 flat, double zComponent) {
-        double xyScaler = Math.sqrt((1 - zComponent * zComponent) / (flat.x * flat.x + flat.y * flat.y));
-        return new Vector3(flat.x * xyScaler, flat.y * xyScaler, zComponent);
+        double xyScaler = Math.sqrt((1 - zComponent * zComponent) / (flat.getX() * flat.getX() + flat.getY() * flat.getY()));
+        return new Vector3(flat.getX() * xyScaler, flat.getY() * xyScaler, zComponent);
     }
 
     @Override

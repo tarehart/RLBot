@@ -84,7 +84,7 @@ public class PredictedVsActualTest {
 
             Vector3 actualSlice = actualTrimmed.get(i).getSpace();
             Vector3 actualToPredicted = predictedSlices.get(i).getSpace().minus(actualSlice);
-            double error = new Vector2(actualToPredicted.x, actualToPredicted.y).magnitude();
+            double error = new Vector2(actualToPredicted.getX(), actualToPredicted.getY()).magnitude();
             if (error > THRESHOLD) {
                 Duration duration = Duration.between(actualTrimmed.get(0).getTime(), actualTrimmed.get(i).getTime());
                 double seconds = duration.toMillis() / 1000.0;
