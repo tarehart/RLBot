@@ -3,8 +3,8 @@ package tarehart.rlbot.physics;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.planning.AccelerationModel;
-import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.carpredict.AccelerationModel;
+import tarehart.rlbot.intercept.StrikeProfile;
 import tarehart.rlbot.time.Duration;
 
 import java.util.ArrayList;

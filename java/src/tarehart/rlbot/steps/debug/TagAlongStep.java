@@ -5,7 +5,7 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.PositionFacing;
+import tarehart.rlbot.routing.PositionFacing;
 import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.travel.SlideToPositionStep;

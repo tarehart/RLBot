@@ -3,10 +3,13 @@ package tarehart.rlbot.steps.strikes;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.intercept.StrikeProfile;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.routing.CircleTurnUtil;
+import tarehart.rlbot.routing.SteerPlan;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
@@ -133,7 +136,7 @@ public class DirectedSideHitStep implements Step {
 
         maneuverSeconds = angle * MANEUVER_SECONDS_PER_RADIAN;
 
-        circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, steerTarget, facingForSideFlip);
+        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, steerTarget, facingForSideFlip);
 
         return getNavigation(input, circleTurnPlan);
     }

@@ -6,7 +6,7 @@ import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.DistancePlot;
-import tarehart.rlbot.planning.StrikeProfile;
+import tarehart.rlbot.intercept.StrikeProfile;
 import tarehart.rlbot.time.Duration;
 
 import java.util.Optional;

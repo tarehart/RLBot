@@ -1,4 +1,4 @@
-package tarehart.rlbot.planning;
+package tarehart.rlbot.intercept;
 
 public class AerialChecklist extends LaunchChecklist {
     public boolean notSkidding;

@@ -1,4 +1,4 @@
-package tarehart.rlbot.planning;
+package tarehart.rlbot.carpredict;
 
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.DistanceTimeSpeed;

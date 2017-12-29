@@ -7,7 +7,7 @@ import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
-import tarehart.rlbot.planning.AirTouchPlanner;
+import tarehart.rlbot.intercept.AirTouchPlanner;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
 

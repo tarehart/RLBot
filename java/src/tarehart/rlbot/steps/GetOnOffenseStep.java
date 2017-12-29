@@ -3,6 +3,7 @@ package tarehart.rlbot.steps;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.intercept.Intercept;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.vector.Vector3;

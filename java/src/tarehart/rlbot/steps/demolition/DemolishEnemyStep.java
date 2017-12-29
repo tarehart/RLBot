@@ -2,28 +2,19 @@ package tarehart.rlbot.steps.demolition;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
+import tarehart.rlbot.carpredict.AccelerationModel;
 import tarehart.rlbot.carpredict.CarInterceptPlanner;
 import tarehart.rlbot.carpredict.CarPath;
 import tarehart.rlbot.carpredict.CarPredictor;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.input.FullBoost;
 import tarehart.rlbot.math.SpaceTime;
-import tarehart.rlbot.math.VectorUtil;
-import tarehart.rlbot.math.vector.Vector2;
-import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.time.Duration;
-import tarehart.rlbot.tuning.BotLog;
 
 import java.awt.*;
-import java.util.List;
 import java.util.Optional;
-
-import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DemolishEnemyStep implements Step {
 

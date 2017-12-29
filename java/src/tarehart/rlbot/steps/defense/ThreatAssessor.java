@@ -2,17 +2,15 @@ package tarehart.rlbot.steps.defense;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTime;
+import tarehart.rlbot.intercept.InterceptCalculator;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.Goal;
 import tarehart.rlbot.planning.GoalUtil;
-import tarehart.rlbot.planning.Intercept;
-import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.intercept.Intercept;
 import tarehart.rlbot.time.Duration;
-import tarehart.rlbot.time.GameTime;
 
 import java.util.Optional;
 
@@ -44,8 +42,8 @@ public class ThreatAssessor {
 
         CarData myCar = input.getMyCarData();
 
-        Optional<Intercept> myInterceptOption = SteerUtil.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.boost);
-        Optional<Intercept> enemyInterceptOption = SteerUtil.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost);
+        Optional<Intercept> myInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.boost);
+        Optional<Intercept> enemyInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost);
 
         if (!enemyInterceptOption.isPresent()) {
             return 0;

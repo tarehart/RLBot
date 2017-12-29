@@ -2,7 +2,9 @@ package tarehart.rlbot.planning;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
+import tarehart.rlbot.carpredict.AccelerationModel;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.intercept.Intercept;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
@@ -23,7 +25,6 @@ import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 
 import java.util.Optional;
-import java.util.function.BiPredicate;
 
 import static tarehart.rlbot.planning.Plan.Posture.ESCAPEGOAL;
 import static tarehart.rlbot.planning.Plan.Posture.NEUTRAL;

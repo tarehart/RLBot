@@ -2,6 +2,7 @@ package tarehart.rlbot.steps;
 
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
+import tarehart.rlbot.carpredict.AccelerationModel;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.input.FullBoost;
 import tarehart.rlbot.math.VectorUtil;
@@ -11,6 +12,8 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.routing.CircleTurnUtil;
+import tarehart.rlbot.routing.SteerPlan;
 import tarehart.rlbot.time.Duration;
 
 import java.awt.*;
@@ -64,7 +67,7 @@ public class GetBoostStep implements Step {
             DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost);
             Vector2 facing = VectorUtil.orthogonal(target.flatten(), v -> v.dotProduct(toBoost) > 0).normalized();
 
-            SteerPlan planForCircleTurn = SteerUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
+            SteerPlan planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
 
             Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
             if (sensibleFlip.isPresent()) {

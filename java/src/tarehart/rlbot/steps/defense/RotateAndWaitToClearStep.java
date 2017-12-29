@@ -7,7 +7,7 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.PositionFacing;
+import tarehart.rlbot.routing.PositionFacing;
 import tarehart.rlbot.planning.TacticsTelemetry;
 import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.Step;

@@ -1,4 +1,4 @@
-package tarehart.rlbot.planning;
+package tarehart.rlbot.routing;
 
 import tarehart.rlbot.math.vector.Vector2;
 

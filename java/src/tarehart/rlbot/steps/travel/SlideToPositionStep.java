@@ -6,7 +6,7 @@ import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.planning.Plan;
-import tarehart.rlbot.planning.PositionFacing;
+import tarehart.rlbot.routing.PositionFacing;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.Step;
 

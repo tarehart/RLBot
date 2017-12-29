@@ -1,9 +1,9 @@
-package tarehart.rlbot.planning;
+package tarehart.rlbot.intercept;
 
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.steps.strikes.InterceptStep;
+import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.tuning.ManeuverMath;
 

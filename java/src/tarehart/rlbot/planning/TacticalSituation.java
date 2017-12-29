@@ -1,5 +1,6 @@
 package tarehart.rlbot.planning;
 
+import tarehart.rlbot.intercept.Intercept;
 import tarehart.rlbot.math.BallSlice;
 
 import java.util.Optional;

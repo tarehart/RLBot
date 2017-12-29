@@ -3,6 +3,7 @@ package tarehart.rlbot.ui;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.intercept.Intercept;
 import tarehart.rlbot.math.Polygon;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;

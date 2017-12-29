@@ -27,7 +27,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static tarehart.rlbot.math.VectorUtil.rotateVector;
 import static tarehart.rlbot.physics.ArenaModel.predictBallPath;
-import static tarehart.rlbot.planning.SteerUtil.getAerialIntercept;
+import static tarehart.rlbot.intercept.InterceptCalculator.getAerialIntercept;
 import static tarehart.rlbot.planning.SteerUtil.getCorrectionAngleRad;
 import static tarehart.rlbot.planning.WaypointTelemetry.set;
 import static tarehart.rlbot.tuning.BotLog.println;

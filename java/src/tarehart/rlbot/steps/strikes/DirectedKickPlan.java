@@ -5,7 +5,7 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.DistancePlot;
-import tarehart.rlbot.planning.Intercept;
+import tarehart.rlbot.intercept.Intercept;
 import tarehart.rlbot.ui.ArenaDisplay;
 
 import java.awt.*;

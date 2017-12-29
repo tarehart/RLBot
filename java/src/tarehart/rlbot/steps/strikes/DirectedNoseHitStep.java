@@ -3,12 +3,16 @@ package tarehart.rlbot.steps.strikes;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.intercept.AirTouchPlanner;
+import tarehart.rlbot.intercept.StrikeProfile;
 import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPhysics;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.routing.CircleTurnUtil;
+import tarehart.rlbot.routing.SteerPlan;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
@@ -176,7 +180,7 @@ public class DirectedNoseHitStep implements Step {
 //            }
 
         // Line up for a nose hit
-        circleTurnPlan = SteerUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, kickPlan.launchPad, strikeForceFlat);
+        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, kickPlan.launchPad, strikeForceFlat);
         if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0)) < -1) {
             println("Failing nose hit because waypoint is out of bounds", input.playerIndex);
             return empty();

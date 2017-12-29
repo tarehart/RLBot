@@ -1,4 +1,4 @@
-package tarehart.rlbot.planning;
+package tarehart.rlbot.intercept;
 
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.vector.Vector3;

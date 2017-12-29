@@ -1,14 +1,18 @@
 package tarehart.rlbot.steps.strikes;
 
 import tarehart.rlbot.AgentInput;
+import tarehart.rlbot.carpredict.AccelerationModel;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.intercept.AirTouchPlanner;
+import tarehart.rlbot.intercept.Intercept;
+import tarehart.rlbot.intercept.InterceptCalculator;
+import tarehart.rlbot.intercept.StrikeProfile;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
-import tarehart.rlbot.planning.*;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.tuning.ManeuverMath;
@@ -48,7 +52,7 @@ public class DirectedKickUtil {
                 verticalPredicate.test(cd, st) &&
                 kickStrategy.looksViable(cd, st.space);
 
-        Optional<Intercept> interceptOpportunity = SteerUtil.getFilteredInterceptOpportunity(
+        Optional<Intercept> interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
                 car, kickPlan.ballPath, kickPlan.distancePlot, interceptModifier,
                 overallPredicate, strikeFn);
         Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> kickPlan.ballPath.getMotionAt(inter.getTime()));
