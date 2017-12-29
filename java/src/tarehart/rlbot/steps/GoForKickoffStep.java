@@ -37,7 +37,7 @@ public class GoForKickoffStep implements Step {
             }
         }
 
-        if (input.ballPosition.flatten().magnitudeSquared() > 0) {
+        if (input.getBallPosition().flatten().magnitudeSquared() > 0) {
             return Optional.empty();
         }
 
@@ -47,16 +47,16 @@ public class GoForKickoffStep implements Step {
             kickoffType = getKickoffType(car);
         }
 
-        double distance = car.position.magnitude();
+        double distance = car.getPosition().magnitude();
         if (distance < 14) {
             plan = SetPieces.frontFlip();
             return plan.getOutput(input);
         }
 
-        double ySide = Math.signum(car.position.getY());
+        double ySide = Math.signum(car.getPosition().getY());
 
         Vector2 target;
-        if (kickoffType == KickoffType.CHEATIN && Math.abs(car.position.getY()) > CHEATIN_BOOST_Y + 10) {
+        if (kickoffType == KickoffType.CHEATIN && Math.abs(car.getPosition().getY()) > CHEATIN_BOOST_Y + 10) {
             // Steer toward boost
             target = new Vector2(0, ySide * CHEATIN_BOOST_Y);
         } else if (distance > 30) {
@@ -68,23 +68,23 @@ public class GoForKickoffStep implements Step {
     }
 
     private KickoffType getKickoffType(CarData car) {
-        double xPosition = car.position.getX();
+        double xPosition = car.getPosition().getX();
         if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM) {
-            BotLog.println("it be center", car.playerIndex);
+            BotLog.println("it be center", car.getPlayerIndex());
             return KickoffType.CENTER;
         }
 
         if (getNumberDistance(CHEATER_KICKOFF_X, Math.abs(xPosition)) < WIGGLE_ROOM) {
-            BotLog.println("it be cheatin", car.playerIndex);
+            BotLog.println("it be cheatin", car.getPlayerIndex());
             return KickoffType.CHEATIN;
         }
 
         if (getNumberDistance(DIAGONAL_KICKOFF_X, Math.abs(xPosition)) < WIGGLE_ROOM) {
-            BotLog.println("it be slanterd", car.playerIndex);
+            BotLog.println("it be slanterd", car.getPlayerIndex());
             return KickoffType.SLANTERD;
         }
 
-        BotLog.println("what on earth", car.playerIndex);
+        BotLog.println("what on earth", car.getPlayerIndex());
         return KickoffType.UNKNOWN;
     }
 

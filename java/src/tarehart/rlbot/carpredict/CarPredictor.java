@@ -11,11 +11,11 @@ public class CarPredictor {
     public static CarPath predictCarMotion(CarData car, Duration duration) {
 
         Vector3 velocity = new Vector3(
-                car.velocity.getX(),
-                car.velocity.getY(),
-                car.hasWheelContact && Math.abs(car.velocity.getZ()) < .2  ? 0 : car.velocity.getZ());
+                car.getVelocity().getX(),
+                car.getVelocity().getY(),
+                car.getHasWheelContact() && Math.abs(car.getVelocity().getZ()) < .2  ? 0 : car.getVelocity().getZ());
 
-        CarSlice initialSlice = new CarSlice(car.position, car.time, velocity, car.orientation);
+        CarSlice initialSlice = new CarSlice(car.getPosition(), car.getTime(), velocity, car.getOrientation());
 
         CarPath carPath = new CarPath(initialSlice);
 
@@ -30,7 +30,7 @@ public class CarPredictor {
             Vector3 nextVel = currentSlice.velocity;
             Vector3 space = currentSlice.space.plus(nextVel.scaled(TIME_STEP));
 
-            CarSlice nextSlice = new CarSlice(space, car.time.plusSeconds(secondsSoFar), nextVel, currentSlice.orientation);
+            CarSlice nextSlice = new CarSlice(space, car.getTime().plusSeconds(secondsSoFar), nextVel, currentSlice.orientation);
             carPath.addSlice(nextSlice);
 
             secondsSoFar += TIME_STEP;

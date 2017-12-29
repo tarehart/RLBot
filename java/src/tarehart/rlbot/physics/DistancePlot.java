@@ -72,7 +72,7 @@ public class DistancePlot {
     public Optional<DistanceTimeSpeed> getMotionUponArrival(CarData carData, Vector3 destination, StrikeProfile strikeProfile) {
 
         double orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination) + strikeProfile.maneuverSeconds;
-        double distance = carData.position.flatten().distance(destination.flatten());
+        double distance = carData.getPosition().flatten().distance(destination.flatten());
 
         return getMotionAfterDistance(distance).map(dts -> new DistanceTimeSpeed(dts.getDistance(), dts.getTime().plusSeconds(orientSeconds), dts.getSpeed()));
 

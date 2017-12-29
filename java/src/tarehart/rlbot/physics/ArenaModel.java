@@ -180,7 +180,7 @@ public class ArenaModel {
 
     public static BallPath predictBallPath(AgentInput input) {
         try {
-            BallSlice key = new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin);
+            BallSlice key = new BallSlice(input.getBallPosition(), input.getTime(), input.getBallVelocity(), input.getBallSpin());
             return pathCache.get(key);
         } catch (ExecutionException e) {
             throw new RuntimeException("Failed to compute ball path!", e);
@@ -305,7 +305,7 @@ public class ArenaModel {
 
         ball.getBody().setForce(0, 0, 0);
         ball.getBody().setLinearVel(toV3f(start.getVelocity()));
-        ball.getBody().setAngularVel(toV3f(start.spin));
+        ball.getBody().setAngularVel(toV3f(start.getSpin()));
         ball.getBody().setPosition(toV3f(start.getSpace()));
 
         // Do some simulation
@@ -355,7 +355,7 @@ public class ArenaModel {
     }
 
     public static boolean isCarNearWall(CarData car) {
-        return getDistanceFromWall(car.position) < 2;
+        return getDistanceFromWall(car.getPosition()) < 2;
     }
 
     public static double getDistanceFromWall(Vector3 position) {
@@ -366,10 +366,10 @@ public class ArenaModel {
     }
 
     public static boolean isCarOnWall(CarData car) {
-        return car.hasWheelContact && isCarNearWall(car) && Math.abs(car.orientation.roofVector.getZ()) < 0.05;
+        return car.getHasWheelContact() && isCarNearWall(car) && Math.abs(car.getOrientation().getRoofVector().getZ()) < 0.05;
     }
 
     public static boolean isNearFloorEdge(CarData car) {
-        return Math.abs(car.position.getX()) > Goal.EXTENT && getDistanceFromWall(car.position) + car.position.getZ() < 6;
+        return Math.abs(car.getPosition().getX()) > Goal.EXTENT && getDistanceFromWall(car.getPosition()) + car.getPosition().getZ() < 6;
     }
 }

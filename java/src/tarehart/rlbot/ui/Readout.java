@@ -5,6 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.Bot;
+import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.BallPath;
@@ -68,7 +69,7 @@ public class Readout {
         situationText.setText(situation);
         predictionTimeSeconds.setText(String.format("%.2f", predictionTime.getValue() / 1000.0));
         // ballHeightPredicted.setValue(0); // Commented out to avoid flicker. Should always be fresh anyway.
-        ballHeightActual.setValue((int) (input.ballPosition.getZ() * HEIGHT_BAR_MULTIPLIER));
+        ballHeightActual.setValue((int) (input.getBallPosition().getZ() * HEIGHT_BAR_MULTIPLIER));
 
         // Filter log before appending
         String filterValue = logFilter.getText();
@@ -95,7 +96,7 @@ public class Readout {
             arenaDisplay.updateBallPrediction(ballPrediction);
         }
 
-        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(input.playerIndex);
+        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(input.getPlayerIndex());
 
         if (situationOption.isPresent()) {
             TacticalSituation tacSituation = situationOption.get();
@@ -113,59 +114,59 @@ public class Readout {
         // Calculate and display Ball Height Actual Max
         if (ballHeightActualMax.getValue() < ballHeightActual.getValue()) {
             ballHeightActualMax.setValue(ballHeightActual.getValue());
-            actualMaxTime = input.time;
-        } else if (Duration.between(input.time, actualMaxTime).abs().getSeconds() > 3) {
+            actualMaxTime = input.getTime();
+        } else if (Duration.between(input.getTime(), actualMaxTime).abs().getSeconds() > 3) {
             ballHeightActualMax.setValue(0);
         }
 
         // Calculate and display Ball Height Predicted Max
         if (ballHeightPredictedMax.getValue() < ballHeightPredicted.getValue()) {
             ballHeightPredictedMax.setValue(ballHeightPredicted.getValue());
-            predictedMaxTime = input.time;
-        } else if (Duration.between(input.time, predictedMaxTime).abs().getSeconds() > 3) {
+            predictedMaxTime = input.getTime();
+        } else if (Duration.between(input.getTime(), predictedMaxTime).abs().getSeconds() > 3) {
             ballHeightPredictedMax.setValue(0);
         }
     }
 
     private void gatherBallPredictionData(AgentInput input, BallPath ballPath) {
         int predictionMillis = predictionTime.getValue();
-        GameTime predictionTime = input.time.plus(Duration.ofMillis(predictionMillis));
+        GameTime predictionTime = input.getTime().plus(Duration.ofMillis(predictionMillis));
 
-        if (previousTime == null || !previousTime.equals(input.time)) {
+        if (previousTime == null || !previousTime.equals(input.getTime())) {
             if (ballPath != null) {
                 Optional<BallSlice> predictionSpace = ballPath.getMotionAt(predictionTime);
                 if (predictionSpace.isPresent()) {
                     BallPrediction prediction = new BallPrediction(predictionSpace.get().getSpace(), predictionTime, ballPath);
                     warehouse.addPrediction(prediction);
                 }
-                previousTime = input.time;
+                previousTime = input.getTime();
             }
         }
     }
 
     private Optional<Vector3> getBallPrediction(AgentInput input) {
-        Optional<BallPrediction> predictionOfNow = warehouse.getPredictionOfMoment(input.time);
+        Optional<BallPrediction> predictionOfNow = warehouse.getPredictionOfMoment(input.getTime());
         return predictionOfNow.map(ballPrediction -> ballPrediction.predictedLocation);
     }
 
     private void updateOmniText(AgentInput input) {
 
-        Optional<ZonePlan> zonePlanOpt = ZoneTelemetry.get(input.team);
+        Optional<ZonePlan> zonePlanOpt = ZoneTelemetry.get(input.getTeam());
 
         String text = "" +
-                "Blue Pos: " + input.blueCar.map(c -> c.position).orElse(new Vector3()) + "\n" +
-                "Blue Vel: " + input.blueCar.map(c -> c.velocity).orElse(new Vector3()) + "\n" +
-                "Orng Pos: " + input.orangeCar.map(c -> c.position).orElse(new Vector3()) + "\n" +
-                "Orng Vel: " + input.orangeCar.map(c -> c.velocity).orElse(new Vector3()) + "\n" +
-                "Ball Pos: " + input.ballPosition + "\n" +
+                "Blue Pos: " + input.getBlueCar().map(CarData::getPosition).orElse(new Vector3()) + "\n" +
+                "Blue Vel: " + input.getBlueCar().map(CarData::getVelocity).orElse(new Vector3()) + "\n" +
+                "Orng Pos: " + input.getOrangeCar().map(CarData::getPosition).orElse(new Vector3()) + "\n" +
+                "Orng Vel: " + input.getOrangeCar().map(CarData::getVelocity).orElse(new Vector3()) + "\n" +
+                "Ball Pos: " + input.getBallPosition() + "\n" +
                 "\n" +
-                "Blue Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.team == Bot.Team.BLUE)).orElse("Unknown") + "\n" +
-                "Orng Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.team == Bot.Team.ORANGE)).orElse("Unknown") + "\n" +
+                "Blue Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.getTeam() == Bot.Team.BLUE)).orElse("Unknown") + "\n" +
+                "Orng Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.getTeam() == Bot.Team.ORANGE)).orElse("Unknown") + "\n" +
                 "Ball Zone: " + zonePlanOpt.map(zp -> zp.getBallZone().toString()).orElse("Unknown") + "\n" +
                 "\n" +
-                "Ball Spin: " + input.ballSpin + "\n" +
+                "Ball Spin: " + input.getBallSpin() + "\n" +
                 "\n" +
-                "Our Boost: " + input.getMyCarData().boost;
+                "Our Boost: " + input.getMyCarData().getBoost();
 
         this.omniText.setText(text);
     }
@@ -177,7 +178,7 @@ public class Readout {
     }
 
     private void updateTacticsInfo(AgentInput input) {
-        Optional<TacticalSituation> situationOpt = TacticsTelemetry.get(input.playerIndex);
+        Optional<TacticalSituation> situationOpt = TacticsTelemetry.get(input.getPlayerIndex());
 
         if (situationOpt.isPresent()) {
             TacticalSituation situation = situationOpt.get();
@@ -188,7 +189,7 @@ public class Readout {
             distanceFromEnemyBackWall.setText(String.format("%.2f", situation.distanceFromEnemyBackWall));
             distanceFromEnemyCorner.setText(String.format("%.2f", situation.distanceFromEnemyCorner));
             expectedEnemyContact.setText(situation.expectedEnemyContact.map(contact -> contact.getSpace().toString()).orElse(""));
-            scoredOnThreat.setText(situation.scoredOnThreat.map(b -> b.space.toString()).orElse("None"));
+            scoredOnThreat.setText(situation.scoredOnThreat.map(b -> b.getSpace().toString()).orElse("None"));
 
             needsDefensiveClear.setText("");
             needsDefensiveClear.setBackground(situation.needsDefensiveClear ? Color.GREEN : Color.WHITE);

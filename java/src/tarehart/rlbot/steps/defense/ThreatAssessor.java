@@ -42,8 +42,8 @@ public class ThreatAssessor {
 
         CarData myCar = input.getMyCarData();
 
-        Optional<Intercept> myInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.boost);
-        Optional<Intercept> enemyInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost);
+        Optional<Intercept> myInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.getBoost());
+        Optional<Intercept> enemyInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.getBoost());
 
         if (!enemyInterceptOption.isPresent()) {
             return 0;
@@ -67,10 +67,10 @@ public class ThreatAssessor {
         }
         CarData enemyCar = enemyCarOption.get();
         
-        Goal myGoal = GoalUtil.getOwnGoal(input.team);
-        Vector3 ballToGoal = myGoal.getCenter().minus(input.ballPosition);
+        Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
+        Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
 
-        Vector3 carToBall = input.ballPosition.minus(enemyCar.position);
+        Vector3 carToBall = input.getBallPosition().minus(enemyCar.getPosition());
         Vector3 rightSideVector = VectorUtil.project(carToBall, ballToGoal);
 
         return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal));
@@ -80,13 +80,13 @@ public class ThreatAssessor {
     private double measureBallThreat(AgentInput input) {
 
         CarData car = input.getMyCarData();
-        Goal myGoal = GoalUtil.getOwnGoal(input.team);
-        Vector3 ballToGoal = myGoal.getCenter().minus(input.ballPosition);
+        Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
+        Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
 
-        Vector3 ballVelocityTowardGoal = VectorUtil.project(input.ballVelocity, ballToGoal);
+        Vector3 ballVelocityTowardGoal = VectorUtil.project(input.getBallVelocity(), ballToGoal);
         double ballSpeedTowardGoal = ballVelocityTowardGoal.magnitude() * Math.signum(ballVelocityTowardGoal.dotProduct(ballToGoal));
 
-        Vector3 carToBall = input.ballPosition.minus(car.position);
+        Vector3 carToBall = input.getBallPosition().minus(car.getPosition());
         Vector3 wrongSideVector = VectorUtil.project(carToBall, ballToGoal);
         double wrongSidedness = wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal));
 

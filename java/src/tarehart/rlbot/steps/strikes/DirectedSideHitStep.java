@@ -55,20 +55,20 @@ public class DirectedSideHitStep implements Step {
             }
         }
 
-        if (doneMoment != null && input.time.isAfter(doneMoment)) {
+        if (doneMoment != null && input.getTime().isAfter(doneMoment)) {
             return Optional.empty();
         }
 
         final Optional<DirectedKickPlan> kickPlanOption;
         if (interceptModifier != null) {
             StrikeProfile strikeProfile = new StrikeProfile(maneuverSeconds, 0, 0, StrikeProfile.Style.SIDE_HIT);
-            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, (space) -> strikeProfile, input.time);
+            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, (space) -> strikeProfile, input.getTime());
         } else {
             kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true);
         }
 
         if (!kickPlanOption.isPresent()) {
-            BotLog.println("Quitting side hit due to failed kick plan.", car.playerIndex);
+            BotLog.println("Quitting side hit due to failed kick plan.", car.getPlayerIndex());
             return Optional.empty();
         }
 
@@ -83,7 +83,7 @@ public class DirectedSideHitStep implements Step {
             originalIntercept = kickPlan.ballAtIntercept.getSpace();
         } else {
             if (originalIntercept.distance(kickPlan.ballAtIntercept.getSpace()) > 30) {
-                println("Failed to make the directed kick", input.playerIndex);
+                println("Failed to make the directed kick", input.getPlayerIndex());
                 return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
@@ -101,15 +101,15 @@ public class DirectedSideHitStep implements Step {
         if (!strikeTime.isPresent()) {
             return Optional.empty();
         }
-        double expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint)).map(m -> m.getSpeed()).orElse(40.0);
+        double expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.getPosition().flatten().distance(orthogonalPoint)).map(m -> m.getSpeed()).orElse(40.0);
         double backoff = expectedSpeed * strikeTime.get().getSeconds() + 1;
 
-        if (backoff > car.position.flatten().distance(orthogonalPoint)) {
-            BotLog.println("Failed the side hit.", car.playerIndex);
+        if (backoff > car.getPosition().flatten().distance(orthogonalPoint)) {
+            BotLog.println("Failed the side hit.", car.getPlayerIndex());
             return Optional.empty();
         }
 
-        Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
+        Vector2 carToIntercept = carPositionAtIntercept.minus(car.getPosition()).flatten();
         Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
 
         if (Vector2.Companion.angle(carToIntercept, facingForSideFlip) > Math.PI / 3) {
@@ -119,13 +119,13 @@ public class DirectedSideHitStep implements Step {
 
         Vector2 steerTarget = orthogonalPoint.minus(facingForSideFlip.scaled(backoff));
 
-        Vector2 toOrthogonal = orthogonalPoint.minus(car.position.flatten());
+        Vector2 toOrthogonal = orthogonalPoint.minus(car.getPosition().flatten());
 
         double distance = toOrthogonal.magnitude();
-        Vector2 carNose = car.orientation.noseVector.flatten();
+        Vector2 carNose = car.getOrientation().getNoseVector().flatten();
         double angle = Vector2.Companion.angle(carNose, facingForSideFlip);
         if (distance < backoff + 3 && angle < Math.PI / 8) {
-            doneMoment = input.time.plus(strikeTime.get()).plusSeconds(.5);
+            doneMoment = input.getTime().plus(strikeTime.get()).plusSeconds(.5);
             finalApproach = true;
             maneuverSeconds = 0;
             circleTurnPlan = null;
@@ -155,24 +155,24 @@ public class DirectedSideHitStep implements Step {
         if (!jumpTime.isPresent()) {
             return Optional.empty();
         }
-        Vector2 carAtImpact = kickPlan.ballAtIntercept.space.flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT));
-        Vector2 toImpact = carAtImpact.minus(car.position.flatten());
-        Vector2 projectedApproach = VectorUtil.project(toImpact, car.orientation.rightVector.flatten());
+        Vector2 carAtImpact = kickPlan.ballAtIntercept.getSpace().flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT));
+        Vector2 toImpact = carAtImpact.minus(car.getPosition().flatten());
+        Vector2 projectedApproach = VectorUtil.project(toImpact, car.getOrientation().getRightVector().flatten());
         double realApproachDistance = projectedApproach.magnitude();
         Optional<Duration> strikeTime = getStrikeTime(carPositionAtIntercept, realApproachDistance);
         if (!strikeTime.isPresent()) {
             return Optional.empty();
         }
-        double backoff = car.velocity.magnitude() * strikeTime.get().getSeconds();
+        double backoff = car.getVelocity().magnitude() * strikeTime.get().getSeconds();
 
-        double distance = car.position.flatten().distance(orthogonalPoint);
+        double distance = car.getPosition().flatten().distance(orthogonalPoint);
         if (distance < backoff) {
             // Time to launch!
             double strikeForceCorrection = DirectedKickUtil.getAngleOfKickFromApproach(car, kickPlan);
             plan = SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime.get());
             return plan.getOutput(input);
         } else {
-            println(format("Side flip soon. Distance: %.2f", distance), input.playerIndex);
+            println(format("Side flip soon. Distance: %.2f", distance), input.getPlayerIndex());
             return of(steerTowardGroundPosition(car, orthogonalPoint));
         }
     }
@@ -184,10 +184,10 @@ public class DirectedSideHitStep implements Step {
     private Optional<AgentOutput> getNavigation(AgentInput input, SteerPlan circleTurnOption) {
         CarData car = input.getMyCarData();
 
-        if (car.boost == 0) {
+        if (car.getBoost() == 0) {
             Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint);
             if (sensibleFlip.isPresent()) {
-                println("Front flip toward side hit", input.playerIndex);
+                println("Front flip toward side hit", input.getPlayerIndex());
                 this.plan = sensibleFlip.get();
                 return this.plan.getOutput(input);
             }

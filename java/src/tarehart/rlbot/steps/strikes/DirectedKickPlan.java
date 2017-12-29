@@ -23,7 +23,7 @@ public class DirectedKickPlan {
 
     public void drawDebugInfo(Graphics2D graphics) {
         graphics.setColor(new Color(73, 111, 73));
-        ArenaDisplay.drawBall(ballAtIntercept.space, graphics, graphics.getColor());
+        ArenaDisplay.drawBall(ballAtIntercept.getSpace(), graphics, graphics.getColor());
         graphics.setStroke(new BasicStroke(1));
 
         Vector2 carAtOffset = intercept.getSpace().flatten();

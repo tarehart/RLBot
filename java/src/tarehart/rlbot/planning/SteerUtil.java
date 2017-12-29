@@ -28,9 +28,9 @@ public class SteerUtil {
 
     public static Optional<SpaceTime> getCatchOpportunity(CarData carData, BallPath ballPath, double boostBudget) {
 
-        GameTime searchStart = carData.time;
+        GameTime searchStart = carData.getTime();
 
-        double groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.getStartPoint().space.getZ(), ballPath.getStartPoint().velocity.getZ());
+        double groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.getStartPoint().getSpace().getZ(), ballPath.getStartPoint().getVelocity().getZ());
 
         if (groundBounceEnergy < 50) {
             return Optional.empty();
@@ -56,7 +56,7 @@ public class SteerUtil {
 
     public static Optional<SpaceTime> getVolleyOpportunity(CarData carData, BallPath ballPath, double boostBudget, double height) {
 
-        GameTime searchStart = carData.time;
+        GameTime searchStart = carData.getTime();
 
         Optional<BallSlice> landingOption = ballPath.getPlaneBreak(searchStart, new Plane(new Vector3(0, 0, height), new Vector3(0, 0, 1)), true);
 
@@ -71,12 +71,12 @@ public class SteerUtil {
     }
 
     private static boolean canGetUnder(CarData carData, SpaceTime spaceTime, double boostBudget) {
-        DistancePlot plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), boostBudget, carData.position.distance(spaceTime.space));
+        DistancePlot plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), boostBudget, carData.getPosition().distance(spaceTime.space));
 
         Optional<DistanceTimeSpeed> dts = plot.getMotionAfterDuration(
                 carData,
                 spaceTime.space,
-                Duration.between(carData.time, spaceTime.time),
+                Duration.between(carData.getTime(), spaceTime.time),
                 new StrikeProfile());
 
         double requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.space);
@@ -88,8 +88,8 @@ public class SteerUtil {
     }
 
     public static double getCorrectionAngleRad(CarData carData, Vector2 target) {
-        Vector2 noseVector = carData.orientation.noseVector.flatten();
-        Vector2 toTarget = target.minus(carData.position.flatten());
+        Vector2 noseVector = carData.getOrientation().getNoseVector().flatten();
+        Vector2 toTarget = target.minus(carData.getPosition().flatten());
         return noseVector.correctionAngle(toTarget);
     }
 
@@ -99,13 +99,13 @@ public class SteerUtil {
             return steerTowardGroundPositionFromWall(carData, position);
         }
 
-        WaypointTelemetry.set(position, carData.team);
+        WaypointTelemetry.set(position, carData.getTeam());
 
         double correctionAngle = getCorrectionAngleRad(carData, position);
-        Vector2 myPositionFlat = carData.position.flatten();
+        Vector2 myPositionFlat = carData.getPosition().flatten();
         double distance = position.distance(myPositionFlat);
-        double speed = carData.velocity.magnitude();
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false);
+        double speed = carData.getVelocity().magnitude();
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic(), false);
     }
 
     public static AgentOutput steerTowardGroundPosition(CarData carData, Vector2 position, boolean noBoosting) {
@@ -114,20 +114,20 @@ public class SteerUtil {
             return steerTowardGroundPositionFromWall(carData, position);
         }
 
-        WaypointTelemetry.set(position, carData.team);
+        WaypointTelemetry.set(position, carData.getTeam());
 
         double correctionAngle = getCorrectionAngleRad(carData, position);
-        Vector2 myPositionFlat = carData.position.flatten();
+        Vector2 myPositionFlat = carData.getPosition().flatten();
         double distance = position.distance(myPositionFlat);
-        double speed = carData.velocity.magnitude();
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, noBoosting);
+        double speed = carData.getVelocity().magnitude();
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic(), noBoosting);
     }
 
     private static AgentOutput steerTowardGroundPositionFromWall(CarData carData, Vector2 position) {
-        Vector2 toPositionFlat = position.minus(carData.position.flatten());
-        Vector3 carShadow = new Vector3(carData.position.getX(), carData.position.getY(), 0);
-        double heightOnWall = carData.position.getZ();
-        Vector3 wallNormal = carData.orientation.roofVector;
+        Vector2 toPositionFlat = position.minus(carData.getPosition().flatten());
+        Vector3 carShadow = new Vector3(carData.getPosition().getX(), carData.getPosition().getY(), 0);
+        double heightOnWall = carData.getPosition().getZ();
+        Vector3 wallNormal = carData.getOrientation().getRoofVector();
         double distanceOntoField = VectorUtil.project(toPositionFlat, wallNormal.flatten()).magnitude();
         double wallWeight = heightOnWall / (heightOnWall + distanceOntoField);
         Vector3 toPositionAlongSeam = new Vector3(toPositionFlat.getX(), toPositionFlat.getY(), 0).projectToPlane(wallNormal);
@@ -137,11 +137,11 @@ public class SteerUtil {
     }
 
     public static AgentOutput steerTowardWallPosition(CarData carData, Vector3 position) {
-        Vector3 toPosition = position.minus(carData.position);
-        double correctionAngle = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toPosition, carData.orientation.roofVector);
-        double speed = carData.velocity.magnitude();
-        double distance = position.distance(carData.position);
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false);
+        Vector3 toPosition = position.minus(carData.getPosition());
+        double correctionAngle = VectorUtil.getCorrectionAngle(carData.getOrientation().getNoseVector(), toPosition, carData.getOrientation().getRoofVector());
+        double speed = carData.getVelocity().magnitude();
+        double distance = position.distance(carData.getPosition());
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic(), false);
     }
 
     private static AgentOutput getSteeringOutput(double correctionAngle, double distance, double speed, boolean isSupersonic, boolean noBoosting) {
@@ -166,7 +166,7 @@ public class SteerUtil {
     }
 
     public static double getDistanceFromCar(CarData car, Vector3 loc) {
-        return VectorUtil.flatDistance(loc, car.position);
+        return VectorUtil.flatDistance(loc, car.getPosition());
     }
 
     public static Optional<Plan> getSensibleFlip(CarData car, Vector3 target) {
@@ -175,16 +175,16 @@ public class SteerUtil {
 
     public static Optional<Plan> getSensibleFlip(CarData car, Vector2 target) {
 
-        Vector2 toTarget = target.minus(car.position.flatten());
+        Vector2 toTarget = target.minus(car.getPosition().flatten());
         if (toTarget.magnitude() > 40 &&
-                Vector2.Companion.angle(car.orientation.noseVector.flatten(), toTarget) > 3 * Math.PI / 4 &&
-                (car.velocity.flatten().dotProduct(toTarget) > 0 || car.velocity.magnitude() < 5)) {
+                Vector2.Companion.angle(car.getOrientation().getNoseVector().flatten(), toTarget) > 3 * Math.PI / 4 &&
+                (car.getVelocity().flatten().dotProduct(toTarget) > 0 || car.getVelocity().magnitude() < 5)) {
 
             return Optional.of(SetPieces.halfFlip(target));
         }
 
-        double speed = car.velocity.flatten().magnitude();
-        if(car.isSupersonic || car.boost > 75 || speed < AccelerationModel.FLIP_THRESHOLD_SPEED) {
+        double speed = car.getVelocity().flatten().magnitude();
+        if(car.isSupersonic() || car.getBoost() > 75 || speed < AccelerationModel.FLIP_THRESHOLD_SPEED) {
             return Optional.empty();
         }
 
@@ -194,9 +194,9 @@ public class SteerUtil {
         double distanceToIntercept = toTarget.magnitude();
         if (distanceToIntercept > distanceCovered + 10) {
 
-            Vector2 facing = car.orientation.noseVector.flatten();
+            Vector2 facing = car.getOrientation().getNoseVector().flatten();
             double facingCorrection = facing.correctionAngle(toTarget);
-            double slideAngle = facing.correctionAngle(car.velocity.flatten());
+            double slideAngle = facing.correctionAngle(car.getVelocity().flatten());
 
             if (Math.abs(facingCorrection) < GOOD_ENOUGH_ANGLE && Math.abs(slideAngle) < GOOD_ENOUGH_ANGLE) {
                 return Optional.of(SetPieces.frontFlip());
@@ -207,10 +207,10 @@ public class SteerUtil {
     }
 
     public static AgentOutput getThereOnTime(CarData input, SpaceTime groundPositionAndTime) {
-        double flatDistance = VectorUtil.flatDistance(input.position, groundPositionAndTime.space);
+        double flatDistance = VectorUtil.flatDistance(input.getPosition(), groundPositionAndTime.space);
 
-        double secondsTillAppointment = Duration.between(input.time, groundPositionAndTime.time).toMillis() / 1000.0;
-        double speed = input.velocity.magnitude();
+        double secondsTillAppointment = Duration.between(input.getTime(), groundPositionAndTime.time).toMillis() / 1000.0;
+        double speed = input.getVelocity().magnitude();
 
         double pace = speed * secondsTillAppointment / flatDistance; // Ideally this should be 1
 

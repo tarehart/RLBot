@@ -26,9 +26,9 @@ public class SpinTracker {
 
         double rateConversion = 1 / secondsElapsed;
 
-        double pitchAmount = getRotationAmount(currData.noseVector, prevData.roofVector);
-        double yawAmount = getRotationAmount(currData.noseVector, prevData.rightVector);
-        double rollAmount = getRotationAmount(currData.roofVector, prevData.rightVector);
+        double pitchAmount = getRotationAmount(currData.getNoseVector(), prevData.getRoofVector());
+        double yawAmount = getRotationAmount(currData.getNoseVector(), prevData.getRightVector());
+        double rollAmount = getRotationAmount(currData.getRoofVector(), prevData.getRightVector());
 
         return new CarSpin(pitchAmount * rateConversion, yawAmount * rateConversion, rollAmount * rateConversion);
     }

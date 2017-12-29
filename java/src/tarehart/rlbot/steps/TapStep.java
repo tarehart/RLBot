@@ -24,9 +24,9 @@ public class TapStep implements Step {
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
-        if (previousTime == null || input.time.isAfter(previousTime)) {
+        if (previousTime == null || input.getTime().isAfter(previousTime)) {
             frameCount++;
-            previousTime = input.time;
+            previousTime = input.getTime();
         }
 
         if (frameCount > numFrames) {

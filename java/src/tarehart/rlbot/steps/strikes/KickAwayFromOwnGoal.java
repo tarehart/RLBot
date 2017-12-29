@@ -13,13 +13,13 @@ public class KickAwayFromOwnGoal implements KickStrategy {
 
     @Override
     public Vector3 getKickDirection(AgentInput input) {
-        return getKickDirection(input, input.ballPosition);
+        return getKickDirection(input, input.getBallPosition());
     }
 
     @Override
     public Vector3 getKickDirection(AgentInput input, Vector3 ballPosition) {
         CarData car = input.getMyCarData();
-        Vector3 toBall = ballPosition.minus(car.position);
+        Vector3 toBall = ballPosition.minus(car.getPosition());
         return getDirection(input.getMyCarData(), ballPosition, toBall);
     }
 
@@ -35,8 +35,8 @@ public class KickAwayFromOwnGoal implements KickStrategy {
 
     private Vector3 getDirection(CarData car, Vector3 ballPosition, Vector3 easyKick) {
         Vector2 easyKickFlat = easyKick.flatten();
-        Vector2 toLeftPost = getOwnGoal(car.team).getLeftPost().minus(ballPosition).flatten();
-        Vector2 toRightPost = getOwnGoal(car.team).getRightPost().minus(ballPosition).flatten();
+        Vector2 toLeftPost = getOwnGoal(car.getTeam()).getLeftPost().minus(ballPosition).flatten();
+        Vector2 toRightPost = getOwnGoal(car.getTeam()).getRightPost().minus(ballPosition).flatten();
 
         Vector2 safeDirectionRight = VectorUtil.rotateVector(toRightPost, -Math.PI/4);
         Vector2 safeDirectionLeft = VectorUtil.rotateVector(toLeftPost, Math.PI/4);

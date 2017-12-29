@@ -42,10 +42,10 @@ public class DirectedNoseHitStep implements Step {
     }
 
     public static boolean canMakeDirectedKick(AgentInput input, KickStrategy kickStrategy) {
-        boolean tooBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.getZ(), input.ballVelocity.getZ()) > 30;
+        boolean tooBouncy = BallPhysics.getGroundBounceEnergy(input.getBallPosition().getZ(), input.getBallVelocity().getZ()) > 30;
 
         Vector2 kickDirection = kickStrategy.getKickDirection(input).flatten();
-        Vector2 carToBall = input.ballPosition.minus(input.getMyCarData().position).flatten();
+        Vector2 carToBall = input.getBallPosition().minus(input.getMyCarData().getPosition()).flatten();
 
         double angle = Vector2.Companion.angle(kickDirection, carToBall);
 
@@ -62,13 +62,13 @@ public class DirectedNoseHitStep implements Step {
 
         car = input.getMyCarData();
 
-        if (doneMoment == null && car.position.distance(input.ballPosition) < 4.5) {
+        if (doneMoment == null && car.getPosition().distance(input.getBallPosition()) < 4.5) {
             // You get a tiny bit more time
-            doneMoment = input.time.plus(Duration.ofMillis(200));
+            doneMoment = input.getTime().plus(Duration.ofMillis(200));
         }
 
         if (earliestPossibleIntercept == null) {
-            earliestPossibleIntercept = input.time;
+            earliestPossibleIntercept = input.getTime();
         }
 
         if (plan != null && !plan.isComplete()) {
@@ -78,7 +78,7 @@ public class DirectedNoseHitStep implements Step {
             }
         }
 
-        if (doneMoment != null && input.time.isAfter(doneMoment)) {
+        if (doneMoment != null && input.getTime().isAfter(doneMoment)) {
             return Optional.empty();
         }
 
@@ -100,7 +100,7 @@ public class DirectedNoseHitStep implements Step {
         }
 
         if (!kickPlanOption.isPresent()) {
-            BotLog.println("Quitting nose hit due to failed kick plan.", car.playerIndex);
+            BotLog.println("Quitting nose hit due to failed kick plan.", car.getPlayerIndex());
             return Optional.empty();
         }
 
@@ -110,7 +110,7 @@ public class DirectedNoseHitStep implements Step {
             originalIntercept = kickPlan.ballAtIntercept.getSpace();
         } else {
             if (originalIntercept.distance(kickPlan.ballAtIntercept.getSpace()) > 30) {
-                println("Failed to make the nose hit", input.playerIndex);
+                println("Failed to make the nose hit", input.getPlayerIndex());
                 return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
@@ -120,12 +120,12 @@ public class DirectedNoseHitStep implements Step {
 
         Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten().normalized();
         Vector3 interceptLocation = kickPlan.intercept.getSpace();
-        Vector2 carToIntercept = interceptLocation.minus(car.position).flatten();
+        Vector2 carToIntercept = interceptLocation.minus(car.getPosition()).flatten();
         Vector2 interceptLocationFlat = interceptLocation.flatten();
 
         carLaunchpadInterceptAngle = measureCarLaunchpadInterceptAngle(car, kickPlan);
         double positionCorrectionForStrike = carToIntercept.correctionAngle(strikeForceFlat);
-        double orientationCorrectionForStrike = car.orientation.noseVector.flatten().correctionAngle(strikeForceFlat);
+        double orientationCorrectionForStrike = car.getOrientation().getNoseVector().flatten().correctionAngle(strikeForceFlat);
 
         circleTurnPlan = null;
 
@@ -169,7 +169,7 @@ public class DirectedNoseHitStep implements Step {
                     kickPlan.ballAtIntercept.getSpace(),
                     new StrikeProfile())
                 .map(DistanceTimeSpeed::getTime)
-                .orElse(Duration.between(input.time, kickPlan.ballAtIntercept.getTime())).getSeconds();
+                .orElse(Duration.between(input.getTime(), kickPlan.ballAtIntercept.getTime())).getSeconds();
 
 //            if (secondsTillIntercept > asapSeconds + .5) {
 //                plan = new Plan(Plan.Posture.OFFENSIVE)
@@ -180,7 +180,7 @@ public class DirectedNoseHitStep implements Step {
         // Line up for a nose hit
         circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, kickPlan.launchPad, strikeForceFlat);
         if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.getX(), circleTurnPlan.waypoint.getY(), 0)) < -1) {
-            println("Failing nose hit because waypoint is out of bounds", input.playerIndex);
+            println("Failing nose hit because waypoint is out of bounds", input.getPlayerIndex());
             return empty();
         }
 
@@ -191,7 +191,7 @@ public class DirectedNoseHitStep implements Step {
     private double getManeuverSeconds() {
         double seconds = carLaunchpadInterceptAngle * .1;
         if (circleTurnPlan != null) {
-            double noseToWaypoint = Vector2.Companion.angle(circleTurnPlan.waypoint.minus(car.position.flatten()), car.orientation.noseVector.flatten());
+            double noseToWaypoint = Vector2.Companion.angle(circleTurnPlan.waypoint.minus(car.getPosition().flatten()), car.getOrientation().getNoseVector().flatten());
             seconds += noseToWaypoint * .4;
         }
         return seconds;
@@ -203,7 +203,7 @@ public class DirectedNoseHitStep implements Step {
      */
     private static double measureCarLaunchpadInterceptAngle(CarData car, DirectedKickPlan kickPlan) {
         Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten();
-        Vector2 carToLaunchPad = kickPlan.launchPad.minus(car.position.flatten());
+        Vector2 carToLaunchPad = kickPlan.launchPad.minus(car.getPosition().flatten());
         return carToLaunchPad.correctionAngle(strikeForceFlat);
     }
 
@@ -212,7 +212,7 @@ public class DirectedNoseHitStep implements Step {
 
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint);
         if (sensibleFlip.isPresent()) {
-            println("Front flip toward nose hit", input.playerIndex);
+            println("Front flip toward nose hit", input.getPlayerIndex());
             this.plan = sensibleFlip.get();
             return this.plan.getOutput(input);
         }

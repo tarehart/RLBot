@@ -46,7 +46,7 @@ public class ReliefBot extends Bot {
 //
 //        return new AgentOutput();
 
-        Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.team);
+        Optional<ZonePlan> zonePlan = ZoneTelemetry.get(input.getTeam());
         BallPath ballPath = ArenaModel.predictBallPath(input);
         TacticalSituation situation = tacticsAdvisor.assessSituation(input, ballPath, currentPlan);
 
@@ -59,26 +59,26 @@ public class ReliefBot extends Bot {
             currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
         }
 
-        if (canInterruptPlanFor(Plan.Posture.LANDING) && !car.hasWheelContact &&
-                car.position.getZ() > 5 &&
-                !ArenaModel.isBehindGoalLine(car.position)) {
+        if (canInterruptPlanFor(Plan.Posture.LANDING) && !car.getHasWheelContact() &&
+                car.getPosition().getZ() > 5 &&
+                !ArenaModel.isBehindGoalLine(car.getPosition())) {
             currentPlan = new Plan(Plan.Posture.LANDING).withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
         }
 
         if (situation.scoredOnThreat.isPresent() && canInterruptPlanFor(Plan.Posture.SAVE)) {
-            println("Canceling current plan. Need to go for save!", input.playerIndex);
+            println("Canceling current plan. Need to go for save!", input.getPlayerIndex());
             currentPlan = null;
         } else if (zonePlan.isPresent() && situation.forceDefensivePosture && canInterruptPlanFor(Plan.Posture.DEFENSIVE)) {
-            println("Canceling current plan. Forcing defensive rotation!", input.playerIndex);
+            println("Canceling current plan. Forcing defensive rotation!", input.getPlayerIndex());
             currentPlan = null;
         } else if (situation.waitToClear && canInterruptPlanFor(Plan.Posture.WAITTOCLEAR)) {
-            println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex);
+            println("Canceling current plan. Ball is in the corner and I need to rotate!", input.getPlayerIndex());
             currentPlan = null;
         } else if (situation.needsDefensiveClear && canInterruptPlanFor(Plan.Posture.CLEAR)) {
-            println("Canceling current plan. Going for clear!", input.playerIndex);
+            println("Canceling current plan. Going for clear!", input.getPlayerIndex());
             currentPlan = null;
         } else if (situation.shotOnGoalAvailable && canInterruptPlanFor(Plan.Posture.OFFENSIVE)) {
-            println("Canceling current plan. Shot opportunity!", input.playerIndex);
+            println("Canceling current plan. Shot opportunity!", input.getPlayerIndex());
             currentPlan = null;
         }
 
@@ -97,6 +97,6 @@ public class ReliefBot extends Bot {
             }
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, input.ballPosition);
+        return SteerUtil.steerTowardGroundPosition(car, input.getBallPosition());
     }
 }

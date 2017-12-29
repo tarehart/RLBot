@@ -4,8 +4,6 @@ import rlbot.api.GameData;
 
 public class AgentOutput {
 
-    public static final int MAX_TILT = 32767;
-
     // 0 is straight, -1 is hard left, 1 is hard right.
     private double steeringTilt;
 

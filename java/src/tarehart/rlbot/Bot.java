@@ -39,17 +39,17 @@ public abstract class Bot {
 
 
     public AgentOutput processInput(AgentInput input) {
-        BotLog.setTimeStamp(input.time);
+        BotLog.setTimeStamp(input.getTime());
         final AgentOutput output;
         Optional<BallPath> ballPath = Optional.empty();
 
-        if (input.matchInfo.matchEnded) {
+        if (input.getMatchInfo().getMatchEnded()) {
             currentPlan = new Plan(Plan.Posture.MENU).withStep(new WaitForActive());
             output = new AgentOutput();
         } else {
             ballPath = Optional.of(ArenaModel.predictBallPath(input));
             ZonePlan zonePlan = new ZonePlan(input);
-            ZoneTelemetry.set(zonePlan, input.team);
+            ZoneTelemetry.set(zonePlan, input.getTeam());
 
 //        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
 //        if (input.ballVelocity.magnitudeSquared() > 0) {
@@ -60,7 +60,7 @@ public abstract class Bot {
 //                    stv.getTime().plusSeconds(1)));
 //        }
 
-            if (input.matchInfo.roundActive) {
+            if (input.getMatchInfo().getRoundActive()) {
                 output = getOutput(input);
             } else {
                 currentPlan = new Plan(Plan.Posture.NEUTRAL).withStep(new WaitForActive());
@@ -71,11 +71,11 @@ public abstract class Bot {
         Plan.Posture posture = currentPlan != null ? currentPlan.getPosture() : Plan.Posture.NEUTRAL;
         String situation = currentPlan != null ? currentPlan.getSituation() : "";
         if (!Objects.equals(situation, previousSituation)) {
-            println("[Sitch] " + situation, input.playerIndex);
+            println("[Sitch] " + situation, input.getPlayerIndex());
         }
         previousSituation = situation;
         previousPlan = currentPlan;
-        ballPath.ifPresent(bp -> readout.update(input, posture, situation, BotLog.collect(input.playerIndex), bp));
+        ballPath.ifPresent(bp -> readout.update(input, posture, situation, BotLog.collect(input.getPlayerIndex()), bp));
 
         return output;
     }

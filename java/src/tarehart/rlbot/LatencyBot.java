@@ -19,13 +19,13 @@ public class LatencyBot extends Bot {
     protected AgentOutput getOutput(AgentInput input) {
 
         if (!hasJumped) {
-            if (VectorUtil.flatDistance(input.ballPosition, new Vector3()) > 0) {
+            if (VectorUtil.flatDistance(input.getBallPosition(), new Vector3()) > 0) {
                 hasJumped = true;
                 return new AgentOutput().withJump();
             }
 
             final CarData car = input.getMyCarData();
-            return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.plus(new Vector3(20, 0, 0)));
+            return SteerUtil.steerTowardGroundPosition(car, input.getBallPosition().plus(new Vector3(20, 0, 0)));
         }
 
         if (noActivePlanWithPosture(Plan.Posture.NEUTRAL)) {

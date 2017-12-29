@@ -26,10 +26,10 @@ public class BlindStep implements Step {
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
         if (scheduledEndTime == null) {
-            scheduledEndTime = input.time.plus(duration);
+            scheduledEndTime = input.getTime().plus(duration);
         }
 
-        if (input.time.isAfter(scheduledEndTime)) {
+        if (input.getTime().isAfter(scheduledEndTime)) {
             return Optional.empty();
         }
         return Optional.of(output);

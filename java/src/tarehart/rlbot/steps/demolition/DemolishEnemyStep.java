@@ -25,7 +25,7 @@ public class DemolishEnemyStep implements Step {
         Optional<CarData> enemyCarOption = input.getEnemyCarData();
 
         CarData car = input.getMyCarData();
-        if (!enemyCarOption.isPresent() || enemyCarOption.map(ec -> ec.isDemolished).orElse(false) || (car.boost == 0 && !car.isSupersonic)) {
+        if (!enemyCarOption.isPresent() || enemyCarOption.map(CarData::isDemolished).orElse(false) || (car.getBoost() == 0 && !car.isSupersonic())) {
             return Optional.empty();
         }
 
@@ -33,7 +33,7 @@ public class DemolishEnemyStep implements Step {
 
         CarPath path = CarPredictor.predictCarMotion(enemyCar, Duration.ofSeconds(4));
 
-        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost);
+        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.getBoost());
 
         Optional<SpaceTime> carInterceptOption = CarInterceptPlanner.getCarIntercept(car, path, distancePlot);
 
@@ -48,21 +48,21 @@ public class DemolishEnemyStep implements Step {
 
             AgentOutput steering = SteerUtil.steerTowardGroundPosition(car, carIntercept.space);
 
-            double secondsTillContact = Duration.between(car.time, carIntercept.time).getSeconds();
+            double secondsTillContact = Duration.between(car.getTime(), carIntercept.time).getSeconds();
 
-            if (secondsTillContact < .5 && !enemyCar.hasWheelContact && (enemyHadWheelContact || enemyCar.position.getZ() - car.position.getZ() > 1)) {
+            if (secondsTillContact < .5 && !enemyCar.getHasWheelContact() && (enemyHadWheelContact || enemyCar.getPosition().getZ() - car.getPosition().getZ() > 1)) {
                 steering.withJump();
-                if (!car.hasWheelContact) {
+                if (!car.getHasWheelContact()) {
                     steering.withSteer(0); // Avoid dodging accidentally.
                 }
             }
 
-            enemyHadWheelContact = enemyCar.hasWheelContact;
+            enemyHadWheelContact = enemyCar.getHasWheelContact();
 
             return Optional.of(steering);
         }
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, enemyCar.position));
+        return Optional.of(SteerUtil.steerTowardGroundPosition(car, enemyCar.getPosition()));
     }
 
     @Override

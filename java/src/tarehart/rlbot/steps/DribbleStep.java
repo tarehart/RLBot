@@ -45,10 +45,10 @@ public class DribbleStep implements Step {
             return Optional.empty();
         }
 
-        Vector2 myPositonFlat = car.position.flatten();
-        Vector2 myDirectionFlat = car.orientation.noseVector.flatten();
-        Vector2 ballPositionFlat = input.ballPosition.flatten();
-        Vector2 ballVelocityFlat = input.ballVelocity.flatten();
+        Vector2 myPositonFlat = car.getPosition().flatten();
+        Vector2 myDirectionFlat = car.getOrientation().getNoseVector().flatten();
+        Vector2 ballPositionFlat = input.getBallPosition().flatten();
+        Vector2 ballVelocityFlat = input.getBallVelocity().flatten();
         Vector2 toBallFlat = ballPositionFlat.minus(myPositonFlat);
         double flatDistance = toBallFlat.magnitude();
 
@@ -58,16 +58,16 @@ public class DribbleStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
-        if (motionAfterWallBounce.isPresent() && Duration.between(input.time, motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
+        if (motionAfterWallBounce.isPresent() && Duration.between(input.getTime(), motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
             return Optional.empty(); // The dribble step is not in the business of wall reads.
         }
 
         Vector2 futureBallPosition;
-        BallSlice ballFuture = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds)).get();
+        BallSlice ballFuture = ballPath.getMotionAt(input.getTime().plusSeconds(leadSeconds)).get();
         futureBallPosition = ballFuture.getSpace().flatten();
 
 
-        Vector2 scoreLocation = getEnemyGoal(input.team).getNearestEntrance(input.ballPosition, 3).flatten();
+        Vector2 scoreLocation = getEnemyGoal(input.getTeam()).getNearestEntrance(input.getBallPosition(), 3).flatten();
 
         Vector2 ballToGoal = scoreLocation.minus(futureBallPosition);
         Vector2 pushDirection;
@@ -90,9 +90,9 @@ public class DribbleStep implements Step {
         Vector2 carToPressurePoint = pressurePoint.minus(myPositonFlat);
         Vector2 carToBall = futureBallPosition.minus(myPositonFlat);
 
-        GameTime hurryUp = input.time.plusSeconds(leadSeconds);
+        GameTime hurryUp = input.getTime().plusSeconds(leadSeconds);
 
-        boolean hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.ballPosition.getZ() > 2;
+        boolean hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.getBallPosition().getZ() > 2;
         if (!hasLineOfSight) {
             // Steer toward a farther-back waypoint.
             Vector2 fallBack = VectorUtil.orthogonal(pushDirection, v -> v.dotProduct(ballToGoal) < 0).scaledToMagnitude(5);
@@ -102,9 +102,9 @@ public class DribbleStep implements Step {
 
         AgentOutput dribble = SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
         if (carToPressurePoint.normalized().dotProduct(ballToGoal.normalized()) > .80 &&
-                flatDistance > 3 && flatDistance < 5 && input.ballPosition.getZ() < 2 && approachDistance < 2
+                flatDistance > 3 && flatDistance < 5 && input.getBallPosition().getZ() < 2 && approachDistance < 2
                 && Vector2.Companion.angle(myDirectionFlat, carToPressurePoint) < Math.PI / 12) {
-            if (car.boost > 0) {
+            if (car.getBoost() > 0) {
                 dribble.withAcceleration(1).withBoost();
             } else {
                 plan = SetPieces.frontFlip();
@@ -117,42 +117,42 @@ public class DribbleStep implements Step {
     public static boolean canDribble(AgentInput input, boolean log) {
 
         CarData car = input.getMyCarData();
-        Vector3 ballToMe = car.position.minus(input.ballPosition);
+        Vector3 ballToMe = car.getPosition().minus(input.getBallPosition());
 
         if (ballToMe.magnitude() > DRIBBLE_DISTANCE) {
             // It got away from us
             if (log) {
-                println("Too far to dribble", input.playerIndex);
+                println("Too far to dribble", input.getPlayerIndex());
             }
             return false;
         }
 
-        if (input.ballPosition.minus(car.position).normaliseCopy().dotProduct(
-                GoalUtil.getOwnGoal(input.team).getCenter().minus(input.ballPosition).normaliseCopy()) > .9) {
+        if (input.getBallPosition().minus(car.getPosition()).normaliseCopy().dotProduct(
+                GoalUtil.getOwnGoal(input.getTeam()).getCenter().minus(input.getBallPosition()).normaliseCopy()) > .9) {
             // Wrong side of ball
             if (log) {
-                println("Wrong side of ball for dribble", input.playerIndex);
+                println("Wrong side of ball for dribble", input.getPlayerIndex());
             }
             return false;
         }
 
-        if (VectorUtil.flatDistance(car.velocity, input.ballVelocity) > 30) {
+        if (VectorUtil.flatDistance(car.getVelocity(), input.getBallVelocity()) > 30) {
             if (log) {
-                println("Velocity too different to dribble.", input.playerIndex);
+                println("Velocity too different to dribble.", input.getPlayerIndex());
             }
             return false;
         }
 
-        if (BallPhysics.getGroundBounceEnergy(input.ballPosition.getZ(), input.ballVelocity.getZ()) > 50) {
+        if (BallPhysics.getGroundBounceEnergy(input.getBallPosition().getZ(), input.getBallVelocity().getZ()) > 50) {
             if (log) {
-                println("Ball bouncing too hard to dribble", input.playerIndex);
+                println("Ball bouncing too hard to dribble", input.getPlayerIndex());
             }
             return false;
         }
 
-        if (car.position.getZ() > 5) {
+        if (car.getPosition().getZ() > 5) {
             if (log) {
-                println("Car too high to dribble", input.playerIndex);
+                println("Car too high to dribble", input.getPlayerIndex());
             }
             return false;
         }

@@ -67,13 +67,13 @@ public class InterceptCalculator {
             Function<Vector3, StrikeProfile> strikeProfileFn,
             Vector3 planeNormal) {
 
-        Vector3 myPosition = carData.position;
+        Vector3 myPosition = carData.getPosition();
         GameTime firstMomentInRange = null;
 
         for (BallSlice ballMoment: ballPath.getSlices()) {
-            SpaceTime spaceTime = new SpaceTime(ballMoment.space.plus(interceptModifier), ballMoment.getTime());
+            SpaceTime spaceTime = new SpaceTime(ballMoment.getSpace().plus(interceptModifier), ballMoment.getTime());
             StrikeProfile strikeProfile = strikeProfileFn.apply(spaceTime.space);
-            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile);
+            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.getTime(), spaceTime.time), strikeProfile);
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
                 double interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space, planeNormal);
@@ -106,20 +106,20 @@ public class InterceptCalculator {
             BallPath ballPath,
             Vector3 interceptModifier) {
 
-        Vector3 myPosition = carData.position;
+        Vector3 myPosition = carData.getPosition();
 
         for (BallSlice ballMoment: ballPath.getSlices()) {
-            SpaceTime intercept = new SpaceTime(ballMoment.space.plus(interceptModifier), ballMoment.getTime());
+            SpaceTime intercept = new SpaceTime(ballMoment.getSpace().plus(interceptModifier), ballMoment.getTime());
 
-            double averageNoseAngle = MidairStrikeStep.getDesiredVerticalAngle(carData.velocity, intercept.space.minus(carData.position));
-            Duration duration = Duration.between(carData.time, ballMoment.getTime());
+            double averageNoseAngle = MidairStrikeStep.getDesiredVerticalAngle(carData.getVelocity(), intercept.space.minus(carData.getPosition()));
+            Duration duration = Duration.between(carData.getTime(), ballMoment.getTime());
             DistancePlot acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle));
             StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 && averageNoseAngle < .5 ?
                     new StrikeProfile(0, 10, .15, StrikeProfile.Style.AERIAL) :
                     InterceptStep.AERIAL_STRIKE_PROFILE;
 
             Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(
-                    carData, intercept.space, Duration.between(carData.time, intercept.time), strikeProfile);
+                    carData, intercept.space, Duration.between(carData.getTime(), intercept.time), strikeProfile);
 
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();

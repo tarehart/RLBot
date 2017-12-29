@@ -30,8 +30,8 @@ public class TagAlongStep implements Step {
             Optional<CarData> enemyCarOption = in.getEnemyCarData();
             CarData enemyCar = enemyCarOption.get();
 
-            Vector2 waypoint = enemyCar.position.plus(enemyCar.orientation.rightVector.scaled(4)).flatten();
-            Vector2 targetFacing = enemyCar.orientation.noseVector.flatten();
+            Vector2 waypoint = enemyCar.getPosition().plus(enemyCar.getOrientation().getRightVector().scaled(4)).flatten();
+            Vector2 targetFacing = enemyCar.getOrientation().getNoseVector().flatten();
             return new PositionFacing(waypoint, targetFacing);
         })).withStep(new BlindStep(new AgentOutput().withAcceleration(1), Duration.ofSeconds(3)));
 

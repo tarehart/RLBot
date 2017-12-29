@@ -25,7 +25,7 @@ public class ChaseBallStep implements Step {
             }
         }
 
-        Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.playerIndex);
+        Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.getPlayerIndex());
 
         if (tacticalSituationOption.map(situation -> situation.expectedContact.isPresent()).orElse(false)) {
             // There's an intercept, quit this thing.
@@ -35,14 +35,14 @@ public class ChaseBallStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, input.ballPosition);
+        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, input.getBallPosition());
         if (sensibleFlip.isPresent()) {
-            println("Front flip after ball", input.playerIndex);
+            println("Front flip after ball", input.getPlayerIndex());
             plan = sensibleFlip.get();
             return plan.getOutput(input);
         }
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.ballPosition));
+        return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.getBallPosition()));
     }
 
     @Override

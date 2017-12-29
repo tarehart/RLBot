@@ -21,7 +21,7 @@ public class GoalUtil {
     }
 
     public static Optional<BallSlice> predictGoalEvent(Goal goal, BallPath ballPath) {
-        return ballPath.getPlaneBreak(ballPath.getStartPoint().time, goal.getScorePlane(), true);
+        return ballPath.getPlaneBreak(ballPath.getStartPoint().getTime(), goal.getScorePlane(), true);
     }
 
     public static boolean ballLingersInBox(Goal goal, BallPath ballPath) {

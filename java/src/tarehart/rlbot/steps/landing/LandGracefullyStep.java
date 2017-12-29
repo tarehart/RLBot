@@ -30,12 +30,12 @@ public class LandGracefullyStep implements Step {
     public static final Function<AgentInput, Vector2> FACE_BALL = LandGracefullyStep::faceBall;
 
     private static Vector2 faceBall(AgentInput input) {
-        Vector2 toBall = (input.ballPosition).minus(input.getMyCarData().position).flatten();
+        Vector2 toBall = (input.getBallPosition()).minus(input.getMyCarData().getPosition()).flatten();
         return toBall.normalized();
     }
 
     public LandGracefullyStep() {
-        this(input -> input.getMyCarData().velocity.flatten());
+        this(input -> input.getMyCarData().getVelocity().flatten());
     }
 
     public LandGracefullyStep(Function<AgentInput, Vector2> facingFn) {
@@ -56,12 +56,12 @@ public class LandGracefullyStep implements Step {
             return plan.getOutput(input);
         }
 
-        if (car.position.getZ() < NEEDS_LANDING_HEIGHT || ArenaModel.isBehindGoalLine(car.position)) {
+        if (car.getPosition().getZ() < NEEDS_LANDING_HEIGHT || ArenaModel.isBehindGoalLine(car.getPosition())) {
             return Optional.empty();
         }
 
         if (plan == null || plan.isComplete()) {
-            plan = planRotation(car, facingFn, input.team);
+            plan = planRotation(car, facingFn, input.getTeam());
         }
 
         return plan.getOutput(input);
@@ -69,8 +69,8 @@ public class LandGracefullyStep implements Step {
 
     private static Plan planRotation(CarData car, Function<AgentInput, Vector2> facingFn, Bot.Team team) {
 
-        CarOrientation current = car.orientation;
-        boolean pitchFirst = Math.abs(car.spin.pitchRate) > 1 || Math.abs(current.roofVector.getZ()) > SIN_45;
+        CarOrientation current = car.getOrientation();
+        boolean pitchFirst = Math.abs(car.getSpin().getPitchRate()) > 1 || Math.abs(current.getRoofVector().getZ()) > SIN_45;
 
         return new Plan()
                 .withStep(pitchFirst ? new PitchToPlaneStep(UP_VECTOR, true) : new YawToPlaneStep(UP_VECTOR, true))

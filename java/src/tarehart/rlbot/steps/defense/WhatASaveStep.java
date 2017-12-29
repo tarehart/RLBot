@@ -34,7 +34,7 @@ public class WhatASaveStep implements Step {
 
         CarData car = input.getMyCarData();
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        Goal goal = GoalUtil.getOwnGoal(input.team);
+        Goal goal = GoalUtil.getOwnGoal(input.getTeam());
         Optional<BallSlice> currentThreat = GoalUtil.predictGoalEvent(goal, ballPath);
         if (!currentThreat.isPresent()) {
             return Optional.empty();
@@ -51,33 +51,33 @@ public class WhatASaveStep implements Step {
 
         if (whichPost == null) {
 
-            Vector3 carToThreat = threat.space.minus(car.position);
-            double carApproachVsBallApproach = carToThreat.flatten().correctionAngle(input.ballVelocity.flatten());
+            Vector3 carToThreat = threat.getSpace().minus(car.getPosition());
+            double carApproachVsBallApproach = carToThreat.flatten().correctionAngle(input.getBallVelocity().flatten());
             // When carApproachVsBallApproach < 0, car is to the right of the ball, angle wise. Right is positive X when we're on the positive Y side of the field.
-            whichPost = Math.signum(-carApproachVsBallApproach * threat.space.getY());
+            whichPost = Math.signum(-carApproachVsBallApproach * threat.getSpace().getY());
 
         }
 
-        double distance = VectorUtil.flatDistance(car.position, threat.getSpace());
-        DistancePlot plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.boost, distance - 15);
+        double distance = VectorUtil.flatDistance(car.getPosition(), threat.getSpace());
+        DistancePlot plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.getBoost(), distance - 15);
 
 
         Intercept intercept = InterceptCalculator.getInterceptOpportunity(car, ballPath, plot)
                 .orElse(new Intercept(threat.toSpaceTime(), new StrikeProfile(), plot));
 
-        Vector3 carToIntercept = intercept.getSpace().minus(car.position);
-        double carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten());
+        Vector3 carToIntercept = intercept.getSpace().minus(car.getPosition());
+        double carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.getBallVelocity().flatten());
 
         Optional<BallSlice> overHeadSlice = ballPath.findSlice((ballSlice -> {
-            return car.position.flatten().distance(ballSlice.space.flatten()) < ArenaModel.BALL_RADIUS;
+            return car.getPosition().flatten().distance(ballSlice.getSpace().flatten()) < ArenaModel.BALL_RADIUS;
         }));
 
         if (overHeadSlice.isPresent() && (goingForSuperJump || AirTouchPlanner.isVerticallyAccessible(car, overHeadSlice.get().toSpaceTime()))) {
 
             goingForSuperJump = true;
 
-            double overheadHeight = overHeadSlice.get().space.getZ();
-            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.time, overHeadSlice.get().time).getSeconds()) {
+            double overheadHeight = overHeadSlice.get().getSpace().getZ();
+            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.getTime(), overHeadSlice.get().getTime()).getSeconds()) {
                 plan = SetPieces.jumpSuperHigh(overheadHeight);
                 return plan.getOutput(input);
             } else {

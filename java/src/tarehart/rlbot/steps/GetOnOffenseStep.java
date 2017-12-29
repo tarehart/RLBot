@@ -36,10 +36,10 @@ public class GetOnOffenseStep implements Step {
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
         if (lastMoment == null) {
-            lastMoment = input.time.plus(duration);
+            lastMoment = input.getTime().plus(duration);
         }
 
-        if (input.time.isAfter(lastMoment) && (plan == null || plan.canInterrupt())) {
+        if (input.getTime().isAfter(lastMoment) && (plan == null || plan.canInterrupt())) {
             return Optional.empty();
         }
 
@@ -50,7 +50,7 @@ public class GetOnOffenseStep implements Step {
             }
         }
 
-        Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.playerIndex);
+        Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.getPlayerIndex());
 
         if (tacticalSituationOption.map(situation -> situation.shotOnGoalAvailable).orElse(false)) {
             return Optional.empty();
@@ -59,18 +59,18 @@ public class GetOnOffenseStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         SpaceTime ballFuture = tacticalSituationOption.map(situation -> situation.expectedContact.map(Intercept::toSpaceTime))
-                .orElse(ballPath.getMotionAt(input.time.plusSeconds(2)).map(BallSlice::toSpaceTime))
-                .orElse(new SpaceTime(input.ballPosition, input.time));
+                .orElse(ballPath.getMotionAt(input.getTime().plusSeconds(2)).map(BallSlice::toSpaceTime))
+                .orElse(new SpaceTime(input.getBallPosition(), input.getTime()));
 
         CarData car = input.getMyCarData();
 
-        if (car.boost < 10 && GetBoostStep.seesOpportunisticBoost(car, input.fullBoosts)) {
+        if (car.getBoost() < 10 && GetBoostStep.seesOpportunisticBoost(car, input.getFullBoosts())) {
             plan = new Plan().withStep(new GetBoostStep());
             return plan.getOutput(input);
         }
 
-        Goal enemyGoal = GoalUtil.getEnemyGoal(input.team);
-        Goal ownGoal = GoalUtil.getOwnGoal(input.team);
+        Goal enemyGoal = GoalUtil.getEnemyGoal(input.getTeam());
+        Goal ownGoal = GoalUtil.getOwnGoal(input.getTeam());
 
         Vector3 target = ballFuture.space;
 
@@ -96,7 +96,7 @@ public class GetOnOffenseStep implements Step {
 
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, target);
         if (sensibleFlip.isPresent()) {
-            println("Front flip toward offense", input.playerIndex);
+            println("Front flip toward offense", input.getPlayerIndex());
             plan = sensibleFlip.get();
             return plan.getOutput(input);
         }

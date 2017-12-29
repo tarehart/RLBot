@@ -12,7 +12,7 @@ public class WaitForActive implements Step {
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
-        if (input.matchInfo.roundActive) {
+        if (input.getMatchInfo().getRoundActive()) {
             return Optional.empty();
         }
         return Optional.of(new AgentOutput());

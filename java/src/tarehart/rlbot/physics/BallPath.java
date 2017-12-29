@@ -45,7 +45,7 @@ public class BallPath {
                 Vector3 toTween = toNext.scaled(tweenPoint);
                 Vector3 space = current.getSpace().plus(toTween);
                 Vector3 velocity = averageVectors(current.getVelocity(), next.getVelocity(), 1 - tweenPoint);
-                return Optional.of(new BallSlice(space, time, velocity, next.spin));
+                return Optional.of(new BallSlice(space, time, velocity, next.getSpin()));
             }
         }
 
@@ -135,14 +135,14 @@ public class BallPath {
                         new Vector3(spt.getSpace().getX(), spt.getSpace().getY(), ArenaModel.BALL_RADIUS),
                         spt.getTime(),
                         spt.getVelocity(),
-                        spt.spin);
+                        spt.getSpin());
                 if (floorGapOfPrev < floorGapOfCurrent) {
                     // TODO: consider interpolating instead of just picking the more accurate.
                     bouncePosition = new BallSlice(
                             new Vector3(previous.getSpace().getX(), previous.getSpace().getY(), ArenaModel.BALL_RADIUS),
                             previous.getTime(),
                             spt.getVelocity(),
-                            spt.spin);
+                            spt.getSpin());
                 }
 
                 return Optional.of(bouncePosition);
@@ -177,7 +177,7 @@ public class BallPath {
                 double tweenPoint = previous.getSpace().distance(breakPosition) / previous.getSpace().distance(spt.getSpace());
                 GameTime moment = previous.getTime().plusSeconds(stepSeconds * tweenPoint);
                 Vector3 velocity = averageVectors(previous.getVelocity(), spt.getVelocity(), 1 - tweenPoint);
-                return Optional.of(new BallSlice(breakPosition, moment, velocity, spt.spin));
+                return Optional.of(new BallSlice(breakPosition, moment, velocity, spt.getSpin()));
             }
         }
 

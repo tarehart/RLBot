@@ -34,7 +34,7 @@ public class SteerPlan {
     public void drawDebugInfo(Graphics2D graphics, CarData car) {
 
         graphics.setStroke(new BasicStroke(1));
-        graphics.draw(new Line2D.Double(car.position.getX(), car.position.getY(), waypoint.getX(), waypoint.getY()));
+        graphics.draw(new Line2D.Double(car.getPosition().getX(), car.getPosition().getY(), waypoint.getX(), waypoint.getY()));
         if (circle != null) {
             Shape circleShape = circle.toShape();
 

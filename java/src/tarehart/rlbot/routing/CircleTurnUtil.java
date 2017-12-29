@@ -16,9 +16,9 @@ public class CircleTurnUtil {
 
         Vector2 targetNose = targetPosition.plus(targetFacing);
         Vector2 targetTail = targetPosition.minus(targetFacing);
-        Vector2 facing = car.orientation.noseVector.flatten();
+        Vector2 facing = car.getOrientation().getNoseVector().flatten();
 
-        Vector2 flatPosition = car.position.flatten();
+        Vector2 flatPosition = car.getPosition().flatten();
         Circle idealCircle = Circle.Companion.getCircleFromPoints(targetTail, targetNose, flatPosition);
 
         boolean clockwise = Circle.Companion.isClockwise(idealCircle, targetPosition, targetFacing);
@@ -56,7 +56,7 @@ public class CircleTurnUtil {
             } else {
                 framesBetweenSlidePulses = 12;
             }
-            output.withSlide(car.frameCount % (framesBetweenSlidePulses + 1) == 0);
+            output.withSlide(car.getFrameCount() % (framesBetweenSlidePulses + 1) == 0);
         }
 
         return new SteerPlan(output, flatPosition, targetPosition, targetFacing, idealCircle);
@@ -94,18 +94,18 @@ public class CircleTurnUtil {
     public static SteerPlan getPlanForCircleTurn(
             CarData car, DistancePlot distancePlot, Vector2 targetPosition, Vector2 targetFacing) {
 
-        double distance = car.position.flatten().distance(targetPosition);
+        double distance = car.getPosition().flatten().distance(targetPosition);
         double maxSpeed = distancePlot.getMotionAfterDistance(distance)
                 .map(dts -> dts.getSpeed())
                 .orElse(AccelerationModel.SUPERSONIC_SPEED);
         double idealSpeed = getIdealCircleSpeed(car, targetFacing);
-        double currentSpeed = car.velocity.magnitude();
+        double currentSpeed = car.getVelocity().magnitude();
 
         return circleWaypoint(car, targetPosition, targetFacing, currentSpeed, Math.min(maxSpeed, idealSpeed));
     }
 
     private static double getIdealCircleSpeed(CarData car, Vector2 targetFacing) {
-        double orientationCorrection = car.orientation.noseVector.flatten().correctionAngle(targetFacing);
+        double orientationCorrection = car.getOrientation().getNoseVector().flatten().correctionAngle(targetFacing);
         double angleAllowingFullSpeed = Math.PI / 6;
         double speedPenaltyPerRadian = 20;
         double rawPenalty = speedPenaltyPerRadian * (Math.abs(orientationCorrection) - angleAllowingFullSpeed);
@@ -115,7 +115,7 @@ public class CircleTurnUtil {
 
     private static SteerPlan circleWaypoint(CarData car, Vector2 targetPosition, Vector2 targetFacing, double currentSpeed, double expectedSpeed) {
 
-        Vector2 flatPosition = car.position.flatten();
+        Vector2 flatPosition = car.getPosition().flatten();
         Vector2 toTarget = targetPosition.minus(flatPosition);
 
         double turnRadius = getTurnRadius(expectedSpeed);

@@ -56,25 +56,25 @@ public class InterceptStep implements Step {
             }
         }
 
-        if (doneMoment != null && input.time.isAfter(doneMoment)) {
-            println("Probably intercepted successfully", input.playerIndex);
+        if (doneMoment != null && input.getTime().isAfter(doneMoment)) {
+            println("Probably intercepted successfully", input.getPlayerIndex());
             return Optional.empty();
         }
 
         CarData carData = input.getMyCarData();
 
-        double distanceFromBall = carData.position.distance(input.ballPosition);
+        double distanceFromBall = carData.getPosition().distance(input.getBallPosition());
         if (doneMoment == null && distanceFromBall < PROBABLY_TOUCHING_THRESHOLD) {
             // You get a tiny bit more time
-            doneMoment = input.time.plus(Duration.ofMillis(1000));
+            doneMoment = input.getTime().plus(Duration.ofMillis(1000));
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(7), carData.boost, 0);
+        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(7), carData.getBoost(), 0);
 
         Optional<Intercept> soonestInterceptOption = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate);
         if (!soonestInterceptOption.isPresent()) {
-            println("No intercept option found, aborting.", input.playerIndex);
+            println("No intercept option found, aborting.", input.getPlayerIndex());
             return Optional.empty();
         }
         chosenIntercept = soonestInterceptOption.get();
@@ -91,9 +91,9 @@ public class InterceptStep implements Step {
         } else {
             if (Duration.between(originalIntercept.getTime(), chosenIntercept.getTime()).getSeconds() > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
                 if (doneMoment != null) {
-                    println("Probably intercepted successfully", input.playerIndex);
+                    println("Probably intercepted successfully", input.getPlayerIndex());
                 } else {
-                    println("Failed to make the intercept", input.playerIndex);
+                    println("Failed to make the intercept", input.getPlayerIndex());
                 }
                 return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
             }
@@ -118,10 +118,10 @@ public class InterceptStep implements Step {
     }
 
     private static Optional<Intercept> getAerialIntercept(CarData carData, BallPath ballPath, Vector3 interceptModifier, BiPredicate<CarData, SpaceTime> interceptPredicate) {
-        if (carData.boost >= AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL) {
+        if (carData.getBoost() >= AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL) {
 
-            double distance = carData.position.flatten().distance(ballPath.getStartPoint().space.flatten());
-            Vector3 averageNoseVector = ballPath.getMotionAt(carData.time.plusSeconds(distance * .02)).get().space.minus(carData.position).normaliseCopy();
+            double distance = carData.getPosition().flatten().distance(ballPath.getStartPoint().getSpace().flatten());
+            Vector3 averageNoseVector = ballPath.getMotionAt(carData.getTime().plusSeconds(distance * .02)).get().getSpace().minus(carData.getPosition()).normaliseCopy();
 
             DistancePlot budgetAcceleration = AccelerationModel.simulateAirAcceleration(carData, Duration.ofSeconds(4), averageNoseVector.flatten().magnitude());
 
@@ -148,7 +148,7 @@ public class InterceptStep implements Step {
 
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, intercept.getSpace());
         if (sensibleFlip.isPresent()) {
-            println("Front flip toward intercept", input.playerIndex);
+            println("Front flip toward intercept", input.getPlayerIndex());
             this.plan = sensibleFlip.get();
             flipOut = this.plan.getOutput(input);
         }
@@ -158,17 +158,17 @@ public class InterceptStep implements Step {
         }
 
         Optional<DistanceTimeSpeed> motionAfterStrike = intercept.getDistancePlot()
-                .getMotionAfterDuration(car, intercept.getSpace(), Duration.between(car.time, intercept.getTime()), intercept.getStrikeProfile());
+                .getMotionAfterDuration(car, intercept.getSpace(), Duration.between(car.getTime(), intercept.getTime()), intercept.getStrikeProfile());
 
         if (motionAfterStrike.isPresent()) {
             double maxDistance = motionAfterStrike.get().getDistance();
-            double pace = maxDistance / car.position.flatten().distance(intercept.getSpace().flatten());
+            double pace = maxDistance / car.getPosition().flatten().distance(intercept.getSpace().flatten());
 
-            AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.getSpace().flatten(), car.boost <= intercept.getAirBoost());
+            AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.getSpace().flatten(), car.getBoost() <= intercept.getAirBoost());
             if (pace > 1.1) {
                 // Slow down
                 agentOutput.withAcceleration(0).withBoost(false).withDeceleration(Math.max(0, pace - 1.5)); // Hit the brakes, but keep steering!
-                if (car.orientation.noseVector.dotProduct(car.velocity) < 0) {
+                if (car.getOrientation().getNoseVector().dotProduct(car.getVelocity()) < 0) {
                     // car is going backwards
                     agentOutput.withDeceleration(0).withSteer(0);
                 }
@@ -176,7 +176,7 @@ public class InterceptStep implements Step {
             return agentOutput;
         } else {
             AgentOutput output = SteerUtil.getThereOnTime(car, chosenIntercept.toSpaceTime());
-            if (car.boost <= intercept.getAirBoost() + 5) {
+            if (car.getBoost() <= intercept.getAirBoost() + 5) {
                 output.withBoost(false);
             }
             return output;

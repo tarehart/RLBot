@@ -19,15 +19,15 @@ public class EscapeTheGoalStep implements Step {
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
         CarData car = input.getMyCarData();
-        if (!ArenaModel.isBehindGoalLine(car.position)) {
+        if (!ArenaModel.isBehindGoalLine(car.getPosition())) {
             return Optional.empty();
         }
 
-        Vector3 target = TacticsTelemetry.get(car.playerIndex).map(telem -> telem.futureBallMotion.space).orElse(new Vector3());
-        Vector3 toTarget = target.minus(car.position);
-        Goal nearestGoal = GoalUtil.getNearestGoal(car.position);
+        Vector3 target = TacticsTelemetry.get(car.getPlayerIndex()).map(telem -> telem.futureBallMotion.getSpace()).orElse(new Vector3());
+        Vector3 toTarget = target.minus(car.getPosition());
+        Goal nearestGoal = GoalUtil.getNearestGoal(car.getPosition());
         Plane goalPlane = nearestGoal.getThreatPlane();
-        Vector3 desiredExit = VectorUtil.getPlaneIntersection(goalPlane, car.position, toTarget).orElse(nearestGoal.getCenter());
+        Vector3 desiredExit = VectorUtil.getPlaneIntersection(goalPlane, car.getPosition(), toTarget).orElse(nearestGoal.getCenter());
 
         Vector3 exit = nearestGoal.getNearestEntrance(desiredExit, 2);
 

@@ -16,11 +16,11 @@ public class PitchToPlaneStep extends OrientToPlaneStep {
 
     @Override
     protected double getOrientationCorrection(CarData car) {
-        Vector3 vectorNeedingCorrection = car.orientation.noseVector;
-        Vector3 axisOfRotation = car.orientation.rightVector;
+        Vector3 vectorNeedingCorrection = car.getOrientation().getNoseVector();
+        Vector3 axisOfRotation = car.getOrientation().getRightVector();
         double correction = getMinimalCorrectionRadiansToPlane(vectorNeedingCorrection, axisOfRotation);
 
-        boolean upsideDown = car.orientation.roofVector.dotProduct(planeNormal) < 0;
+        boolean upsideDown = car.getOrientation().getRoofVector().dotProduct(planeNormal) < 0;
 
         if (upsideDown) {
             correction *= -1; // When upside down, need to rotate the opposite direction to converge on plane.
@@ -33,7 +33,7 @@ public class PitchToPlaneStep extends OrientToPlaneStep {
 
     @Override
     protected double getAngularVelocity(CarData car) {
-        return car.spin.pitchRate;
+        return car.getSpin().getPitchRate();
     }
 
     @Override

@@ -17,14 +17,14 @@ public class StrikePlanner {
         if (strikeStyle == StrikeProfile.Style.AERIAL) {
             AerialChecklist checklist = AirTouchPlanner.checkAerialReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
-                BotLog.println("Performing Aerial!", car.playerIndex);
+                BotLog.println("Performing Aerial!", car.getPlayerIndex());
 
-                double groundDistance = car.position.flatten().distance(intercept.getSpace().flatten());
+                double groundDistance = car.getPosition().flatten().distance(intercept.getSpace().flatten());
                 double radiansForTilt = Math.atan2(height, groundDistance) + MidairStrikeStep.UPWARD_VELOCITY_MAINTENANCE_ANGLE;
 
                 double tiltBackSeconds = radiansForTilt * .35;
 
-                if (Duration.between(car.time, intercept.getTime()).getSeconds() > 1.5 && intercept.getSpace().getZ() > 10) {
+                if (Duration.between(car.getTime(), intercept.getTime()).getSeconds() > 1.5 && intercept.getSpace().getZ() > 10) {
                     return Optional.of(SetPieces.performDoubleJumpAerial(tiltBackSeconds * .8));
                 }
                 return Optional.of(SetPieces.performAerial(tiltBackSeconds));
@@ -35,7 +35,7 @@ public class StrikePlanner {
         if (strikeStyle == StrikeProfile.Style.JUMP_HIT) {
             LaunchChecklist checklist = AirTouchPlanner.checkJumpHitReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
-                BotLog.println("Performing JumpHit!", car.playerIndex);
+                BotLog.println("Performing JumpHit!", car.getPlayerIndex());
                 return Optional.of(SetPieces.performJumpHit(height));
             }
             return Optional.empty();
@@ -44,7 +44,7 @@ public class StrikePlanner {
         if (strikeStyle == StrikeProfile.Style.FLIP_HIT) {
             LaunchChecklist checklist = AirTouchPlanner.checkFlipHitReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
-                BotLog.println("Performing FlipHit!", car.playerIndex);
+                BotLog.println("Performing FlipHit!", car.getPlayerIndex());
                 return Optional.of(SetPieces.frontFlip());
             }
             return Optional.empty();

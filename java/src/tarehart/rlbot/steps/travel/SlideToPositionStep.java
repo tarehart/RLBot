@@ -49,7 +49,7 @@ public class SlideToPositionStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        Vector2 toTarget = target.getPosition().minus(car.position.flatten());
+        Vector2 toTarget = target.getPosition().minus(car.getPosition().flatten());
 
         if (phase == AIM_AT_TARGET) {
 
@@ -58,7 +58,7 @@ public class SlideToPositionStep implements Step {
             }
 
 
-            double angle = Vector2.Companion.angle(toTarget, car.orientation.noseVector.flatten());
+            double angle = Vector2.Companion.angle(toTarget, car.getOrientation().getNoseVector().flatten());
             if (angle < Math.PI / 12) {
                 phase = TRAVEL;
             } else {
@@ -69,7 +69,7 @@ public class SlideToPositionStep implements Step {
         if (phase == TRAVEL) {
 
             double distance = toTarget.magnitude();
-            double slideDistance = getSlideDistance(car.velocity.magnitude());
+            double slideDistance = getSlideDistance(car.getVelocity().magnitude());
 
             if (distance < slideDistance) {
                 phase = SLIDE_SPIN;
@@ -89,17 +89,17 @@ public class SlideToPositionStep implements Step {
                     return this.plan.getOutput(input);
                 }
 
-                return Optional.of(SteerUtil.steerTowardGroundPosition(car, waypoint).withBoost(car.boost > 50));
+                return Optional.of(SteerUtil.steerTowardGroundPosition(car, waypoint).withBoost(car.getBoost() > 50));
             }
         }
 
         if (phase == SLIDE_SPIN) {
             if (turnDirection == null) {
-                turnDirection = (int) Math.signum(car.orientation.noseVector.flatten().correctionAngle(toTarget));
+                turnDirection = (int) Math.signum(car.getOrientation().getNoseVector().flatten().correctionAngle(toTarget));
             }
 
-            double correctionRadians = car.orientation.noseVector.flatten().correctionAngle(target.getFacing());
-            double futureRadians = correctionRadians + car.spin.yawRate * .3;
+            double correctionRadians = car.getOrientation().getNoseVector().flatten().correctionAngle(target.getFacing());
+            double futureRadians = correctionRadians + car.getSpin().getYawRate() * .3;
 
             if (futureRadians * turnDirection < 0 && Math.abs(futureRadians) < Math.PI / 4) {
                 return Optional.empty(); // Done orienting.

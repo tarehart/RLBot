@@ -28,7 +28,7 @@ public class DirectedKickUtil {
     public static Optional<DirectedKickPlan> planKick(AgentInput input, KickStrategy kickStrategy, boolean isSideHit) {
         Vector3 interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2);
         StrikeProfile strikeProfile = new StrikeProfile();
-        return planKick(input, kickStrategy, isSideHit, interceptModifier, (space) -> strikeProfile, input.time);
+        return planKick(input, kickStrategy, isSideHit, interceptModifier, (space) -> strikeProfile, input.getTime());
     }
 
     static Optional<DirectedKickPlan> planKick(
@@ -45,7 +45,7 @@ public class DirectedKickUtil {
         CarData car = input.getMyCarData();
 
         kickPlan.ballPath = ArenaModel.predictBallPath(input);
-        kickPlan.distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6), car.boost);
+        kickPlan.distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6), car.getBoost());
 
 
         BiPredicate<CarData, SpaceTime> verticalPredicate = isSideHit ? AirTouchPlanner::isJumpHitAccessible : AirTouchPlanner::isVerticallyAccessible;
@@ -64,17 +64,17 @@ public class DirectedKickUtil {
         kickPlan.intercept = interceptOpportunity.get();
         kickPlan.ballAtIntercept = ballMotion.get();
 
-        Duration secondsTillImpactRoughly = Duration.between(input.time, kickPlan.ballAtIntercept.getTime());
+        Duration secondsTillImpactRoughly = Duration.between(input.getTime(), kickPlan.ballAtIntercept.getTime());
         double impactSpeed = isSideHit ? ManeuverMath.DODGE_SPEED :
                 kickPlan.distancePlot.getMotionAfterDuration(secondsTillImpactRoughly).map(DistanceTimeSpeed::getSpeed).orElse(AccelerationModel.SUPERSONIC_SPEED);
 
         Vector3 easyForce;
         if (isSideHit) {
-            Vector2 carToIntercept = interceptOpportunity.get().getSpace().minus(car.position).flatten();
+            Vector2 carToIntercept = interceptOpportunity.get().getSpace().minus(car.getPosition()).flatten();
             Vector2 sideHit = VectorUtil.orthogonal(carToIntercept, v -> v.dotProduct(interceptModifier.flatten()) < 0);
             easyForce = new Vector3(sideHit.getX(), sideHit.getY(), 0).scaledToMagnitude(impactSpeed);
         } else {
-            easyForce = kickPlan.ballAtIntercept.getSpace().minus(car.position).scaledToMagnitude(impactSpeed);
+            easyForce = kickPlan.ballAtIntercept.getSpace().minus(car.getPosition()).scaledToMagnitude(impactSpeed);
         }
 
         Vector3 easyKick = bump(kickPlan.ballAtIntercept.getVelocity(), easyForce);
@@ -124,7 +124,7 @@ public class DirectedKickUtil {
     static double getAngleOfKickFromApproach(CarData car, DirectedKickPlan kickPlan) {
         Vector2 strikeForceFlat = kickPlan.plannedKickForce.flatten();
         Vector3 carPositionAtIntercept = kickPlan.intercept.getSpace();
-        Vector2 carToIntercept = carPositionAtIntercept.minus(car.position).flatten();
+        Vector2 carToIntercept = carPositionAtIntercept.minus(car.getPosition()).flatten();
         return carToIntercept.correctionAngle(strikeForceFlat);
     }
 }

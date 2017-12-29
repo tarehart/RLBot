@@ -25,21 +25,21 @@ public class AccelerationModel {
 
 
     public static Optional<Duration> getTravelSeconds(CarData carData, DistancePlot plot, Vector3 target) {
-        double distance = carData.position.distance(target);
+        double distance = carData.getPosition().distance(target);
         Optional<Duration> travelTime = plot.getTravelTime(distance);
         double penaltySeconds = getSteerPenaltySeconds(carData, target);
         return travelTime.map(time -> time.plusSeconds(penaltySeconds));
     }
 
     public static double getSteerPenaltySeconds(CarData carData, Vector3 target) {
-        Vector3 toTarget = target.minus(carData.position);
-        double correctionAngleRad = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toTarget, carData.orientation.roofVector);
+        Vector3 toTarget = target.minus(carData.getPosition());
+        double correctionAngleRad = VectorUtil.getCorrectionAngle(carData.getOrientation().getNoseVector(), toTarget, carData.getOrientation().getRoofVector());
         double correctionErr = Math.abs(correctionAngleRad);
 
         if (correctionErr < Math.PI / 6) {
             return 0;
         }
-        return correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .005;
+        return correctionErr * .1 + correctionErr * carData.getVelocity().magnitude() * .005;
     }
 
     public static DistancePlot simulateAcceleration(CarData carData, Duration duration, double boostBudget) {
@@ -48,7 +48,7 @@ public class AccelerationModel {
 
     public static DistancePlot simulateAcceleration(CarData carData, Duration duration, double boostBudget, double flipCutoffDistance) {
 
-        double currentSpeed = VectorUtil.project(carData.velocity, carData.orientation.noseVector).magnitude();
+        double currentSpeed = VectorUtil.project(carData.getVelocity(), carData.getOrientation().getNoseVector()).magnitude();
         DistancePlot plot = new DistancePlot(new DistanceTimeSpeed(0, Duration.ofMillis(0), currentSpeed));
 
         double boostRemaining = boostBudget;
@@ -117,10 +117,10 @@ public class AccelerationModel {
     }
 
     public static DistancePlot simulateAirAcceleration(CarData car, Duration duration, double horizontalPitchComponent) {
-        double currentSpeed = car.velocity.flatten().magnitude();
+        double currentSpeed = car.getVelocity().flatten().magnitude();
         DistancePlot plot = new DistancePlot(new DistanceTimeSpeed(0, Duration.ofMillis(0), currentSpeed));
 
-        double boostRemaining = car.boost;
+        double boostRemaining = car.getBoost();
 
         double distanceSoFar = 0;
         double secondsSoFar = 0;

@@ -11,20 +11,20 @@ public class ZoneUtil {
     // Checks to see if the y position order is: my car, opponent car, ball, my net
     public static boolean isEnemyOffensiveBreakaway(Bot.Team team, CarData myCar, CarData opponentCar, Vector3 ballPosition) {
         if(team == Bot.Team.BLUE) {
-            return myCar.position.getY() > opponentCar.position.getY() && opponentCar.position.getY() > ballPosition.getY();
+            return myCar.getPosition().getY() > opponentCar.getPosition().getY() && opponentCar.getPosition().getY() > ballPosition.getY();
         }
         else {
-            return myCar.position.getY() < opponentCar.position.getY() && opponentCar.position.getY() < ballPosition.getY();
+            return myCar.getPosition().getY() < opponentCar.getPosition().getY() && opponentCar.getPosition().getY() < ballPosition.getY();
         }
     }
 
     // Checks to see if the y position order is: opponent car, my car, ball, their net
     public static boolean isMyOffensiveBreakaway(Bot.Team team, CarData myCar, CarData opponentCar, Vector3 ballPosition) {
         if(team == Bot.Team.BLUE) {
-            return ballPosition.getY() > myCar.position.getY() && myCar.position.getY() > opponentCar.position.getY();
+            return ballPosition.getY() > myCar.getPosition().getY() && myCar.getPosition().getY() > opponentCar.getPosition().getY();
         }
         else {
-            return ballPosition.getY() < myCar.position.getY() && myCar.position.getY() < opponentCar.position.getY();
+            return ballPosition.getY() < myCar.getPosition().getY() && myCar.getPosition().getY() < opponentCar.getPosition().getY();
         }
     }
 

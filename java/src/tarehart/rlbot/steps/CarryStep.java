@@ -31,22 +31,22 @@ public class CarryStep implements Step {
             return Optional.empty();
         }
 
-        Vector2 ballVelocityFlat = input.ballVelocity.flatten();
+        Vector2 ballVelocityFlat = input.getBallVelocity().flatten();
         double leadSeconds = .2;
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
-        if (motionAfterWallBounce.isPresent() && Duration.between(input.time, motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
+        if (motionAfterWallBounce.isPresent() && Duration.between(input.getTime(), motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
             return Optional.empty(); // The dribble step is not in the business of wall reads.
         }
 
         Vector2 futureBallPosition;
-        BallSlice ballFuture = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds)).get();
+        BallSlice ballFuture = ballPath.getMotionAt(input.getTime().plusSeconds(leadSeconds)).get();
         futureBallPosition = ballFuture.getSpace().flatten();
 
 
-        Vector2 scoreLocation = getEnemyGoal(input.team).getNearestEntrance(input.ballPosition, 3).flatten();
+        Vector2 scoreLocation = getEnemyGoal(input.getTeam()).getNearestEntrance(input.getBallPosition(), 3).flatten();
 
         Vector2 ballToGoal = scoreLocation.minus(futureBallPosition);
         Vector2 pushDirection;
@@ -60,7 +60,7 @@ public class CarryStep implements Step {
         pressurePoint = futureBallPosition.minus(pushDirection.scaled(approachDistance));
 
 
-        GameTime hurryUp = input.time.plusSeconds(leadSeconds);
+        GameTime hurryUp = input.getTime().plusSeconds(leadSeconds);
 
         AgentOutput dribble = SteerUtil.getThereOnTime(input.getMyCarData(), new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
         return Optional.of(dribble);
@@ -70,60 +70,60 @@ public class CarryStep implements Step {
         // We will assume that the car is flat on the ground.
 
         // We will treat (0, 1) as the car's natural orientation.
-        double carYaw = new Vector2(0, 1).correctionAngle(car.orientation.noseVector.flatten());
+        double carYaw = new Vector2(0, 1).correctionAngle(car.getOrientation().getNoseVector().flatten());
 
-        Vector2 carToPosition = worldPosition.minus(car.position).flatten();
+        Vector2 carToPosition = worldPosition.minus(car.getPosition()).flatten();
 
         Vector2 carToPositionRotated = VectorUtil.rotateVector(carToPosition, -carYaw);
 
-        double zDiff = worldPosition.getZ() - car.position.getZ();
+        double zDiff = worldPosition.getZ() - car.getPosition().getZ();
         return new Vector3(carToPositionRotated.getX(), carToPositionRotated.getY(), zDiff);
     }
 
     public static boolean canCarry(AgentInput input, boolean log) {
 
         CarData car = input.getMyCarData();
-        Vector3 ballInCarCoordinates = positionInCarCoordinates(car, input.ballPosition);
+        Vector3 ballInCarCoordinates = positionInCarCoordinates(car, input.getBallPosition());
 
         double xMag = Math.abs(ballInCarCoordinates.getX());
         if (xMag > MAX_X_DIFF) {
             if (log) {
-                println("Fell off the side", input.playerIndex);
+                println("Fell off the side", input.getPlayerIndex());
             }
             return false;
         }
 
         if (ballInCarCoordinates.getY() > MAX_Y) {
             if (log) {
-                println("Fell off the front", input.playerIndex);
+                println("Fell off the front", input.getPlayerIndex());
             }
             return false;
         }
 
         if (ballInCarCoordinates.getY() < MIN_Y) {
             if (log) {
-                println("Fell off the back", input.playerIndex);
+                println("Fell off the back", input.getPlayerIndex());
             }
             return false;
         }
 
         if (ballInCarCoordinates.getZ() > 3) {
             if (log) {
-                println("Ball too high to carry", input.playerIndex);
+                println("Ball too high to carry", input.getPlayerIndex());
             }
             return false;
         }
 
         if (ballInCarCoordinates.getZ() < 1) {
             if (log) {
-                println("Ball too low to carry", input.playerIndex);
+                println("Ball too low to carry", input.getPlayerIndex());
             }
             return false;
         }
 
-        if (VectorUtil.flatDistance(car.velocity, input.ballVelocity) > 10) {
+        if (VectorUtil.flatDistance(car.getVelocity(), input.getBallVelocity()) > 10) {
             if (log) {
-                println("Velocity too different to carry.", input.playerIndex);
+                println("Velocity too different to carry.", input.getPlayerIndex());
             }
             return false;
         }

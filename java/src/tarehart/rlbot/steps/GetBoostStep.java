@@ -32,20 +32,20 @@ public class GetBoostStep implements Step {
             init(input);
         }
 
-        Optional<FullBoost> matchingBoost = input.fullBoosts.stream().filter(b -> b.location.distance(targetLocation.location) < 1).findFirst();
+        Optional<FullBoost> matchingBoost = input.getFullBoosts().stream().filter(b -> b.getLocation().distance(targetLocation.getLocation()) < 1).findFirst();
         if (!matchingBoost.isPresent()) {
             return Optional.empty();
         }
 
         targetLocation = matchingBoost.get();
 
-        if (!targetLocation.isActive) {
+        if (!targetLocation.isActive()) {
             return Optional.empty();
         }
 
         CarData car = input.getMyCarData();
 
-        double distance = SteerUtil.getDistanceFromCar(car, targetLocation.location);
+        double distance = SteerUtil.getDistanceFromCar(car, targetLocation.getLocation());
 
         if (plan != null && !plan.isComplete()) {
             Optional<AgentOutput> output = plan.getOutput(input);
@@ -59,19 +59,19 @@ public class GetBoostStep implements Step {
         } else {
 
             CarData carData = input.getMyCarData();
-            Vector2 myPosition = carData.position.flatten();
-            Vector3 target = targetLocation.location;
+            Vector2 myPosition = carData.getPosition().flatten();
+            Vector3 target = targetLocation.getLocation();
             Vector2 toBoost = target.flatten().minus(myPosition);
 
 
-            DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost);
+            DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.getBoost());
             Vector2 facing = VectorUtil.orthogonal(target.flatten(), v -> v.dotProduct(toBoost) > 0).normalized();
 
             SteerPlan planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
 
             Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
             if (sensibleFlip.isPresent()) {
-                println("Flipping toward boost", input.playerIndex);
+                println("Flipping toward boost", input.getPlayerIndex());
                 plan = sensibleFlip.get();
                 return plan.getOutput(input);
             }
@@ -88,11 +88,11 @@ public class GetBoostStep implements Step {
         FullBoost nearestLocation = null;
         double minTime = Double.MAX_VALUE;
         CarData carData = input.getMyCarData();
-        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), carData.boost);
-        for (FullBoost boost : input.fullBoosts) {
-            Optional<Duration> travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.location);
+        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), carData.getBoost());
+        for (FullBoost boost : input.getFullBoosts()) {
+            Optional<Duration> travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.getLocation());
             if (travelSeconds.isPresent() && travelSeconds.get().getSeconds() < minTime &&
-                    (boost.isActive || travelSeconds.get().minus(Duration.between(input.time, boost.activeTime)).getSeconds() > 1)) {
+                    (boost.isActive() || travelSeconds.get().minus(Duration.between(input.getTime(), boost.getActiveTime())).getSeconds() > 1)) {
 
                 minTime = travelSeconds.get().getSeconds();
                 nearestLocation = boost;
@@ -105,16 +105,16 @@ public class GetBoostStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
         Vector3 endpoint = ballPath.getEndpoint().getSpace();
         // Add a defensive bias.
-        Vector3 idealPlaceToGetBoost = new Vector3(endpoint.getX(), 40 * Math.signum(GoalUtil.getOwnGoal(input.team).getCenter().getY()), 0);
-        return getNearestBoost(input.fullBoosts, idealPlaceToGetBoost);
+        Vector3 idealPlaceToGetBoost = new Vector3(endpoint.getX(), 40 * Math.signum(GoalUtil.getOwnGoal(input.getTeam()).getCenter().getY()), 0);
+        return getNearestBoost(input.getFullBoosts(), idealPlaceToGetBoost);
     }
 
     private static FullBoost getNearestBoost(List<FullBoost> boosts, Vector3 position) {
         FullBoost location = null;
         double minDistance = Double.MAX_VALUE;
         for (FullBoost boost : boosts) {
-            if (boost.isActive) {
-                double distance = position.distance(boost.location);
+            if (boost.isActive()) {
+                double distance = position.distance(boost.getLocation());
                 if (distance < minDistance) {
                     minDistance = distance;
                     location = boost;
@@ -125,9 +125,9 @@ public class GetBoostStep implements Step {
     }
 
     public static boolean seesOpportunisticBoost(CarData carData, List<FullBoost> boosts) {
-        FullBoost boost = getNearestBoost(boosts, carData.position);
-        return boost.location.distance(carData.position) < 20 &&
-                Math.abs(SteerUtil.getCorrectionAngleRad(carData, boost.location)) < Math.PI / 6;
+        FullBoost boost = getNearestBoost(boosts, carData.getPosition());
+        return boost.getLocation().distance(carData.getPosition()) < 20 &&
+                Math.abs(SteerUtil.getCorrectionAngleRad(carData, boost.getLocation())) < Math.PI / 6;
 
     }
 

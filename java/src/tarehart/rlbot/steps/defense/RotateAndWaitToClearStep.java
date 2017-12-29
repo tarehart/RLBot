@@ -27,7 +27,7 @@ public class RotateAndWaitToClearStep implements Step {
     public Optional<AgentOutput> getOutput(AgentInput input) {
         CarData myCar = input.getMyCarData();
 
-        if (TacticsTelemetry.get(myCar.playerIndex).map(telem -> !telem.waitToClear).orElse(false)) {
+        if (TacticsTelemetry.get(myCar.getPlayerIndex()).map(telem -> !telem.waitToClear).orElse(false)) {
             return Optional.empty(); // Time to reevaluate the plan.
         }
 
@@ -41,10 +41,10 @@ public class RotateAndWaitToClearStep implements Step {
         plan = new Plan(Plan.Posture.DEFENSIVE)
                 .withStep(new SlideToPositionStep(in -> {
 
-                    Vector3 goalCenter = GoalUtil.getOwnGoal(in.team).getCenter();
-                    Vector3 futureBallPosition = TacticsTelemetry.get(in.playerIndex)
-                            .map(telem -> telem.futureBallMotion.space)
-                            .orElse(in.ballPosition);
+                    Vector3 goalCenter = GoalUtil.getOwnGoal(in.getTeam()).getCenter();
+                    Vector3 futureBallPosition = TacticsTelemetry.get(in.getPlayerIndex())
+                            .map(telem -> telem.futureBallMotion.getSpace())
+                            .orElse(in.getBallPosition());
 
                     Vector2 targetPosition = new Vector2(Math.signum(futureBallPosition.getX()) * CENTER_OFFSET, goalCenter.getY() - Math.signum(goalCenter.getY()) * AWAY_FROM_GOAL);
                     Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.getX()), 0);

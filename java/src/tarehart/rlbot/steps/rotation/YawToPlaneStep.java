@@ -19,11 +19,11 @@ public class YawToPlaneStep extends OrientToPlaneStep {
 
     @Override
     protected double getOrientationCorrection(CarData car) {
-        Vector3 vectorNeedingCorrection = car.orientation.noseVector;
-        Vector3 axisOfRotation = car.orientation.roofVector;
+        Vector3 vectorNeedingCorrection = car.getOrientation().getNoseVector();
+        Vector3 axisOfRotation = car.getOrientation().getRoofVector();
         double correction = getMinimalCorrectionRadiansToPlane(vectorNeedingCorrection, axisOfRotation);
 
-        boolean wrongDirection = car.orientation.rightVector.dotProduct(planeNormal) < 0;
+        boolean wrongDirection = car.getOrientation().getRightVector().dotProduct(planeNormal) < 0;
 
         if (wrongDirection) {
             correction *= -1; // When upside down, need to rotate the opposite direction to converge on plane.
@@ -36,7 +36,7 @@ public class YawToPlaneStep extends OrientToPlaneStep {
 
     @Override
     protected double getAngularVelocity(CarData car) {
-        return car.spin.yawRate;
+        return car.getSpin().getYawRate();
     }
 
     @Override

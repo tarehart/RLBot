@@ -10,13 +10,13 @@ import tarehart.rlbot.planning.GoalUtil;
 public class FunnelTowardEnemyGoal implements KickStrategy {
     @Override
     public Vector3 getKickDirection(AgentInput input) {
-        return getKickDirection(input, input.ballPosition);
+        return getKickDirection(input, input.getBallPosition());
     }
 
     @Override
     public Vector3 getKickDirection(AgentInput input, Vector3 ballPosition) {
         CarData car = input.getMyCarData();
-        Vector3 toBall = ballPosition.minus(car.position);
+        Vector3 toBall = ballPosition.minus(car.getPosition());
         return getDirection(car, ballPosition, toBall);
     }
 
@@ -42,7 +42,7 @@ public class FunnelTowardEnemyGoal implements KickStrategy {
     }
 
     private Vector2 getIdealDirection(CarData car, Vector3 ballPosition) {
-        Goal enemyGoal = GoalUtil.getEnemyGoal(car.team);
+        Goal enemyGoal = GoalUtil.getEnemyGoal(car.getTeam());
         if (enemyGoal.getCenter().getY() * ballPosition.getY() < 0) {
             // Ball is not on the enemy side. Strange that you're using this strat.
             return new Vector2(0, Math.signum(enemyGoal.getCenter().getY()));

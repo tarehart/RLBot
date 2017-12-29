@@ -22,16 +22,16 @@ public class CalibrateStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        if (gameClockStart == null && Math.abs(car.spin.yawRate) < TINY_VALUE && car.hasWheelContact) {
-            gameClockStart = input.time;
+        if (gameClockStart == null && Math.abs(car.getSpin().getYawRate()) < TINY_VALUE && car.getHasWheelContact()) {
+            gameClockStart = input.getTime();
             wallClockStart = LocalDateTime.now();
         }
 
         if (gameClockStart != null) {
-            if (car.spin.yawRate > TINY_VALUE) {
+            if (car.getSpin().getYawRate() > TINY_VALUE) {
                 BotLog.println(String.format("Game Latency: %s \nWall Latency: %s",
-                        Duration.between(gameClockStart, input.time).getSeconds(),
-                        java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), input.playerIndex);
+                        Duration.between(gameClockStart, input.getTime()).getSeconds(),
+                        java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), input.getPlayerIndex());
                 return Optional.empty();
             }
             return Optional.of(new AgentOutput().withSteer(1).withAcceleration(1));

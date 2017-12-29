@@ -36,27 +36,27 @@ public class WallTouchStep implements Step {
     }
 
     private static boolean isBallOnWall(BallSlice ballPosition) {
-        return ballPosition.space.getZ() > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE;
+        return ballPosition.getSpace().getZ() > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.getSpace()) <= ACCEPTABLE_WALL_DISTANCE;
     }
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
         CarData car = input.getMyCarData();
         if (!ArenaModel.isCarOnWall(car)) {
-            println("Failed to make the wall touch because the car is not on the wall", input.playerIndex);
+            println("Failed to make the wall touch because the car is not on the wall", input.getPlayerIndex());
             return empty();
         }
 
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.boost, 0);
+        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.getBoost(), 0);
 
         Optional<Intercept> interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, fullAcceleration, new Vector3(), WallTouchStep::isBallOnWall);
         Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> ballPath.getMotionAt(inter.getTime()));
 
 
         if (!ballMotion.isPresent()) {
-            println("Failed to make the wall touch because we see no intercepts on the wall", input.playerIndex);
+            println("Failed to make the wall touch because we see no intercepts on the wall", input.getPlayerIndex());
             return empty();
         }
         BallSlice motion = ballMotion.get();
@@ -66,17 +66,17 @@ public class WallTouchStep implements Step {
             originalIntercept = motion.getSpace();
         } else {
             if (originalIntercept.distance(motion.getSpace()) > 20) {
-                println("Failed to make the wall touch because the intercept changed", input.playerIndex);
+                println("Failed to make the wall touch because the intercept changed", input.getPlayerIndex());
                 return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
 
         if (readyToJump(input, motion.toSpaceTime())) {
-            println("Jumping for wall touch.", input.playerIndex);
+            println("Jumping for wall touch.", input.getPlayerIndex());
             return of(new AgentOutput().withAcceleration(1).withJump());
         }
 
-        return Optional.of(SteerUtil.steerTowardWallPosition(car, motion.space));
+        return Optional.of(SteerUtil.steerTowardWallPosition(car, motion.getSpace()));
     }
 
     private static boolean readyToJump(AgentInput input, SpaceTime carPositionAtContact) {
@@ -85,14 +85,14 @@ public class WallTouchStep implements Step {
             return false; // Really close to wall, no need to jump. Just chip it.
         }
         CarData car = input.getMyCarData();
-        Vector3 toPosition = carPositionAtContact.space.minus(car.position);
-        double correctionAngleRad = VectorUtil.getCorrectionAngle(car.orientation.noseVector, toPosition, car.orientation.roofVector);
-        double secondsTillIntercept = Duration.between(input.time, carPositionAtContact.time).getSeconds();
+        Vector3 toPosition = carPositionAtContact.space.minus(car.getPosition());
+        double correctionAngleRad = VectorUtil.getCorrectionAngle(car.getOrientation().getNoseVector(), toPosition, car.getOrientation().getRoofVector());
+        double secondsTillIntercept = Duration.between(input.getTime(), carPositionAtContact.time).getSeconds();
         double wallDistanceAtIntercept = ArenaModel.getDistanceFromWall(carPositionAtContact.space);
         double tMinus = secondsTillIntercept - wallDistanceAtIntercept / WALL_DEPART_SPEED;
         boolean linedUp = Math.abs(correctionAngleRad) < Math.PI / 8;
         if (tMinus < 3) {
-            println("Correction angle: " + correctionAngleRad, input.playerIndex);
+            println("Correction angle: " + correctionAngleRad, input.getPlayerIndex());
         }
 
         return tMinus < 0.1 && tMinus > -.4 && linedUp;
@@ -113,7 +113,7 @@ public class WallTouchStep implements Step {
         Optional<BallSlice> nearWallOption = ballPath.findSlice(WallTouchStep::isBallOnWall);
         if (nearWallOption.isPresent()) {
             BallSlice nearWall = nearWallOption.get();
-            if (Duration.between(input.time, nearWall.getTime()).getSeconds() > 3) {
+            if (Duration.between(input.getTime(), nearWall.getTime()).getSeconds() > 3) {
                 return false; // Not on wall soon enough
             }
 
@@ -123,8 +123,8 @@ public class WallTouchStep implements Step {
                 if (ArenaModel.getDistanceFromWall(motion.getSpace()) > ACCEPTABLE_WALL_DISTANCE) {
                     return false;
                 }
-                Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.team).getCenter();
-                return (motion.getSpace().distance(ownGoalCenter) > input.getMyCarData().position.distance(ownGoalCenter));
+                Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.getTeam()).getCenter();
+                return (motion.getSpace().distance(ownGoalCenter) > input.getMyCarData().getPosition().distance(ownGoalCenter));
             }
 
         }

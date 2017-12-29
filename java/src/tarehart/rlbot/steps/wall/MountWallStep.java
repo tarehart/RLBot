@@ -29,7 +29,7 @@ public class MountWallStep implements Step {
             return Optional.empty();
         }
 
-        BallSlice ballMotion = ballPath.getMotionAt(input.time.plusSeconds(3)).orElse(ballPath.getEndpoint());
+        BallSlice ballMotion = ballPath.getMotionAt(input.getTime().plusSeconds(3)).orElse(ballPath.getEndpoint());
         Vector3 ballPositionExaggerated = ballMotion.getSpace().scaled(1.04); // This assumes the ball is close to the wall
 
         return Optional.of(SteerUtil.steerTowardGroundPosition(car, ballPositionExaggerated));

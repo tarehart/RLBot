@@ -23,15 +23,15 @@ public class LineUpInReverseStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        Vector2 waypointToCar = car.position.flatten().minus(waypoint);
+        Vector2 waypointToCar = car.getPosition().flatten().minus(waypoint);
 
-        double correctionRadians = car.orientation.noseVector.flatten().correctionAngle(waypointToCar);
+        double correctionRadians = car.getOrientation().getNoseVector().flatten().correctionAngle(waypointToCar);
 
         if (correctionDirection == null) {
             correctionDirection = (int) Math.signum(correctionRadians);
         }
 
-        double futureRadians = correctionRadians + car.spin.yawRate * .3;
+        double futureRadians = correctionRadians + car.getSpin().getYawRate() * .3;
 
         if (futureRadians * correctionDirection < 0 && Math.abs(futureRadians) < Math.PI / 4) {
             return Optional.empty(); // Done orienting.

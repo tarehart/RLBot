@@ -16,14 +16,14 @@ public class RollToPlaneStep extends OrientToPlaneStep {
 
     @Override
     protected double getOrientationCorrection(CarData car) {
-        Vector3 vectorNeedingCorrection = car.orientation.rightVector;
-        Vector3 axisOfRotation = car.orientation.noseVector;
+        Vector3 vectorNeedingCorrection = car.getOrientation().getRightVector();
+        Vector3 axisOfRotation = car.getOrientation().getNoseVector();
 
         // Negate the correction radians. If the right vector is above the plane, the function will indicate a negative
         // correction, but we need to roll right which is considered the positive direction.
         double correction = -getMinimalCorrectionRadiansToPlane(vectorNeedingCorrection, axisOfRotation);
 
-        boolean upsideDown = car.orientation.roofVector.dotProduct(planeNormal) < 0;
+        boolean upsideDown = car.getOrientation().getRoofVector().dotProduct(planeNormal) < 0;
 
         if (upsideDown) {
             correction *= -1; // When upside down, need to rotate the opposite direction to converge on plane.
@@ -37,7 +37,7 @@ public class RollToPlaneStep extends OrientToPlaneStep {
 
     @Override
     protected double getAngularVelocity(CarData car) {
-        return car.spin.rollRate;
+        return car.getSpin().getRollRate();
     }
 
     @Override
