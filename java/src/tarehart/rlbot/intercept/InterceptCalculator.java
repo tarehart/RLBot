@@ -21,7 +21,7 @@ import java.util.function.Function;
 public class InterceptCalculator {
 
     public static Optional<Intercept> getInterceptOpportunityAssumingMaxAccel(CarData carData, BallPath ballPath, double boostBudget) {
-        DistancePlot plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), boostBudget);
+        DistancePlot plot = AccelerationModel.INSTANCE.simulateAcceleration(carData, Duration.Companion.ofSeconds(4), boostBudget);
 
         return getInterceptOpportunity(carData, ballPath, plot);
     }
@@ -72,19 +72,19 @@ public class InterceptCalculator {
 
         for (BallSlice ballMoment: ballPath.getSlices()) {
             SpaceTime spaceTime = new SpaceTime(ballMoment.getSpace().plus(interceptModifier), ballMoment.getTime());
-            StrikeProfile strikeProfile = strikeProfileFn.apply(spaceTime.space);
-            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.getTime(), spaceTime.time), strikeProfile);
+            StrikeProfile strikeProfile = strikeProfileFn.apply(spaceTime.getSpace());
+            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.getSpace(), Duration.Companion.between(carData.getTime(), spaceTime.getTime()), strikeProfile);
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
-                double interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space, planeNormal);
+                double interceptDistance = VectorUtil.INSTANCE.flatDistance(myPosition, spaceTime.getSpace(), planeNormal);
                 if (dts.getDistance() > interceptDistance) {
                     if (firstMomentInRange == null) {
-                        firstMomentInRange = spaceTime.time;
+                        firstMomentInRange = spaceTime.getTime();
                     }
                     if (predicate.test(carData, spaceTime)) {
-                        double boostNeeded = spaceTime.space.getZ() > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD ? AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL : 0;
-                        Duration spareTime = Duration.between(firstMomentInRange, spaceTime.time);
-                        return Optional.of(new Intercept(spaceTime.space, spaceTime.time, boostNeeded, strikeProfile, acceleration, spareTime));
+                        double boostNeeded = spaceTime.getSpace().getZ() > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD ? AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL : 0;
+                        Duration spareTime = Duration.Companion.between(firstMomentInRange, spaceTime.getTime());
+                        return Optional.of(new Intercept(spaceTime.getSpace(), spaceTime.getTime(), boostNeeded, strikeProfile, acceleration, spareTime));
                     }
                 }
             } else {
@@ -111,19 +111,19 @@ public class InterceptCalculator {
         for (BallSlice ballMoment: ballPath.getSlices()) {
             SpaceTime intercept = new SpaceTime(ballMoment.getSpace().plus(interceptModifier), ballMoment.getTime());
 
-            double averageNoseAngle = MidairStrikeStep.getDesiredVerticalAngle(carData.getVelocity(), intercept.space.minus(carData.getPosition()));
-            Duration duration = Duration.between(carData.getTime(), ballMoment.getTime());
-            DistancePlot acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle));
+            double averageNoseAngle = MidairStrikeStep.getDesiredVerticalAngle(carData.getVelocity(), intercept.getSpace().minus(carData.getPosition()));
+            Duration duration = Duration.Companion.between(carData.getTime(), ballMoment.getTime());
+            DistancePlot acceleration = AccelerationModel.INSTANCE.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle));
             StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 && averageNoseAngle < .5 ?
                     new StrikeProfile(0, 10, .15, StrikeProfile.Style.AERIAL) :
                     InterceptStep.AERIAL_STRIKE_PROFILE;
 
             Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(
-                    carData, intercept.space, Duration.between(carData.getTime(), intercept.time), strikeProfile);
+                    carData, intercept.getSpace(), Duration.Companion.between(carData.getTime(), intercept.getTime()), strikeProfile);
 
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
-                double interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space);
+                double interceptDistance = VectorUtil.INSTANCE.flatDistance(myPosition, intercept.getSpace());
                 if (dts.getDistance() > interceptDistance) {
                     return Optional.of(intercept);
                 }

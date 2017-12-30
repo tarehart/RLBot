@@ -61,7 +61,7 @@ public class ArenaModel {
     private DSphere ball;
     private final DJointGroup contactgroup;
 
-    public static final Duration SIMULATION_DURATION = Duration.ofSeconds(6);
+    public static final Duration SIMULATION_DURATION = Duration.Companion.ofSeconds(6);
     private static final LoadingCache<BallSlice, BallPath> pathCache = CacheBuilder.newBuilder()
             .maximumSize(100)
             .build(new CacheLoader<BallSlice, BallPath>() {
@@ -162,7 +162,7 @@ public class ArenaModel {
                 c.fdir1.set(toV3f(velocityAlongSurface.normaliseCopy()));
             }
 
-            Vector3 velAlongNormal = VectorUtil.project(velocity, normal);
+            Vector3 velAlongNormal = VectorUtil.INSTANCE.project(velocity, normal);
             c.surface.mu = getFriction(velAlongNormal.magnitude());
 
             DJoint joint = OdeHelper.createContactJoint(world, contactgroup, contacts.get(i));
@@ -313,7 +313,7 @@ public class ArenaModel {
     }
 
     private void runSimulation(BallPath ballPath, GameTime startTime, GameTime endTime) {
-        GameTime simulationTime = GameTime.from(startTime);
+        GameTime simulationTime = startTime;
 
         while (simulationTime.isBefore(endTime)) {
             float stepSize = 1.0f / STEPS_PER_SECOND;

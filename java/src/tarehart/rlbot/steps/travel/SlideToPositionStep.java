@@ -77,7 +77,7 @@ public class SlideToPositionStep implements Step {
 
                 double correctionRadians = toTarget.correctionAngle(target.getFacing());
 
-                Vector2 offsetVector = VectorUtil
+                Vector2 offsetVector = VectorUtil.INSTANCE
                         .rotateVector(toTarget, -Math.signum(correctionRadians) * Math.PI / 2)
                         .scaledToMagnitude(10);
 

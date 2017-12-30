@@ -26,15 +26,15 @@ public class CarInterceptPlanner {
             CarSlice slice = enemyPath.getSlices().get(i);
             SpaceTime spaceTime = new SpaceTime(slice.space, slice.getTime());
             StrikeProfile strikeProfile = new StrikeProfile();
-            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.getTime(), spaceTime.time), strikeProfile);
+            Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.getSpace(), Duration.Companion.between(carData.getTime(), spaceTime.getTime()), strikeProfile);
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
-                double interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space);
+                double interceptDistance = VectorUtil.INSTANCE.flatDistance(myPosition, spaceTime.getSpace());
                 if (dts.getDistance() + CAR_CONTACT_DISTANCE > interceptDistance) {
                     if (i > 0) {
                         // Take the average of the current slice and the previous slice to avoid systematic pessimism.
                         CarSlice previousSlice = enemyPath.getSlices().get(i - 1);
-                        double timeDiff = Duration.between(previousSlice.time, slice.time).getSeconds();
+                        double timeDiff = Duration.Companion.between(previousSlice.time, slice.time).getSeconds();
                         Vector3 toCurrentSlice = slice.space.minus(previousSlice.space);
                         return Optional.of(new SpaceTime(previousSlice.space.plus(toCurrentSlice.scaled(.5)), previousSlice.time.plusSeconds(timeDiff * .5)));
 

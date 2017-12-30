@@ -86,7 +86,7 @@ public class PredictedVsActualTest {
             Vector3 actualToPredicted = predictedSlices.get(i).getSpace().minus(actualSlice);
             double error = new Vector2(actualToPredicted.getX(), actualToPredicted.getY()).magnitude();
             if (error > THRESHOLD) {
-                Duration duration = Duration.between(actualTrimmed.get(0).getTime(), actualTrimmed.get(i).getTime());
+                Duration duration = Duration.Companion.between(actualTrimmed.get(0).getTime(), actualTrimmed.get(i).getTime());
                 double seconds = duration.toMillis() / 1000.0;
                 Assert.fail(String.format("Diverged to %.2f after %.2f seconds!", error, seconds));
             }
@@ -94,7 +94,7 @@ public class PredictedVsActualTest {
     }
 
     private BallPath finesseActualPath(BallPath actualPath) {
-        Optional<BallSlice> newStart = actualPath.getMotionAt(actualPath.getStartPoint().getTime().plus(Duration.ofMillis(100)));
+        Optional<BallSlice> newStart = actualPath.getMotionAt(actualPath.getStartPoint().getTime().plus(Duration.Companion.ofMillis(100)));
         BallPath finessed = new BallPath(newStart.get());
         List<BallSlice> slices = actualPath.getSlices();
         for (int i = 0; i < actualPath.getSlices().size(); i++) {
@@ -106,7 +106,7 @@ public class PredictedVsActualTest {
     }
 
     private BallPath makePrediction(BallPath backWallActual) {
-        Duration duration = Duration.between(backWallActual.getStartPoint().getTime(), backWallActual.getEndpoint().getTime());
+        Duration duration = Duration.Companion.between(backWallActual.getStartPoint().getTime(), backWallActual.getEndpoint().getTime());
         return arenaModel.simulateBall(backWallActual.getStartPoint(), duration);
     }
 

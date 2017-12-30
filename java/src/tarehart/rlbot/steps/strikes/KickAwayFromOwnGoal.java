@@ -38,8 +38,8 @@ public class KickAwayFromOwnGoal implements KickStrategy {
         Vector2 toLeftPost = getOwnGoal(car.getTeam()).getLeftPost().minus(ballPosition).flatten();
         Vector2 toRightPost = getOwnGoal(car.getTeam()).getRightPost().minus(ballPosition).flatten();
 
-        Vector2 safeDirectionRight = VectorUtil.rotateVector(toRightPost, -Math.PI/4);
-        Vector2 safeDirectionLeft = VectorUtil.rotateVector(toLeftPost, Math.PI/4);
+        Vector2 safeDirectionRight = VectorUtil.INSTANCE.rotateVector(toRightPost, -Math.PI/4);
+        Vector2 safeDirectionLeft = VectorUtil.INSTANCE.rotateVector(toLeftPost, Math.PI/4);
 
         double safeRightCorrection = easyKickFlat.correctionAngle(safeDirectionRight);
         double safeLeftCorrection = easyKickFlat.correctionAngle(safeDirectionLeft);

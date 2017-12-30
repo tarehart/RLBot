@@ -30,7 +30,7 @@ public class CalibrateStep implements Step {
         if (gameClockStart != null) {
             if (car.getSpin().getYawRate() > TINY_VALUE) {
                 BotLog.println(String.format("Game Latency: %s \nWall Latency: %s",
-                        Duration.between(gameClockStart, input.getTime()).getSeconds(),
+                        Duration.Companion.between(gameClockStart, input.getTime()).getSeconds(),
                         java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), input.getPlayerIndex());
                 return Optional.empty();
             }

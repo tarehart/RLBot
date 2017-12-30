@@ -58,7 +58,7 @@ public class DribbleStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
-        if (motionAfterWallBounce.isPresent() && Duration.between(input.getTime(), motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
+        if (motionAfterWallBounce.isPresent() && Duration.Companion.between(input.getTime(), motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
             return Optional.empty(); // The dribble step is not in the business of wall reads.
         }
 
@@ -77,8 +77,8 @@ public class DribbleStep implements Step {
         if (ballSpeed > 20) {
             double velocityCorrectionAngle = ballVelocityFlat.correctionAngle(ballToGoal);
             double angleTweak = Math.min(Math.PI / 6, Math.max(-Math.PI / 6, velocityCorrectionAngle * ballSpeed / 10));
-            pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normalized();
-            approachDistance = VectorUtil.project(toBallFlat, new Vector2(pushDirection.getY(), -pushDirection.getX())).magnitude() * 1.6 + .8;
+            pushDirection = VectorUtil.INSTANCE.rotateVector(ballToGoal, angleTweak).normalized();
+            approachDistance = VectorUtil.INSTANCE.project(toBallFlat, new Vector2(pushDirection.getY(), -pushDirection.getX())).magnitude() * 1.6 + .8;
             approachDistance = Math.min(approachDistance, 4);
             pressurePoint = futureBallPosition.minus(pushDirection.normalized().scaled(approachDistance));
         } else {
@@ -95,7 +95,7 @@ public class DribbleStep implements Step {
         boolean hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.getBallPosition().getZ() > 2;
         if (!hasLineOfSight) {
             // Steer toward a farther-back waypoint.
-            Vector2 fallBack = VectorUtil.orthogonal(pushDirection, v -> v.dotProduct(ballToGoal) < 0).scaledToMagnitude(5);
+            Vector2 fallBack = VectorUtil.INSTANCE.orthogonal(pushDirection, v -> v.dotProduct(ballToGoal) < 0).scaledToMagnitude(5);
 
             return Optional.of(SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(fallBack.getX(), fallBack.getY(), 0), hurryUp)));
         }
@@ -136,7 +136,7 @@ public class DribbleStep implements Step {
             return false;
         }
 
-        if (VectorUtil.flatDistance(car.getVelocity(), input.getBallVelocity()) > 30) {
+        if (VectorUtil.INSTANCE.flatDistance(car.getVelocity(), input.getBallVelocity()) > 30) {
             if (log) {
                 println("Velocity too different to dribble.", input.getPlayerIndex());
             }

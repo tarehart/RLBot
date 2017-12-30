@@ -19,7 +19,7 @@ public class LatencyBot extends Bot {
     protected AgentOutput getOutput(AgentInput input) {
 
         if (!hasJumped) {
-            if (VectorUtil.flatDistance(input.getBallPosition(), new Vector3()) > 0) {
+            if (VectorUtil.INSTANCE.flatDistance(input.getBallPosition(), new Vector3()) > 0) {
                 hasJumped = true;
                 return new AgentOutput().withJump();
             }

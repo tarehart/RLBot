@@ -42,6 +42,6 @@ public class StrikeProfile {
     }
 
     public Duration getTotalDuration() {
-        return Duration.ofSeconds(maneuverSeconds + dodgeSeconds);
+        return Duration.Companion.ofSeconds(maneuverSeconds + dodgeSeconds);
     }
 }

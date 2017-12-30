@@ -79,7 +79,7 @@ public class LandGracefullyStep implements Step {
     }
 
     private static Vector3 getFacingPlane(Vector2 desiredFacing) {
-        Vector2 rightward = VectorUtil.rotateVector(desiredFacing, -Math.PI / 2);
+        Vector2 rightward = VectorUtil.INSTANCE.rotateVector(desiredFacing, -Math.PI / 2);
         return new Vector3(rightward.getX(), rightward.getY(), 0);
     }
 

@@ -4,6 +4,7 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.carpredict.AccelerationModel;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.Circle;
+import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.physics.DistancePlot;
@@ -24,7 +25,7 @@ public class CircleTurnUtil {
         boolean clockwise = Circle.Companion.isClockwise(idealCircle, targetPosition, targetFacing);
 
         Vector2 centerToMe = flatPosition.minus(idealCircle.getCenter());
-        Vector2 idealDirection = VectorUtil.orthogonal(centerToMe, v -> Circle.Companion.isClockwise(idealCircle, flatPosition, v) == clockwise).normalized();
+        Vector2 idealDirection = VectorUtil.INSTANCE.orthogonal(centerToMe, v -> Circle.Companion.isClockwise(idealCircle, flatPosition, v) == clockwise).normalized();
 
 //        if (facing.dotProduct(idealDirection) < .7) {
 //            AgentOutput output = steerTowardGroundPosition(car, flatPosition.plus(idealDirection));
@@ -38,13 +39,13 @@ public class CircleTurnUtil {
         double speedRatio = currentSpeed / idealSpeed; // Ideally should be 1
 
         double lookaheadRadians = Math.PI / 20;
-        Vector2 centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(idealCircle.getCenter()), lookaheadRadians * (clockwise ? -1 : 1));
+        Vector2 centerToSteerTarget = VectorUtil.INSTANCE.rotateVector(flatPosition.minus(idealCircle.getCenter()), lookaheadRadians * (clockwise ? -1 : 1));
         Vector2 steerTarget = idealCircle.getCenter().plus(centerToSteerTarget);
 
         AgentOutput output = SteerUtil.steerTowardGroundPosition(car, steerTarget).withBoost(false).withSlide(false).withDeceleration(0).withAcceleration(1);
 
         if (speedRatio < 1) {
-            output.withBoost(currentSpeed >= AccelerationModel.MEDIUM_SPEED && speedRatio < .8 || speedRatio < .7);
+            output.withBoost(currentSpeed >= AccelerationModel.INSTANCE.getMEDIUM_SPEED() && speedRatio < .8 || speedRatio < .7);
         } else {
             int framesBetweenSlidePulses;
             if (speedRatio > 2) {
@@ -96,8 +97,8 @@ public class CircleTurnUtil {
 
         double distance = car.getPosition().flatten().distance(targetPosition);
         double maxSpeed = distancePlot.getMotionAfterDistance(distance)
-                .map(dts -> dts.getSpeed())
-                .orElse(AccelerationModel.SUPERSONIC_SPEED);
+                .map(DistanceTimeSpeed::getSpeed)
+                .orElse(AccelerationModel.INSTANCE.getSUPERSONIC_SPEED());
         double idealSpeed = getIdealCircleSpeed(car, targetFacing);
         double currentSpeed = car.getVelocity().magnitude();
 
@@ -110,7 +111,7 @@ public class CircleTurnUtil {
         double speedPenaltyPerRadian = 20;
         double rawPenalty = speedPenaltyPerRadian * (Math.abs(orientationCorrection) - angleAllowingFullSpeed);
         double correctionPenalty = Math.max(0, rawPenalty);
-        return Math.max(15, AccelerationModel.SUPERSONIC_SPEED - correctionPenalty);
+        return Math.max(15, AccelerationModel.INSTANCE.getSUPERSONIC_SPEED() - correctionPenalty);
     }
 
     private static SteerPlan circleWaypoint(CarData car, Vector2 targetPosition, Vector2 targetFacing, double currentSpeed, double expectedSpeed) {
@@ -120,12 +121,12 @@ public class CircleTurnUtil {
 
         double turnRadius = getTurnRadius(expectedSpeed);
         // Make sure the radius vector points from the target position to the center of the turn circle.
-        Vector2 radiusVector = VectorUtil.orthogonal(targetFacing, v -> v.dotProduct(toTarget) < 0).scaled(turnRadius);
+        Vector2 radiusVector = VectorUtil.INSTANCE.orthogonal(targetFacing, v -> v.dotProduct(toTarget) < 0).scaled(turnRadius);
 
         Vector2 center = targetPosition.plus(radiusVector);
         double distanceFromCenter = flatPosition.distance(center);
 
-        Vector2 centerToTangent = VectorUtil.orthogonal(toTarget, v -> v.dotProduct(targetFacing) < 0).scaledToMagnitude(turnRadius);
+        Vector2 centerToTangent = VectorUtil.INSTANCE.orthogonal(toTarget, v -> v.dotProduct(targetFacing) < 0).scaledToMagnitude(turnRadius);
         Vector2 tangentPoint = center.plus(centerToTangent);
 
         if (distanceFromCenter < turnRadius * 1.1) {

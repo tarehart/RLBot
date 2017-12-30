@@ -24,7 +24,7 @@ public class StrikePlanner {
 
                 double tiltBackSeconds = radiansForTilt * .35;
 
-                if (Duration.between(car.getTime(), intercept.getTime()).getSeconds() > 1.5 && intercept.getSpace().getZ() > 10) {
+                if (Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds() > 1.5 && intercept.getSpace().getZ() > 10) {
                     return Optional.of(SetPieces.performDoubleJumpAerial(tiltBackSeconds * .8));
                 }
                 return Optional.of(SetPieces.performAerial(tiltBackSeconds));

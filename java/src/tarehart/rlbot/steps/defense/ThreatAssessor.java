@@ -37,7 +37,7 @@ public class ThreatAssessor {
         }
         CarData enemyCar = enemyCarOption.get();
 
-        Duration simDuration = Duration.ofSeconds(4);
+        Duration simDuration = Duration.Companion.ofSeconds(4);
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         CarData myCar = input.getMyCarData();
@@ -56,7 +56,7 @@ public class ThreatAssessor {
         Intercept myIntercept = myInterceptOption.get();
         Intercept enemyIntercept = enemyInterceptOption.get();
 
-        return Duration.between(myIntercept.getTime(), enemyIntercept.getTime()).getSeconds();
+        return Duration.Companion.between(myIntercept.getTime(), enemyIntercept.getTime()).getSeconds();
     }
 
     private double measureEnemyPosture(AgentInput input) {
@@ -71,7 +71,7 @@ public class ThreatAssessor {
         Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
 
         Vector3 carToBall = input.getBallPosition().minus(enemyCar.getPosition());
-        Vector3 rightSideVector = VectorUtil.project(carToBall, ballToGoal);
+        Vector3 rightSideVector = VectorUtil.INSTANCE.project(carToBall, ballToGoal);
 
         return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal));
     }
@@ -83,11 +83,11 @@ public class ThreatAssessor {
         Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
         Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
 
-        Vector3 ballVelocityTowardGoal = VectorUtil.project(input.getBallVelocity(), ballToGoal);
+        Vector3 ballVelocityTowardGoal = VectorUtil.INSTANCE.project(input.getBallVelocity(), ballToGoal);
         double ballSpeedTowardGoal = ballVelocityTowardGoal.magnitude() * Math.signum(ballVelocityTowardGoal.dotProduct(ballToGoal));
 
         Vector3 carToBall = input.getBallPosition().minus(car.getPosition());
-        Vector3 wrongSideVector = VectorUtil.project(carToBall, ballToGoal);
+        Vector3 wrongSideVector = VectorUtil.INSTANCE.project(carToBall, ballToGoal);
         double wrongSidedness = wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal));
 
         return ballSpeedTowardGoal + wrongSidedness;

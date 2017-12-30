@@ -16,7 +16,7 @@ public class BlindStep implements Step {
 
     public BlindStep(double seconds, AgentOutput output) {
         this.output = output;
-        this.duration = Duration.ofSeconds(seconds);
+        this.duration = Duration.Companion.ofSeconds(seconds);
     }
 
     public BlindStep(AgentOutput output, Duration duration) {

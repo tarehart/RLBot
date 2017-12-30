@@ -53,7 +53,7 @@ public abstract class OrientToPlaneStep implements Step {
     protected double getMinimalCorrectionRadiansToPlane(Vector3 vectorNeedingCorrection, Vector3 axisOfRotation) {
         // We want vectorNeedingCorrection to be resting on the plane. If it's lined up with the planeNormal, then it's
         // doing a very poor job of that.
-        Vector3 planeError = VectorUtil.project(vectorNeedingCorrection, planeNormal);
+        Vector3 planeError = VectorUtil.INSTANCE.project(vectorNeedingCorrection, planeNormal);
 
         double distanceAbovePlane = planeError.magnitude() * Math.signum(planeError.dotProduct(planeNormal));
 

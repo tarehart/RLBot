@@ -73,7 +73,7 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
             val confirmedLocation = FullBoost.getFullBoostLocation(location)
             confirmedLocation.ifPresent { loc ->
                 fullBoosts.add(FullBoost(loc, boostInfo.isActive,
-                        if (boostInfo.isActive) GameTime.from(time) else time.plus(Duration.ofMillis(boostInfo.timer.toLong()))))
+                        if (boostInfo.isActive) time else time + Duration.ofMillis(boostInfo.timer.toLong())))
             }
         }
 

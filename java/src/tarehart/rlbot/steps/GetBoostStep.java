@@ -64,8 +64,8 @@ public class GetBoostStep implements Step {
             Vector2 toBoost = target.flatten().minus(myPosition);
 
 
-            DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.getBoost());
-            Vector2 facing = VectorUtil.orthogonal(target.flatten(), v -> v.dotProduct(toBoost) > 0).normalized();
+            DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(car, Duration.Companion.ofSeconds(4), car.getBoost());
+            Vector2 facing = VectorUtil.INSTANCE.orthogonal(target.flatten(), v -> v.dotProduct(toBoost) > 0).normalized();
 
             SteerPlan planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
 
@@ -88,11 +88,11 @@ public class GetBoostStep implements Step {
         FullBoost nearestLocation = null;
         double minTime = Double.MAX_VALUE;
         CarData carData = input.getMyCarData();
-        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), carData.getBoost());
+        DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(carData, Duration.Companion.ofSeconds(4), carData.getBoost());
         for (FullBoost boost : input.getFullBoosts()) {
-            Optional<Duration> travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.getLocation());
+            Optional<Duration> travelSeconds = AccelerationModel.INSTANCE.getTravelSeconds(carData, distancePlot, boost.getLocation());
             if (travelSeconds.isPresent() && travelSeconds.get().getSeconds() < minTime &&
-                    (boost.isActive() || travelSeconds.get().minus(Duration.between(input.getTime(), boost.getActiveTime())).getSeconds() > 1)) {
+                    (boost.isActive() || travelSeconds.get().minus(Duration.Companion.between(input.getTime(), boost.getActiveTime())).getSeconds() > 1)) {
 
                 minTime = travelSeconds.get().getSeconds();
                 nearestLocation = boost;

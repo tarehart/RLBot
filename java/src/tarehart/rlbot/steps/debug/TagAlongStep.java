@@ -33,7 +33,7 @@ public class TagAlongStep implements Step {
             Vector2 waypoint = enemyCar.getPosition().plus(enemyCar.getOrientation().getRightVector().scaled(4)).flatten();
             Vector2 targetFacing = enemyCar.getOrientation().getNoseVector().flatten();
             return new PositionFacing(waypoint, targetFacing);
-        })).withStep(new BlindStep(new AgentOutput().withAcceleration(1), Duration.ofSeconds(3)));
+        })).withStep(new BlindStep(new AgentOutput().withAcceleration(1), Duration.Companion.ofSeconds(3)));
 
         return plan.getOutput(input);
 

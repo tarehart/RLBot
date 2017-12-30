@@ -58,8 +58,8 @@ public class WhatASaveStep implements Step {
 
         }
 
-        double distance = VectorUtil.flatDistance(car.getPosition(), threat.getSpace());
-        DistancePlot plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5), car.getBoost(), distance - 15);
+        double distance = VectorUtil.INSTANCE.flatDistance(car.getPosition(), threat.getSpace());
+        DistancePlot plot = AccelerationModel.INSTANCE.simulateAcceleration(car, Duration.Companion.ofSeconds(5), car.getBoost(), distance - 15);
 
 
         Intercept intercept = InterceptCalculator.getInterceptOpportunity(car, ballPath, plot)
@@ -77,7 +77,7 @@ public class WhatASaveStep implements Step {
             goingForSuperJump = true;
 
             double overheadHeight = overHeadSlice.get().getSpace().getZ();
-            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.getTime(), overHeadSlice.get().getTime()).getSeconds()) {
+            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.Companion.between(input.getTime(), overHeadSlice.get().getTime()).getSeconds()) {
                 plan = SetPieces.jumpSuperHigh(overheadHeight);
                 return plan.getOutput(input);
             } else {

@@ -36,7 +36,7 @@ public class GetOnDefenseStep implements Step {
             startTime = input.getTime();
         }
 
-        if (Duration.between(startTime, input.getTime()).getSeconds() > lifespan && (plan == null || plan.canInterrupt())) {
+        if (Duration.Companion.between(startTime, input.getTime()).getSeconds() > lifespan && (plan == null || plan.canInterrupt())) {
             return Optional.empty(); // Time to reevaluate the plan.
         }
 

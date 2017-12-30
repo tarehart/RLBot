@@ -38,11 +38,11 @@ public class CatchBallStep implements Step {
 
     private AgentOutput playCatch(CarData car, SpaceTime catchLocation) {
         Vector3 enemyGoal = GoalUtil.getEnemyGoal(car.getTeam()).getCenter();
-        Vector3 awayFromEnemyGoal = catchLocation.space.minus(enemyGoal);
+        Vector3 awayFromEnemyGoal = catchLocation.getSpace().minus(enemyGoal);
         Vector3 offset = new Vector3(awayFromEnemyGoal.getX(), awayFromEnemyGoal.getY(), 0).scaledToMagnitude(1.2);
-        Vector3 target = catchLocation.space.plus(offset);
+        Vector3 target = catchLocation.getSpace().plus(offset);
 
-        return SteerUtil.getThereOnTime(car, new SpaceTime(target, catchLocation.time));
+        return SteerUtil.getThereOnTime(car, new SpaceTime(target, catchLocation.getTime()));
     }
 
     @Override

@@ -27,7 +27,7 @@ public class EscapeTheGoalStep implements Step {
         Vector3 toTarget = target.minus(car.getPosition());
         Goal nearestGoal = GoalUtil.getNearestGoal(car.getPosition());
         Plane goalPlane = nearestGoal.getThreatPlane();
-        Vector3 desiredExit = VectorUtil.getPlaneIntersection(goalPlane, car.getPosition(), toTarget).orElse(nearestGoal.getCenter());
+        Vector3 desiredExit = VectorUtil.INSTANCE.getPlaneIntersection(goalPlane, car.getPosition(), toTarget).orElse(nearestGoal.getCenter());
 
         Vector3 exit = nearestGoal.getNearestEntrance(desiredExit, 2);
 

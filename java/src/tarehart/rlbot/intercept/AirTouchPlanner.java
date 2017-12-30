@@ -37,7 +37,7 @@ public class AirTouchPlanner {
         checkLaunchReadiness(checklist, car, intercept);
         StrikeProfile strikeProfile = intercept.getStrikeProfile();
         double jumpHitTime = strikeProfile.getTotalDuration().getSeconds();
-        checklist.timeForIgnition = Duration.between(car.getTime(), intercept.getTime()).getSeconds() < jumpHitTime;
+        checklist.timeForIgnition = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds() < jumpHitTime;
         return checklist;
     }
 
@@ -45,14 +45,14 @@ public class AirTouchPlanner {
         LaunchChecklist checklist = new LaunchChecklist();
         checkLaunchReadiness(checklist, car, intercept);
         checklist.notTooClose = true;
-        checklist.timeForIgnition = Duration.between(car.getTime(), intercept.getTime()).getSeconds() < intercept.getStrikeProfile().getTotalDuration().getSeconds();
+        checklist.timeForIgnition = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds() < intercept.getStrikeProfile().getTotalDuration().getSeconds();
         return checklist;
     }
 
     private static void checkLaunchReadiness(LaunchChecklist checklist, CarData car, Intercept intercept) {
 
         double correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, intercept.getSpace());
-        double secondsTillIntercept = Duration.between(car.getTime(), intercept.getTime()).getSeconds();
+        double secondsTillIntercept = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds();
         double tMinus = getAerialLaunchCountdown(intercept.getSpace().getZ(), secondsTillIntercept);
 
         checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 60;
@@ -64,27 +64,27 @@ public class AirTouchPlanner {
     }
 
     public static boolean isVerticallyAccessible(CarData carData, SpaceTime intercept) {
-        double secondsTillIntercept = Duration.between(carData.getTime(), intercept.time).getSeconds();
+        double secondsTillIntercept = Duration.Companion.between(carData.getTime(), intercept.getTime()).getSeconds();
 
-        if (intercept.space.getZ() < NEEDS_AERIAL_THRESHOLD) {
-            double tMinus = getJumpLaunchCountdown(intercept.space.getZ(), secondsTillIntercept);
+        if (intercept.getSpace().getZ() < NEEDS_AERIAL_THRESHOLD) {
+            double tMinus = getJumpLaunchCountdown(intercept.getSpace().getZ(), secondsTillIntercept);
             return tMinus >= -0.1;
         }
 
         if (carData.getBoost() > BOOST_NEEDED_FOR_AERIAL) {
-            double tMinus = getAerialLaunchCountdown(intercept.space.getZ(), secondsTillIntercept);
+            double tMinus = getAerialLaunchCountdown(intercept.getSpace().getZ(), secondsTillIntercept);
             return tMinus >= -0.1;
         }
         return false;
     }
 
     public static boolean isJumpHitAccessible(CarData carData, SpaceTime intercept) {
-        if (intercept.space.getZ() > MAX_JUMP_HIT) {
+        if (intercept.getSpace().getZ() > MAX_JUMP_HIT) {
             return false;
         }
 
-        double secondsTillIntercept = Duration.between(carData.getTime(), intercept.time).getSeconds();
-        StrikeProfile jumpHitStrikeProfile = getJumpHitStrikeProfile(intercept.space);
+        double secondsTillIntercept = Duration.Companion.between(carData.getTime(), intercept.getTime()).getSeconds();
+        StrikeProfile jumpHitStrikeProfile = getJumpHitStrikeProfile(intercept.getSpace());
         double tMinus = secondsTillIntercept - jumpHitStrikeProfile.maneuverSeconds;
         return tMinus >= -0.1;
     }
@@ -97,7 +97,7 @@ public class AirTouchPlanner {
     }
 
     public static boolean isFlipHitAccessible(CarData carData, SpaceTime intercept) {
-        return intercept.space.getZ() <= MAX_FLIP_HIT;
+        return intercept.getSpace().getZ() <= MAX_FLIP_HIT;
     }
 
     private static double getAerialLaunchCountdown(double height, double secondsTillIntercept) {

@@ -22,7 +22,7 @@ public class BallRecorderTest {
     @Test
     public void testFileOutput() throws IOException {
 
-        GameTime now = GameTime.now();
+        GameTime now = GameTime.Companion.zero();
         BallRecorder.startRecording(new BallSlice(new Vector3(0, 0, 0), now, new Vector3(1, 0, 1)), now.plusSeconds(1));
         BallRecorder.recordPosition(new BallSlice(new Vector3(1, 1, 2), now.plusSeconds(1), new Vector3(1, 0, 1)));
         BallRecorder.recordPosition(new BallSlice(new Vector3(2, 2, 5), now.plusSeconds(2), new Vector3(1, 0, 1)));

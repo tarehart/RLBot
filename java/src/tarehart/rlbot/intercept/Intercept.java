@@ -24,7 +24,7 @@ public class Intercept {
     }
 
     public Intercept(SpaceTime spaceTime, StrikeProfile strikeProfile, DistancePlot distancePlot) {
-        this(spaceTime.space, spaceTime.time, 0, strikeProfile, distancePlot, Duration.ofSeconds(0));
+        this(spaceTime.getSpace(), spaceTime.getTime(), 0, strikeProfile, distancePlot, Duration.Companion.ofSeconds(0));
     }
 
     public double getAirBoost() {

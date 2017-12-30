@@ -44,7 +44,7 @@ public class SteerUtil {
                 if (canGetUnder(carData, landing, boostBudget)) {
                     return Optional.of(landing);
                 } else {
-                    searchStart = landing.time.plusSeconds(1);
+                    searchStart = landing.getTime().plusSeconds(1);
                 }
             } else {
                 return Optional.empty();
@@ -71,15 +71,15 @@ public class SteerUtil {
     }
 
     private static boolean canGetUnder(CarData carData, SpaceTime spaceTime, double boostBudget) {
-        DistancePlot plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4), boostBudget, carData.getPosition().distance(spaceTime.space));
+        DistancePlot plot = AccelerationModel.INSTANCE.simulateAcceleration(carData, Duration.Companion.ofSeconds(4), boostBudget, carData.getPosition().distance(spaceTime.getSpace()));
 
         Optional<DistanceTimeSpeed> dts = plot.getMotionAfterDuration(
                 carData,
-                spaceTime.space,
-                Duration.between(carData.getTime(), spaceTime.time),
+                spaceTime.getSpace(),
+                Duration.Companion.between(carData.getTime(), spaceTime.getTime()),
                 new StrikeProfile());
 
-        double requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.space);
+        double requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.getSpace());
         return dts.filter(travel -> travel.getDistance() > requiredDistance).isPresent();
     }
 
@@ -128,7 +128,7 @@ public class SteerUtil {
         Vector3 carShadow = new Vector3(carData.getPosition().getX(), carData.getPosition().getY(), 0);
         double heightOnWall = carData.getPosition().getZ();
         Vector3 wallNormal = carData.getOrientation().getRoofVector();
-        double distanceOntoField = VectorUtil.project(toPositionFlat, wallNormal.flatten()).magnitude();
+        double distanceOntoField = VectorUtil.INSTANCE.project(toPositionFlat, wallNormal.flatten()).magnitude();
         double wallWeight = heightOnWall / (heightOnWall + distanceOntoField);
         Vector3 toPositionAlongSeam = new Vector3(toPositionFlat.getX(), toPositionFlat.getY(), 0).projectToPlane(wallNormal);
         Vector3 seamPosition = carShadow.plus(toPositionAlongSeam.scaled(wallWeight));
@@ -138,7 +138,7 @@ public class SteerUtil {
 
     public static AgentOutput steerTowardWallPosition(CarData carData, Vector3 position) {
         Vector3 toPosition = position.minus(carData.getPosition());
-        double correctionAngle = VectorUtil.getCorrectionAngle(carData.getOrientation().getNoseVector(), toPosition, carData.getOrientation().getRoofVector());
+        double correctionAngle = VectorUtil.INSTANCE.getCorrectionAngle(carData.getOrientation().getNoseVector(), toPosition, carData.getOrientation().getRoofVector());
         double speed = carData.getVelocity().magnitude();
         double distance = position.distance(carData.getPosition());
         return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic(), false);
@@ -166,7 +166,7 @@ public class SteerUtil {
     }
 
     public static double getDistanceFromCar(CarData car, Vector3 loc) {
-        return VectorUtil.flatDistance(loc, car.getPosition());
+        return VectorUtil.INSTANCE.flatDistance(loc, car.getPosition());
     }
 
     public static Optional<Plan> getSensibleFlip(CarData car, Vector3 target) {
@@ -184,11 +184,11 @@ public class SteerUtil {
         }
 
         double speed = car.getVelocity().flatten().magnitude();
-        if(car.isSupersonic() || car.getBoost() > 75 || speed < AccelerationModel.FLIP_THRESHOLD_SPEED) {
+        if(car.isSupersonic() || car.getBoost() > 75 || speed < AccelerationModel.INSTANCE.getFLIP_THRESHOLD_SPEED()) {
             return Optional.empty();
         }
 
-        double distanceCovered = AccelerationModel.getFrontFlipDistance(speed);
+        double distanceCovered = AccelerationModel.INSTANCE.getFrontFlipDistance(speed);
 
 
         double distanceToIntercept = toTarget.magnitude();
@@ -207,25 +207,25 @@ public class SteerUtil {
     }
 
     public static AgentOutput getThereOnTime(CarData input, SpaceTime groundPositionAndTime) {
-        double flatDistance = VectorUtil.flatDistance(input.getPosition(), groundPositionAndTime.space);
+        double flatDistance = VectorUtil.INSTANCE.flatDistance(input.getPosition(), groundPositionAndTime.getSpace());
 
-        double secondsTillAppointment = Duration.between(input.getTime(), groundPositionAndTime.time).toMillis() / 1000.0;
+        double secondsTillAppointment = Duration.Companion.between(input.getTime(), groundPositionAndTime.getTime()).toMillis() / 1000.0;
         double speed = input.getVelocity().magnitude();
 
         double pace = speed * secondsTillAppointment / flatDistance; // Ideally this should be 1
 
         if (flatDistance > 40) {
             // Go fast
-            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.space);
+            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace());
         } else if (flatDistance > 10 && pace < 1) {
             // Go fast
-            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.space);
+            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace());
         } else if (pace < 1) {
             // Go moderate
-            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.space).withBoost(false);
+            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace()).withBoost(false);
         } else {
             // We're going too fast!
-            AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.space);
+            AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace());
             agentOutput.withAcceleration(0).withBoost(false).withDeceleration(Math.max(0, pace - 1.5)); // Hit the brakes, but keep steering!
             return agentOutput;
         }

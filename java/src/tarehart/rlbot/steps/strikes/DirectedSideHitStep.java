@@ -62,9 +62,9 @@ public class DirectedSideHitStep implements Step {
         final Optional<DirectedKickPlan> kickPlanOption;
         if (interceptModifier != null) {
             StrikeProfile strikeProfile = new StrikeProfile(maneuverSeconds, 0, 0, StrikeProfile.Style.SIDE_HIT);
-            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, (space) -> strikeProfile, input.getTime());
+            kickPlanOption = DirectedKickUtil.INSTANCE.planKick(input, kickStrategy, true, interceptModifier, (space) -> strikeProfile, input.getTime());
         } else {
-            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true);
+            kickPlanOption = DirectedKickUtil.INSTANCE.planKick(input, kickStrategy, true);
         }
 
         if (!kickPlanOption.isPresent()) {
@@ -75,21 +75,21 @@ public class DirectedSideHitStep implements Step {
         kickPlan = kickPlanOption.get();
 
         if (interceptModifier == null) {
-            Vector3 nearSide = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE));
+            Vector3 nearSide = kickPlan.getPlannedKickForce().scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE));
             interceptModifier = new Vector3(nearSide.getX(), nearSide.getY(), nearSide.getZ() - 1.4); // Closer to ground
         }
 
         if (originalIntercept == null) {
-            originalIntercept = kickPlan.ballAtIntercept.getSpace();
+            originalIntercept = kickPlan.getBallAtIntercept().getSpace();
         } else {
-            if (originalIntercept.distance(kickPlan.ballAtIntercept.getSpace()) > 30) {
+            if (originalIntercept.distance(kickPlan.getBallAtIntercept().getSpace()) > 30) {
                 println("Failed to make the directed kick", input.getPlayerIndex());
                 return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }
 
-        Vector2 strikeDirection = kickPlan.plannedKickForce.flatten().normalized();
-        Vector3 carPositionAtIntercept = kickPlan.intercept.getSpace();
+        Vector2 strikeDirection = kickPlan.getPlannedKickForce().flatten().normalized();
+        Vector3 carPositionAtIntercept = kickPlan.getIntercept().getSpace();
 
         Vector2 orthogonalPoint = carPositionAtIntercept.flatten();
 
@@ -101,7 +101,7 @@ public class DirectedSideHitStep implements Step {
         if (!strikeTime.isPresent()) {
             return Optional.empty();
         }
-        double expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.getPosition().flatten().distance(orthogonalPoint)).map(m -> m.getSpeed()).orElse(40.0);
+        double expectedSpeed = kickPlan.getDistancePlot().getMotionAfterDistance(car.getPosition().flatten().distance(orthogonalPoint)).map(m -> m.getSpeed()).orElse(40.0);
         double backoff = expectedSpeed * strikeTime.get().getSeconds() + 1;
 
         if (backoff > car.getPosition().flatten().distance(orthogonalPoint)) {
@@ -110,7 +110,7 @@ public class DirectedSideHitStep implements Step {
         }
 
         Vector2 carToIntercept = carPositionAtIntercept.minus(car.getPosition()).flatten();
-        Vector2 facingForSideFlip = VectorUtil.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
+        Vector2 facingForSideFlip = VectorUtil.INSTANCE.orthogonal(strikeDirection, v -> v.dotProduct(carToIntercept) > 0).normalized();
 
         if (Vector2.Companion.angle(carToIntercept, facingForSideFlip) > Math.PI / 3) {
             // If we're doing more than a quarter turn, this is a waste of time.
@@ -136,7 +136,7 @@ public class DirectedSideHitStep implements Step {
 
         maneuverSeconds = angle * MANEUVER_SECONDS_PER_RADIAN;
 
-        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, steerTarget, facingForSideFlip);
+        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), steerTarget, facingForSideFlip);
 
         return getNavigation(input, circleTurnPlan);
     }
@@ -155,9 +155,9 @@ public class DirectedSideHitStep implements Step {
         if (!jumpTime.isPresent()) {
             return Optional.empty();
         }
-        Vector2 carAtImpact = kickPlan.ballAtIntercept.getSpace().flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT));
+        Vector2 carAtImpact = kickPlan.getBallAtIntercept().getSpace().flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT));
         Vector2 toImpact = carAtImpact.minus(car.getPosition().flatten());
-        Vector2 projectedApproach = VectorUtil.project(toImpact, car.getOrientation().getRightVector().flatten());
+        Vector2 projectedApproach = VectorUtil.INSTANCE.project(toImpact, car.getOrientation().getRightVector().flatten());
         double realApproachDistance = projectedApproach.magnitude();
         Optional<Duration> strikeTime = getStrikeTime(carPositionAtIntercept, realApproachDistance);
         if (!strikeTime.isPresent()) {
@@ -168,7 +168,7 @@ public class DirectedSideHitStep implements Step {
         double distance = car.getPosition().flatten().distance(orthogonalPoint);
         if (distance < backoff) {
             // Time to launch!
-            double strikeForceCorrection = DirectedKickUtil.getAngleOfKickFromApproach(car, kickPlan);
+            double strikeForceCorrection = DirectedKickUtil.INSTANCE.getAngleOfKickFromApproach(car, kickPlan);
             plan = SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime.get());
             return plan.getOutput(input);
         } else {
@@ -178,7 +178,7 @@ public class DirectedSideHitStep implements Step {
     }
 
     private Optional<Duration> getJumpTime(Vector3 carPositionAtIntercept) {
-        return ManeuverMath.secondsForMashJumpHeight(carPositionAtIntercept.getZ()).map(Duration::ofSeconds);
+        return ManeuverMath.secondsForMashJumpHeight(carPositionAtIntercept.getZ()).map(Duration.Companion::ofSeconds);
     }
 
     private Optional<AgentOutput> getNavigation(AgentInput input, SteerPlan circleTurnOption) {

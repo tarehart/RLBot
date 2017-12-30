@@ -34,7 +34,7 @@ import static tarehart.rlbot.tuning.BotLog.println;
 public class TacticsAdvisor {
 
     private static final double LOOKAHEAD_SECONDS = 2;
-    private static final Duration PLAN_HORIZON = Duration.ofSeconds(6);
+    private static final Duration PLAN_HORIZON = Duration.Companion.ofSeconds(6);
 
     public TacticsAdvisor() {
     }
@@ -120,7 +120,7 @@ public class TacticsAdvisor {
     public static double calculateRaceResult(SpaceTime myIntercept, CarData enemyCar, BallPath ballPath) {
         Optional<Intercept> enemyIntercept = getSoonestIntercept(enemyCar, ballPath);
 
-        return calculateRaceResult(Optional.of(myIntercept.time), enemyIntercept.map(Intercept::getTime));
+        return calculateRaceResult(Optional.of(myIntercept.getTime()), enemyIntercept.map(Intercept::getTime));
     }
 
     private static double calculateRaceResult(Optional<GameTime> ourContact, Optional<GameTime> enemyContact) {
@@ -130,7 +130,7 @@ public class TacticsAdvisor {
         } else if (!ourContact.isPresent()) {
             raceResult = -3;
         } else {
-            raceResult = Duration.between(ourContact.get(), enemyContact.get()).getSeconds();
+            raceResult = Duration.Companion.between(ourContact.get(), enemyContact.get()).getSeconds();
         }
 
         return raceResult;
@@ -210,7 +210,7 @@ public class TacticsAdvisor {
         TacticalSituation situation = new TacticalSituation();
         situation.expectedContact = ourIntercept;
         situation.expectedEnemyContact = enemyIntercept;
-        situation.ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.getTeam()).getCenter(), futureBallMotion.getSpace());
+        situation.ownGoalFutureProximity = VectorUtil.INSTANCE.flatDistance(GoalUtil.getOwnGoal(input.getTeam()).getCenter(), futureBallMotion.getSpace());
         situation.distanceBallIsBehindUs = measureOutOfPosition(input);
         situation.enemyOffensiveApproachError = situation.expectedEnemyContact.map(contact -> measureEnemyApproachError(input, contact.toSpaceTime()));
         double enemyGoalY = GoalUtil.getEnemyGoal(input.getTeam()).getCenter().getY();
@@ -248,7 +248,7 @@ public class TacticsAdvisor {
 
 
     private static Optional<Intercept> getSoonestIntercept(CarData car, BallPath ballPath) {
-        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, PLAN_HORIZON, car.getBoost());
+        DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(car, PLAN_HORIZON, car.getBoost());
         return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, new Vector3(), (c, st) -> true);
     }
 
@@ -317,9 +317,9 @@ public class TacticsAdvisor {
 
         CarData enemyCar = enemyCarData.get();
         Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
-        Vector3 ballToGoal = myGoal.getCenter().minus(enemyContact.space);
+        Vector3 ballToGoal = myGoal.getCenter().minus(enemyContact.getSpace());
 
-        Vector3 carToBall = enemyContact.space.minus(enemyCar.getPosition());
+        Vector3 carToBall = enemyContact.getSpace().minus(enemyCar.getPosition());
 
         return Vector2.Companion.angle(ballToGoal.flatten(), carToBall.flatten());
     }
@@ -330,7 +330,7 @@ public class TacticsAdvisor {
         Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
         Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
         Vector3 carToBall = input.getBallPosition().minus(car.getPosition());
-        Vector3 wrongSideVector = VectorUtil.project(carToBall, ballToGoal);
+        Vector3 wrongSideVector = VectorUtil.INSTANCE.project(carToBall, ballToGoal);
         return wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal));
     }
 

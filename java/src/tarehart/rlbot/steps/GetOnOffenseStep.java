@@ -26,7 +26,7 @@ public class GetOnOffenseStep implements Step {
 
 
     public GetOnOffenseStep() {
-        this(Duration.ofSeconds(1));
+        this(Duration.Companion.ofSeconds(1));
     }
 
     public GetOnOffenseStep(Duration duration) {
@@ -72,7 +72,7 @@ public class GetOnOffenseStep implements Step {
         Goal enemyGoal = GoalUtil.getEnemyGoal(input.getTeam());
         Goal ownGoal = GoalUtil.getOwnGoal(input.getTeam());
 
-        Vector3 target = ballFuture.space;
+        Vector3 target = ballFuture.getSpace();
 
 
 
@@ -90,7 +90,7 @@ public class GetOnOffenseStep implements Step {
         }
 
 
-        if (TacticsAdvisor.getYAxisWrongSidedness(car, ballFuture.space) < 0) {
+        if (TacticsAdvisor.getYAxisWrongSidedness(car, ballFuture.getSpace()) < 0) {
             return Optional.empty();
         }
 

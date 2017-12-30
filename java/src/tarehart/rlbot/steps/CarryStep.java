@@ -37,7 +37,7 @@ public class CarryStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
-        if (motionAfterWallBounce.isPresent() && Duration.between(input.getTime(), motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
+        if (motionAfterWallBounce.isPresent() && Duration.Companion.between(input.getTime(), motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
             return Optional.empty(); // The dribble step is not in the business of wall reads.
         }
 
@@ -56,7 +56,7 @@ public class CarryStep implements Step {
 
         double velocityCorrectionAngle = ballVelocityFlat.correctionAngle(ballToGoal);
         double angleTweak = Math.min(Math.PI / 6, Math.max(-Math.PI / 6, velocityCorrectionAngle * 2));
-        pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normalized();
+        pushDirection = VectorUtil.INSTANCE.rotateVector(ballToGoal, angleTweak).normalized();
         pressurePoint = futureBallPosition.minus(pushDirection.scaled(approachDistance));
 
 
@@ -74,7 +74,7 @@ public class CarryStep implements Step {
 
         Vector2 carToPosition = worldPosition.minus(car.getPosition()).flatten();
 
-        Vector2 carToPositionRotated = VectorUtil.rotateVector(carToPosition, -carYaw);
+        Vector2 carToPositionRotated = VectorUtil.INSTANCE.rotateVector(carToPosition, -carYaw);
 
         double zDiff = worldPosition.getZ() - car.getPosition().getZ();
         return new Vector3(carToPositionRotated.getX(), carToPositionRotated.getY(), zDiff);
@@ -121,7 +121,7 @@ public class CarryStep implements Step {
             return false;
         }
 
-        if (VectorUtil.flatDistance(car.getVelocity(), input.getBallVelocity()) > 10) {
+        if (VectorUtil.INSTANCE.flatDistance(car.getVelocity(), input.getBallVelocity()) > 10) {
             if (log) {
                 println("Velocity too different to carry.", input.getPlayerIndex());
             }

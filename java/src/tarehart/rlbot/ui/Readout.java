@@ -52,8 +52,8 @@ public class Readout {
 
     private double maxCarSpeedVal;
 
-    private GameTime actualMaxTime = GameTime.now();
-    private GameTime predictedMaxTime = GameTime.now();
+    private GameTime actualMaxTime = new GameTime(0);
+    private GameTime predictedMaxTime = new GameTime(0);
     private PredictionWarehouse warehouse = new PredictionWarehouse();
     private GameTime previousTime = null;
 
@@ -115,7 +115,7 @@ public class Readout {
         if (ballHeightActualMax.getValue() < ballHeightActual.getValue()) {
             ballHeightActualMax.setValue(ballHeightActual.getValue());
             actualMaxTime = input.getTime();
-        } else if (Duration.between(input.getTime(), actualMaxTime).abs().getSeconds() > 3) {
+        } else if (Duration.Companion.between(input.getTime(), actualMaxTime).abs().getSeconds() > 3) {
             ballHeightActualMax.setValue(0);
         }
 
@@ -123,14 +123,14 @@ public class Readout {
         if (ballHeightPredictedMax.getValue() < ballHeightPredicted.getValue()) {
             ballHeightPredictedMax.setValue(ballHeightPredicted.getValue());
             predictedMaxTime = input.getTime();
-        } else if (Duration.between(input.getTime(), predictedMaxTime).abs().getSeconds() > 3) {
+        } else if (Duration.Companion.between(input.getTime(), predictedMaxTime).abs().getSeconds() > 3) {
             ballHeightPredictedMax.setValue(0);
         }
     }
 
     private void gatherBallPredictionData(AgentInput input, BallPath ballPath) {
         int predictionMillis = predictionTime.getValue();
-        GameTime predictionTime = input.getTime().plus(Duration.ofMillis(predictionMillis));
+        GameTime predictionTime = input.getTime().plus(Duration.Companion.ofMillis(predictionMillis));
 
         if (previousTime == null || !previousTime.equals(input.getTime())) {
             if (ballPath != null) {

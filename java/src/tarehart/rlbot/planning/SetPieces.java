@@ -77,7 +77,7 @@ public class SetPieces {
     }
 
     public static Plan performAerial(double tiltBackSeconds) {
-        Duration tiltBackDuration = Duration.ofSeconds(tiltBackSeconds);
+        Duration tiltBackDuration = Duration.Companion.ofSeconds(tiltBackSeconds);
 
         return new Plan()
                 .withStep(new BlindStep(
@@ -91,7 +91,7 @@ public class SetPieces {
     }
 
     public static Plan performDoubleJumpAerial(double tiltBackSeconds) {
-        Duration tiltBackDuration = Duration.ofSeconds(tiltBackSeconds);
+        Duration tiltBackDuration = Duration.Companion.ofSeconds(tiltBackSeconds);
 
         return new Plan()
                 .withStep(new BlindStep(
@@ -104,13 +104,13 @@ public class SetPieces {
                         new AgentOutput()
                                 .withPitch(1)
                                 .withBoost(true),
-                        Duration.ofSeconds(.05)
+                        Duration.Companion.ofSeconds(.05)
                 ))
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withBoost(true)
                                 .withJump(true),
-                        Duration.ofSeconds(.05)
+                        Duration.Companion.ofSeconds(.05)
                 ))
                 .withStep(new MidairStrikeStep(tiltBackDuration))
                 .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
@@ -127,14 +127,14 @@ public class SetPieces {
                         new AgentOutput()
                                 .withJump(true)
                                 .withPitch(1),
-                        Duration.ofSeconds(pitchBackPortion)
+                        Duration.Companion.ofSeconds(pitchBackPortion)
                 ));
 
         if (driftUpPortion > 0) {
             plan.withStep(new BlindStep(
                     new AgentOutput()
                             .withJump(true),
-                    Duration.ofSeconds(driftUpPortion)
+                    Duration.Companion.ofSeconds(driftUpPortion)
             ));
         }
 
@@ -154,7 +154,7 @@ public class SetPieces {
                         new AgentOutput()
                                 .withAcceleration(1)
                                 .withPitch(-1),
-                        Duration.ofMillis(800)
+                        Duration.Companion.ofMillis(800)
                 ))
                 .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
     }
@@ -181,7 +181,7 @@ public class SetPieces {
     public static Plan jumpSideFlip(boolean flipLeft, Duration jumpTime) {
 
         if (jumpTime.toMillis() < 0) {
-            jumpTime = Duration.ofMillis(0);
+            jumpTime = Duration.Companion.ofMillis(0);
         }
 
         return new Plan()
@@ -212,25 +212,25 @@ public class SetPieces {
                         new AgentOutput()
                                 .withJump(true)
                                 .withPitch(1),
-                        Duration.ofSeconds(.3)
+                        Duration.Companion.ofSeconds(.3)
                 ))
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withPitch(1)
                                 .withBoost(true),
-                        Duration.ofSeconds(.05)
+                        Duration.Companion.ofSeconds(.05)
                 ))
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withBoost(true)
                                 .withJump(true),
-                        Duration.ofSeconds(.05)
+                        Duration.Companion.ofSeconds(.05)
                 ))
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withJump(true)
                                 .withBoost(true),
-                        Duration.ofSeconds(howHigh / 10)
+                        Duration.Companion.ofSeconds(howHigh / 10)
                 ))
                 .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
     }

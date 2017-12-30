@@ -25,7 +25,6 @@ import java.util.Optional;
 import static java.lang.Math.*;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static tarehart.rlbot.math.VectorUtil.rotateVector;
 import static tarehart.rlbot.physics.ArenaModel.predictBallPath;
 import static tarehart.rlbot.intercept.InterceptCalculator.getAerialIntercept;
 import static tarehart.rlbot.planning.SteerUtil.getCorrectionAngleRad;
@@ -36,7 +35,7 @@ public class MidairStrikeStep implements Step {
     private static final double SIDE_DODGE_THRESHOLD = Math.PI / 4;
     public static final int DODGE_TIME = 400;
     public static final double DODGE_DISTANCE = 6;
-    public static final Duration MAX_TIME_FOR_AIR_DODGE = Duration.ofMillis(1500);
+    public static final Duration MAX_TIME_FOR_AIR_DODGE = Duration.Companion.ofMillis(1500);
     public static final double UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25;
     public static final double YAW_OVERCORRECT = .1;
     public static final double PITCH_OVERCORRECT = .1;
@@ -69,7 +68,7 @@ public class MidairStrikeStep implements Step {
         CarData car = input.getMyCarData();
         Vector3 offset = GoalUtil.getOwnGoal(car.getTeam()).getCenter().scaledToMagnitude(3).minus(new Vector3(0, 0, .6));
         if (intercept != null) {
-            Vector3 goalToBall = intercept.space.minus(GoalUtil.getEnemyGoal(car.getTeam()).getNearestEntrance(intercept.space, 4));
+            Vector3 goalToBall = intercept.getSpace().minus(GoalUtil.getEnemyGoal(car.getTeam()).getNearestEntrance(intercept.getSpace(), 4));
             offset = goalToBall.scaledToMagnitude(2.5);
             if (goalToBall.magnitude() > 50) {
                 offset = new Vector3(offset.getX(), offset.getY(), -.2);
@@ -86,34 +85,34 @@ public class MidairStrikeStep implements Step {
             return of(new AgentOutput().withBoost());
         }
         intercept = interceptOpportunity.get();
-        set(intercept.space.flatten(), car.getTeam());
-        Vector3 carToIntercept = intercept.space.minus(car.getPosition());
-        long millisTillIntercept = Duration.between(input.getTime(), intercept.time).toMillis();
+        set(intercept.getSpace().flatten(), car.getTeam());
+        Vector3 carToIntercept = intercept.getSpace().minus(car.getPosition());
+        long millisTillIntercept = Duration.Companion.between(input.getTime(), intercept.getTime()).toMillis();
         double distance = car.getPosition().distance(input.getBallPosition());
         println("Midair strike running... Distance: " + distance, input.getPlayerIndex());
 
-        double correctionAngleRad = getCorrectionAngleRad(car, intercept.space);
+        double correctionAngleRad = getCorrectionAngleRad(car, intercept.getSpace());
 
         if (input.getTime().isBefore(lastMomentForDodge) && distance < DODGE_DISTANCE) {
             // Let's flip into the ball!
             if (abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
                 println("Front flip strike", input.getPlayerIndex());
                 plan = new Plan()
-                        .withStep(new BlindStep(new AgentOutput(), Duration.ofMillis(5)))
-                        .withStep(new BlindStep(new AgentOutput().withPitch(-1).withJump(), Duration.ofMillis(5)));
+                        .withStep(new BlindStep(new AgentOutput(), Duration.Companion.ofMillis(5)))
+                        .withStep(new BlindStep(new AgentOutput().withPitch(-1).withJump(), Duration.Companion.ofMillis(5)));
                 return plan.getOutput(input);
             } else {
                 // Dodge to the side
                 println("Side flip strike", input.getPlayerIndex());
                 plan = new Plan()
-                        .withStep(new BlindStep(new AgentOutput(), Duration.ofMillis(5)))
-                        .withStep(new BlindStep(new AgentOutput().withSteer(correctionAngleRad < 0 ? 1 : -1).withJump(), Duration.ofMillis(5)));
+                        .withStep(new BlindStep(new AgentOutput(), Duration.Companion.ofMillis(5)))
+                        .withStep(new BlindStep(new AgentOutput().withSteer(correctionAngleRad < 0 ? 1 : -1).withJump(), Duration.Companion.ofMillis(5)));
                 return plan.getOutput(input);
             }
         }
 
         double rightDirection = carToIntercept.normaliseCopy().dotProduct(car.getVelocity().normaliseCopy());
-        double secondsSoFar = Duration.between(beginningOfStep, input.getTime()).getSeconds();
+        double secondsSoFar = Duration.Companion.between(beginningOfStep, input.getTime()).getSeconds();
 
         if (millisTillIntercept > DODGE_TIME && secondsSoFar > 2 && rightDirection < .6 || rightDirection < 0) {
             println("Failed aerial on bad angle", input.getPlayerIndex());
@@ -127,13 +126,15 @@ public class MidairStrikeStep implements Step {
         Vector2 currentFlatVelocity = car.getVelocity().flatten();
 
         double leftRightCorrectionAngle = currentFlatVelocity.correctionAngle(flatToIntercept);
-        Vector2 desiredFlatOrientation = rotateVector(currentFlatVelocity, leftRightCorrectionAngle + signum(leftRightCorrectionAngle) * YAW_OVERCORRECT).normalized();
+        Vector2 desiredFlatOrientation = VectorUtil.INSTANCE
+                .rotateVector(currentFlatVelocity, leftRightCorrectionAngle + signum(leftRightCorrectionAngle) * YAW_OVERCORRECT)
+                .normalized();
 
 
         Vector3 desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, sin(desiredVerticalAngle));
 
         Vector3 pitchPlaneNormal = car.getOrientation().getRightVector().crossProduct(desiredNoseVector);
-        Vector3 yawPlaneNormal = VectorUtil.rotateVector(desiredFlatOrientation, -Math.PI / 2).toVector3().normaliseCopy();
+        Vector3 yawPlaneNormal = VectorUtil.INSTANCE.rotateVector(desiredFlatOrientation, -Math.PI / 2).toVector3().normaliseCopy();
 
         Optional<AgentOutput> pitchOutput = new PitchToPlaneStep(pitchPlaneNormal).getOutput(input);
         Optional<AgentOutput> yawOutput = new YawToPlaneStep(yawPlaneNormal, false).getOutput(input);
@@ -200,7 +201,7 @@ public class MidairStrikeStep implements Step {
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
         if (intercept != null) {
-            ArenaDisplay.drawBall(intercept.space, graphics, new Color(23, 194, 8));
+            ArenaDisplay.drawBall(intercept.getSpace(), graphics, new Color(23, 194, 8));
         }
     }
 }

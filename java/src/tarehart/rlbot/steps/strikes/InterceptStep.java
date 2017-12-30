@@ -66,11 +66,11 @@ public class InterceptStep implements Step {
         double distanceFromBall = carData.getPosition().distance(input.getBallPosition());
         if (doneMoment == null && distanceFromBall < PROBABLY_TOUCHING_THRESHOLD) {
             // You get a tiny bit more time
-            doneMoment = input.getTime().plus(Duration.ofMillis(1000));
+            doneMoment = input.getTime().plus(Duration.Companion.ofMillis(1000));
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        DistancePlot fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(7), carData.getBoost(), 0);
+        DistancePlot fullAcceleration = AccelerationModel.INSTANCE.simulateAcceleration(carData, Duration.Companion.ofSeconds(7), carData.getBoost(), 0);
 
         Optional<Intercept> soonestInterceptOption = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate);
         if (!soonestInterceptOption.isPresent()) {
@@ -89,7 +89,7 @@ public class InterceptStep implements Step {
         if (originalIntercept == null) {
             originalIntercept = chosenIntercept;
         } else {
-            if (Duration.between(originalIntercept.getTime(), chosenIntercept.getTime()).getSeconds() > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
+            if (Duration.Companion.between(originalIntercept.getTime(), chosenIntercept.getTime()).getSeconds() > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
                 if (doneMoment != null) {
                     println("Probably intercepted successfully", input.getPlayerIndex());
                 } else {
@@ -123,7 +123,7 @@ public class InterceptStep implements Step {
             double distance = carData.getPosition().flatten().distance(ballPath.getStartPoint().getSpace().flatten());
             Vector3 averageNoseVector = ballPath.getMotionAt(carData.getTime().plusSeconds(distance * .02)).get().getSpace().minus(carData.getPosition()).normaliseCopy();
 
-            DistancePlot budgetAcceleration = AccelerationModel.simulateAirAcceleration(carData, Duration.ofSeconds(4), averageNoseVector.flatten().magnitude());
+            DistancePlot budgetAcceleration = AccelerationModel.INSTANCE.simulateAirAcceleration(carData, Duration.Companion.ofSeconds(4), averageNoseVector.flatten().magnitude());
 
             return InterceptCalculator.getFilteredInterceptOpportunity(carData, ballPath, budgetAcceleration, interceptModifier,
                     interceptPredicate.and(AirTouchPlanner::isVerticallyAccessible), (space) -> AERIAL_STRIKE_PROFILE);
@@ -158,7 +158,7 @@ public class InterceptStep implements Step {
         }
 
         Optional<DistanceTimeSpeed> motionAfterStrike = intercept.getDistancePlot()
-                .getMotionAfterDuration(car, intercept.getSpace(), Duration.between(car.getTime(), intercept.getTime()), intercept.getStrikeProfile());
+                .getMotionAfterDuration(car, intercept.getSpace(), Duration.Companion.between(car.getTime(), intercept.getTime()), intercept.getStrikeProfile());
 
         if (motionAfterStrike.isPresent()) {
             double maxDistance = motionAfterStrike.get().getDistance();

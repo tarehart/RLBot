@@ -39,8 +39,8 @@ public class BallPath {
             BallSlice next = path.get(i + 1);
             if (next.getTime().isAfter(time)) {
 
-                long simulationStepMillis = Duration.between(current.getTime(), next.getTime()).toMillis();
-                double tweenPoint = Duration.between(current.getTime(), time).toMillis() * 1.0 / simulationStepMillis;
+                long simulationStepMillis = Duration.Companion.between(current.getTime(), next.getTime()).toMillis();
+                double tweenPoint = Duration.Companion.between(current.getTime(), time).toMillis() * 1.0 / simulationStepMillis;
                 Vector3 toNext = next.getSpace().minus(current.getSpace());
                 Vector3 toTween = toNext.scaled(tweenPoint);
                 Vector3 space = current.getSpace().plus(toTween);
@@ -162,7 +162,7 @@ public class BallPath {
 
             BallSlice previous = path.get(i - 1);
 
-            if (directionSensitive && spt.getSpace().minus(previous.getSpace()).dotProduct(plane.normal) > 0) {
+            if (directionSensitive && spt.getSpace().minus(previous.getSpace()).dotProduct(plane.getNormal()) > 0) {
                 // Moving the same direction as the plane normal. If we're direction sensitive, then we don't care about plane breaks in this direction.
                 continue;
             }
@@ -173,7 +173,7 @@ public class BallPath {
 
                 Vector3 breakPosition = planeBreak.get();
 
-                double stepSeconds = Duration.between(previous.getTime(), spt.getTime()).getSeconds();
+                double stepSeconds = Duration.Companion.between(previous.getTime(), spt.getTime()).getSeconds();
                 double tweenPoint = previous.getSpace().distance(breakPosition) / previous.getSpace().distance(spt.getSpace());
                 GameTime moment = previous.getTime().plusSeconds(stepSeconds * tweenPoint);
                 Vector3 velocity = averageVectors(previous.getVelocity(), spt.getVelocity(), 1 - tweenPoint);
@@ -185,7 +185,7 @@ public class BallPath {
     }
 
     private Optional<Vector3> getPlaneBreak(Vector3 start, Vector3 end, Plane plane) {
-        return VectorUtil.getPlaneIntersection(plane, start, end.minus(start));
+        return VectorUtil.INSTANCE.getPlaneIntersection(plane, start, end.minus(start));
     }
 
     public Optional<BallSlice> findSlice(Predicate<BallSlice> decider) {

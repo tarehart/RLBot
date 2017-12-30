@@ -31,9 +31,9 @@ public class DemolishEnemyStep implements Step {
 
         CarData enemyCar = enemyCarOption.get();
 
-        CarPath path = CarPredictor.predictCarMotion(enemyCar, Duration.ofSeconds(4));
+        CarPath path = CarPredictor.predictCarMotion(enemyCar, Duration.Companion.ofSeconds(4));
 
-        DistancePlot distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4), car.getBoost());
+        DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(car, Duration.Companion.ofSeconds(4), car.getBoost());
 
         Optional<SpaceTime> carInterceptOption = CarInterceptPlanner.getCarIntercept(car, path, distancePlot);
 
@@ -46,9 +46,9 @@ public class DemolishEnemyStep implements Step {
 //            BotLog.println("Whoops", car.playerIndex);
 //        }
 
-            AgentOutput steering = SteerUtil.steerTowardGroundPosition(car, carIntercept.space);
+            AgentOutput steering = SteerUtil.steerTowardGroundPosition(car, carIntercept.getSpace());
 
-            double secondsTillContact = Duration.between(car.getTime(), carIntercept.time).getSeconds();
+            double secondsTillContact = Duration.Companion.between(car.getTime(), carIntercept.getTime()).getSeconds();
 
             if (secondsTillContact < .5 && !enemyCar.getHasWheelContact() && (enemyHadWheelContact || enemyCar.getPosition().getZ() - car.getPosition().getZ() > 1)) {
                 steering.withJump();
