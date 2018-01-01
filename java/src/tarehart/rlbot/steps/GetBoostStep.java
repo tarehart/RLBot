@@ -69,14 +69,14 @@ public class GetBoostStep implements Step {
 
             SteerPlan planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
 
-            Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint);
+            Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.getWaypoint());
             if (sensibleFlip.isPresent()) {
                 println("Flipping toward boost", input.getPlayerIndex());
                 plan = sensibleFlip.get();
                 return plan.getOutput(input);
             }
 
-            return Optional.of(planForCircleTurn.immediateSteer);
+            return Optional.of(planForCircleTurn.getImmediateSteer());
         }
     }
 

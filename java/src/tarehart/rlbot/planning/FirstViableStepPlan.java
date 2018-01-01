@@ -10,7 +10,7 @@ public class FirstViableStepPlan extends Plan {
 
     // If a step runs successfully for this number of frames, then we decide that it was viable, and commit to it.
     // When that step ends, the plan is complete, even if there were originally subsequent steps.
-    private static final int FRAMES_TILL_COMMITMENT = 20;
+    private static final int FRAMES_TILL_COMMITMENT = 3;
 
     private int frameCount = 0;
 

@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 public class SlideToPositionStep implements Step {
 
-    private Function<AgentInput, PositionFacing> targetFunction;
+    private Function<AgentInput, Optional<PositionFacing>> targetFunction;
 
     private static final int AIM_AT_TARGET = 0;
     private static final int TRAVEL = 1;
@@ -30,7 +30,7 @@ public class SlideToPositionStep implements Step {
 
     private Plan plan;
 
-    public SlideToPositionStep(Function<AgentInput, PositionFacing> targetFunction) {
+    public SlideToPositionStep(Function<AgentInput, Optional<PositionFacing>> targetFunction) {
         this.targetFunction = targetFunction;
     }
 
@@ -45,7 +45,11 @@ public class SlideToPositionStep implements Step {
             }
         }
 
-        target = targetFunction.apply(input);
+        Optional<PositionFacing> targetOption = targetFunction.apply(input);
+        if (!targetOption.isPresent()) {
+            return Optional.empty();
+        }
+        target = targetOption.get();
 
         CarData car = input.getMyCarData();
 

@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes;
 
+import org.jetbrains.annotations.NotNull;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
@@ -16,6 +17,7 @@ import tarehart.rlbot.routing.CircleTurnUtil;
 import tarehart.rlbot.routing.SteerPlan;
 import tarehart.rlbot.routing.StrikePoint;
 import tarehart.rlbot.steps.Step;
+import tarehart.rlbot.steps.travel.SlideToPositionStep;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 import tarehart.rlbot.tuning.BotLog;
@@ -88,18 +90,7 @@ public class DirectedNoseHitStep implements Step {
             return Optional.empty();
         }
 
-        final Optional<DirectedKickPlan> kickPlanOption;
-        if (interceptModifier != null) {
-            kickPlanOption = DirectedKickUtil.INSTANCE.planKick(
-                    input,
-                    kickStrategy,
-                    false,
-                    interceptModifier,
-                    (space) -> new StrikeProfile(),
-                    earliestPossibleIntercept);
-        } else {
-            kickPlanOption = DirectedKickUtil.INSTANCE.planKick(input, kickStrategy, false);
-        }
+        final Optional<DirectedKickPlan> kickPlanOption = planKick(input);
 
         if (!kickPlanOption.isPresent()) {
             BotLog.println("Quitting nose hit due to failed kick plan.", car.getPlayerIndex());
@@ -144,9 +135,9 @@ public class DirectedNoseHitStep implements Step {
         GameTime earliestThisTime = kickPlan.getIntercept().getTime().plusSeconds(freshManeuverSeconds).minus(kickPlan.getIntercept().getSpareTime());
         double timeMismatch = Duration.Companion.between(earliestPossibleIntercept, earliestThisTime).getSeconds();
 
-        if (Math.abs(timeMismatch) < .2 && positionCorrectionForStrike > Math.PI / 3 && carToIntercept.magnitude() > 20) {
-            // If we're planning to turn a huge amount, this is a waste of time.
-            return Optional.empty();
+        if (Math.abs(positionCorrectionForStrike) > Math.PI / 2 || Math.abs(carLaunchpadInterceptAngle) > Math.PI / 2) {
+            plan = new Plan().withStep(new SlideToPositionStep(in -> planKick(in).map(pl -> pl.getLaunchPad().getPositionFacing())));
+            return plan.getOutput(input);
         }
 
         // If you're facing the intercept, but the circle backoff wants you to backtrack, you should just wait
@@ -158,7 +149,7 @@ public class DirectedNoseHitStep implements Step {
         } else if (kickPlan.getIntercept().getSpace().getZ() < AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD) {
             earliestPossibleIntercept = earliestPossibleIntercept.plusSeconds(timeMismatch / 2);
         } else if (Math.abs(positionCorrectionForStrike) < MAX_NOSE_HIT_ANGLE) {
-            circleTurnPlan = new SteerPlan(SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat), interceptLocationFlat);
+            circleTurnPlan = new SteerPlan(SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat), interceptLocationFlat, kickPlan.getLaunchPad());
             return getNavigation(input, circleTurnPlan);
         }
 
@@ -178,7 +169,7 @@ public class DirectedNoseHitStep implements Step {
 
         // Line up for a nose hit
         circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), kickPlan.getLaunchPad());
-        if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.getX(), circleTurnPlan.waypoint.getY(), 0)) < -1) {
+        if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.getWaypoint().getX(), circleTurnPlan.getWaypoint().getY(), 0)) < -1) {
             println("Failing nose hit because waypoint is out of bounds", input.getPlayerIndex());
             return empty();
         }
@@ -187,10 +178,27 @@ public class DirectedNoseHitStep implements Step {
         return getNavigation(input, circleTurnPlan);
     }
 
+    @NotNull
+    private Optional<DirectedKickPlan> planKick(AgentInput input) {
+        final Optional<DirectedKickPlan> kickPlanOption;
+        if (interceptModifier != null) {
+            kickPlanOption = DirectedKickUtil.INSTANCE.planKick(
+                    input,
+                    kickStrategy,
+                    false,
+                    interceptModifier,
+                    (space) -> new StrikeProfile(),
+                    earliestPossibleIntercept);
+        } else {
+            kickPlanOption = DirectedKickUtil.INSTANCE.planKick(input, kickStrategy, false);
+        }
+        return kickPlanOption;
+    }
+
     private double getManeuverSeconds() {
         double seconds = Math.abs(carLaunchpadInterceptAngle) * .1;
         if (circleTurnPlan != null) {
-            double noseToWaypoint = Vector2.Companion.angle(circleTurnPlan.waypoint.minus(car.getPosition().flatten()), car.getOrientation().getNoseVector().flatten());
+            double noseToWaypoint = Vector2.Companion.angle(circleTurnPlan.getWaypoint().minus(car.getPosition().flatten()), car.getOrientation().getNoseVector().flatten());
             seconds += noseToWaypoint * .4;
         }
         return seconds;
@@ -209,14 +217,14 @@ public class DirectedNoseHitStep implements Step {
     private Optional<AgentOutput> getNavigation(AgentInput input, SteerPlan circleTurnOption) {
         CarData car = input.getMyCarData();
 
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint);
+        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.getWaypoint());
         if (sensibleFlip.isPresent()) {
             println("Front flip toward nose hit", input.getPlayerIndex());
             this.plan = sensibleFlip.get();
             return this.plan.getOutput(input);
         }
 
-        return Optional.of(circleTurnOption.immediateSteer);
+        return Optional.of(circleTurnOption.getImmediateSteer());
     }
 
     @Override

@@ -37,11 +37,12 @@ public class MidairStrikeStep implements Step {
     private static final double SIDE_DODGE_THRESHOLD = Math.PI / 4;
     public static final int DODGE_TIME = 400;
     public static final double DODGE_DISTANCE = 6;
-    public static final Duration MAX_TIME_FOR_AIR_DODGE = Duration.Companion.ofMillis(1500);
+    public static final Duration MAX_TIME_FOR_AIR_DODGE = Duration.Companion.ofSeconds(1.4);
     public static final double UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25;
     public static final double YAW_OVERCORRECT = .1;
     public static final double PITCH_OVERCORRECT = .1;
     private static final double EFFECTIVE_AIR_BOOST_ACCELERATION = 18; // Normally 19ish, but we'll be wiggling
+    private static final long NOSE_FINESSE_MILLIS = 700;
     private int confusionCount = 0;
     private Plan plan;
     private GameTime lastMomentForDodge;
@@ -92,7 +93,6 @@ public class MidairStrikeStep implements Step {
         Vector3 carToIntercept = intercept.getSpace().minus(car.getPosition());
         long millisTillIntercept = Duration.Companion.between(input.getTime(), intercept.getTime()).getMillis();
         double distance = car.getPosition().distance(input.getBallPosition());
-        println("Midair strike running... Distance: " + distance, input.getPlayerIndex());
 
         double correctionAngleRad = getCorrectionAngleRad(car, intercept.getSpace());
 
@@ -102,7 +102,7 @@ public class MidairStrikeStep implements Step {
                 println("Front flip strike", input.getPlayerIndex());
                 plan = new Plan()
                         .withStep(new BlindStep(new AgentOutput(), Duration.Companion.ofMillis(5)))
-                        .withStep(new BlindStep(new AgentOutput().withPitch(-1).withJump(), Duration.Companion.ofMillis(5)));
+                        .withStep(new BlindStep(new AgentOutput().withPitch(-1).withJump(), Duration.Companion.ofSeconds(1)));
                 return plan.getOutput(input);
             } else {
                 // Dodge to the side
@@ -122,7 +122,7 @@ public class MidairStrikeStep implements Step {
             return empty();
         }
 
-        double heightError = getHeightError(car.getVelocity(), carToIntercept, Duration.Companion.between(car.getTime(), intercept.getTime()), car);
+        double heightError = getHeightError(intercept.getSpace().getZ(), Duration.Companion.between(car.getTime(), intercept.getTime()), car);
 
         Vector2 flatToIntercept = carToIntercept.flatten();
 
@@ -134,10 +134,23 @@ public class MidairStrikeStep implements Step {
                 .normalized();
 
 
-        Vector2 currentPitchVector = getPitchVector(car.getOrientation().getNoseVector());
-        double currentPitchAngle = new Vector2(1, 0).correctionAngle(currentPitchVector);
-        double desiredPitchAngle = currentPitchAngle - Math.signum(heightError) * .3;
-        Vector3 desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, sin(desiredPitchAngle));
+
+
+        Vector3 desiredNoseVector;
+
+        if (millisTillIntercept < NOSE_FINESSE_MILLIS && intercept.getTime().isAfter(lastMomentForDodge) && heightError > 0 && offset.getZ() > 0) {
+            // Nose into the ball
+            desiredNoseVector = offset.scaled(-1).normaliseCopy();
+        } else {
+            // Fly toward intercept
+//            Vector2 currentPitchVector = getPitchVector(car.getOrientation().getNoseVector());
+//            double currentPitchAngle = new Vector2(1, 0).correctionAngle(currentPitchVector);
+//            double desiredPitchAngle = currentPitchAngle - Math.signum(heightError - 2) * .3;
+            double extraHeight = offset.getZ() > 0 ? 1.2 : 0;
+            double desiredZ = getDesiredZComponentBasedOnAccel(intercept.getSpace().getZ() + extraHeight, Duration.Companion.between(car.getTime(), intercept.getTime()), car);
+            desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, desiredZ);
+        }
+
 
         Vector3 pitchPlaneNormal = car.getOrientation().getRightVector().crossProduct(desiredNoseVector);
         Vector3 yawPlaneNormal = VectorUtil.INSTANCE.rotateVector(desiredFlatOrientation, -Math.PI / 2).toVector3().normaliseCopy();
@@ -164,16 +177,31 @@ public class MidairStrikeStep implements Step {
         return desiredVerticalAngle;
     }
 
-    public static double getHeightError(Vector3 velocity, Vector3 carToIntercept, Duration timeTillIntercept, CarData car) {
+    public static double getDesiredZComponentBasedOnAccel(double targetHeight, Duration timeTillIntercept, CarData car) {
+        double initialHeightError = getHeightError(targetHeight, timeTillIntercept, car);
+        double angleStep = -Math.signum(initialHeightError) * .1;
 
-        double targetHeight = car.getPosition().getZ() + carToIntercept.getZ();
+        double latestHeightError = initialHeightError;
+        double latestZ = car.getOrientation().getNoseVector().getZ();
+        double latestAngle = Math.asin(latestZ);
+        while (latestHeightError * initialHeightError > 0 && Math.abs(latestAngle) < Math.PI / 2) {
+            latestAngle = latestAngle + angleStep;
+            latestZ = Math.sin(latestAngle);
+            latestHeightError = getHeightError(car.getPosition().getZ(), targetHeight, timeTillIntercept, car.getVelocity().getZ(), latestZ);
+        }
+        return latestZ;
+    }
 
-        double initialVelocity = velocity.getZ();
+    public static double getHeightError(double targetHeight, Duration timeTillIntercept, CarData car) {
+        return getHeightError(car.getPosition().getZ(), targetHeight, timeTillIntercept, car.getVelocity().getZ(), car.getOrientation().getNoseVector().getZ());
+    }
+
+    public static double getHeightError(double currentHeight, double targetHeight, Duration timeTillIntercept, double initialVelocity, double noseVertical) {
 
         double t = timeTillIntercept.getSeconds();
-        double verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * car.getOrientation().getNoseVector().getZ() - ArenaModel.GRAVITY;
+        double verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical - ArenaModel.GRAVITY;
 
-        double resultingHeight = car.getPosition().getZ() + initialVelocity * t + .5 * verticalAcceleration * t * t;
+        double resultingHeight = currentHeight + initialVelocity * t + .5 * verticalAcceleration * t * t;
 
         return resultingHeight - targetHeight;
     }
@@ -208,7 +236,7 @@ public class MidairStrikeStep implements Step {
     /**
      * Return a unit vector with the given z component, and the same flat angle as flatDirection.
      */
-    private Vector3 convertToVector3WithPitch(Vector2 flat, double zComponent) {
+    private static Vector3 convertToVector3WithPitch(Vector2 flat, double zComponent) {
         double xyScaler = Math.sqrt((1 - zComponent * zComponent) / (flat.getX() * flat.getX() + flat.getY() * flat.getY()));
         return new Vector3(flat.getX() * xyScaler, flat.getY() * xyScaler, zComponent);
     }

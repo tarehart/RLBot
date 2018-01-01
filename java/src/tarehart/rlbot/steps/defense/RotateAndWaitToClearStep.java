@@ -48,7 +48,7 @@ public class RotateAndWaitToClearStep implements Step {
 
                     Vector2 targetPosition = new Vector2(Math.signum(futureBallPosition.getX()) * CENTER_OFFSET, goalCenter.getY() - Math.signum(goalCenter.getY()) * AWAY_FROM_GOAL);
                     Vector2 targetFacing = new Vector2(-Math.signum(targetPosition.getX()), 0);
-                    return new PositionFacing(targetPosition, targetFacing);
+                    return Optional.of(new PositionFacing(targetPosition, targetFacing));
                 }))
                 .withStep(new BlindStep(1, new AgentOutput()));
 

@@ -185,7 +185,7 @@ public class DirectedSideHitStep implements Step {
         CarData car = input.getMyCarData();
 
         if (car.getBoost() == 0) {
-            Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint);
+            Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.getWaypoint());
             if (sensibleFlip.isPresent()) {
                 println("Front flip toward side hit", input.getPlayerIndex());
                 this.plan = sensibleFlip.get();
@@ -193,7 +193,7 @@ public class DirectedSideHitStep implements Step {
             }
         }
 
-        return Optional.of(circleTurnOption.immediateSteer);
+        return Optional.of(circleTurnOption.getImmediateSteer());
     }
 
     @Override
