@@ -87,8 +87,7 @@ public class PredictedVsActualTest {
             double error = new Vector2(actualToPredicted.getX(), actualToPredicted.getY()).magnitude();
             if (error > THRESHOLD) {
                 Duration duration = Duration.Companion.between(actualTrimmed.get(0).getTime(), actualTrimmed.get(i).getTime());
-                double seconds = duration.toMillis() / 1000.0;
-                Assert.fail(String.format("Diverged to %.2f after %.2f seconds!", error, seconds));
+                Assert.fail(String.format("Diverged to %.2f after %.2f seconds!", error, duration.getSeconds()));
             }
         }
     }

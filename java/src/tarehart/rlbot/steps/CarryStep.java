@@ -37,7 +37,7 @@ public class CarryStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         Optional<BallSlice> motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1);
-        if (motionAfterWallBounce.isPresent() && Duration.Companion.between(input.getTime(), motionAfterWallBounce.get().getTime()).toMillis() < 1000) {
+        if (motionAfterWallBounce.isPresent() && Duration.Companion.between(input.getTime(), motionAfterWallBounce.get().getTime()).getSeconds() < 1) {
             return Optional.empty(); // The dribble step is not in the business of wall reads.
         }
 

@@ -180,7 +180,7 @@ public class SetPieces {
 
     public static Plan jumpSideFlip(boolean flipLeft, Duration jumpTime) {
 
-        if (jumpTime.toMillis() < 0) {
+        if (jumpTime.getMillis() < 0) {
             jumpTime = Duration.Companion.ofMillis(0);
         }
 

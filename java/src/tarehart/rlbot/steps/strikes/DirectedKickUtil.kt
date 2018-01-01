@@ -14,6 +14,7 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
+import tarehart.rlbot.routing.StrikePoint
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
@@ -54,7 +55,7 @@ object DirectedKickUtil {
         }
 
         val ballPath = ArenaModel.predictBallPath(input)
-        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
+        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost, 0.0)
 
         val interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
                 car, ballPath, distancePlot, interceptModifier, overallPredicate, strikeFn)
@@ -69,9 +70,8 @@ object DirectedKickUtil {
 
 
         val secondsTillImpactRoughly = Duration.between(input.time, ballAtIntercept.time)
-        val impactSpeed =
-                if (isSideHit) ManeuverMath.DODGE_SPEED
-                else distancePlot.getMotionAfterDuration(secondsTillImpactRoughly).map(DistanceTimeSpeed::speed).orElse(AccelerationModel.SUPERSONIC_SPEED)
+        val approachSpeed = distancePlot.getMotionAfterDuration(secondsTillImpactRoughly).map(DistanceTimeSpeed::speed).orElse(AccelerationModel.SUPERSONIC_SPEED)
+        val impactSpeed = if (isSideHit) ManeuverMath.DODGE_SPEED else approachSpeed
 
         val easyForce: Vector3
         if (isSideHit) {
@@ -104,11 +104,13 @@ object DirectedKickUtil {
                     desiredBallVelocity.z)
         }
 
-        val launchPad: Vector2?
+        val launchPad: StrikePoint?
 
         if (!isSideHit) {
-            val backoff = 3 + ballAtIntercept.space.z
-            launchPad = ballAtIntercept.space.flatten() - plannedKickForce.flatten().scaledToMagnitude(backoff)
+            val backoff = 3 + ballAtIntercept.space.z + interceptOpportunity.get().spareTime.seconds * 10
+            val facing = plannedKickForce.flatten().normalized()
+            val launchPosition = ballAtIntercept.space.flatten() - facing.scaledToMagnitude(backoff)
+            launchPad = StrikePoint(launchPosition, facing, car.time + Duration.ofSeconds(backoff / approachSpeed))
         } else {
             launchPad = null
         }

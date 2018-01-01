@@ -42,7 +42,7 @@ public class RollToPlaneStep extends OrientToPlaneStep {
 
     @Override
     protected AgentOutput accelerate(boolean positiveRadians) {
-        return  new AgentOutput().withSteer(positiveRadians ? 1 : -1).withSlide();
+        return  new AgentOutput().withRoll(positiveRadians ? 1 : -1);
     }
 
     @Override

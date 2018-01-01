@@ -1,13 +1,9 @@
 package tarehart.rlbot.time
 
-class Duration private constructor(private val millis: Long) : Comparable<Duration> {
+class Duration private constructor(val millis: Long) : Comparable<Duration> {
 
     val seconds: Double
         get() = millis / 1000.0
-
-    fun toMillis(): Long {
-        return millis
-    }
 
     fun abs(): Duration {
         return if (millis < 0) Duration(-millis) else this

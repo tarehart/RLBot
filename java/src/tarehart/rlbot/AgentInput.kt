@@ -141,7 +141,8 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
                 playerIndex = playerIndex,
                 time = time,
                 frameCount = frameCount,
-                isDemolished = playerInfo.isDemolished
+                isDemolished = playerInfo.isDemolished,
+                name = playerInfo.name
         )
     }
 

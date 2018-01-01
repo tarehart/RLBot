@@ -10,6 +10,8 @@ public class AgentOutput {
     // -1 for front flip, 1 for back flip
     private double pitchTilt;
 
+    private double rollTilt;
+
     // 0 is none, 1 is full
     private double acceleration;
     private double deceleration;
@@ -28,6 +30,11 @@ public class AgentOutput {
 
     public AgentOutput withPitch(double pitchTilt) {
         this.pitchTilt = Math.max(-1, Math.min(1, pitchTilt));
+        return this;
+    }
+
+    public AgentOutput withRoll(double rollTilt) {
+        this.rollTilt = Math.max(-1, Math.min(1, rollTilt));
         return this;
     }
 
@@ -113,12 +120,16 @@ public class AgentOutput {
         return pitchTilt;
     }
 
+    public double getRoll() {
+        return rollTilt;
+    }
+
     GameData.ControllerState toControllerState() {
         return GameData.ControllerState.newBuilder()
                 .setThrottle((float) (acceleration - deceleration))
                 .setSteer((float) steeringTilt)
                 .setYaw(slideDepressed ? 0 : (float) steeringTilt)
-                .setRoll(slideDepressed ? (float) steeringTilt : 0)
+                .setRoll(rollTilt != 0 ? (float) rollTilt : (slideDepressed ? (float) steeringTilt : 0))
                 .setPitch((float) pitchTilt)
                 .setBoost(boostDepressed)
                 .setHandbrake(slideDepressed)

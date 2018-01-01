@@ -39,8 +39,8 @@ public class BallPath {
             BallSlice next = path.get(i + 1);
             if (next.getTime().isAfter(time)) {
 
-                long simulationStepMillis = Duration.Companion.between(current.getTime(), next.getTime()).toMillis();
-                double tweenPoint = Duration.Companion.between(current.getTime(), time).toMillis() * 1.0 / simulationStepMillis;
+                long simulationStepMillis = Duration.Companion.between(current.getTime(), next.getTime()).getMillis();
+                double tweenPoint = Duration.Companion.between(current.getTime(), time).getMillis() * 1.0 / simulationStepMillis;
                 Vector3 toNext = next.getSpace().minus(current.getSpace());
                 Vector3 toTween = toNext.scaled(tweenPoint);
                 Vector3 space = current.getSpace().plus(toTween);

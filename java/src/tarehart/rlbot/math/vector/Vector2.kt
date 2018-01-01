@@ -70,6 +70,20 @@ data class Vector2(val x: Double, val y: Double) {
         return idealRad - currentRad
     }
 
+    fun correctionAngle(ideal: Vector2, clockwise: Boolean): Double {
+        var currentRad = Math.atan2(y, x)
+        var idealRad = Math.atan2(ideal.y, ideal.x)
+
+        if ((idealRad - currentRad) > 0 && clockwise) {
+            currentRad += Math.PI * 2
+        }
+        if ((idealRad - currentRad) < 0 && !clockwise) {
+            idealRad += Math.PI * 2
+        }
+
+        return idealRad - currentRad
+    }
+
     override fun toString(): String {
         return ("(" + String.format("%.2f", x)
                 + ", " + String.format("%.2f", y)

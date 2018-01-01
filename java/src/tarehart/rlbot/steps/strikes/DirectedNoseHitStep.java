@@ -5,6 +5,7 @@ import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.intercept.AirTouchPlanner;
 import tarehart.rlbot.intercept.StrikeProfile;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -13,6 +14,7 @@ import tarehart.rlbot.physics.BallPhysics;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.routing.CircleTurnUtil;
 import tarehart.rlbot.routing.SteerPlan;
+import tarehart.rlbot.routing.StrikePoint;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
@@ -27,7 +29,7 @@ import static tarehart.rlbot.tuning.BotLog.println;
 public class DirectedNoseHitStep implements Step {
     public static final double MAX_NOSE_HIT_ANGLE = Math.PI / 18;
     private Plan plan;
-    private Vector3 originalIntercept;
+    private BallSlice originalIntercept;
     private GameTime doneMoment;
     private KickStrategy kickStrategy;
     private Vector3 interceptModifier = null;
@@ -107,16 +109,13 @@ public class DirectedNoseHitStep implements Step {
         kickPlan = kickPlanOption.get();
 
         if (originalIntercept == null) {
-            originalIntercept = kickPlan.getBallAtIntercept().getSpace();
+            originalIntercept = kickPlan.getBallAtIntercept();
         } else {
-            if (originalIntercept.distance(kickPlan.getBallAtIntercept().getSpace()) > 30) {
-                println("Failed to make the nose hit", input.getPlayerIndex());
-                return empty(); // Failed to kick it soon enough, new stuff has happened.
+            if (kickPlan.getBallPath().getMotionAt(originalIntercept.getTime()).map(slice -> slice.getSpace().distance(originalIntercept.getSpace()) > 10).orElse(true)) {
+                println("Ball path has diverged from expectation, quitting.", input.getPlayerIndex());
+                return Optional.empty();
             }
         }
-
-        Double circleBackoff = kickPlan.getLaunchPad().distance(kickPlan.getIntercept().getSpace().flatten());
-
 
         Vector2 strikeForceFlat = kickPlan.getPlannedKickForce().flatten().normalized();
         Vector3 interceptLocation = kickPlan.getIntercept().getSpace();
@@ -178,7 +177,7 @@ public class DirectedNoseHitStep implements Step {
 //            }
 
         // Line up for a nose hit
-        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), kickPlan.getLaunchPad(), strikeForceFlat);
+        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), kickPlan.getLaunchPad());
         if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.waypoint.getX(), circleTurnPlan.waypoint.getY(), 0)) < -1) {
             println("Failing nose hit because waypoint is out of bounds", input.getPlayerIndex());
             return empty();
@@ -189,7 +188,7 @@ public class DirectedNoseHitStep implements Step {
     }
 
     private double getManeuverSeconds() {
-        double seconds = carLaunchpadInterceptAngle * .1;
+        double seconds = Math.abs(carLaunchpadInterceptAngle) * .1;
         if (circleTurnPlan != null) {
             double noseToWaypoint = Vector2.Companion.angle(circleTurnPlan.waypoint.minus(car.getPosition().flatten()), car.getOrientation().getNoseVector().flatten());
             seconds += noseToWaypoint * .4;
@@ -203,7 +202,7 @@ public class DirectedNoseHitStep implements Step {
      */
     private static double measureCarLaunchpadInterceptAngle(CarData car, DirectedKickPlan kickPlan) {
         Vector2 strikeForceFlat = kickPlan.getPlannedKickForce().flatten();
-        Vector2 carToLaunchPad = kickPlan.getLaunchPad().minus(car.getPosition().flatten());
+        Vector2 carToLaunchPad = kickPlan.getLaunchPad().getPosition().minus(car.getPosition().flatten());
         return carToLaunchPad.correctionAngle(strikeForceFlat);
     }
 

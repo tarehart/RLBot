@@ -3,8 +3,10 @@ package tarehart.rlbot.steps.strikes;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.carpredict.AccelerationModel;
+import tarehart.rlbot.input.BallTouch;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.intercept.*;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.math.DistanceTimeSpeed;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.vector.Vector2;
@@ -25,18 +27,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 
+import static java.util.Optional.empty;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class InterceptStep implements Step {
     public static final StrikeProfile AERIAL_STRIKE_PROFILE = new StrikeProfile(0, 0, 0, StrikeProfile.Style.AERIAL);
     public static final StrikeProfile FLIP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, .3, StrikeProfile.Style.FLIP_HIT);
-    public static final double PROBABLY_TOUCHING_THRESHOLD = 5.5;
     private Plan plan;
     private Vector3 interceptModifier;
-    private GameTime doneMoment;
     private Intercept originalIntercept;
     private Intercept chosenIntercept;
     private BiPredicate<CarData, SpaceTime> interceptPredicate;
+    private Optional<BallTouch> originalTouch;
 
     public InterceptStep(Vector3 interceptModifier) {
         this(interceptModifier, (c, st) -> true);
@@ -56,18 +58,7 @@ public class InterceptStep implements Step {
             }
         }
 
-        if (doneMoment != null && input.getTime().isAfter(doneMoment)) {
-            println("Probably intercepted successfully", input.getPlayerIndex());
-            return Optional.empty();
-        }
-
         CarData carData = input.getMyCarData();
-
-        double distanceFromBall = carData.getPosition().distance(input.getBallPosition());
-        if (doneMoment == null && distanceFromBall < PROBABLY_TOUCHING_THRESHOLD) {
-            // You get a tiny bit more time
-            doneMoment = input.getTime().plus(Duration.Companion.ofMillis(1000));
-        }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
         DistancePlot fullAcceleration = AccelerationModel.INSTANCE.simulateAcceleration(carData, Duration.Companion.ofSeconds(7), carData.getBoost(), 0);
@@ -88,14 +79,20 @@ public class InterceptStep implements Step {
 
         if (originalIntercept == null) {
             originalIntercept = chosenIntercept;
+            originalTouch = input.getLatestBallTouch();
+
         } else {
-            if (Duration.Companion.between(originalIntercept.getTime(), chosenIntercept.getTime()).getSeconds() > 3 && distanceFromBall > PROBABLY_TOUCHING_THRESHOLD) {
-                if (doneMoment != null) {
-                    println("Probably intercepted successfully", input.getPlayerIndex());
-                } else {
-                    println("Failed to make the intercept", input.getPlayerIndex());
-                }
-                return Optional.empty(); // Failed to kick it soon enough, new stuff has happened.
+
+            if (ballPath.getMotionAt(originalIntercept.getTime()).map(slice -> slice.getSpace().distance(originalIntercept.getSpace()) > 10).orElse(true)) {
+                println("Ball path has diverged from expectation, quitting.", input.getPlayerIndex());
+                return Optional.empty();
+            }
+
+            if (!input.getLatestBallTouch().map(BallTouch::getPosition).orElse(new Vector3())
+                    .equals(originalTouch.map(BallTouch::getPosition).orElse(new Vector3())) ) {
+                // There has been a new ball touch.
+                println("Ball has been touched, quitting intercept", input.getPlayerIndex());
+                return Optional.empty();
             }
         }
 
@@ -157,15 +154,19 @@ public class InterceptStep implements Step {
             return flipOut.get();
         }
 
+        Duration timeToIntercept = Duration.Companion.between(car.getTime(), intercept.getTime());
         Optional<DistanceTimeSpeed> motionAfterStrike = intercept.getDistancePlot()
-                .getMotionAfterDuration(car, intercept.getSpace(), Duration.Companion.between(car.getTime(), intercept.getTime()), intercept.getStrikeProfile());
+                .getMotionAfterDuration(car, intercept.getSpace(), timeToIntercept, intercept.getStrikeProfile());
 
         if (motionAfterStrike.isPresent()) {
             double maxDistance = motionAfterStrike.get().getDistance();
-            double pace = maxDistance / car.getPosition().flatten().distance(intercept.getSpace().flatten());
+            double distanceToIntercept = car.getPosition().flatten().distance(intercept.getSpace().flatten());
+            double pace = maxDistance / distanceToIntercept;
+            double averageSpeedNeeded = distanceToIntercept / timeToIntercept.getSeconds();
+            double currentSpeed = car.getVelocity().magnitude();
 
             AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.getSpace().flatten(), car.getBoost() <= intercept.getAirBoost());
-            if (pace > 1.1) {
+            if (pace > 1.1 && currentSpeed > averageSpeedNeeded) {
                 // Slow down
                 agentOutput.withAcceleration(0).withBoost(false).withDeceleration(Math.max(0, pace - 1.5)); // Hit the brakes, but keep steering!
                 if (car.getOrientation().getNoseVector().dotProduct(car.getVelocity()) < 0) {

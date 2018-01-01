@@ -8,8 +8,10 @@ import tarehart.rlbot.math.Polygon;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.*;
+import tarehart.rlbot.routing.PositionFacing;
 
 import javax.swing.*;
+import javax.swing.text.Position;
 import java.awt.*;
 import java.awt.geom.*;
 import java.util.Arrays;
@@ -155,17 +157,22 @@ public class ArenaDisplay extends JPanel {
     }
 
     private void drawCar(CarData car, Graphics2D g) {
+        // Draw the car
+        g.setColor(car.getTeam() == Bot.Team.BLUE ? BLUE_COLOR : ORANGE_COLOR);
+        PositionFacing positionFacing = new PositionFacing(car.getPosition().flatten(), car.getOrientation().getNoseVector().flatten());
+        drawCar(positionFacing, car.getPosition().getZ(), g);
+
+    }
+
+    public static void drawCar(PositionFacing positionFacing, double height, Graphics2D g) {
         // Determine size and rotation of car
         Rectangle2D carShape = new Rectangle2D.Double(-CAR_LENGTH / 2, -CAR_WIDTH / 2, CAR_LENGTH, CAR_WIDTH);
         AffineTransform carTransformation = new AffineTransform();
-        carTransformation.translate(car.getPosition().getX(), car.getPosition().getY());
-        carTransformation.rotate(car.getOrientation().getNoseVector().getX(), car.getOrientation().getNoseVector().getY());
-        double scale = getHeightScaling(car.getPosition().getZ());
+        carTransformation.translate(positionFacing.getPosition().getX(), positionFacing.getPosition().getY());
+        carTransformation.rotate(positionFacing.getFacing().getX(), positionFacing.getFacing().getY());
+        double scale = getHeightScaling(height);
         carTransformation.scale(scale, scale);
         Shape transformedCar = carTransformation.createTransformedShape(carShape);
-
-        // Draw the car
-        g.setColor(car.getTeam() == Bot.Team.BLUE ? BLUE_COLOR : ORANGE_COLOR);
         g.fill(transformedCar);
     }
 

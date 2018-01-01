@@ -2,6 +2,7 @@ package tarehart.rlbot.carpredict;
 
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.vector.Vector3;
+import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.time.Duration;
 
 public class CarPredictor {
@@ -29,6 +30,12 @@ public class CarPredictor {
 
             Vector3 nextVel = currentSlice.velocity;
             Vector3 space = currentSlice.space.plus(nextVel.scaled(TIME_STEP));
+
+            if (currentSlice.space.getZ() > .34) { // TODO: drop in the right constant
+                nextVel = new Vector3(nextVel.getX(), nextVel.getY(), nextVel.getZ() - ArenaModel.GRAVITY * TIME_STEP);
+            } else {
+                nextVel = new Vector3(nextVel.getX(), nextVel.getY(), 0);
+            }
 
             CarSlice nextSlice = new CarSlice(space, car.getTime().plusSeconds(secondsSoFar), nextVel, currentSlice.orientation);
             carPath.addSlice(nextSlice);

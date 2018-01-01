@@ -5,10 +5,12 @@ import tarehart.rlbot.carpredict.AccelerationModel;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.Circle;
 import tarehart.rlbot.math.DistanceTimeSpeed;
+import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.physics.DistancePlot;
 import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.time.GameTime;
 
 import java.util.Optional;
 
@@ -50,6 +52,8 @@ public class CircleTurnUtil {
             int framesBetweenSlidePulses;
             if (speedRatio > 2) {
                 framesBetweenSlidePulses = 3;
+                output.withAcceleration(0);
+                output.withDeceleration(1);
             } else if (speedRatio > 1.5) {
                 framesBetweenSlidePulses = 6;
             } else if (speedRatio > 1.2) {
@@ -60,7 +64,7 @@ public class CircleTurnUtil {
             output.withSlide(car.getFrameCount() % (framesBetweenSlidePulses + 1) == 0);
         }
 
-        return new SteerPlan(output, flatPosition, targetPosition, targetFacing, idealCircle);
+        return new SteerPlan(output, flatPosition, targetPosition, targetFacing, idealCircle, clockwise);
     }
 
     private static double getTurnRadius(double speed) {
@@ -93,8 +97,10 @@ public class CircleTurnUtil {
     }
 
     public static SteerPlan getPlanForCircleTurn(
-            CarData car, DistancePlot distancePlot, Vector2 targetPosition, Vector2 targetFacing) {
+            CarData car, DistancePlot distancePlot, StrikePoint strikePoint) {
 
+        Vector2 targetPosition = strikePoint.getPosition();
+        Vector2 targetFacing = strikePoint.getFacing();
         double distance = car.getPosition().flatten().distance(targetPosition);
         double maxSpeed = distancePlot.getMotionAfterDistance(distance)
                 .map(DistanceTimeSpeed::getSpeed)
@@ -102,7 +108,7 @@ public class CircleTurnUtil {
         double idealSpeed = getIdealCircleSpeed(car, targetFacing);
         double currentSpeed = car.getVelocity().magnitude();
 
-        return circleWaypoint(car, targetPosition, targetFacing, currentSpeed, Math.min(maxSpeed, idealSpeed));
+        return circleWaypoint(car, strikePoint, currentSpeed, Math.min(maxSpeed, idealSpeed));
     }
 
     private static double getIdealCircleSpeed(CarData car, Vector2 targetFacing) {
@@ -114,7 +120,10 @@ public class CircleTurnUtil {
         return Math.max(15, AccelerationModel.INSTANCE.getSUPERSONIC_SPEED() - correctionPenalty);
     }
 
-    private static SteerPlan circleWaypoint(CarData car, Vector2 targetPosition, Vector2 targetFacing, double currentSpeed, double expectedSpeed) {
+    private static SteerPlan circleWaypoint(CarData car, StrikePoint strikePoint, double currentSpeed, double expectedSpeed) {
+
+        Vector2 targetPosition = strikePoint.getPosition();
+        Vector2 targetFacing = strikePoint.getFacing();
 
         Vector2 flatPosition = car.getPosition().flatten();
         Vector2 toTarget = targetPosition.minus(flatPosition);
@@ -132,12 +141,25 @@ public class CircleTurnUtil {
         if (distanceFromCenter < turnRadius * 1.1) {
 
             if (currentSpeed < expectedSpeed) {
-                return circleWaypoint(car, targetPosition, targetFacing, currentSpeed, currentSpeed);
+                return circleWaypoint(car, strikePoint, currentSpeed, currentSpeed);
             }
 
             return planWithinCircle(car, targetPosition, targetFacing, currentSpeed);
         }
 
-        return new SteerPlan(SteerUtil.steerTowardGroundPosition(car, tangentPoint), tangentPoint, targetPosition, targetFacing, new Circle(center, turnRadius));
+        Vector2 toTangent = tangentPoint.minus(flatPosition);
+        double facingCorrectionSeconds = getFacingCorrectionSeconds(toTangent, targetFacing, expectedSpeed);
+
+        GameTime momentToStartTurning = strikePoint.getGameTime().minusSeconds(facingCorrectionSeconds);
+        AgentOutput immediateSteer = SteerUtil.getThereOnTime(car, new SpaceTime(tangentPoint.toVector3(), momentToStartTurning));
+        if (currentSpeed > expectedSpeed && toTangent.magnitude() < 10) {
+            immediateSteer.withAcceleration(0).withDeceleration(1);
+        }
+        Circle circle = new Circle(center, turnRadius);
+        return new SteerPlan(immediateSteer, tangentPoint, targetPosition, targetFacing, circle, Circle.Companion.isClockwise(circle, targetPosition, targetFacing));
+    }
+
+    public static SteerPlan getPlanForCircleTurn(CarData car, DistancePlot distancePlot, Vector2 flatten, Vector2 facing) {
+        return getPlanForCircleTurn(car, distancePlot, new StrikePoint(flatten, facing, car.getTime()));
     }
 }

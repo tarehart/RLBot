@@ -19,6 +19,7 @@ import java.util.Optional;
 public class DemolishEnemyStep implements Step {
 
     private boolean enemyHadWheelContact;
+    private boolean hasDoubleJumped;
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
@@ -50,8 +51,20 @@ public class DemolishEnemyStep implements Step {
 
             double secondsTillContact = Duration.Companion.between(car.getTime(), carIntercept.getTime()).getSeconds();
 
-            if (secondsTillContact < .5 && !enemyCar.getHasWheelContact() && (enemyHadWheelContact || enemyCar.getPosition().getZ() - car.getPosition().getZ() > 1)) {
-                steering.withJump();
+            double heightAtIntercept = carIntercept.getSpace().getZ();
+            boolean needsDoubleJump = heightAtIntercept > 5;
+
+            double heightDifference = heightAtIntercept - car.getPosition().getZ();
+            if (secondsTillContact < .8 && !enemyCar.getHasWheelContact() && (enemyHadWheelContact || heightDifference > 1)) {
+
+                if (needsDoubleJump && !hasDoubleJumped && !car.getHasWheelContact()) {
+                    // Let go of A for a moment
+                    hasDoubleJumped = true;
+                } else {
+                    steering.withJump();
+                }
+
+
                 if (!car.getHasWheelContact()) {
                     steering.withSteer(0); // Avoid dodging accidentally.
                 }

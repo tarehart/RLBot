@@ -6,6 +6,7 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.intercept.Intercept
+import tarehart.rlbot.routing.StrikePoint
 import tarehart.rlbot.ui.ArenaDisplay
 
 import java.awt.*
@@ -19,7 +20,7 @@ class DirectedKickPlan (
     val interceptModifier: Vector3,
     val desiredBallVelocity: Vector3,
     val plannedKickForce: Vector3,
-    val launchPad: Vector2?
+    val launchPad: StrikePoint?
 ) {
 
     fun drawDebugInfo(graphics: Graphics2D) {

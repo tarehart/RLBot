@@ -16,5 +16,6 @@ class CarData (
     val time: GameTime,
     val frameCount: Long,
     val hasWheelContact: Boolean,
-    val isDemolished: Boolean
+    val isDemolished: Boolean,
+    val name: String
 )

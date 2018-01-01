@@ -1,6 +1,9 @@
 package tarehart.rlbot.routing;
 
 import tarehart.rlbot.math.vector.Vector2;
+import tarehart.rlbot.ui.ArenaDisplay;
+
+import java.awt.*;
 
 public class PositionFacing {
 
@@ -18,5 +21,10 @@ public class PositionFacing {
 
     public Vector2 getFacing() {
         return facing;
+    }
+
+    public void drawDebugInfo(Graphics2D graphics) {
+        graphics.setColor(Color.green);
+        ArenaDisplay.drawCar(this, 0, graphics);
     }
 }

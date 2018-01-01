@@ -209,7 +209,7 @@ public class SteerUtil {
     public static AgentOutput getThereOnTime(CarData input, SpaceTime groundPositionAndTime) {
         double flatDistance = VectorUtil.INSTANCE.flatDistance(input.getPosition(), groundPositionAndTime.getSpace());
 
-        double secondsTillAppointment = Duration.Companion.between(input.getTime(), groundPositionAndTime.getTime()).toMillis() / 1000.0;
+        double secondsTillAppointment = Duration.Companion.between(input.getTime(), groundPositionAndTime.getTime()).getSeconds();
         double speed = input.getVelocity().magnitude();
 
         double pace = speed * secondsTillAppointment / flatDistance; // Ideally this should be 1

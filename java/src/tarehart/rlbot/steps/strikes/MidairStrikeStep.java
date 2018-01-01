@@ -7,6 +7,7 @@ import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
+import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.Plan;
@@ -14,6 +15,7 @@ import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.TapStep;
 import tarehart.rlbot.steps.rotation.PitchToPlaneStep;
+import tarehart.rlbot.steps.rotation.RollToPlaneStep;
 import tarehart.rlbot.steps.rotation.YawToPlaneStep;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
@@ -39,6 +41,7 @@ public class MidairStrikeStep implements Step {
     public static final double UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25;
     public static final double YAW_OVERCORRECT = .1;
     public static final double PITCH_OVERCORRECT = .1;
+    private static final double EFFECTIVE_AIR_BOOST_ACCELERATION = 18; // Normally 19ish, but we'll be wiggling
     private int confusionCount = 0;
     private Plan plan;
     private GameTime lastMomentForDodge;
@@ -70,7 +73,7 @@ public class MidairStrikeStep implements Step {
         if (intercept != null) {
             Vector3 goalToBall = intercept.getSpace().minus(GoalUtil.getEnemyGoal(car.getTeam()).getNearestEntrance(intercept.getSpace(), 4));
             offset = goalToBall.scaledToMagnitude(2.5);
-            if (goalToBall.magnitude() > 50) {
+            if (goalToBall.magnitude() > 110) {
                 offset = new Vector3(offset.getX(), offset.getY(), -.2);
             }
         }
@@ -87,7 +90,7 @@ public class MidairStrikeStep implements Step {
         intercept = interceptOpportunity.get();
         set(intercept.getSpace().flatten(), car.getTeam());
         Vector3 carToIntercept = intercept.getSpace().minus(car.getPosition());
-        long millisTillIntercept = Duration.Companion.between(input.getTime(), intercept.getTime()).toMillis();
+        long millisTillIntercept = Duration.Companion.between(input.getTime(), intercept.getTime()).getMillis();
         double distance = car.getPosition().distance(input.getBallPosition());
         println("Midair strike running... Distance: " + distance, input.getPlayerIndex());
 
@@ -119,7 +122,7 @@ public class MidairStrikeStep implements Step {
             return empty();
         }
 
-        double desiredVerticalAngle = getDesiredVerticalAngle(car.getVelocity(), carToIntercept);
+        double heightError = getHeightError(car.getVelocity(), carToIntercept, Duration.Companion.between(car.getTime(), intercept.getTime()), car);
 
         Vector2 flatToIntercept = carToIntercept.flatten();
 
@@ -131,15 +134,19 @@ public class MidairStrikeStep implements Step {
                 .normalized();
 
 
-        Vector3 desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, sin(desiredVerticalAngle));
+        Vector2 currentPitchVector = getPitchVector(car.getOrientation().getNoseVector());
+        double currentPitchAngle = new Vector2(1, 0).correctionAngle(currentPitchVector);
+        double desiredPitchAngle = currentPitchAngle - Math.signum(heightError) * .3;
+        Vector3 desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, sin(desiredPitchAngle));
 
         Vector3 pitchPlaneNormal = car.getOrientation().getRightVector().crossProduct(desiredNoseVector);
         Vector3 yawPlaneNormal = VectorUtil.INSTANCE.rotateVector(desiredFlatOrientation, -Math.PI / 2).toVector3().normaliseCopy();
 
         Optional<AgentOutput> pitchOutput = new PitchToPlaneStep(pitchPlaneNormal).getOutput(input);
         Optional<AgentOutput> yawOutput = new YawToPlaneStep(yawPlaneNormal, false).getOutput(input);
+        Optional<AgentOutput> rollOutput = new RollToPlaneStep(new Vector3(0, 0, 1), false).getOutput(input);
 
-        return of(mergeOrientationOutputs(pitchOutput, yawOutput).withBoost().withJump());
+        return of(mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput).withBoost().withJump());
     }
 
     public static double getDesiredVerticalAngle(Vector3 velocity, Vector3 carToIntercept) {
@@ -157,13 +164,31 @@ public class MidairStrikeStep implements Step {
         return desiredVerticalAngle;
     }
 
-    private AgentOutput mergeOrientationOutputs(Optional<AgentOutput> pitchOutput, Optional<AgentOutput> yawOutput) {
+    public static double getHeightError(Vector3 velocity, Vector3 carToIntercept, Duration timeTillIntercept, CarData car) {
+
+        double targetHeight = car.getPosition().getZ() + carToIntercept.getZ();
+
+        double initialVelocity = velocity.getZ();
+
+        double t = timeTillIntercept.getSeconds();
+        double verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * car.getOrientation().getNoseVector().getZ() - ArenaModel.GRAVITY;
+
+        double resultingHeight = car.getPosition().getZ() + initialVelocity * t + .5 * verticalAcceleration * t * t;
+
+        return resultingHeight - targetHeight;
+    }
+
+
+    private AgentOutput mergeOrientationOutputs(Optional<AgentOutput> pitchOutput, Optional<AgentOutput> yawOutput, Optional<AgentOutput> rollOutput) {
         AgentOutput output = new AgentOutput();
         if (pitchOutput.isPresent()) {
             output.withPitch(pitchOutput.get().getPitch());
         }
         if (yawOutput.isPresent()) {
             output.withSteer(yawOutput.get().getSteer());
+        }
+        if (rollOutput.isPresent()) {
+            output.withRoll(rollOutput.get().getRoll());
         }
 
         return output;

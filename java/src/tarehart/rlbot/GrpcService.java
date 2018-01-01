@@ -47,7 +47,13 @@ public class GrpcService extends BotGrpc.BotImplBase {
             // Setup bot from this packet if necessary
             synchronized (this) {
                 if (!bots.containsKey(playerIndex)) {
-                    ReliefBot bot = new ReliefBot(translatedInput.getTeam(), playerIndex);
+                    Bot bot = null;
+                    if (translatedInput.getMyCarData().getName().startsWith("JumpingBean")) {
+                        bot = new JumpingBeanBot(translatedInput.getTeam(), playerIndex);
+                    } else {
+                        bot = new ReliefBot(translatedInput.getTeam(), playerIndex);
+                    }
+
                     bots.put(playerIndex, bot);
                     statusSummary.markTeamRunning(translatedInput.getTeam(), playerIndex, bot.getDebugWindow());
                 }
