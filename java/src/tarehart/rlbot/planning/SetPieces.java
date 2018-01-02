@@ -193,6 +193,7 @@ public class SetPieces {
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withJump(true)
+                                .withBoost(true)
                                 .withAcceleration(1), jumpTime))
                 .withStep(new TapStep(2,
                         new AgentOutput()

@@ -49,7 +49,7 @@ object DirectedKickUtil {
         else BiPredicate<CarData, SpaceTime> { carData, intercept -> AirTouchPlanner.isVerticallyAccessible(carData, intercept) }
 
         val overallPredicate = BiPredicate { cd: CarData, st: SpaceTime ->
-            !(st.time < earliestPossibleIntercept) &&
+            st.time > earliestPossibleIntercept &&
                     verticalPredicate.test(cd, st) &&
                     kickStrategy.looksViable(cd, st.space)
         }
@@ -107,7 +107,7 @@ object DirectedKickUtil {
         val launchPad: StrikePoint?
 
         if (!isSideHit) {
-            val backoff = 3 + ballAtIntercept.space.z + interceptOpportunity.get().spareTime.seconds * 10
+            val backoff = 5 + ballAtIntercept.space.z * 2 + interceptOpportunity.get().spareTime.seconds * 10
             val facing = plannedKickForce.flatten().normalized()
             val launchPosition = ballAtIntercept.space.flatten() - facing.scaledToMagnitude(backoff)
             launchPad = StrikePoint(launchPosition, facing, car.time + Duration.ofSeconds(backoff / approachSpeed))

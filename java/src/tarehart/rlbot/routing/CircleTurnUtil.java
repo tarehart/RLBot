@@ -65,7 +65,7 @@ public class CircleTurnUtil {
             output.withSlide(car.getFrameCount() % (framesBetweenSlidePulses + 1) == 0);
         }
 
-        return new SteerPlan(output, steerTarget, strikePoint, idealCircle, clockwise);
+        return new SteerPlan(output, flatPosition, strikePoint, idealCircle, clockwise);
     }
 
     private static double getTurnRadius(double speed) {
@@ -129,17 +129,24 @@ public class CircleTurnUtil {
         Vector2 flatPosition = car.getPosition().flatten();
         Vector2 toTarget = targetPosition.minus(flatPosition);
 
+        boolean clockwise = toTarget.correctionAngle(targetFacing) < 0;
+
         double turnRadius = getTurnRadius(expectedSpeed);
         // Make sure the radius vector points from the target position to the center of the turn circle.
-        Vector2 radiusVector = VectorUtil.INSTANCE.orthogonal(targetFacing, v -> v.dotProduct(toTarget) < 0).scaled(turnRadius);
+        Vector2 radiusVector = VectorUtil.INSTANCE.rotateVector(targetFacing, Math.PI / 2 * (clockwise ? -1 : 1)).scaled(turnRadius);
 
         Vector2 center = targetPosition.plus(radiusVector);
         double distanceFromCenter = flatPosition.distance(center);
 
-        Vector2 centerToTangent = VectorUtil.INSTANCE.orthogonal(toTarget, v -> v.dotProduct(targetFacing) < 0).scaledToMagnitude(turnRadius);
+        Vector2 centerToTangent = VectorUtil.INSTANCE.orthogonal(toTarget.scaledToMagnitude(turnRadius), v -> {
+            Vector2 toCenter = center.minus(flatPosition);
+            Vector2 toCandidate = center.plus(v).minus(flatPosition);
+            return toCandidate.correctionAngle(toCenter) < 0 == clockwise;
+        });
+
         Vector2 tangentPoint = center.plus(centerToTangent);
 
-        if (distanceFromCenter < turnRadius * 1.1) {
+        if (distanceFromCenter < turnRadius) {
 
             if (currentSpeed < expectedSpeed) {
                 return circleWaypoint(car, strikePoint, currentSpeed, currentSpeed);
@@ -153,7 +160,7 @@ public class CircleTurnUtil {
 
         GameTime momentToStartTurning = strikePoint.getGameTime().minusSeconds(facingCorrectionSeconds);
         AgentOutput immediateSteer = SteerUtil.getThereOnTime(car, new SpaceTime(tangentPoint.toVector3(), momentToStartTurning));
-        if (currentSpeed > expectedSpeed && toTangent.magnitude() < 10) {
+        if (currentSpeed > expectedSpeed && toTangent.magnitude() < 20) {
             immediateSteer.withAcceleration(0).withDeceleration(1);
         }
         Circle circle = new Circle(center, turnRadius);

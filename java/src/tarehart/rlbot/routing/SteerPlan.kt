@@ -26,15 +26,18 @@ class SteerPlan @JvmOverloads constructor(val immediateSteer: AgentOutput, val w
 
             //graphics.draw(circleShape);
 
-            val centerToWaypoint = waypoint.minus(circle.center)
-            val centerToFinal = strikePoint.position.minus(circle.center)
-            val waypointAngle = Math.atan2(centerToWaypoint.y, centerToWaypoint.x)
-            val waypointDegrees = -waypointAngle * 180 / Math.PI
-            val radians = centerToWaypoint.correctionAngle(centerToFinal, clockwise)
-            val extent = -radians * 180 / Math.PI
+            if (waypoint.distance(strikePoint.position) > .01) {
 
-            val arc = Arc2D.Double(circleShape.bounds2D, waypointDegrees, extent, Arc2D.OPEN)
-            graphics.draw(arc)
+                val centerToWaypoint = waypoint.minus(circle.center)
+                val centerToFinal = strikePoint.position.minus(circle.center)
+                val waypointAngle = Math.atan2(centerToWaypoint.y, centerToWaypoint.x)
+                val waypointDegrees = -waypointAngle * 180 / Math.PI
+                val radians = centerToWaypoint.correctionAngle(centerToFinal, clockwise)
+                val extent = -radians * 180 / Math.PI
+
+                val arc = Arc2D.Double(circleShape.bounds2D, waypointDegrees, extent, Arc2D.OPEN)
+                graphics.draw(arc)
+            }
 
             graphics.draw(Circle(waypoint, 1.0).toShape())
 

@@ -71,7 +71,8 @@ public class TacticsAdvisor {
             return new FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(new DirectedNoseHitStep(new KickAtEnemyGoal()))
                     .withStep(new DirectedSideHitStep(new KickAtEnemyGoal()))
-                    .withStep(new CatchBallStep());
+                    .withStep(new CatchBallStep())
+                    .withStep(new GetOnOffenseStep());
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);

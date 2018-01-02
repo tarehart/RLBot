@@ -43,6 +43,9 @@ public class MidairStrikeStep implements Step {
     public static final double PITCH_OVERCORRECT = .1;
     private static final double EFFECTIVE_AIR_BOOST_ACCELERATION = 18; // Normally 19ish, but we'll be wiggling
     private static final long NOSE_FINESSE_MILLIS = 700;
+    public static final int JUMP_ASSIST_DURATION = 1;
+    public static final int JUMP_ASSIST = 10;
+    private double jumpMashAccel = 0;
     private int confusionCount = 0;
     private Plan plan;
     private GameTime lastMomentForDodge;
@@ -67,6 +70,9 @@ public class MidairStrikeStep implements Step {
             lastMomentForDodge = input.getTime().plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart);
             beginningOfStep = input.getTime();
         }
+
+        // We hold down the jump button during the aerial for extra upward acceleration, but it wears off.
+        jumpMashAccel = Duration.Companion.between(beginningOfStep, input.getTime()).getSeconds() < JUMP_ASSIST_DURATION ? JUMP_ASSIST : 0;
 
         BallPath ballPath = predictBallPath(input);
         CarData car = input.getMyCarData();
@@ -177,7 +183,7 @@ public class MidairStrikeStep implements Step {
         return desiredVerticalAngle;
     }
 
-    public static double getDesiredZComponentBasedOnAccel(double targetHeight, Duration timeTillIntercept, CarData car) {
+    public double getDesiredZComponentBasedOnAccel(double targetHeight, Duration timeTillIntercept, CarData car) {
         double initialHeightError = getHeightError(targetHeight, timeTillIntercept, car);
         double angleStep = -Math.signum(initialHeightError) * .1;
 
@@ -192,14 +198,14 @@ public class MidairStrikeStep implements Step {
         return latestZ;
     }
 
-    public static double getHeightError(double targetHeight, Duration timeTillIntercept, CarData car) {
+    public double getHeightError(double targetHeight, Duration timeTillIntercept, CarData car) {
         return getHeightError(car.getPosition().getZ(), targetHeight, timeTillIntercept, car.getVelocity().getZ(), car.getOrientation().getNoseVector().getZ());
     }
 
-    public static double getHeightError(double currentHeight, double targetHeight, Duration timeTillIntercept, double initialVelocity, double noseVertical) {
+    public double getHeightError(double currentHeight, double targetHeight, Duration timeTillIntercept, double initialVelocity, double noseVertical) {
 
         double t = timeTillIntercept.getSeconds();
-        double verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical - ArenaModel.GRAVITY;
+        double verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical + jumpMashAccel - ArenaModel.GRAVITY;
 
         double resultingHeight = currentHeight + initialVelocity * t + .5 * verticalAcceleration * t * t;
 

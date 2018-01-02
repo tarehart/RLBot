@@ -52,10 +52,6 @@ public class GetOnOffenseStep implements Step {
 
         Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.getPlayerIndex());
 
-        if (tacticalSituationOption.map(situation -> situation.shotOnGoalAvailable).orElse(false)) {
-            return Optional.empty();
-        }
-
         BallPath ballPath = ArenaModel.predictBallPath(input);
 
         SpaceTime ballFuture = tacticalSituationOption.map(situation -> situation.expectedContact.map(Intercept::toSpaceTime))
@@ -90,7 +86,7 @@ public class GetOnOffenseStep implements Step {
         }
 
 
-        if (TacticsAdvisor.getYAxisWrongSidedness(car, ballFuture.getSpace()) < 0) {
+        if (TacticsAdvisor.getYAxisWrongSidedness(car, ballFuture.getSpace()) < -20) {
             return Optional.empty();
         }
 

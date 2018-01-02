@@ -41,9 +41,11 @@ public class KickAwayFromOwnGoal implements KickStrategy {
         Vector2 safeDirectionRight = VectorUtil.INSTANCE.rotateVector(toRightPost, -Math.PI/4);
         Vector2 safeDirectionLeft = VectorUtil.INSTANCE.rotateVector(toLeftPost, Math.PI/4);
 
+        double rightToEasyCorrection = safeDirectionRight.correctionAngle(easyKickFlat, false);
+        double rightToLeftCorrection = safeDirectionRight.correctionAngle(safeDirectionLeft, false);
         double safeRightCorrection = easyKickFlat.correctionAngle(safeDirectionRight);
         double safeLeftCorrection = easyKickFlat.correctionAngle(safeDirectionLeft);
-        if (safeRightCorrection > 0 || safeLeftCorrection < 0) {
+        if (rightToLeftCorrection < rightToEasyCorrection) {
             // The easy kick is already wide. Go with the easy kick.
             return new Vector3(easyKickFlat.getX(), easyKickFlat.getY(), 0);
         } else if (Math.abs(safeRightCorrection) < Math.abs(safeLeftCorrection)) {

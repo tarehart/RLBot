@@ -69,24 +69,38 @@ public class InterceptCalculator {
 
         Vector3 myPosition = carData.getPosition();
         GameTime firstMomentInRange = null;
+        double previousOvershoot = 0;
 
-        for (BallSlice ballMoment: ballPath.getSlices()) {
+        //for (BallSlice ballMoment: ballPath.getSlices()) {
+        for (int i = 0; i < ballPath.getSlices().size(); i++) {
+            BallSlice ballMoment = ballPath.getSlices().get(i);
             SpaceTime spaceTime = new SpaceTime(ballMoment.getSpace().plus(interceptModifier), ballMoment.getTime());
             StrikeProfile strikeProfile = strikeProfileFn.apply(spaceTime.getSpace());
             Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.getSpace(), Duration.Companion.between(carData.getTime(), spaceTime.getTime()), strikeProfile);
             if (motionAt.isPresent()) {
                 DistanceTimeSpeed dts = motionAt.get();
                 double interceptDistance = VectorUtil.INSTANCE.flatDistance(myPosition, spaceTime.getSpace(), planeNormal);
-                if (dts.getDistance() > interceptDistance) {
+                double overshoot = dts.getDistance() - interceptDistance;
+                if (overshoot > 0) {
                     if (firstMomentInRange == null) {
                         firstMomentInRange = spaceTime.getTime();
                     }
                     if (predicate.test(carData, spaceTime)) {
+                        double tweenPoint = 1;
+                        if (previousOvershoot < 0) {
+                            tweenPoint = (0 - previousOvershoot) / (overshoot - previousOvershoot);
+                        }
+                        GameTime previousSliceTime = ballPath.getSlices().get(i - 1).getTime();
+                        double sliceSeconds = Duration.Companion.between(previousSliceTime, ballMoment.getTime()).getSeconds();
+                        GameTime moment = previousSliceTime.plusSeconds(sliceSeconds * tweenPoint);
+                        BallSlice realBallMoment = ballPath.getMotionAt(moment).orElse(ballMoment);
                         double boostNeeded = spaceTime.getSpace().getZ() > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD ? AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL : 0;
-                        Duration spareTime = Duration.Companion.between(firstMomentInRange, spaceTime.getTime());
-                        return Optional.of(new Intercept(spaceTime.getSpace(), spaceTime.getTime(), boostNeeded, strikeProfile, acceleration, spareTime));
+                        Duration spareTime = Duration.Companion.between(firstMomentInRange, moment);
+                        return Optional.of(new Intercept(realBallMoment.getSpace().plus(interceptModifier), realBallMoment.getTime(), boostNeeded, strikeProfile, acceleration, spareTime));
                     }
                 }
+                previousOvershoot = overshoot;
+
             } else {
                 return Optional.empty();
             }

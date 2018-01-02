@@ -10,6 +10,7 @@ import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.intercept.AirTouchPlanner;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
+import tarehart.rlbot.time.Duration;
 
 import java.awt.*;
 import java.util.Optional;
@@ -30,6 +31,9 @@ public class CatchBallStep implements Step {
         // Weed out any intercepts after a catch opportunity. Should just catch it.
         if (catchOpportunity.isPresent()) {
             latestCatchLocation = catchOpportunity.get();
+            if (Duration.Companion.between(input.getTime(), latestCatchLocation.getTime()).getSeconds() > 2) {
+                return Optional.empty(); // Don't wait around for so long
+            }
             return Optional.of(playCatch(car, latestCatchLocation));
         } else {
             return Optional.empty();

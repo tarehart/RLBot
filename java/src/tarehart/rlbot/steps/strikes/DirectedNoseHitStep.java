@@ -14,6 +14,7 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPhysics;
 import tarehart.rlbot.planning.*;
 import tarehart.rlbot.routing.CircleTurnUtil;
+import tarehart.rlbot.routing.PositionFacing;
 import tarehart.rlbot.routing.SteerPlan;
 import tarehart.rlbot.routing.StrikePoint;
 import tarehart.rlbot.steps.Step;
@@ -102,7 +103,7 @@ public class DirectedNoseHitStep implements Step {
         if (originalIntercept == null) {
             originalIntercept = kickPlan.getBallAtIntercept();
         } else {
-            if (kickPlan.getBallPath().getMotionAt(originalIntercept.getTime()).map(slice -> slice.getSpace().distance(originalIntercept.getSpace()) > 10).orElse(true)) {
+            if (kickPlan.getBallPath().getMotionAt(originalIntercept.getTime()).map(slice -> slice.getSpace().distance(originalIntercept.getSpace()) > 20).orElse(true)) {
                 println("Ball path has diverged from expectation, quitting.", input.getPlayerIndex());
                 return Optional.empty();
             }
@@ -136,8 +137,7 @@ public class DirectedNoseHitStep implements Step {
         double timeMismatch = Duration.Companion.between(earliestPossibleIntercept, earliestThisTime).getSeconds();
 
         if (Math.abs(positionCorrectionForStrike) > Math.PI / 2 || Math.abs(carLaunchpadInterceptAngle) > Math.PI / 2) {
-            plan = new Plan().withStep(new SlideToPositionStep(in -> planKick(in).map(pl -> pl.getLaunchPad().getPositionFacing())));
-            return plan.getOutput(input);
+            return Optional.empty(); // Too much turning.
         }
 
         // If you're facing the intercept, but the circle backoff wants you to backtrack, you should just wait

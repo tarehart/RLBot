@@ -83,7 +83,7 @@ public class DirectedSideHitStep implements Step {
             originalIntercept = kickPlan.getBallAtIntercept().getSpace();
         } else {
             if (originalIntercept.distance(kickPlan.getBallAtIntercept().getSpace()) > 30) {
-                println("Failed to make the directed kick", input.getPlayerIndex());
+                println("Failed to make the side kick", input.getPlayerIndex());
                 return empty(); // Failed to kick it soon enough, new stuff has happened.
             }
         }

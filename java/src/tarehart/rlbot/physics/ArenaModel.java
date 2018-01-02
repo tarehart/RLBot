@@ -314,6 +314,7 @@ public class ArenaModel {
 
     private void runSimulation(BallPath ballPath, GameTime startTime, GameTime endTime) {
         GameTime simulationTime = startTime;
+        Vector3 ballVel = new Vector3();
 
         while (simulationTime.isBefore(endTime)) {
             float stepSize = 1.0f / STEPS_PER_SECOND;
@@ -333,8 +334,10 @@ public class ArenaModel {
                 // This is handy for making the bot not give up on saves / follow through on shots.
                 ball.getBody().setKinematic();
                 ball.getBody().setLinearVel(0, 0, 0);
+            } else {
+                ballVel = ballVelocity;
             }
-            ballPath.addSlice(new BallSlice(ballPosition, simulationTime, ballVelocity, ballSpin));
+            ballPath.addSlice(new BallSlice(ballPosition, simulationTime, ballVel, ballSpin));
         }
     }
 
