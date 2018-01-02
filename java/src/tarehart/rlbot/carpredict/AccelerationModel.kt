@@ -19,7 +19,7 @@ object AccelerationModel {
     private val FRONT_FLIP_SPEED_BOOST = 10.0
     private val FRONT_FLIP_SECONDS = 1.5
 
-    private val INCREMENTAL_BOOST_ACCELERATION = 15.0
+    private val INCREMENTAL_BOOST_ACCELERATION = 19
     private val AIR_BOOST_ACCELERATION = 19.0 // It's a tiny bit faster, but account for course correction wiggle
     private val BOOST_CONSUMED_PER_SECOND = 25.0
 
@@ -57,8 +57,6 @@ object AccelerationModel {
         while (secondsSoFar < secondsToSimulate) {
             val hypotheticalFrontFlipDistance = getFrontFlipDistance(currentSpeed)
 
-            secondsSoFar += TIME_STEP
-            distanceSoFar += currentSpeed * TIME_STEP
 
             if (currentSpeed >= SUPERSONIC_SPEED) {
                 // It gets boring from zero on. Put a slice at the very end.
@@ -77,11 +75,11 @@ object AccelerationModel {
 
             } else {
                 val acceleration = getAcceleration(currentSpeed, boostRemaining > 0)
-                currentSpeed += acceleration * TIME_STEP
-                if (currentSpeed > SUPERSONIC_SPEED) {
-                    currentSpeed = SUPERSONIC_SPEED
-                }
+                val nextSpeed = Math.min(SUPERSONIC_SPEED, currentSpeed + acceleration * TIME_STEP)
                 boostRemaining -= BOOST_CONSUMED_PER_SECOND * TIME_STEP
+                distanceSoFar += ((currentSpeed + nextSpeed) / 2) * TIME_STEP
+                secondsSoFar += TIME_STEP
+                currentSpeed = nextSpeed;
                 plot.addSlice(DistanceTimeSpeed(distanceSoFar, Duration.ofSeconds(secondsSoFar), currentSpeed))
             }
         }
@@ -96,11 +94,10 @@ object AccelerationModel {
         }
 
         var accel = 0.0
-        if (currentSpeed < 20) {
-            accel = 30 - currentSpeed * 1.27
-        } else if (currentSpeed < MEDIUM_SPEED || hasBoost) {
-            accel = 4.58
+        if (currentSpeed < MEDIUM_SPEED) {
+            accel = 30 - currentSpeed * .95
         }
+
         if (hasBoost) {
             accel += INCREMENTAL_BOOST_ACCELERATION
         }

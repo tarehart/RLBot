@@ -59,6 +59,12 @@ public abstract class Bot {
 //                    new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin),
 //                    stv.getTime().plusSeconds(1)));
 //        }
+//            CarData enemyCar = input.getEnemyCarData().get();
+//            CarSlice slice = new CarSlice(enemyCar.getPosition(), enemyCar.getTime(), enemyCar.getVelocity(), enemyCar.getOrientation());
+//            CarRecorder.recordPosition(slice);
+//            if (enemyCar.getVelocity().magnitudeSquared() < .1) {
+//                CarRecorder.startRecording(slice, input.getTime().plusSeconds(6));
+//            }
 
             if (input.getMatchInfo().getRoundActive()) {
                 output = getOutput(input);
