@@ -139,7 +139,7 @@ public class InterceptCalculator {
 
             DistancePlot acceleration = AccelerationModel.INSTANCE.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle));
             StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 && averageNoseAngle < .5 ?
-                    new StrikeProfile(0, 10, .15, StrikeProfile.Style.AERIAL) :
+                    new StrikeProfile(0, 0, 10, .15, StrikeProfile.Style.AERIAL) :
                     InterceptStep.AERIAL_STRIKE_PROFILE;
 
             Optional<DistanceTimeSpeed> motionAt = acceleration.getMotionAfterDuration(

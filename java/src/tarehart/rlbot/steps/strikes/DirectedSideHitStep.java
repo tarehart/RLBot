@@ -70,7 +70,7 @@ public class DirectedSideHitStep implements Step {
 
         final Optional<DirectedKickPlan> kickPlanOption;
         if (interceptModifier != null) {
-            StrikeProfile strikeProfile = new StrikeProfile(maneuverSeconds, 0, 0, StrikeProfile.Style.SIDE_HIT);
+            StrikeProfile strikeProfile = new StrikeProfile(maneuverSeconds, 0, 0, 0, StrikeProfile.Style.SIDE_HIT);
             kickPlanOption = DirectedKickUtil.INSTANCE.planKick(input, kickStrategy, true, interceptModifier, (space) -> strikeProfile, input.getTime());
         } else {
             kickPlanOption = DirectedKickUtil.INSTANCE.planKick(input, kickStrategy, true);

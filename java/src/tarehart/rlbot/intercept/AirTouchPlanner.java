@@ -38,7 +38,7 @@ public class AirTouchPlanner {
         LaunchChecklist checklist = new LaunchChecklist();
         checkLaunchReadiness(checklist, car, intercept);
         StrikeProfile strikeProfile = intercept.getStrikeProfile();
-        double jumpHitTime = strikeProfile.getTotalDuration().getSeconds();
+        double jumpHitTime = strikeProfile.getStrikeDuration().getSeconds();
         checklist.timeForIgnition = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds() < jumpHitTime;
         return checklist;
     }
@@ -46,7 +46,7 @@ public class AirTouchPlanner {
     public static LaunchChecklist checkFlipHitReadiness(CarData car, Intercept intercept) {
         LaunchChecklist checklist = new LaunchChecklist();
         checkLaunchReadiness(checklist, car, intercept);
-        checklist.timeForIgnition = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds() < intercept.getStrikeProfile().getTotalDuration().getSeconds();
+        checklist.timeForIgnition = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds() < intercept.getStrikeProfile().getStrikeDuration().getSeconds();
         return checklist;
     }
 
@@ -66,7 +66,7 @@ public class AirTouchPlanner {
         double secondsTillIntercept = Duration.Companion.between(carData.getTime(), intercept.getTime()).getSeconds();
 
         if (intercept.getSpace().getZ() < NEEDS_AERIAL_THRESHOLD) {
-            double tMinus = secondsTillIntercept - getJumpHitStrikeProfile(intercept.getSpace()).getTotalDuration().getSeconds();
+            double tMinus = secondsTillIntercept - getJumpHitStrikeProfile(intercept.getSpace()).getStrikeDuration().getSeconds();
             return tMinus >= -0.1;
         }
 
@@ -92,7 +92,7 @@ public class AirTouchPlanner {
         // If we have time to tilt back, the nose will be higher and we can cheat a little.
         double requiredHeight = space.getZ() * .7;
         double jumpTime = ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8);
-        return new StrikeProfile(jumpTime, 10, .15, StrikeProfile.Style.JUMP_HIT);
+        return new StrikeProfile(0, jumpTime, 10, .15, StrikeProfile.Style.JUMP_HIT);
     }
 
     public static boolean isFlipHitAccessible(CarData carData, SpaceTime intercept) {

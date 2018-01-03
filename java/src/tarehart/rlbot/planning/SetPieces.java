@@ -116,13 +116,13 @@ public class SetPieces {
                 .withStep(new LandGracefullyStep(LandGracefullyStep.FACE_BALL));
     }
 
-    public static Plan performJumpHit(double strikeHeight) {
+    public static Plan performJumpHit(double jumpSeconds) {
 
-        Double jumpSeconds = ManeuverMath.secondsForMashJumpHeight(strikeHeight).orElse(ManeuverMath.MASH_JUMP_HEIGHT);
         double pitchBackPortion = Math.min(.36, jumpSeconds);
         double driftUpPortion = jumpSeconds - pitchBackPortion;
 
         Plan plan = new Plan()
+                .unstoppable()
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withJump(true)

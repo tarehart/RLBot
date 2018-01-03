@@ -36,7 +36,7 @@ public class StrikePlanner {
             LaunchChecklist checklist = AirTouchPlanner.checkJumpHitReadiness(car, intercept);
             if (checklist.readyToLaunch()) {
                 BotLog.println("Performing JumpHit!", car.getPlayerIndex());
-                return Optional.of(SetPieces.performJumpHit(height));
+                return Optional.of(SetPieces.performJumpHit(intercept.getStrikeProfile().leadupSeconds));
             }
             return Optional.empty();
         }

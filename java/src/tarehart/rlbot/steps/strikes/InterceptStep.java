@@ -31,8 +31,8 @@ import static java.util.Optional.empty;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class InterceptStep implements Step {
-    public static final StrikeProfile AERIAL_STRIKE_PROFILE = new StrikeProfile(0, 0, 0, StrikeProfile.Style.AERIAL);
-    public static final StrikeProfile FLIP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 10, .5, StrikeProfile.Style.FLIP_HIT);
+    public static final StrikeProfile AERIAL_STRIKE_PROFILE = new StrikeProfile(0, 0, 0, 0, StrikeProfile.Style.AERIAL);
+    public static final StrikeProfile FLIP_HIT_STRIKE_PROFILE = new StrikeProfile(0, 0, 10, .5, StrikeProfile.Style.FLIP_HIT);
     private Plan plan;
     private Vector3 interceptModifier;
     private Intercept originalIntercept;

@@ -18,6 +18,11 @@ public class StrikeProfile {
     public double maneuverSeconds;
 
     /**
+     * The amount of time between strike initiation and any dodge.
+     */
+    public double leadupSeconds;
+
+    /**
      * The amount of speed potentially gained over the course of the strike's final stage (generally after driving over and lining up)
      */
     public double speedBoost;
@@ -30,18 +35,19 @@ public class StrikeProfile {
     public Style style;
 
 
-    public StrikeProfile(double maneuverSeconds, double speedBoost, double dodgeSeconds, Style style) {
+    public StrikeProfile(double maneuverSeconds, double leadupSeconds, double speedBoost, double dodgeSeconds, Style style) {
         this.maneuverSeconds = maneuverSeconds;
+        this.leadupSeconds = leadupSeconds;
         this.speedBoost = speedBoost;
         this.dodgeSeconds = dodgeSeconds;
         this.style = style;
     }
 
     public StrikeProfile() {
-        this(0, 0, 0, Style.RAM);
+        this(0, 0, 0, 0, Style.RAM);
     }
 
-    public Duration getTotalDuration() {
-        return Duration.Companion.ofSeconds(maneuverSeconds + dodgeSeconds);
+    public Duration getStrikeDuration() {
+        return Duration.Companion.ofSeconds(leadupSeconds + dodgeSeconds);
     }
 }
