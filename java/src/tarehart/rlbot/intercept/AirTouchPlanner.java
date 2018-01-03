@@ -24,8 +24,10 @@ public class AirTouchPlanner {
 
         AerialChecklist checklist = new AerialChecklist();
         checkLaunchReadiness(checklist, car, intercept);
-
-        checklist.notSkidding = car.getVelocity().isZero() || car.getVelocity().normaliseCopy().dotProduct(car.getOrientation().getNoseVector()) > .99;
+        double secondsTillIntercept = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds();
+        double tMinus = getAerialLaunchCountdown(intercept.getSpace().getZ(), secondsTillIntercept);
+        checklist.timeForIgnition = tMinus < 0.1;
+        checklist.notSkidding = !ManeuverMath.isSkidding(car);
         checklist.hasBoost = car.getBoost() >= BOOST_NEEDED_FOR_AERIAL;
 
         return checklist;
@@ -44,7 +46,6 @@ public class AirTouchPlanner {
     public static LaunchChecklist checkFlipHitReadiness(CarData car, Intercept intercept) {
         LaunchChecklist checklist = new LaunchChecklist();
         checkLaunchReadiness(checklist, car, intercept);
-        checklist.notTooClose = true;
         checklist.timeForIgnition = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds() < intercept.getStrikeProfile().getTotalDuration().getSeconds();
         return checklist;
     }
@@ -53,12 +54,10 @@ public class AirTouchPlanner {
 
         double correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, intercept.getSpace());
         double secondsTillIntercept = Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds();
-        double tMinus = getAerialLaunchCountdown(intercept.getSpace().getZ(), secondsTillIntercept);
 
-        checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 60;
+        checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 30;
         checklist.closeEnough = secondsTillIntercept < 4;
-        checklist.notTooClose = isVerticallyAccessible(car, intercept.toSpaceTime());
-        checklist.timeForIgnition = tMinus < 0.1;
+
         checklist.upright = car.getOrientation().getRoofVector().dotProduct(new Vector3(0, 0, 1)) > .99;
         checklist.onTheGround = car.getHasWheelContact();
     }
@@ -67,7 +66,7 @@ public class AirTouchPlanner {
         double secondsTillIntercept = Duration.Companion.between(carData.getTime(), intercept.getTime()).getSeconds();
 
         if (intercept.getSpace().getZ() < NEEDS_AERIAL_THRESHOLD) {
-            double tMinus = getJumpLaunchCountdown(intercept.getSpace().getZ(), secondsTillIntercept);
+            double tMinus = secondsTillIntercept - getJumpHitStrikeProfile(intercept.getSpace()).getTotalDuration().getSeconds();
             return tMinus >= -0.1;
         }
 
@@ -107,11 +106,6 @@ public class AirTouchPlanner {
 
     public static double expectedSecondsForSuperJump(double height) {
         return (height - CAR_BASE_HEIGHT) / SUPER_JUMP_RISE_RATE;
-    }
-
-    private static double getJumpLaunchCountdown(double height, double secondsTillIntercept) {
-        double expectedJumpSeconds = ManeuverMath.secondsForMashJumpHeight(height).orElse(Double.MAX_VALUE);
-        return secondsTillIntercept - expectedJumpSeconds;
     }
 
     public static double getBoostBudget(CarData carData) {

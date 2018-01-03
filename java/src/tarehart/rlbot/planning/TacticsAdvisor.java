@@ -44,16 +44,17 @@ public class TacticsAdvisor {
         if (situation.scoredOnThreat.isPresent()) {
             return new Plan(Plan.Posture.SAVE).withStep(new WhatASaveStep());
         }
-        if (ArenaModel.isBehindGoalLine(input.getMyCarData().getPosition())) {
-            return new Plan(ESCAPEGOAL).withStep(new EscapeTheGoalStep());
-        }
+//        if (ArenaModel.isBehindGoalLine(input.getMyCarData().getPosition())) {
+//            return new Plan(ESCAPEGOAL).withStep(new EscapeTheGoalStep());
+//        }
         if(situation.waitToClear) {
             return new Plan(Plan.Posture.WAITTOCLEAR).withStep(new RotateAndWaitToClearStep());
         }
         if (situation.needsDefensiveClear) {
             return new FirstViableStepPlan(Plan.Posture.CLEAR)
-                    .withStep(new DirectedNoseHitStep(new KickAwayFromOwnGoal()))
+                    .withStep(new DirectedNoseHitStep(new KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
                     .withStep(new DirectedSideHitStep(new KickAwayFromOwnGoal()))
+                    .withStep(new EscapeTheGoalStep())
                     .withStep(new GetOnDefenseStep());
         }
         if (situation.forceDefensivePosture) {

@@ -96,6 +96,9 @@ public class InterceptCalculator {
                         BallSlice realBallMoment = ballPath.getMotionAt(moment).orElse(ballMoment);
                         double boostNeeded = spaceTime.getSpace().getZ() > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD ? AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL : 0;
                         Duration spareTime = Duration.Companion.between(firstMomentInRange, moment);
+                        if (spareTime.getMillis() < 0) {
+                            spareTime = Duration.Companion.ofMillis(0);
+                        }
                         return Optional.of(new Intercept(realBallMoment.getSpace().plus(interceptModifier), realBallMoment.getTime(), boostNeeded, strikeProfile, acceleration, spareTime));
                     }
                 }
@@ -118,15 +121,22 @@ public class InterceptCalculator {
     public static Optional<SpaceTime> getAerialIntercept(
             CarData carData,
             BallPath ballPath,
-            Vector3 interceptModifier) {
+            Vector3 interceptModifier,
+            GameTime launchMoment) {
 
         Vector3 myPosition = carData.getPosition();
 
         for (BallSlice ballMoment: ballPath.getSlices()) {
             SpaceTime intercept = new SpaceTime(ballMoment.getSpace().plus(interceptModifier), ballMoment.getTime());
 
-            double averageNoseAngle = MidairStrikeStep.getDesiredVerticalAngle(carData.getVelocity(), intercept.getSpace().minus(carData.getPosition()));
+            Duration timeSinceLaunch = Duration.Companion.between(launchMoment, carData.getTime());
             Duration duration = Duration.Companion.between(carData.getTime(), ballMoment.getTime());
+            double zComponent = MidairStrikeStep.getDesiredZComponentBasedOnAccel(intercept.getSpace().getZ(), duration, timeSinceLaunch, carData);
+            double desiredNoseAngle = Math.asin(zComponent);
+            double currentNoseAngle = Math.asin(carData.getOrientation().getNoseVector().getZ());
+            double currentAngleFactor = Math.min(1, 1 / duration.getSeconds());
+            double averageNoseAngle = currentNoseAngle * currentAngleFactor + desiredNoseAngle * (1 - currentAngleFactor);
+
             DistancePlot acceleration = AccelerationModel.INSTANCE.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle));
             StrikeProfile strikeProfile = duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 && averageNoseAngle < .5 ?
                     new StrikeProfile(0, 10, .15, StrikeProfile.Style.AERIAL) :

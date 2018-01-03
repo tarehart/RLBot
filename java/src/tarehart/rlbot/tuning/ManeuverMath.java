@@ -1,5 +1,7 @@
 package tarehart.rlbot.tuning;
 
+import tarehart.rlbot.input.CarData;
+
 import java.util.Optional;
 
 public class ManeuverMath {
@@ -38,6 +40,10 @@ public class ManeuverMath {
 
     public static double secondsForSideFlipTravel(double distance) {
         return distance / DODGE_SPEED;
+    }
+
+    public static boolean isSkidding(CarData car) {
+        return !car.getVelocity().isZero() && car.getVelocity().normaliseCopy().dotProduct(car.getOrientation().getNoseVector()) < .98;
     }
 
 }

@@ -1,15 +1,15 @@
 package tarehart.rlbot.steps.strikes
 
+import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.routing.StrikePoint
 import tarehart.rlbot.ui.ArenaDisplay
-
-import java.awt.*
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Graphics2D
 import java.awt.geom.Line2D
 
 class DirectedKickPlan (
@@ -20,7 +20,8 @@ class DirectedKickPlan (
     val interceptModifier: Vector3,
     val desiredBallVelocity: Vector3,
     val plannedKickForce: Vector3,
-    val launchPad: StrikePoint?
+    val launchPad: StrikePoint?,
+    val easyKickAllowed: Boolean
 ) {
 
     fun drawDebugInfo(graphics: Graphics2D) {

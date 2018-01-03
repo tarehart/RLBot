@@ -178,7 +178,7 @@ public class SetPieces {
                 .withStep(new LandMindlesslyStep());
     }
 
-    public static Plan jumpSideFlip(boolean flipLeft, Duration jumpTime) {
+    public static Plan jumpSideFlip(boolean flipLeft, Duration jumpTime, boolean hurry) {
 
         if (jumpTime.getMillis() < 0) {
             jumpTime = Duration.Companion.ofMillis(0);
@@ -189,11 +189,11 @@ public class SetPieces {
                 .withStep(new TapStep(2,
                         new AgentOutput()
                                 .withJump(true)
-                                .withAcceleration(1)))
+                                .withAcceleration(hurry ? 1 : 0)))
                 .withStep(new BlindStep(
                         new AgentOutput()
                                 .withJump(true)
-                                .withBoost(true)
+                                .withBoost(hurry)
                                 .withAcceleration(1), jumpTime))
                 .withStep(new TapStep(2,
                         new AgentOutput()

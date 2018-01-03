@@ -25,6 +25,10 @@ class DistancePlot(start: DistanceTimeSpeed) {
         plot.add(dts)
     }
 
+    fun getEndPoint(): DistanceTimeSpeed {
+        return plot[plot.size - 1]
+    }
+
     fun getMotionAfterDuration(time: Duration): Optional<DistanceTimeSpeed> {
         if (time < plot[0].time || time > plot[plot.size - 1].time) {
             return Optional.empty()

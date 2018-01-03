@@ -206,29 +206,42 @@ public class SteerUtil {
         return Optional.empty();
     }
 
-    public static AgentOutput getThereOnTime(CarData input, SpaceTime groundPositionAndTime) {
-        double flatDistance = VectorUtil.INSTANCE.flatDistance(input.getPosition(), groundPositionAndTime.getSpace());
+    public static AgentOutput getThereOnTime(CarData car, SpaceTime groundPositionAndTime) {
 
-        double secondsTillAppointment = Duration.Companion.between(input.getTime(), groundPositionAndTime.getTime()).getSeconds();
-        double speed = input.getVelocity().magnitude();
-
-        double pace = speed * secondsTillAppointment / flatDistance; // Ideally this should be 1
-
-        if (flatDistance > 40) {
-            // Go fast
-            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace());
-        } else if (flatDistance > 10 && pace < 1) {
-            // Go fast
-            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace());
-        } else if (pace < 1) {
-            // Go moderate
-            return SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace()).withBoost(false);
-        } else {
-            // We're going too fast!
-            AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(input, groundPositionAndTime.getSpace());
-            agentOutput.withAcceleration(0).withBoost(false).withDeceleration(Math.max(0, pace - 1.5)); // Hit the brakes, but keep steering!
-            return agentOutput;
+        Duration timeToIntercept = Duration.Companion.between(car.getTime(), groundPositionAndTime.getTime());
+        if (timeToIntercept.getMillis() < 0) {
+            timeToIntercept = Duration.Companion.ofMillis(1);
         }
+        DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(
+                car, timeToIntercept, car.getBoost(), 0);
+        DistanceTimeSpeed dts = distancePlot.getEndPoint();
+        double maxDistance = dts.getDistance();
+
+        double distanceToIntercept = car.getPosition().flatten().distance(groundPositionAndTime.getSpace().flatten());
+        double distanceRatio = maxDistance / distanceToIntercept;
+        double averageSpeedNeeded = distanceToIntercept / timeToIntercept.getSeconds();
+        double currentSpeed = car.getVelocity().magnitude();
+
+        AgentOutput agentOutput = SteerUtil.steerTowardGroundPosition(car, groundPositionAndTime.getSpace().flatten());
+        if (distanceRatio > 1.1) {
+            agentOutput.withBoost(false);
+            if (currentSpeed > averageSpeedNeeded) {
+                // Slow down
+                agentOutput.withAcceleration(0).withBoost(false).withDeceleration(Math.max(0, distanceRatio - 1.5)); // Hit the brakes, but keep steering!
+                if (car.getOrientation().getNoseVector().dotProduct(car.getVelocity()) < 0) {
+                    // car is going backwards
+                    agentOutput.withDeceleration(0).withSteer(0);
+                }
+            } else if (distanceRatio > 1.5) {
+                agentOutput.withAcceleration(.5);
+            }
+        }
+
+        if (currentSpeed > averageSpeedNeeded) {
+            agentOutput.withBoost(false);
+            agentOutput.withAcceleration(averageSpeedNeeded / currentSpeed);
+        }
+        return agentOutput;
     }
 
 }

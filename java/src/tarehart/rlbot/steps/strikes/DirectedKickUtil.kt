@@ -49,7 +49,7 @@ object DirectedKickUtil {
         else BiPredicate<CarData, SpaceTime> { carData, intercept -> AirTouchPlanner.isVerticallyAccessible(carData, intercept) }
 
         val overallPredicate = BiPredicate { cd: CarData, st: SpaceTime ->
-            st.time > earliestPossibleIntercept &&
+            st.time >= earliestPossibleIntercept - Duration.ofMillis(50) &&
                     verticalPredicate.test(cd, st) &&
                     kickStrategy.looksViable(cd, st.space)
         }
@@ -60,12 +60,13 @@ object DirectedKickUtil {
         val interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
                 car, ballPath, distancePlot, interceptModifier, overallPredicate, strikeFn)
 
-        val ballMotion = interceptOpportunity.flatMap { inter -> ballPath.getMotionAt(inter.time) }
 
-        if (!ballMotion.isPresent || !interceptOpportunity.isPresent) {
+        if (!interceptOpportunity.isPresent) {
             return Optional.empty()
         }
 
+        val intercept = interceptOpportunity.get()
+        val ballMotion = ballPath.getMotionAt(intercept.time)
         val ballAtIntercept = ballMotion.get()
 
 
@@ -75,7 +76,7 @@ object DirectedKickUtil {
 
         val easyForce: Vector3
         if (isSideHit) {
-            val carToIntercept = (interceptOpportunity.get().space - car.position).flatten()
+            val carToIntercept = (intercept.space - car.position).flatten()
             val (x, y) = VectorUtil.orthogonal(carToIntercept) { v -> v.dotProduct(interceptModifier.flatten()) < 0 }
             easyForce = Vector3(x, y, 0.0).scaledToMagnitude(impactSpeed)
         } else {
@@ -88,7 +89,9 @@ object DirectedKickUtil {
         val plannedKickForce: Vector3
         val desiredBallVelocity: Vector3
 
-        if (easyKick.x == kickDirection.x && easyKick.y == kickDirection.y) {
+        val easyKickAllowed = easyKick.x == kickDirection.x && easyKick.y == kickDirection.y;
+
+        if (easyKickAllowed) {
             // The kick strategy is fine with the easy kick.
             plannedKickForce = easyForce
             desiredBallVelocity = easyKick
@@ -107,10 +110,11 @@ object DirectedKickUtil {
         val launchPad: StrikePoint?
 
         if (!isSideHit) {
-            val backoff = 5 + ballAtIntercept.space.z * 2 + interceptOpportunity.get().spareTime.seconds * 10
+            val backoff = 5 + (ballAtIntercept.space.z - ArenaModel.BALL_RADIUS) * 2 + intercept.spareTime.seconds * 5
             val facing = plannedKickForce.flatten().normalized()
             val launchPosition = ballAtIntercept.space.flatten() - facing.scaledToMagnitude(backoff)
-            launchPad = StrikePoint(launchPosition, facing, car.time + Duration.ofSeconds(backoff / approachSpeed))
+            // Time is chosen with a bias toward hurrying
+            launchPad = StrikePoint(launchPosition, facing, intercept.time - Duration.ofSeconds(backoff / car.velocity.magnitude()))
         } else {
             launchPad = null
         }
@@ -123,8 +127,8 @@ object DirectedKickUtil {
                 ballAtIntercept = ballAtIntercept,
                 plannedKickForce = plannedKickForce,
                 desiredBallVelocity = desiredBallVelocity,
-                launchPad = launchPad
-
+                launchPad = launchPad,
+                easyKickAllowed = easyKickAllowed
         )
 
         return Optional.of(kickPlan)
