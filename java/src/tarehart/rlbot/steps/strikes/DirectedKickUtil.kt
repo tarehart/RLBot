@@ -29,7 +29,7 @@ object DirectedKickUtil {
     fun planKick(input: AgentInput, kickStrategy: KickStrategy, isSideHit: Boolean): Optional<DirectedKickPlan> {
         val interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2.0)
         val strikeProfile = StrikeProfile()
-        return planKick(input, kickStrategy, isSideHit, interceptModifier, Function { strikeProfile }, input.time)
+        return planKick(input, kickStrategy, isSideHit, interceptModifier, { strikeProfile }, input.time)
     }
 
     fun planKick(
@@ -37,20 +37,18 @@ object DirectedKickUtil {
             kickStrategy: KickStrategy,
             isSideHit: Boolean,
             interceptModifier: Vector3,
-            strikeFn: Function<Vector3, StrikeProfile>,
+            strikeFn: (Vector3) -> StrikeProfile,
             earliestPossibleIntercept: GameTime): Optional<DirectedKickPlan> {
 
         val car = input.myCarData
 
-
-
         val verticalPredicate =
-                if (isSideHit) BiPredicate { carData, intercept -> AirTouchPlanner.isJumpHitAccessible(carData, intercept) }
-        else BiPredicate<CarData, SpaceTime> { carData, intercept -> AirTouchPlanner.isVerticallyAccessible(carData, intercept) }
+                if (isSideHit) { carData: CarData, intercept: SpaceTime -> AirTouchPlanner.isJumpHitAccessible(carData, intercept) }
+                else { carData, intercept -> AirTouchPlanner.isVerticallyAccessible(carData, intercept) }
 
-        val overallPredicate = BiPredicate { cd: CarData, st: SpaceTime ->
+        val overallPredicate = { cd: CarData, st: SpaceTime ->
             st.time >= earliestPossibleIntercept - Duration.ofMillis(50) &&
-                    verticalPredicate.test(cd, st) &&
+                    verticalPredicate.invoke(cd, st) &&
                     kickStrategy.looksViable(cd, st.space)
         }
 

@@ -10,6 +10,9 @@ import java.util.Optional;
 
 public class StrikePlanner {
 
+    // This is the approximate angle a car needs to boost at to not accelerate up or down.
+    private static final double UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25;
+
     public static Optional<Plan> planImmediateLaunch(CarData car, Intercept intercept) {
 
         double height = intercept.getSpace().getZ();
@@ -20,7 +23,7 @@ public class StrikePlanner {
                 BotLog.println("Performing Aerial!", car.getPlayerIndex());
 
                 double groundDistance = car.getPosition().flatten().distance(intercept.getSpace().flatten());
-                double radiansForTilt = Math.atan2(height, groundDistance) + MidairStrikeStep.UPWARD_VELOCITY_MAINTENANCE_ANGLE;
+                double radiansForTilt = Math.atan2(height, groundDistance) + UPWARD_VELOCITY_MAINTENANCE_ANGLE;
 
                 double tiltBackSeconds = radiansForTilt * .35;
 

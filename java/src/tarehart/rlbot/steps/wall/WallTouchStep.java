@@ -51,7 +51,7 @@ public class WallTouchStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
         DistancePlot fullAcceleration = AccelerationModel.INSTANCE.simulateAcceleration(car, Duration.Companion.ofSeconds(4), car.getBoost(), 0);
 
-        Optional<Intercept> interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, fullAcceleration, new Vector3(), WallTouchStep::isBallOnWall);
+        Optional<Intercept> interceptOpportunity = InterceptCalculator.INSTANCE.getFilteredInterceptOpportunity(car, ballPath, fullAcceleration, new Vector3(), WallTouchStep::isBallOnWall);
         Optional<BallSlice> ballMotion = interceptOpportunity.flatMap(inter -> ballPath.getMotionAt(inter.getTime()));
 
 

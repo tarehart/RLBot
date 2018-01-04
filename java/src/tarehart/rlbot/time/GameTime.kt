@@ -26,6 +26,10 @@ data class GameTime(private val gameMillis: Long) : Comparable<GameTime> {
         return GameTime(gameMillis - duration.millis)
     }
 
+    operator fun minus(gameTime: GameTime): Duration {
+        return Duration.ofMillis(gameMillis - gameTime.gameMillis)
+    }
+
     fun minusSeconds(seconds: Double): GameTime {
         return minus(Duration.ofSeconds(seconds))
     }

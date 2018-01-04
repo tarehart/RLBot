@@ -14,8 +14,7 @@ public class AirTouchPlanner {
     public static final double BOOST_NEEDED_FOR_AERIAL = 20;
     public static final double NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT;
     public static final double MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD;
-    public static final double NEEDS_JUMP_HIT_THRESHOLD = 3.6;
-    public static final double NEEDS_FRONT_FLIP_THRESHOLD = 2.2;
+    public static final double NEEDS_JUMP_HIT_THRESHOLD = 3.2;
     public static final double CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z;
     private static final double MAX_FLIP_HIT = NEEDS_JUMP_HIT_THRESHOLD;
 

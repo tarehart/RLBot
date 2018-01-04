@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.strikes;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.intercept.AerialMath;
 import tarehart.rlbot.intercept.InterceptCalculator;
 import tarehart.rlbot.math.SpaceTime;
 import tarehart.rlbot.math.VectorUtil;
@@ -35,15 +36,12 @@ import static tarehart.rlbot.tuning.BotLog.println;
 
 public class MidairStrikeStep implements Step {
     private static final double SIDE_DODGE_THRESHOLD = Math.PI / 4;
-    public static final int DODGE_TIME = 400;
-    public static final double DODGE_DISTANCE = 6;
+    private static final Duration DODGE_TIME = Duration.Companion.ofMillis(400);
+    //private static final double DODGE_DISTANCE = 6;
     public static final Duration MAX_TIME_FOR_AIR_DODGE = Duration.Companion.ofSeconds(1.4);
-    public static final double UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25;
-    public static final double YAW_OVERCORRECT = .1;
-    private static final double EFFECTIVE_AIR_BOOST_ACCELERATION = 18; // Normally 19ish, but we'll be wiggling
-    private static final long NOSE_FINESSE_MILLIS = 700;
-    public static final double JUMP_ASSIST_DURATION = .6;
-    public static final int JUMP_ASSIST = 12;
+    private static final double YAW_OVERCORRECT = .1;
+    private static final Duration NOSE_FINESSE_TIME = Duration.Companion.ofMillis(800);
+
     private int confusionCount = 0;
     private Plan plan;
     private GameTime lastMomentForDodge;
@@ -82,7 +80,7 @@ public class MidairStrikeStep implements Step {
                 offset = new Vector3(offset.getX(), offset.getY(), -.2);
             }
         }
-        Optional<SpaceTime> interceptOpportunity = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep);
+        Optional<SpaceTime> interceptOpportunity = InterceptCalculator.INSTANCE.getAerialIntercept(car, ballPath, offset, beginningOfStep);
         if (!interceptOpportunity.isPresent()) {
             confusionCount++;
             if (confusionCount > 3) {
@@ -100,7 +98,7 @@ public class MidairStrikeStep implements Step {
 
         double correctionAngleRad = getCorrectionAngleRad(car, intercept.getSpace());
 
-        if (input.getTime().isBefore(lastMomentForDodge) && distance < DODGE_DISTANCE) {
+        if (input.getTime().isBefore(lastMomentForDodge) && distance < DODGE_TIME.getSeconds() * car.getVelocity().magnitude()) {
             // Let's flip into the ball!
             if (abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
                 println("Front flip strike", input.getPlayerIndex());
@@ -121,12 +119,17 @@ public class MidairStrikeStep implements Step {
         double rightDirection = carToIntercept.normaliseCopy().dotProduct(car.getVelocity().normaliseCopy());
         double secondsSoFar = Duration.Companion.between(beginningOfStep, input.getTime()).getSeconds();
 
-        if (millisTillIntercept > DODGE_TIME && secondsSoFar > 2 && rightDirection < .6) {
+        if (millisTillIntercept > DODGE_TIME.getMillis() && secondsSoFar > 2 && rightDirection < .6) {
             println("Failed aerial on bad angle", input.getPlayerIndex());
             return empty();
         }
 
-        double heightError = getHeightError(intercept.getSpace().getZ(), Duration.Companion.between(car.getTime(), intercept.getTime()), timeSinceLaunch, car);
+        double projectedHeight = AerialMath.INSTANCE.getProjectedHeight(
+                car, Duration.Companion.between(car.getTime(), intercept.getTime()).getSeconds(),
+                timeSinceLaunch.getSeconds()
+        );
+
+        double heightError = projectedHeight - intercept.getSpace().getZ();
 
         Vector2 flatToIntercept = carToIntercept.flatten();
 
@@ -137,21 +140,15 @@ public class MidairStrikeStep implements Step {
                 .rotateVector(currentFlatVelocity, leftRightCorrectionAngle + signum(leftRightCorrectionAngle) * YAW_OVERCORRECT)
                 .normalized();
 
-
-
-
         Vector3 desiredNoseVector;
 
-        if (millisTillIntercept < NOSE_FINESSE_MILLIS && intercept.getTime().isAfter(lastMomentForDodge) && heightError > 0 && offset.getZ() > 0) {
+        if (millisTillIntercept < NOSE_FINESSE_TIME.getMillis() && intercept.getTime().isAfter(lastMomentForDodge) && heightError > 0 && offset.getZ() > 0) {
             // Nose into the ball
             desiredNoseVector = offset.scaled(-1).normaliseCopy();
         } else {
             // Fly toward intercept
-//            Vector2 currentPitchVector = getPitchVector(car.getOrientation().getNoseVector());
-//            double currentPitchAngle = new Vector2(1, 0).correctionAngle(currentPitchVector);
-//            double desiredPitchAngle = currentPitchAngle - Math.signum(heightError - 2) * .3;
-            double extraHeight = offset.getZ() > 0 ? 1.2 : 0;
-            double desiredZ = getDesiredZComponentBasedOnAccel(
+            double extraHeight = offset.getZ() > 0 ? 1.6 : 0;
+            double desiredZ = AerialMath.INSTANCE.getDesiredZComponentBasedOnAccel(
                     intercept.getSpace().getZ() + extraHeight,
                     Duration.Companion.between(car.getTime(), intercept.getTime()),
                     timeSinceLaunch,
@@ -168,42 +165,6 @@ public class MidairStrikeStep implements Step {
         Optional<AgentOutput> rollOutput = new RollToPlaneStep(new Vector3(0, 0, 1), false).getOutput(input);
 
         return of(mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput).withBoost().withJump());
-    }
-
-    public static double getDesiredZComponentBasedOnAccel(double targetHeight, Duration timeTillIntercept, Duration timeSinceLaunch, CarData car) {
-        double initialHeightError = getHeightError(targetHeight, timeTillIntercept, timeSinceLaunch, car);
-        double angleStep = -Math.signum(initialHeightError) * .1;
-
-        double latestHeightError = initialHeightError;
-        double latestZ = car.getOrientation().getNoseVector().getZ();
-        double latestAngle = Math.asin(latestZ);
-        while (latestHeightError * initialHeightError > 0 && Math.abs(latestAngle) < Math.PI / 2) {
-            latestAngle = latestAngle + angleStep;
-            latestZ = Math.sin(latestAngle);
-            latestHeightError = getHeightError(car.getPosition().getZ(), targetHeight, timeTillIntercept, timeSinceLaunch, car.getVelocity().getZ(), latestZ);
-        }
-        return latestZ;
-    }
-
-    private static double getHeightError(double targetHeight, Duration timeTillIntercept, Duration timeSinceLaunch, CarData car) {
-        return getHeightError(car.getPosition().getZ(), targetHeight, timeTillIntercept, timeSinceLaunch, car.getVelocity().getZ(), car.getOrientation().getNoseVector().getZ());
-    }
-
-    private static double getHeightError(double currentHeight, double targetHeight, Duration timeTillIntercept, Duration timeSinceLaunch, double initialVelocity, double noseVertical) {
-
-        double tjmp = Math.max(0, JUMP_ASSIST_DURATION - timeSinceLaunch.getSeconds());
-        if (tjmp > 0) {
-            double verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical + JUMP_ASSIST - ArenaModel.GRAVITY;
-            currentHeight = currentHeight + initialVelocity * tjmp + .5 * verticalAcceleration * tjmp * tjmp;
-            initialVelocity = initialVelocity + verticalAcceleration * tjmp;
-        }
-
-        double tfly = timeTillIntercept.getSeconds() - tjmp;
-
-        double verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical - ArenaModel.GRAVITY;
-        double resultingHeight = currentHeight + initialVelocity * tfly + .5 * verticalAcceleration * tfly * tfly;
-
-        return resultingHeight - targetHeight;
     }
 
 

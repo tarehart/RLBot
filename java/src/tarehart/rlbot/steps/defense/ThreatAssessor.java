@@ -42,8 +42,8 @@ public class ThreatAssessor {
 
         CarData myCar = input.getMyCarData();
 
-        Optional<Intercept> myInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.getBoost());
-        Optional<Intercept> enemyInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.getBoost());
+        Optional<Intercept> myInterceptOption = InterceptCalculator.INSTANCE.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.getBoost());
+        Optional<Intercept> enemyInterceptOption = InterceptCalculator.INSTANCE.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.getBoost());
 
         if (!enemyInterceptOption.isPresent()) {
             return 0;

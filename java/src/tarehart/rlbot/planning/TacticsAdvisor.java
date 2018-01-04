@@ -251,7 +251,7 @@ public class TacticsAdvisor {
 
     private static Optional<Intercept> getSoonestIntercept(CarData car, BallPath ballPath) {
         DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(car, PLAN_HORIZON, car.getBoost());
-        return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, new Vector3(), (c, st) -> true);
+        return Optional.ofNullable(InterceptStep.Companion.getSoonestIntercept(car, ballPath, distancePlot, new Vector3(), (c, st) -> true));
     }
 
     private boolean getForceDefensivePosture(Bot.Team team, CarData myCar, Optional<CarData> opponentCar,
