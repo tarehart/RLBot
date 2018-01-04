@@ -60,7 +60,7 @@ public class GetOnOffenseStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        if (car.getBoost() < 10 && GetBoostStep.seesOpportunisticBoost(car, input.getFullBoosts())) {
+        if (car.getBoost() < 10 && GetBoostStep.seesOpportunisticBoost(car, input.getBoostData().getFullBoosts())) {
             plan = new Plan().withStep(new GetBoostStep());
             return plan.getOutput(input);
         }

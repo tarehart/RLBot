@@ -75,7 +75,7 @@ public class DemolishEnemyStep implements Step {
             return Optional.of(steering);
         }
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, enemyCar.getPosition()));
+        return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.getBoostData(), enemyCar.getPosition().flatten()));
     }
 
     @Override

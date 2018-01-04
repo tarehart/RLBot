@@ -199,7 +199,7 @@ public class ArenaDisplay extends JPanel {
     }
 
     private void drawBoosts(Graphics2D g) {
-        input.getFullBoosts().forEach(fullBoost -> {
+        input.getBoostData().getFullBoosts().forEach(fullBoost -> {
             if (fullBoost.isActive()) {
                 drawBoost(fullBoost.getLocation(), g);
             }

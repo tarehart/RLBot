@@ -66,7 +66,7 @@ public class SlideToPositionStep implements Step {
             if (angle < Math.PI / 12) {
                 phase = TRAVEL;
             } else {
-                return Optional.of(SteerUtil.steerTowardGroundPosition(car, target.getPosition()));
+                return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.getBoostData(), target.getPosition()));
             }
         }
 
@@ -93,7 +93,7 @@ public class SlideToPositionStep implements Step {
                     return this.plan.getOutput(input);
                 }
 
-                return Optional.of(SteerUtil.steerTowardGroundPosition(car, waypoint).withBoost(car.getBoost() > 50));
+                return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.getBoostData(), waypoint).withBoost(car.getBoost() > 50));
             }
         }
 

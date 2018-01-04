@@ -25,7 +25,6 @@ import java.util.Optional;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static tarehart.rlbot.planning.SteerUtil.steerTowardGroundPosition;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DirectedSideHitStep implements Step {

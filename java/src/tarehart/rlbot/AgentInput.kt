@@ -3,11 +3,13 @@ package tarehart.rlbot
 import rlbot.api.GameData
 import tarehart.rlbot.input.*
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
 import java.util.ArrayList
 import java.util.Optional
+import java.util.stream.Collectors
 
 class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronometer: Chronometer, spinTracker: SpinTracker, private val frameCount: Long) {
 
@@ -23,7 +25,7 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
     val team: Bot.Team
     val ballSpin: Vector3
     var time: GameTime
-    var fullBoosts: MutableList<FullBoost> = ArrayList(6)
+    val boostData: BoostData
     val matchInfo: MatchInfo
     val latestBallTouch: Optional<BallTouch>
 
@@ -68,14 +70,18 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
         blueCar = Optional.ofNullable(blueCarInput?.let { convert(it, Bot.Team.BLUE, spinTracker, elapsedSeconds, frameCount) })
         orangeCar = Optional.ofNullable(orangeCarInput?.let { convert(it, Bot.Team.ORANGE, spinTracker, elapsedSeconds, frameCount) })
 
-        for (boostInfo in request.boostPadsList) {
-            val location = convert(boostInfo.location)
-            val confirmedLocation = FullBoost.getFullBoostLocation(location)
-            confirmedLocation.ifPresent { loc ->
-                fullBoosts.add(FullBoost(loc, boostInfo.isActive,
-                        if (boostInfo.isActive) time else time + Duration.ofMillis(boostInfo.timer.toLong())))
-            }
-        }
+        boostData = BoostData(
+                fullBoosts = request.boostPadsList.mapNotNull {
+                    BoostAdvisor.getFullBoostLocation(convert(it.location))?.let {
+                        loc -> BoostPad(loc, it.isActive, if (it.isActive) time else time + Duration.ofMillis(it.timer.toLong()), 100.0 ) }
+                },
+                smallBoosts = request.boostPadsList.mapNotNull {
+                    val location = convert(it.location)
+                    if (BoostAdvisor.getFullBoostLocation(location) == null) {
+                        BoostPad(location, it.isActive, if (it.isActive) time else time + Duration.ofMillis(it.timer.toLong()), 15.0)
+                    } else null
+                }
+        )
 
         this.latestBallTouch = getLatestBallTouch(request)
     }

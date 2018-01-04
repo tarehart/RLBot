@@ -2,6 +2,7 @@ package tarehart.rlbot.planning;
 
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.carpredict.AccelerationModel;
+import tarehart.rlbot.input.BoostData;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.intercept.StrikeProfile;
 import tarehart.rlbot.math.*;
@@ -11,6 +12,7 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.physics.BallPhysics;
 import tarehart.rlbot.physics.DistancePlot;
+import tarehart.rlbot.routing.BoostAdvisor;
 import tarehart.rlbot.routing.CircleTurnUtil;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
@@ -121,6 +123,23 @@ public class SteerUtil {
         double distance = position.distance(myPositionFlat);
         double speed = carData.getVelocity().magnitude();
         return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic(), noBoosting);
+    }
+
+    public static AgentOutput steerTowardGroundPosition(CarData carData, BoostData boostData, Vector2 position) {
+
+        if (ArenaModel.isCarOnWall(carData)) {
+            return steerTowardGroundPositionFromWall(carData, position);
+        }
+
+        final Vector2 adjustedPosition = Optional.ofNullable(BoostAdvisor.INSTANCE.getBoostWaypoint(carData, boostData, position)).orElse(position);
+
+        WaypointTelemetry.set(adjustedPosition, carData.getTeam());
+
+        double correctionAngle = getCorrectionAngleRad(carData, adjustedPosition);
+        Vector2 myPositionFlat = carData.getPosition().flatten();
+        double distance = adjustedPosition.distance(myPositionFlat);
+        double speed = carData.getVelocity().magnitude();
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic(), false);
     }
 
     private static AgentOutput steerTowardGroundPositionFromWall(CarData carData, Vector2 position) {

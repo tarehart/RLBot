@@ -97,6 +97,6 @@ public class ReliefBot extends Bot {
             }
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, input.getBallPosition());
+        return SteerUtil.steerTowardGroundPosition(car, input.getBoostData(), input.getBallPosition().flatten());
     }
 }

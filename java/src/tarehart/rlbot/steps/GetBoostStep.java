@@ -3,8 +3,8 @@ package tarehart.rlbot.steps;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.carpredict.AccelerationModel;
+import tarehart.rlbot.input.BoostPad;
 import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.input.FullBoost;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -23,7 +23,7 @@ import java.util.Optional;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class GetBoostStep implements Step {
-    private FullBoost targetLocation = null;
+    private BoostPad targetLocation = null;
     private Plan plan;
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
@@ -32,7 +32,7 @@ public class GetBoostStep implements Step {
             init(input);
         }
 
-        Optional<FullBoost> matchingBoost = input.getFullBoosts().stream().filter(b -> b.getLocation().distance(targetLocation.getLocation()) < 1).findFirst();
+        Optional<BoostPad> matchingBoost = input.getBoostData().getFullBoosts().stream().filter(b -> b.getLocation().distance(targetLocation.getLocation()) < 1).findFirst();
         if (!matchingBoost.isPresent()) {
             return Optional.empty();
         }
@@ -84,12 +84,12 @@ public class GetBoostStep implements Step {
         targetLocation = getTacticalBoostLocation(input);
     }
 
-    private static FullBoost getTacticalBoostLocation(AgentInput input) {
-        FullBoost nearestLocation = null;
+    private static BoostPad getTacticalBoostLocation(AgentInput input) {
+        BoostPad nearestLocation = null;
         double minTime = Double.MAX_VALUE;
         CarData carData = input.getMyCarData();
         DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(carData, Duration.Companion.ofSeconds(4), carData.getBoost());
-        for (FullBoost boost : input.getFullBoosts()) {
+        for (BoostPad boost : input.getBoostData().getFullBoosts()) {
             Optional<Duration> travelSeconds = AccelerationModel.INSTANCE.getTravelSeconds(carData, distancePlot, boost.getLocation());
             if (travelSeconds.isPresent() && travelSeconds.get().getSeconds() < minTime &&
                     (boost.isActive() || travelSeconds.get().minus(Duration.Companion.between(input.getTime(), boost.getActiveTime())).getSeconds() > 1)) {
@@ -106,13 +106,13 @@ public class GetBoostStep implements Step {
         Vector3 endpoint = ballPath.getEndpoint().getSpace();
         // Add a defensive bias.
         Vector3 idealPlaceToGetBoost = new Vector3(endpoint.getX(), 40 * Math.signum(GoalUtil.getOwnGoal(input.getTeam()).getCenter().getY()), 0);
-        return getNearestBoost(input.getFullBoosts(), idealPlaceToGetBoost);
+        return getNearestBoost(input.getBoostData().getFullBoosts(), idealPlaceToGetBoost);
     }
 
-    private static FullBoost getNearestBoost(List<FullBoost> boosts, Vector3 position) {
-        FullBoost location = null;
+    private static BoostPad getNearestBoost(List<BoostPad> boosts, Vector3 position) {
+        BoostPad location = null;
         double minDistance = Double.MAX_VALUE;
-        for (FullBoost boost : boosts) {
+        for (BoostPad boost : boosts) {
             if (boost.isActive()) {
                 double distance = position.distance(boost.getLocation());
                 if (distance < minDistance) {
@@ -124,8 +124,8 @@ public class GetBoostStep implements Step {
         return location;
     }
 
-    public static boolean seesOpportunisticBoost(CarData carData, List<FullBoost> boosts) {
-        FullBoost boost = getNearestBoost(boosts, carData.getPosition());
+    public static boolean seesOpportunisticBoost(CarData carData, List<BoostPad> boosts) {
+        BoostPad boost = getNearestBoost(boosts, carData.getPosition());
         return boost.getLocation().distance(carData.getPosition()) < 20 &&
                 Math.abs(SteerUtil.getCorrectionAngleRad(carData, boost.getLocation())) < Math.PI / 6;
 
