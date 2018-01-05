@@ -21,7 +21,7 @@ public class JumpingBeanBot extends Bot {
     @Override
     protected AgentOutput getOutput(AgentInput input) {
 
-        if (!Plan.activePlan(plan).isPresent()) {
+        if (!Plan.Companion.activePlan(plan).isPresent()) {
             plan = SetPieces.jumpSuperHigh(10);
         }
 

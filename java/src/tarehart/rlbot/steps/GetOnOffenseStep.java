@@ -130,7 +130,7 @@ public class GetOnOffenseStep implements Step {
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        if (Plan.activePlan(plan).isPresent()) {
+        if (Plan.Companion.activePlan(plan).isPresent()) {
             plan.getCurrentStep().drawDebugInfo(graphics);
         }
 

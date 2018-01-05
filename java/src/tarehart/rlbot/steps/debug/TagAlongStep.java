@@ -46,12 +46,12 @@ public class TagAlongStep implements Step {
 
     @Override
     public String getSituation() {
-        return Plan.concatSituation("Tagging along", plan);
+        return Plan.Companion.concatSituation("Tagging along", plan);
     }
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        if (Plan.activePlan(plan).isPresent()) {
+        if (Plan.Companion.activePlan(plan).isPresent()) {
             plan.getCurrentStep().drawDebugInfo(graphics);
         }
     }

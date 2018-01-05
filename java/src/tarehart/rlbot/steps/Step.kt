@@ -1,0 +1,23 @@
+package tarehart.rlbot.steps
+
+import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
+
+import java.awt.*
+import java.util.Optional
+
+interface Step {
+
+    // Describes very briefly what's going on, for UI display
+    val situation: String
+
+    /**
+     * Return the output you want to pass to the bot.
+     * If you pass Optional.empty(), you are declaring yourself to be complete.
+     */
+    fun getOutput(input: AgentInput): Optional<AgentOutput>
+
+    fun canInterrupt(): Boolean
+
+    fun drawDebugInfo(graphics: Graphics2D)
+}

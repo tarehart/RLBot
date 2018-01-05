@@ -38,7 +38,7 @@ public class SlideToPositionStep implements Step {
     @Override
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
-        if (Plan.activePlan(plan).isPresent()) {
+        if (Plan.Companion.activePlan(plan).isPresent()) {
             Optional<AgentOutput> output = plan.getOutput(input);
             if (output.isPresent()) {
                 return output;

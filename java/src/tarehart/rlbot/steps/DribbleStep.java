@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps;
 
+import org.jetbrains.annotations.NotNull;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.input.CarData;
@@ -24,20 +25,13 @@ import java.util.Optional;
 import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
 import static tarehart.rlbot.tuning.BotLog.println;
 
-public class DribbleStep implements Step {
+public class DribbleStep extends NestedPlanStep {
+
     public static final double DRIBBLE_DISTANCE = 20;
-    private Plan plan;
 
-    public Optional<AgentOutput> getOutput(AgentInput input) {
-
-        if (plan != null && !plan.isComplete()) {
-            if (plan != null && !plan.isComplete()) {
-                Optional<AgentOutput> output = plan.getOutput(input);
-                if (output.isPresent()) {
-                    return output;
-                }
-            }
-        }
+    @NotNull
+    @Override
+    public Optional<AgentOutput> getUnplannedOutput(@NotNull AgentInput input) {
 
         CarData car = input.getMyCarData();
 
@@ -107,8 +101,7 @@ public class DribbleStep implements Step {
             if (car.getBoost() > 0) {
                 dribble.withAcceleration(1).withBoost();
             } else {
-                plan = SetPieces.frontFlip();
-                return plan.getOutput(input);
+                return startPlan(SetPieces.frontFlip(), input);
             }
         }
         return Optional.of(dribble);
@@ -160,13 +153,9 @@ public class DribbleStep implements Step {
         return true;
     }
 
+    @NotNull
     @Override
-    public boolean canInterrupt() {
-        return plan == null || plan.canInterrupt();
-    }
-
-    @Override
-    public String getSituation() {
+    public String getLocalSituation() {
         return "Dribbling";
     }
 

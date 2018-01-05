@@ -52,7 +52,7 @@ public class ChaseBallStep implements Step {
 
     @Override
     public String getSituation() {
-        return Plan.concatSituation("Chasing ball", plan);
+        return Plan.Companion.concatSituation("Chasing ball", plan);
     }
 
     @Override

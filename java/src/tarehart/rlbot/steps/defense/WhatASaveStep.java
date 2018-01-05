@@ -101,11 +101,11 @@ public class WhatASaveStep implements Step {
 
     @Override
     public String getSituation() {
-        return Plan.concatSituation("Making a save", plan);
+        return Plan.Companion.concatSituation("Making a save", plan);
     }
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
-        Plan.activePlan(plan).ifPresent(p -> p.getCurrentStep().drawDebugInfo(graphics));
+        Plan.Companion.activePlan(plan).ifPresent(p -> p.getCurrentStep().drawDebugInfo(graphics));
     }
 }

@@ -227,13 +227,13 @@ public class DirectedSideHitStep implements Step {
 
     @Override
     public String getSituation() {
-        return Plan.concatSituation("Directed Side Hit", plan);
+        return Plan.Companion.concatSituation("Directed Side Hit", plan);
     }
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
 
-        if (Plan.activePlan(plan).isPresent()) {
+        if (Plan.Companion.activePlan(plan).isPresent()) {
             plan.getCurrentStep().drawDebugInfo(graphics);
             return;
         }

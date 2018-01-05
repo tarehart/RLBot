@@ -6,47 +6,35 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.*
-import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.SpaceTime
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.planning.*
-import tarehart.rlbot.steps.Step
+import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
-
-import java.awt.*
-import java.awt.geom.Line2D
-import java.util.ArrayList
-import java.util.Comparator
-import java.util.Optional
-import java.util.function.BiPredicate
-
-import java.util.Optional.empty
 import tarehart.rlbot.tuning.BotLog.println
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Graphics2D
+import java.awt.geom.Line2D
+import java.util.*
 
 class InterceptStep @JvmOverloads constructor(
         private val interceptModifier: Vector3,
         private val interceptPredicate: (CarData, SpaceTime) -> Boolean = { _, _ -> true }
-) : Step {
+) : NestedPlanStep() {
+    override fun getLocalSituation(): String {
+        return  "Working on intercept"
+    }
 
-    private var plan: Plan? = null
     private var originalIntercept: Intercept? = null
     private var chosenIntercept: Intercept? = null
     private var originalTouch: BallTouch? = null
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
-
-        if (plan != null && !plan!!.isComplete) {
-            val output = plan!!.getOutput(input)
-            if (output.isPresent) {
-                return output
-            }
-        }
+    override fun getUnplannedOutput(input: AgentInput): Optional<AgentOutput> {
 
         val carData = input.myCarData
 
@@ -64,9 +52,8 @@ class InterceptStep @JvmOverloads constructor(
         val launchPlan = StrikePlanner.planImmediateLaunch(input.myCarData, chosenIntercept)
 
         launchPlan.orElse(null)?.let {
-            plan = it
             it.unstoppable()
-            return it.getOutput(input)
+            return startPlan(it, input)
         }
 
         if (originalIntercept == null) {
@@ -76,8 +63,8 @@ class InterceptStep @JvmOverloads constructor(
         } else {
 
             if (originalIntercept?.let { ballPath.getMotionAt(it.time).map { (space) -> space.distance(it.space) > 10 }.orElse(true) } == true) {
-                println("Ball path has diverged from expectation, quitting.", input.playerIndex)
-                return Optional.empty()
+                println("Ball path has diverged from expectation, will quit.", input.playerIndex)
+                zombie = true
             }
 
             if (originalTouch?.position ?: Vector3() != input.latestBallTouch.map({it.position}).orElse(Vector3())) {
@@ -93,19 +80,12 @@ class InterceptStep @JvmOverloads constructor(
 
     private fun getThereOnTime(input: AgentInput, intercept: Intercept): AgentOutput {
 
-        var flipOut = Optional.empty<AgentOutput>()
         val car = input.myCarData
 
         val sensibleFlip = SteerUtil.getSensibleFlip(car, intercept.space)
         if (sensibleFlip.isPresent) {
             println("Front flip toward intercept", input.playerIndex)
-            val flipPlan = sensibleFlip.get()
-            this.plan = sensibleFlip.get()
-            flipOut = flipPlan.getOutput(input)
-        }
-
-        if (flipOut.isPresent) {
-            return flipOut.get()
+            startPlan(sensibleFlip.get(), input)
         }
 
         val timeToIntercept = Duration.between(car.time, intercept.time)
@@ -138,19 +118,9 @@ class InterceptStep @JvmOverloads constructor(
         }
     }
 
-    override fun canInterrupt(): Boolean {
-        return plan?.canInterrupt() ?: true
-    }
-
-    override fun getSituation(): String {
-        return Plan.concatSituation("Working on intercept", plan)
-    }
-
     override fun drawDebugInfo(graphics: Graphics2D) {
 
-        if (Plan.activePlan(plan).isPresent) {
-            plan!!.currentStep.drawDebugInfo(graphics)
-        }
+        super.drawDebugInfo(graphics)
 
         if (chosenIntercept != null) {
             graphics.color = Color(214, 136, 29)

@@ -99,7 +99,7 @@ public class GoForKickoffStep implements Step {
 
     @Override
     public String getSituation() {
-        return Plan.concatSituation("Going for kickoff", plan);
+        return Plan.Companion.concatSituation("Going for kickoff", plan);
     }
 
     @Override

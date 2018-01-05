@@ -18,6 +18,7 @@ import tarehart.rlbot.routing.CircleTurnUtil;
 import tarehart.rlbot.routing.PositionFacing;
 import tarehart.rlbot.routing.SteerPlan;
 import tarehart.rlbot.routing.StrikePoint;
+import tarehart.rlbot.steps.NestedPlanStep;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.travel.SlideToPositionStep;
 import tarehart.rlbot.time.Duration;
@@ -30,9 +31,8 @@ import java.util.Optional;
 import static java.util.Optional.empty;
 import static tarehart.rlbot.tuning.BotLog.println;
 
-public class DirectedNoseHitStep implements Step {
+public class DirectedNoseHitStep extends NestedPlanStep {
     public static final double MAX_NOSE_HIT_ANGLE = Math.PI / 18;
-    private Plan plan;
     private BallSlice originalIntercept;
     private GameTime doneMoment;
     private KickStrategy kickStrategy;
@@ -65,6 +65,7 @@ public class DirectedNoseHitStep implements Step {
         return carLaunchpadInterceptAngle;
     }
 
+
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
         car = input.getMyCarData();
@@ -74,16 +75,16 @@ public class DirectedNoseHitStep implements Step {
             doneMoment = input.getTime().plus(Duration.Companion.ofMillis(200));
         }
 
+        return super.getOutput(input);
+    }
+
+    @NotNull
+    @Override
+    public Optional<AgentOutput> getUnplannedOutput(@NotNull AgentInput input) {
+
         if (earliestPossibleIntercept == null) {
             earliestPossibleIntercept = input.getTime();
             originalTouch = input.getLatestBallTouch();
-        }
-
-        if (plan != null && !plan.isComplete()) {
-            Optional<AgentOutput> output = plan.getOutput(input);
-            if (output.isPresent()) {
-                return output;
-            }
         }
 
         if (doneMoment != null && input.getTime().isAfter(doneMoment)) {
@@ -107,8 +108,8 @@ public class DirectedNoseHitStep implements Step {
             originalIntercept = kickPlan.getBallAtIntercept();
         } else {
             if (kickPlan.getBallPath().getMotionAt(originalIntercept.getTime()).map(slice -> slice.getSpace().distance(originalIntercept.getSpace()) > 20).orElse(true)) {
-                println("Ball path has diverged from expectation, quitting.", input.getPlayerIndex());
-                return Optional.empty();
+                println("Ball path has diverged from expectation, will quit.", input.getPlayerIndex());
+                setZombie(true);
             }
         }
 
@@ -137,8 +138,7 @@ public class DirectedNoseHitStep implements Step {
 
         if (kickPlan.getEasyKickAllowed() || (interceptLocation.getZ() > 2 && Math.abs(positionCorrectionForStrike) < Math.PI / 12 && Math.abs(orientationCorrectionForStrike) < Math.PI / 12)) {
             circleTurnPlan = null;
-            plan = new Plan().withStep(new InterceptStep(interceptModifier, (c, st) -> !st.getTime().isBefore(earliestPossibleIntercept)));
-            return plan.getOutput(input);
+            return startPlan(new Plan().withStep(new InterceptStep(interceptModifier, (c, st) -> !st.getTime().isBefore(earliestPossibleIntercept))), input);
         }
 
 
@@ -165,9 +165,9 @@ public class DirectedNoseHitStep implements Step {
 
         double asapSeconds = kickPlan.getDistancePlot()
                 .getMotionUponArrival(
-                    car,
-                    kickPlan.getBallAtIntercept().getSpace(),
-                    new StrikeProfile())
+                        car,
+                        kickPlan.getBallAtIntercept().getSpace(),
+                        new StrikeProfile())
                 .map(DistanceTimeSpeed::getTime)
                 .orElse(Duration.Companion.between(input.getTime(), kickPlan.getBallAtIntercept().getTime())).getSeconds();
 
@@ -234,29 +234,22 @@ public class DirectedNoseHitStep implements Step {
         Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.getWaypoint());
         if (sensibleFlip.isPresent()) {
             println("Front flip toward nose hit", input.getPlayerIndex());
-            this.plan = sensibleFlip.get();
-            return this.plan.getOutput(input);
+            return startPlan(sensibleFlip.get(), input);
         }
 
         return Optional.of(circleTurnOption.getImmediateSteer());
     }
 
+    @NotNull
     @Override
-    public boolean canInterrupt() {
-        return plan == null || plan.canInterrupt();
-    }
-
-    @Override
-    public String getSituation() {
-        return Plan.concatSituation("Directed nose hit", plan);
+    public String getLocalSituation() {
+        return "Directed nose hit";
     }
 
     @Override
     public void drawDebugInfo(Graphics2D graphics) {
 
-        if (Plan.activePlan(plan).isPresent()) {
-            plan.getCurrentStep().drawDebugInfo(graphics);
-        }
+        super.drawDebugInfo(graphics);
 
         if (circleTurnPlan != null) {
             graphics.setColor(new Color(138, 164, 200));
