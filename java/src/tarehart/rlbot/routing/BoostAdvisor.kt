@@ -16,6 +16,8 @@ object BoostAdvisor {
     private const val CORNER_BOOST_WIDTH = 61.5f
     private const val CORNER_BOOST_DEPTH = 82f
 
+    private const val TURN_LIMIT = Math.PI / 4
+
     private val boostLocations = Arrays.asList(
             Vector3(MIDFIELD_BOOST_WIDTH.toDouble(), 0.0, 0.0),
             Vector3((-MIDFIELD_BOOST_WIDTH).toDouble(), 0.0, 0.0),
@@ -47,7 +49,9 @@ object BoostAdvisor {
         val carPosition = car.position.flatten()
         val carToBoost = boostLocation - carPosition
         val boostToWaypoint = waypoint - boostLocation
-        return Vector2.angle(carToBoost, boostToWaypoint) < Math.PI / 6
+        val detourAngle = Vector2.angle(carToBoost, boostToWaypoint)
+        val initialSteerCorrection = Vector2.angle(car.orientation.noseVector.flatten(), carToBoost)
+        return detourAngle + initialSteerCorrection < TURN_LIMIT
     }
 
     /**
