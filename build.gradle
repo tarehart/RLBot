@@ -81,6 +81,9 @@ protobuf {
         }
     }
 }
+
+compileKotlin.dependsOn ':generateProto'
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
