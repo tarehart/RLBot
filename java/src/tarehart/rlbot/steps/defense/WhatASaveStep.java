@@ -63,7 +63,7 @@ public class WhatASaveStep implements Step {
 
 
         Intercept intercept = InterceptCalculator.INSTANCE.getInterceptOpportunity(car, ballPath, plot)
-                .orElse(new Intercept(threat.toSpaceTime(), new StrikeProfile(), plot));
+                .orElse(new Intercept(threat.getSpace(), threat.getTime(), 0.0, new StrikeProfile(), plot, Duration.Companion.ofMillis(0)));
 
         Vector3 carToIntercept = intercept.getSpace().minus(car.getPosition());
         double carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.getBallVelocity().flatten());
@@ -72,12 +72,12 @@ public class WhatASaveStep implements Step {
             return car.getPosition().flatten().distance(ballSlice.getSpace().flatten()) < ArenaModel.BALL_RADIUS;
         }));
 
-        if (overHeadSlice.isPresent() && (goingForSuperJump || AirTouchPlanner.isVerticallyAccessible(car, overHeadSlice.get().toSpaceTime()))) {
+        if (overHeadSlice.isPresent() && (goingForSuperJump || AirTouchPlanner.INSTANCE.isVerticallyAccessible(car, overHeadSlice.get().toSpaceTime()))) {
 
             goingForSuperJump = true;
 
             double overheadHeight = overHeadSlice.get().getSpace().getZ();
-            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.Companion.between(input.getTime(), overHeadSlice.get().getTime()).getSeconds()) {
+            if (AirTouchPlanner.INSTANCE.expectedSecondsForSuperJump(overheadHeight) >= Duration.Companion.between(input.getTime(), overHeadSlice.get().getTime()).getSeconds()) {
                 plan = SetPieces.jumpSuperHigh(overheadHeight);
                 return plan.getOutput(input);
             } else {

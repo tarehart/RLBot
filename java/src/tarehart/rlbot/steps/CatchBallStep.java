@@ -26,7 +26,7 @@ public class CatchBallStep implements Step {
         CarData car = input.getMyCarData();
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car));
+        Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.INSTANCE.getBoostBudget(car));
 
         // Weed out any intercepts after a catch opportunity. Should just catch it.
         if (catchOpportunity.isPresent()) {

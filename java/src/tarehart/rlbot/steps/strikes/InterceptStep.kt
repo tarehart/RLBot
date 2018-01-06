@@ -49,9 +49,9 @@ class InterceptStep @JvmOverloads constructor(
 
         chosenIntercept = soonestIntercept
 
-        val launchPlan = StrikePlanner.planImmediateLaunch(input.myCarData, chosenIntercept)
+        val launchPlan = StrikePlanner.planImmediateLaunch(input.myCarData, soonestIntercept)
 
-        launchPlan.orElse(null)?.let {
+        launchPlan?.let {
             it.unstoppable()
             return startPlan(it, input)
         }
@@ -110,7 +110,7 @@ class InterceptStep @JvmOverloads constructor(
             }
             return agentOutput
         } else {
-            val output = SteerUtil.getThereOnTime(car, chosenIntercept!!.toSpaceTime())
+            val output = SteerUtil.getThereOnTime(car, intercept.toSpaceTime())
             if (car.boost <= intercept.airBoost + 5) {
                 output.withBoost(false)
             }
@@ -122,10 +122,10 @@ class InterceptStep @JvmOverloads constructor(
 
         super.drawDebugInfo(graphics)
 
-        if (chosenIntercept != null) {
+        chosenIntercept?.let {
             graphics.color = Color(214, 136, 29)
             graphics.stroke = BasicStroke(1f)
-            val (x, y) = chosenIntercept!!.space.flatten()
+            val (x, y) = it.space.flatten()
             val crossSize = 2
             graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
             graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
@@ -177,7 +177,7 @@ class InterceptStep @JvmOverloads constructor(
         private fun getFlipHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
             return InterceptCalculator.getFilteredInterceptOpportunity(
                     carData, ballPath, fullAcceleration, interceptModifier,
-                    { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isFlipHitAccessible(cd, st) },
+                    { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isFlipHitAccessible(st) },
                     { FLIP_HIT_STRIKE_PROFILE })
                     .orElse(null)
         }

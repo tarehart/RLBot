@@ -73,7 +73,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
 
     fun getMotionUponArrival(carData: CarData, destination: Vector3, strikeProfile: StrikeProfile): Optional<DistanceTimeSpeed> {
 
-        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination) + strikeProfile.maneuverSeconds
+        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination) + strikeProfile.travelDelay
         val distance = carData.position.flatten().distance(destination.flatten())
 
         return getMotionAfterDistance(distance).map { DistanceTimeSpeed(it.distance, it.time.plusSeconds(orientSeconds), it.speed) }
@@ -83,7 +83,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
 
     fun getMotionAfterDuration(carData: CarData, target: Vector3, time: Duration, strikeProfile: StrikeProfile): Optional<DistanceTimeSpeed> {
 
-        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, target) + strikeProfile.maneuverSeconds
+        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, target) + strikeProfile.travelDelay
 
         val totalSeconds = time.seconds
         val secondsSpentAccelerating = Math.max(0.0, totalSeconds - orientSeconds)
