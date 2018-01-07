@@ -62,7 +62,7 @@ public class TacticsAdvisor {
             return new Plan(Plan.Posture.DEFENSIVE).withStep(new GetOnDefenseStep(secondsToOverrideFor));
         }
 
-        Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.getTeam()).getCenter();
+        Vector3 ownGoalCenter = GoalUtil.INSTANCE.getOwnGoal(input.getTeam()).getCenter();
         Vector3 interceptPosition = situation.expectedContact.map(Intercept::getSpace).orElse(input.getBallPosition());
         Vector3 toOwnGoal = ownGoalCenter.minus(interceptPosition);
         Vector3 interceptModifier = toOwnGoal.normaliseCopy();
@@ -142,8 +142,8 @@ public class TacticsAdvisor {
 
         CarData car = input.getMyCarData();
 
-        if (!generousShotAngle(GoalUtil.getEnemyGoal(car.getTeam()), situation.expectedContact, car.getPlayerIndex())) {
-            Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, car.getBoost());
+        if (!generousShotAngle(GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()), situation.expectedContact, car.getPlayerIndex())) {
+            Optional<SpaceTime> catchOpportunity = SteerUtil.INSTANCE.getCatchOpportunity(car, ballPath, car.getBoost());
             if (catchOpportunity.isPresent()) {
                 return new Plan(Plan.Posture.OFFENSIVE).withStep(new CatchBallStep());
             }
@@ -152,9 +152,9 @@ public class TacticsAdvisor {
         if (DribbleStep.canDribble(input, false) && input.getBallVelocity().magnitude() > 15) {
             println("Beginning dribble", input.getPlayerIndex());
             return new Plan(OFFENSIVE).withStep(new DribbleStep());
-        }  else if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
+        }  else if (WallTouchStep.Companion.hasWallTouchOpportunity(input, ballPath)) {
             return new Plan(Plan.Posture.OFFENSIVE).withStep(new MountWallStep()).withStep(new WallTouchStep()).withStep(new DescendFromWallStep());
-        } else if (generousShotAngle(GoalUtil.getEnemyGoal(car.getTeam()), situation.expectedContact, car.getPlayerIndex()) &&
+        } else if (generousShotAngle(GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()), situation.expectedContact, car.getPlayerIndex()) &&
                 DirectedNoseHitStep.canMakeDirectedKick(input, new KickAtEnemyGoal())) {
             return new FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(new DirectedNoseHitStep(new KickAtEnemyGoal()))
@@ -212,16 +212,16 @@ public class TacticsAdvisor {
         TacticalSituation situation = new TacticalSituation();
         situation.expectedContact = ourIntercept;
         situation.expectedEnemyContact = enemyIntercept;
-        situation.ownGoalFutureProximity = VectorUtil.INSTANCE.flatDistance(GoalUtil.getOwnGoal(input.getTeam()).getCenter(), futureBallMotion.getSpace());
+        situation.ownGoalFutureProximity = VectorUtil.INSTANCE.flatDistance(GoalUtil.INSTANCE.getOwnGoal(input.getTeam()).getCenter(), futureBallMotion.getSpace());
         situation.distanceBallIsBehindUs = measureOutOfPosition(input);
         situation.enemyOffensiveApproachError = situation.expectedEnemyContact.map(contact -> measureEnemyApproachError(input, contact.toSpaceTime()));
-        double enemyGoalY = GoalUtil.getEnemyGoal(input.getTeam()).getCenter().getY();
+        double enemyGoalY = GoalUtil.INSTANCE.getEnemyGoal(input.getTeam()).getCenter().getY();
         situation.distanceFromEnemyBackWall = Math.abs(enemyGoalY - futureBallMotion.getSpace().getY());
         situation.distanceFromEnemyCorner = getDistanceFromEnemyCorner(futureBallMotion, enemyGoalY);
         situation.futureBallMotion = futureBallMotion;
 
-        situation.scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.getTeam()), ballPath);
-        situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.getTeam()), ballPath);
+        situation.scoredOnThreat = Optional.ofNullable(GoalUtil.INSTANCE.predictGoalEvent(GoalUtil.INSTANCE.getOwnGoal(input.getTeam()), ballPath));
+        situation.needsDefensiveClear = GoalUtil.INSTANCE.ballLingersInBox(GoalUtil.INSTANCE.getOwnGoal(input.getTeam()), ballPath);
         situation.shotOnGoalAvailable = getShotOnGoalAvailable(input.getTeam(), myCar, opponentCar, input.getBallPosition(), ourIntercept, ballPath);
         situation.forceDefensivePosture = getForceDefensivePosture(input.getTeam(), myCar, opponentCar, input.getBallPosition());
         situation.goForKickoff = getGoForKickoff(zonePlan, input.getTeam(), input.getBallPosition());
@@ -278,8 +278,8 @@ public class TacticsAdvisor {
                                            Vector3 ballPosition, Optional<Intercept> soonestIntercept, BallPath ballPath) {
 
         if(myCar.getPosition().distance(ballPosition) < 80 &&
-                GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(team), ballPath) &&
-                generousShotAngle(GoalUtil.getEnemyGoal(myCar.getTeam()), soonestIntercept, myCar.getPlayerIndex())) {
+                GoalUtil.INSTANCE.ballLingersInBox(GoalUtil.INSTANCE.getEnemyGoal(team), ballPath) &&
+                generousShotAngle(GoalUtil.INSTANCE.getEnemyGoal(myCar.getTeam()), soonestIntercept, myCar.getPlayerIndex())) {
             return true;
         }
 
@@ -288,7 +288,7 @@ public class TacticsAdvisor {
 
     // Checks to see if the ball is in the corner and if the opponent is closer to it
     private boolean getWaitToClear(Optional<ZonePlan> zonePlan, AgentInput input) {
-        Vector3 myGoalLocation = GoalUtil.getOwnGoal(input.getTeam()).getCenter();
+        Vector3 myGoalLocation = GoalUtil.INSTANCE.getOwnGoal(input.getTeam()).getCenter();
         double myBallDistance = input.getBallPosition().distance(input.getMyCarData().getPosition());
         double enemyBallDistance = input.getEnemyCarData().map(c -> input.getBallPosition().distance(c.getPosition())).orElse(Double.MAX_VALUE);
         double ballDistanceToGoal = input.getBallPosition().distance(myGoalLocation);
@@ -318,7 +318,7 @@ public class TacticsAdvisor {
         }
 
         CarData enemyCar = enemyCarData.get();
-        Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
+        Goal myGoal = GoalUtil.INSTANCE.getOwnGoal(input.getTeam());
         Vector3 ballToGoal = myGoal.getCenter().minus(enemyContact.getSpace());
 
         Vector3 carToBall = enemyContact.getSpace().minus(enemyCar.getPosition());
@@ -329,7 +329,7 @@ public class TacticsAdvisor {
 
     private double measureOutOfPosition(AgentInput input) {
         CarData car = input.getMyCarData();
-        Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
+        Goal myGoal = GoalUtil.INSTANCE.getOwnGoal(input.getTeam());
         Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
         Vector3 carToBall = input.getBallPosition().minus(car.getPosition());
         Vector3 wrongSideVector = VectorUtil.INSTANCE.project(carToBall, ballToGoal);
@@ -337,13 +337,13 @@ public class TacticsAdvisor {
     }
 
     public static double getYAxisWrongSidedness(AgentInput input) {
-        Vector3 ownGoalCenter = GoalUtil.getOwnGoal(input.getTeam()).getCenter();
+        Vector3 ownGoalCenter = GoalUtil.INSTANCE.getOwnGoal(input.getTeam()).getCenter();
         double playerToBallY = input.getBallPosition().getY() - input.getMyCarData().getPosition().getY();
         return playerToBallY * Math.signum(ownGoalCenter.getY());
     }
 
     public static double getYAxisWrongSidedness(CarData car, Vector3 ball) {
-        Vector3 ownGoalCenter = GoalUtil.getOwnGoal(car.getTeam()).getCenter();
+        Vector3 ownGoalCenter = GoalUtil.INSTANCE.getOwnGoal(car.getTeam()).getCenter();
         double playerToBallY = ball.getY() - car.getPosition().getY();
         return playerToBallY * Math.signum(ownGoalCenter.getY());
     }

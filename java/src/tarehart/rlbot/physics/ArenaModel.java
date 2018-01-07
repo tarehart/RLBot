@@ -32,7 +32,7 @@ i'm using blender it has an addon to import psk files
 
 TODO: Try using the libgdx wrapper around the bullet physics engine instead of ODE:
 https://github.com/libgdx/libgdx/wiki/Bullet-physics
-This gives us a much clearer path to importing the arena model, and possibly better performance.
+This gives us a much clearer slices to importing the arena model, and possibly better performance.
  */
 public class ArenaModel {
 
@@ -183,7 +183,7 @@ public class ArenaModel {
             BallSlice key = new BallSlice(input.getBallPosition(), input.getTime(), input.getBallVelocity(), input.getBallSpin());
             return pathCache.get(key);
         } catch (ExecutionException e) {
-            throw new RuntimeException("Failed to compute ball path!", e);
+            throw new RuntimeException("Failed to compute ball slices!", e);
         }
     }
 

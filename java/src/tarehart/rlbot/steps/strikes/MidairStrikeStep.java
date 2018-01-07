@@ -13,6 +13,7 @@ import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.Plan;
+import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.steps.BlindStep;
 import tarehart.rlbot.steps.Step;
 import tarehart.rlbot.steps.TapStep;
@@ -30,7 +31,6 @@ import static java.lang.Math.*;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static tarehart.rlbot.physics.ArenaModel.predictBallPath;
-import static tarehart.rlbot.planning.SteerUtil.getCorrectionAngleRad;
 import static tarehart.rlbot.planning.WaypointTelemetry.set;
 import static tarehart.rlbot.tuning.BotLog.println;
 
@@ -72,9 +72,9 @@ public class MidairStrikeStep implements Step {
 
         BallPath ballPath = predictBallPath(input);
         CarData car = input.getMyCarData();
-        Vector3 offset = GoalUtil.getOwnGoal(car.getTeam()).getCenter().scaledToMagnitude(3).minus(new Vector3(0, 0, .6));
+        Vector3 offset = GoalUtil.INSTANCE.getOwnGoal(car.getTeam()).getCenter().scaledToMagnitude(3).minus(new Vector3(0, 0, .6));
         if (intercept != null) {
-            Vector3 goalToBall = intercept.getSpace().minus(GoalUtil.getEnemyGoal(car.getTeam()).getNearestEntrance(intercept.getSpace(), 4));
+            Vector3 goalToBall = intercept.getSpace().minus(GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()).getNearestEntrance(intercept.getSpace(), 4));
             offset = goalToBall.scaledToMagnitude(3);
             if (goalToBall.magnitude() > 110) {
                 offset = new Vector3(offset.getX(), offset.getY(), -.2);
@@ -96,7 +96,7 @@ public class MidairStrikeStep implements Step {
         long millisTillIntercept = Duration.Companion.between(input.getTime(), intercept.getTime()).getMillis();
         double distance = car.getPosition().distance(input.getBallPosition());
 
-        double correctionAngleRad = getCorrectionAngleRad(car, intercept.getSpace());
+        double correctionAngleRad = SteerUtil.INSTANCE.getCorrectionAngleRad(car, intercept.getSpace());
 
         if (input.getTime().isBefore(lastMomentForDodge) && distance < DODGE_TIME.getSeconds() * car.getVelocity().magnitude()) {
             // Let's flip into the ball!

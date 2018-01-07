@@ -26,7 +26,7 @@ public class CatchBallStep implements Step {
         CarData car = input.getMyCarData();
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        Optional<SpaceTime> catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.INSTANCE.getBoostBudget(car));
+        Optional<SpaceTime> catchOpportunity = SteerUtil.INSTANCE.getCatchOpportunity(car, ballPath, AirTouchPlanner.INSTANCE.getBoostBudget(car));
 
         // Weed out any intercepts after a catch opportunity. Should just catch it.
         if (catchOpportunity.isPresent()) {
@@ -41,12 +41,12 @@ public class CatchBallStep implements Step {
     }
 
     private AgentOutput playCatch(CarData car, SpaceTime catchLocation) {
-        Vector3 enemyGoal = GoalUtil.getEnemyGoal(car.getTeam()).getCenter();
+        Vector3 enemyGoal = GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()).getCenter();
         Vector3 awayFromEnemyGoal = catchLocation.getSpace().minus(enemyGoal);
         Vector3 offset = new Vector3(awayFromEnemyGoal.getX(), awayFromEnemyGoal.getY(), 0).scaledToMagnitude(1.2);
         Vector3 target = catchLocation.getSpace().plus(offset);
 
-        return SteerUtil.getThereOnTime(car, new SpaceTime(target, catchLocation.getTime()));
+        return SteerUtil.INSTANCE.getThereOnTime(car, new SpaceTime(target, catchLocation.getTime()));
     }
 
     @Override

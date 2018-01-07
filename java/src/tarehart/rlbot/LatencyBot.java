@@ -25,7 +25,7 @@ public class LatencyBot extends Bot {
             }
 
             final CarData car = input.getMyCarData();
-            return SteerUtil.steerTowardGroundPosition(car, input.getBallPosition().plus(new Vector3(20, 0, 0)));
+            return SteerUtil.INSTANCE.steerTowardGroundPosition(car, input.getBallPosition().plus(new Vector3(20, 0, 0)));
         }
 
         if (noActivePlanWithPosture(Plan.Posture.NEUTRAL)) {

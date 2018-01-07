@@ -152,7 +152,7 @@ public class DirectedSideHitStep implements Step {
 
         maneuverSeconds = angle * MANEUVER_SECONDS_PER_RADIAN;
 
-        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), strikePoint);
+        circleTurnPlan = CircleTurnUtil.INSTANCE.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), strikePoint);
 
         return getNavigation(input, circleTurnPlan);
     }
@@ -197,7 +197,7 @@ public class DirectedSideHitStep implements Step {
             return plan.getOutput(input);
         } else {
             println(format("Side flip soon. Distance: %.2f, Time: %.2f", distanceCountdown, timeCountdown), input.getPlayerIndex());
-            return of(SteerUtil.getThereOnTime(car, new SpaceTime(orthogonalPoint.toVector3(), kickPlan.getIntercept().getTime())));
+            return of(SteerUtil.INSTANCE.getThereOnTime(car, new SpaceTime(orthogonalPoint.toVector3(), kickPlan.getIntercept().getTime())));
         }
     }
 
@@ -209,7 +209,7 @@ public class DirectedSideHitStep implements Step {
         CarData car = input.getMyCarData();
 
         if (car.getBoost() == 0) {
-            Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.getWaypoint());
+            Optional<Plan> sensibleFlip = SteerUtil.INSTANCE.getSensibleFlip(car, circleTurnOption.getWaypoint());
             if (sensibleFlip.isPresent()) {
                 println("Front flip toward side hit", input.getPlayerIndex());
                 this.plan = sensibleFlip.get();

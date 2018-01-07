@@ -64,7 +64,7 @@ public class GoForKickoffStep implements Step {
         } else {
             target = new Vector2(0, 0);
         }
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, target));
+        return Optional.of(SteerUtil.INSTANCE.steerTowardGroundPosition(car, target));
     }
 
     private KickoffType getKickoffType(CarData car) {

@@ -108,7 +108,7 @@ public class DirectedNoseHitStep extends NestedPlanStep {
             originalIntercept = kickPlan.getBallAtIntercept();
         } else {
             if (kickPlan.getBallPath().getMotionAt(originalIntercept.getTime()).map(slice -> slice.getSpace().distance(originalIntercept.getSpace()) > 20).orElse(true)) {
-                println("Ball path has diverged from expectation, will quit.", input.getPlayerIndex());
+                println("Ball slices has diverged from expectation, will quit.", input.getPlayerIndex());
                 setZombie(true);
             }
         }
@@ -159,7 +159,7 @@ public class DirectedNoseHitStep extends NestedPlanStep {
         } else if (kickPlan.getIntercept().getSpace().getZ() < AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD) {
             earliestPossibleIntercept = earliestPossibleIntercept.plusSeconds(timeMismatch / 2);
         } else if (Math.abs(positionCorrectionForStrike) < MAX_NOSE_HIT_ANGLE) {
-            circleTurnPlan = new SteerPlan(SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat), interceptLocationFlat, kickPlan.getLaunchPad());
+            circleTurnPlan = new SteerPlan(SteerUtil.INSTANCE.steerTowardGroundPosition(car, interceptLocationFlat), interceptLocationFlat, kickPlan.getLaunchPad());
             return getNavigation(input, circleTurnPlan);
         }
 
@@ -182,7 +182,7 @@ public class DirectedNoseHitStep extends NestedPlanStep {
         StrikePoint launchPad = fullSpeed ?
                 new StrikePoint(kickPlan.getLaunchPad().getPosition(), kickPlan.getLaunchPad().getFacing(), new GameTime(0)) :
                 kickPlan.getLaunchPad();
-        circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), launchPad);
+        circleTurnPlan = CircleTurnUtil.INSTANCE.getPlanForCircleTurn(car, kickPlan.getDistancePlot(), launchPad);
         if (ArenaModel.getDistanceFromWall(new Vector3(circleTurnPlan.getWaypoint().getX(), circleTurnPlan.getWaypoint().getY(), 0)) < -1) {
             println("Failing nose hit because waypoint is out of bounds", input.getPlayerIndex());
             return empty();
@@ -231,7 +231,7 @@ public class DirectedNoseHitStep extends NestedPlanStep {
     private Optional<AgentOutput> getNavigation(AgentInput input, SteerPlan circleTurnOption) {
         CarData car = input.getMyCarData();
 
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.getWaypoint());
+        Optional<Plan> sensibleFlip = SteerUtil.INSTANCE.getSensibleFlip(car, circleTurnOption.getWaypoint());
         if (sensibleFlip.isPresent()) {
             println("Front flip toward nose hit", input.getPlayerIndex());
             return startPlan(sensibleFlip.get(), input);

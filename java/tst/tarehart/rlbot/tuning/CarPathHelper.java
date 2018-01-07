@@ -32,15 +32,15 @@ public class CarPathHelper {
 
     public CarData getCarDataFromSlice(CarSlice carSlice) {
         return new CarData(
-                carSlice.space,
-                carSlice.velocity,
-                carSlice.orientation,
+                carSlice.getSpace(),
+                carSlice.getVelocity(),
+                carSlice.getOrientation(),
                 new CarSpin(0, 0, 0),
                 100,
                 false,
                 Bot.Team.BLUE,
                 0,
-                carSlice.time,
+                carSlice.getTime(),
                 0,
                 true,
                 false,

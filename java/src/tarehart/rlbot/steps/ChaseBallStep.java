@@ -35,14 +35,14 @@ public class ChaseBallStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, input.getBallPosition());
+        Optional<Plan> sensibleFlip = SteerUtil.INSTANCE.getSensibleFlip(car, input.getBallPosition());
         if (sensibleFlip.isPresent()) {
             println("Front flip after ball", input.getPlayerIndex());
             plan = sensibleFlip.get();
             return plan.getOutput(input);
         }
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.getBallPosition()));
+        return Optional.of(SteerUtil.INSTANCE.steerTowardGroundPosition(car, input.getBallPosition()));
     }
 
     @Override

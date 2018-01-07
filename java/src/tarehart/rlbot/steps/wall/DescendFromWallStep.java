@@ -17,9 +17,9 @@ public class DescendFromWallStep implements Step {
         CarData car = input.getMyCarData();
         if (ArenaModel.isCarOnWall(car)) {
             Vector3 ballShadow = new Vector3(input.getBallPosition().getX(), input.getBallPosition().getY(), 0);
-            return Optional.of(SteerUtil.steerTowardWallPosition(car, ballShadow));
+            return Optional.of(SteerUtil.INSTANCE.steerTowardWallPosition(car, ballShadow));
         } else if (ArenaModel.isNearFloorEdge(car)) {
-            return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.getBallPosition()));
+            return Optional.of(SteerUtil.INSTANCE.steerTowardGroundPosition(car, input.getBallPosition()));
         }
 
         return Optional.empty();

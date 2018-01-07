@@ -26,12 +26,12 @@ object VectorUtil {
         return a.projectToPlane(planeNormal).distance(b.projectToPlane(planeNormal))
     }
 
-    fun getPlaneIntersection(plane: Plane, segmentPosition: Vector3, segmentVector: Vector3): Optional<Vector3> {
+    fun getPlaneIntersection(plane: Plane, segmentPosition: Vector3, segmentVector: Vector3): Vector3? {
         // get d value
         val d = plane.normal.dotProduct(plane.position)
 
         if (plane.normal.dotProduct(segmentVector) == 0.0) {
-            return Optional.empty() // No intersection, the line is parallel to the plane
+            return null // No intersection, the line is parallel to the plane
         }
 
         // Compute the X value for the directed line ray intersecting the plane
@@ -41,9 +41,9 @@ object VectorUtil {
         val intersection = segmentPosition.plus(segmentVector.scaled(x))
 
         return if (intersection.distance(segmentPosition) > segmentVector.magnitude()) {
-            Optional.empty()
+            null
         } else {
-            Optional.of(intersection)
+            intersection
         }
 
     }
@@ -82,5 +82,11 @@ object VectorUtil {
             angle *= -1.0
         }
         return angle
+    }
+
+    fun weightedAverage(a: Vector3, b: Vector3, weightOfA: Double): Vector3 {
+        val weightedA = a.scaled(weightOfA)
+        val weightedB = b.scaled(1 - weightOfA)
+        return weightedA.plus(weightedB)
     }
 }

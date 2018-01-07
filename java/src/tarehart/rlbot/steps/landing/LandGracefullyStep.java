@@ -47,7 +47,7 @@ public class LandGracefullyStep implements Step {
         CarData car = input.getMyCarData();
         if (ArenaModel.isCarOnWall(car) || ArenaModel.isNearFloorEdge(car)) {
 
-            if (WallTouchStep.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input))) {
+            if (WallTouchStep.Companion.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input))) {
                 plan = new Plan().withStep(new WallTouchStep());
                 return plan.getOutput(input);
             }

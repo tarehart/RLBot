@@ -63,7 +63,7 @@ class InterceptStep @JvmOverloads constructor(
         } else {
 
             if (originalIntercept?.let { ballPath.getMotionAt(it.time).map { (space) -> space.distance(it.space) > 10 }.orElse(true) } == true) {
-                println("Ball path has diverged from expectation, will quit.", input.playerIndex)
+                println("Ball slices has diverged from expectation, will quit.", input.playerIndex)
                 zombie = true
             }
 

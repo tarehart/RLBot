@@ -35,10 +35,10 @@ public class AccelerationPredictedVsActualTest {
         // (-73.29997, 65.447556, 4.5342107) after first time step
 
         List<CarSlice> actual = actualPath.getSlices();
-        GameTime startTime = actual.get(0).time;
+        GameTime startTime = actual.get(0).getTime();
 
         for (CarSlice slice : actual) {
-            Optional<DistanceTimeSpeed> predicted = predictedAccel.getMotionAfterDuration(Duration.Companion.between(startTime, slice.time));
+            Optional<DistanceTimeSpeed> predicted = predictedAccel.getMotionAfterDuration(Duration.Companion.between(startTime, slice.getTime()));
             Assert.assertTrue(predicted.isPresent());
             Assert.assertEquals(predicted.get().getSpeed(), slice.getVelocity().magnitude(), 1);
         }

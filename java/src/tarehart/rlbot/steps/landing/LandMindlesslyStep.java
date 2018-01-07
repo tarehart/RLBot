@@ -21,7 +21,7 @@ public class LandMindlesslyStep implements Step {
 
         if (ArenaModel.isCarOnWall(car)) {
             Vector3 groundBeneathMe = new Vector3(car.getPosition().getX(), car.getPosition().getY(), 0);
-            return Optional.of(SteerUtil.steerTowardWallPosition(car, groundBeneathMe));
+            return Optional.of(SteerUtil.INSTANCE.steerTowardWallPosition(car, groundBeneathMe));
         }
 
         return Optional.of(new AgentOutput().withAcceleration(1));

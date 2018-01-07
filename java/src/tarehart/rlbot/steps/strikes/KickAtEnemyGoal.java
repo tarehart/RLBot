@@ -7,8 +7,6 @@ import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.TacticsAdvisor;
 
-import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
-
 public class KickAtEnemyGoal implements KickStrategy {
     @Override
     public Vector3 getKickDirection(AgentInput input) {
@@ -29,13 +27,13 @@ public class KickAtEnemyGoal implements KickStrategy {
 
     @Override
     public boolean looksViable(CarData car, Vector3 ballPosition) {
-        return TacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.getTeam()), ballPosition.flatten(), car.getPlayerIndex());
+        return TacticsAdvisor.generousShotAngle(GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()), ballPosition.flatten(), car.getPlayerIndex());
     }
 
     private Vector3 getDirection(CarData car, Vector3 ballPosition, Vector3 easyKick) {
         Vector2 easyKickFlat = easyKick.flatten();
-        Vector2 toLeftCorner = getEnemyGoal(car.getTeam()).getLeftPost(6).minus(ballPosition).flatten();
-        Vector2 toRightCorner = getEnemyGoal(car.getTeam()).getRightPost(6).minus(ballPosition).flatten();
+        Vector2 toLeftCorner = GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()).getLeftPost(6).minus(ballPosition).flatten();
+        Vector2 toRightCorner = GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()).getRightPost(6).minus(ballPosition).flatten();
 
         double rightCornerCorrection = easyKickFlat.correctionAngle(toRightCorner);
         double leftCornerCorrection = easyKickFlat.correctionAngle(toLeftCorner);

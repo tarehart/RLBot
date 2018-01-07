@@ -219,21 +219,21 @@ public class ArenaDisplay extends JPanel {
     private void drawShotDefenseZones(TacticalSituation situation, Graphics2D g) {
         if(situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) {
             g.setColor(new Color(255, 0, 0, 79));
-            Vector2 myGoalCenter = GoalUtil.getOwnGoal(myCar.getTeam()).getCenter().flatten();
+            Vector2 myGoalCenter = GoalUtil.INSTANCE.getOwnGoal(myCar.getTeam()).getCenter().flatten();
             Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, myGoalCenter);
             g.draw(shotDefenseZone.getAwtArea());
         }
 
         if(situation.shotOnGoalAvailable) {
             g.setColor(new Color(0, 255, 0, 79));
-            Vector2 enemyGoalCenter = GoalUtil.getEnemyGoal(myCar.getTeam()).getCenter().flatten();
+            Vector2 enemyGoalCenter = GoalUtil.INSTANCE.getEnemyGoal(myCar.getTeam()).getCenter().flatten();
             Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, enemyGoalCenter);
             g.draw(shotDefenseZone.getAwtArea());
         }
     }
 
     private void drawDefensiveReachZones(TacticalSituation situation, Graphics2D g) {
-        Vector3 myGoalCenter = GoalUtil.getOwnGoal(myCar.getTeam()).getCenter();
+        Vector3 myGoalCenter = GoalUtil.INSTANCE.getOwnGoal(myCar.getTeam()).getCenter();
         boolean myCarIsInNet = Math.signum(myCar.getPosition().getY()) == Math.signum(myGoalCenter.getY())
                 && Math.abs(myCar.getPosition().getY()) > Math.abs(myGoalCenter.getY());
 
@@ -245,7 +245,7 @@ public class ArenaDisplay extends JPanel {
 
         if(enemyCarOptional.isPresent()) {
             CarData enemyCar = enemyCarOptional.get();
-            Vector3 enemyGoalCenter = GoalUtil.getEnemyGoal(myCar.getTeam()).getCenter();
+            Vector3 enemyGoalCenter = GoalUtil.INSTANCE.getEnemyGoal(myCar.getTeam()).getCenter();
             boolean enemyCarIsInNet = Math.signum(enemyCar.getPosition().getY()) == Math.signum(enemyGoalCenter.getY())
                     && Math.abs(enemyCar.getPosition().getY()) > Math.abs(enemyGoalCenter.getY());
 

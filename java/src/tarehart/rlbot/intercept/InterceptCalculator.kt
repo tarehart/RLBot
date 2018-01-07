@@ -90,7 +90,7 @@ object InterceptCalculator {
             previousRangeDeficiency = rangeDeficiency
         }
 
-        // No slices in the ball path were in range and satisfied the predicate
+        // No slices in the ball slices were in range and satisfied the predicate
         return Optional.empty()
     }
 

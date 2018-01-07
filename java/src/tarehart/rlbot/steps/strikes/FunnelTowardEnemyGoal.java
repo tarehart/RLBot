@@ -42,7 +42,7 @@ public class FunnelTowardEnemyGoal implements KickStrategy {
     }
 
     private Vector2 getIdealDirection(CarData car, Vector3 ballPosition) {
-        Goal enemyGoal = GoalUtil.getEnemyGoal(car.getTeam());
+        Goal enemyGoal = GoalUtil.INSTANCE.getEnemyGoal(car.getTeam());
         if (enemyGoal.getCenter().getY() * ballPosition.getY() < 0) {
             // Ball is not on the enemy side. Strange that you're using this strat.
             return new Vector2(0, Math.signum(enemyGoal.getCenter().getY()));

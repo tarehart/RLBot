@@ -18,12 +18,10 @@ import tarehart.rlbot.planning.SetPieces;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
+import tarehart.rlbot.tuning.BotLog;
 
 import java.awt.*;
 import java.util.Optional;
-
-import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
-import static tarehart.rlbot.tuning.BotLog.println;
 
 public class DribbleStep extends NestedPlanStep {
 
@@ -61,7 +59,7 @@ public class DribbleStep extends NestedPlanStep {
         futureBallPosition = ballFuture.getSpace().flatten();
 
 
-        Vector2 scoreLocation = getEnemyGoal(input.getTeam()).getNearestEntrance(input.getBallPosition(), 3).flatten();
+        Vector2 scoreLocation = GoalUtil.INSTANCE.getEnemyGoal(input.getTeam()).getNearestEntrance(input.getBallPosition(), 3).flatten();
 
         Vector2 ballToGoal = scoreLocation.minus(futureBallPosition);
         Vector2 pushDirection;
@@ -91,10 +89,10 @@ public class DribbleStep extends NestedPlanStep {
             // Steer toward a farther-back waypoint.
             Vector2 fallBack = VectorUtil.INSTANCE.orthogonal(pushDirection, v -> v.dotProduct(ballToGoal) < 0).scaledToMagnitude(5);
 
-            return Optional.of(SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(fallBack.getX(), fallBack.getY(), 0), hurryUp)));
+            return Optional.of(SteerUtil.INSTANCE.getThereOnTime(car, new SpaceTime(new Vector3(fallBack.getX(), fallBack.getY(), 0), hurryUp)));
         }
 
-        AgentOutput dribble = SteerUtil.getThereOnTime(car, new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
+        AgentOutput dribble = SteerUtil.INSTANCE.getThereOnTime(car, new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
         if (carToPressurePoint.normalized().dotProduct(ballToGoal.normalized()) > .80 &&
                 flatDistance > 3 && flatDistance < 5 && input.getBallPosition().getZ() < 2 && approachDistance < 2
                 && Vector2.Companion.angle(myDirectionFlat, carToPressurePoint) < Math.PI / 12) {
@@ -115,37 +113,37 @@ public class DribbleStep extends NestedPlanStep {
         if (ballToMe.magnitude() > DRIBBLE_DISTANCE) {
             // It got away from us
             if (log) {
-                println("Too far to dribble", input.getPlayerIndex());
+                BotLog.println("Too far to dribble", input.getPlayerIndex());
             }
             return false;
         }
 
         if (input.getBallPosition().minus(car.getPosition()).normaliseCopy().dotProduct(
-                GoalUtil.getOwnGoal(input.getTeam()).getCenter().minus(input.getBallPosition()).normaliseCopy()) > .9) {
+                GoalUtil.INSTANCE.getOwnGoal(input.getTeam()).getCenter().minus(input.getBallPosition()).normaliseCopy()) > .9) {
             // Wrong side of ball
             if (log) {
-                println("Wrong side of ball for dribble", input.getPlayerIndex());
+                BotLog.println("Wrong side of ball for dribble", input.getPlayerIndex());
             }
             return false;
         }
 
         if (VectorUtil.INSTANCE.flatDistance(car.getVelocity(), input.getBallVelocity()) > 30) {
             if (log) {
-                println("Velocity too different to dribble.", input.getPlayerIndex());
+                BotLog.println("Velocity too different to dribble.", input.getPlayerIndex());
             }
             return false;
         }
 
         if (BallPhysics.getGroundBounceEnergy(input.getBallPosition().getZ(), input.getBallVelocity().getZ()) > 50) {
             if (log) {
-                println("Ball bouncing too hard to dribble", input.getPlayerIndex());
+                BotLog.println("Ball bouncing too hard to dribble", input.getPlayerIndex());
             }
             return false;
         }
 
         if (car.getPosition().getZ() > 5) {
             if (log) {
-                println("Car too high to dribble", input.getPlayerIndex());
+                BotLog.println("Car too high to dribble", input.getPlayerIndex());
             }
             return false;
         }

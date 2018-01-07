@@ -24,7 +24,7 @@ public class MountWallStep implements Step {
         }
 
         BallPath ballPath = ArenaModel.predictBallPath(input);
-        if (!WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
+        if (!WallTouchStep.Companion.hasWallTouchOpportunity(input, ballPath)) {
             // Failed to mount the wall in time.
             return Optional.empty();
         }
@@ -32,7 +32,7 @@ public class MountWallStep implements Step {
         BallSlice ballMotion = ballPath.getMotionAt(input.getTime().plusSeconds(3)).orElse(ballPath.getEndpoint());
         Vector3 ballPositionExaggerated = ballMotion.getSpace().scaled(1.04); // This assumes the ball is close to the wall
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, ballPositionExaggerated));
+        return Optional.of(SteerUtil.INSTANCE.steerTowardGroundPosition(car, ballPositionExaggerated));
     }
 
     @Override

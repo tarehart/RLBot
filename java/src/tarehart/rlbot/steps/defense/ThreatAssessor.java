@@ -67,7 +67,7 @@ public class ThreatAssessor {
         }
         CarData enemyCar = enemyCarOption.get();
         
-        Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
+        Goal myGoal = GoalUtil.INSTANCE.getOwnGoal(input.getTeam());
         Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
 
         Vector3 carToBall = input.getBallPosition().minus(enemyCar.getPosition());
@@ -80,7 +80,7 @@ public class ThreatAssessor {
     private double measureBallThreat(AgentInput input) {
 
         CarData car = input.getMyCarData();
-        Goal myGoal = GoalUtil.getOwnGoal(input.getTeam());
+        Goal myGoal = GoalUtil.INSTANCE.getOwnGoal(input.getTeam());
         Vector3 ballToGoal = myGoal.getCenter().minus(input.getBallPosition());
 
         Vector3 ballVelocityTowardGoal = VectorUtil.INSTANCE.project(input.getBallVelocity(), ballToGoal);

@@ -41,7 +41,7 @@ public class RotateAndWaitToClearStep implements Step {
         plan = new Plan(Plan.Posture.DEFENSIVE)
                 .withStep(new SlideToPositionStep(in -> {
 
-                    Vector3 goalCenter = GoalUtil.getOwnGoal(in.getTeam()).getCenter();
+                    Vector3 goalCenter = GoalUtil.INSTANCE.getOwnGoal(in.getTeam()).getCenter();
                     Vector3 futureBallPosition = TacticsTelemetry.get(in.getPlayerIndex())
                             .map(telem -> telem.futureBallMotion.getSpace())
                             .orElse(in.getBallPosition());

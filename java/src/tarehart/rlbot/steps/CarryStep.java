@@ -10,6 +10,7 @@ import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
+import tarehart.rlbot.planning.GoalUtil;
 import tarehart.rlbot.planning.SteerUtil;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
@@ -17,7 +18,6 @@ import tarehart.rlbot.time.GameTime;
 import java.awt.*;
 import java.util.Optional;
 
-import static tarehart.rlbot.planning.GoalUtil.getEnemyGoal;
 import static tarehart.rlbot.tuning.BotLog.println;
 
 public class CarryStep implements Step {
@@ -46,7 +46,7 @@ public class CarryStep implements Step {
         futureBallPosition = ballFuture.getSpace().flatten();
 
 
-        Vector2 scoreLocation = getEnemyGoal(input.getTeam()).getNearestEntrance(input.getBallPosition(), 3).flatten();
+        Vector2 scoreLocation = GoalUtil.INSTANCE.getEnemyGoal(input.getTeam()).getNearestEntrance(input.getBallPosition(), 3).flatten();
 
         Vector2 ballToGoal = scoreLocation.minus(futureBallPosition);
         Vector2 pushDirection;
@@ -62,7 +62,7 @@ public class CarryStep implements Step {
 
         GameTime hurryUp = input.getTime().plusSeconds(leadSeconds);
 
-        AgentOutput dribble = SteerUtil.getThereOnTime(input.getMyCarData(), new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
+        AgentOutput dribble = SteerUtil.INSTANCE.getThereOnTime(input.getMyCarData(), new SpaceTime(new Vector3(pressurePoint.getX(), pressurePoint.getY(), 0), hurryUp));
         return Optional.of(dribble);
     }
 

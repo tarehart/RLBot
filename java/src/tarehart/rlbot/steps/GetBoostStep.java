@@ -45,7 +45,7 @@ public class GetBoostStep implements Step {
 
         CarData car = input.getMyCarData();
 
-        double distance = SteerUtil.getDistanceFromCar(car, targetLocation.getLocation());
+        double distance = SteerUtil.INSTANCE.getDistanceFromCar(car, targetLocation.getLocation());
 
         if (plan != null && !plan.isComplete()) {
             Optional<AgentOutput> output = plan.getOutput(input);
@@ -67,9 +67,9 @@ public class GetBoostStep implements Step {
             DistancePlot distancePlot = AccelerationModel.INSTANCE.simulateAcceleration(car, Duration.Companion.ofSeconds(4), car.getBoost());
             Vector2 facing = VectorUtil.INSTANCE.orthogonal(target.flatten(), v -> v.dotProduct(toBoost) > 0).normalized();
 
-            SteerPlan planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
+            SteerPlan planForCircleTurn = CircleTurnUtil.INSTANCE.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing);
 
-            Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.getWaypoint());
+            Optional<Plan> sensibleFlip = SteerUtil.INSTANCE.getSensibleFlip(car, planForCircleTurn.getWaypoint());
             if (sensibleFlip.isPresent()) {
                 println("Flipping toward boost", input.getPlayerIndex());
                 plan = sensibleFlip.get();
@@ -105,7 +105,7 @@ public class GetBoostStep implements Step {
         BallPath ballPath = ArenaModel.predictBallPath(input);
         Vector3 endpoint = ballPath.getEndpoint().getSpace();
         // Add a defensive bias.
-        Vector3 idealPlaceToGetBoost = new Vector3(endpoint.getX(), 40 * Math.signum(GoalUtil.getOwnGoal(input.getTeam()).getCenter().getY()), 0);
+        Vector3 idealPlaceToGetBoost = new Vector3(endpoint.getX(), 40 * Math.signum(GoalUtil.INSTANCE.getOwnGoal(input.getTeam()).getCenter().getY()), 0);
         return getNearestBoost(input.getBoostData().getFullBoosts(), idealPlaceToGetBoost);
     }
 
@@ -127,7 +127,7 @@ public class GetBoostStep implements Step {
     public static boolean seesOpportunisticBoost(CarData carData, List<BoostPad> boosts) {
         BoostPad boost = getNearestBoost(boosts, carData.getPosition());
         return boost.getLocation().distance(carData.getPosition()) < 20 &&
-                Math.abs(SteerUtil.getCorrectionAngleRad(carData, boost.getLocation())) < Math.PI / 6;
+                Math.abs(SteerUtil.INSTANCE.getCorrectionAngleRad(carData, boost.getLocation())) < Math.PI / 6;
 
     }
 

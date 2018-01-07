@@ -65,8 +65,8 @@ public class GetOnOffenseStep implements Step {
             return plan.getOutput(input);
         }
 
-        Goal enemyGoal = GoalUtil.getEnemyGoal(input.getTeam());
-        Goal ownGoal = GoalUtil.getOwnGoal(input.getTeam());
+        Goal enemyGoal = GoalUtil.INSTANCE.getEnemyGoal(input.getTeam());
+        Goal ownGoal = GoalUtil.INSTANCE.getOwnGoal(input.getTeam());
 
         target = ballFuture.getSpace();
 
@@ -107,7 +107,7 @@ public class GetOnOffenseStep implements Step {
             }
         }
 
-        Optional<Plan> sensibleFlip = SteerUtil.getSensibleFlip(car, target);
+        Optional<Plan> sensibleFlip = SteerUtil.INSTANCE.getSensibleFlip(car, target);
         if (sensibleFlip.isPresent()) {
             println("Front flip toward offense", input.getPlayerIndex());
             plan = sensibleFlip.get();

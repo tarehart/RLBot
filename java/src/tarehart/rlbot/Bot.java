@@ -1,5 +1,7 @@
 package tarehart.rlbot;
 
+import tarehart.rlbot.carpredict.CarSlice;
+import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.physics.ArenaModel;
 import tarehart.rlbot.physics.BallPath;
 import tarehart.rlbot.planning.Plan;
@@ -7,6 +9,7 @@ import tarehart.rlbot.planning.ZonePlan;
 import tarehart.rlbot.planning.ZoneTelemetry;
 import tarehart.rlbot.steps.WaitForActive;
 import tarehart.rlbot.tuning.BotLog;
+import tarehart.rlbot.tuning.CarRecorder;
 import tarehart.rlbot.ui.Readout;
 
 import javax.swing.*;
@@ -59,12 +62,6 @@ public abstract class Bot {
 //                    new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin),
 //                    stv.getTime().plusSeconds(1)));
 //        }
-//            CarData enemyCar = input.getEnemyCarData().get();
-//            CarSlice slice = new CarSlice(enemyCar.getPosition(), enemyCar.getTime(), enemyCar.getVelocity(), enemyCar.getOrientation());
-//            CarRecorder.recordPosition(slice);
-//            if (enemyCar.getVelocity().magnitudeSquared() < .1) {
-//                CarRecorder.startRecording(slice, input.getTime().plusSeconds(6));
-//            }
 
             if (input.getMatchInfo().getRoundActive()) {
                 output = getOutput(input);
