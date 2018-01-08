@@ -22,8 +22,8 @@ object CarInterceptPlanner {
 
         val myPosition = carData.position
 
-        for (i in 0 until enemyPath.slices.size) {
-            val slice = enemyPath.slices[i]
+        for (i in 0 until enemyPath.path.size) {
+            val slice = enemyPath.path[i]
             val spaceTime = SpaceTime(slice.space, slice.time)
             val strikeProfile = StrikeProfile()
             val motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile)
@@ -33,7 +33,7 @@ object CarInterceptPlanner {
                 if (dts.distance + CAR_CONTACT_DISTANCE > interceptDistance) {
                     if (i > 0) {
                         // Take the average of the current slice and the previous slice to avoid systematic pessimism.
-                        val previousSlice = enemyPath.slices[i - 1]
+                        val previousSlice = enemyPath.path[i - 1]
                         val timeDiff = Duration.between(previousSlice.time, slice.time).seconds
                         val toCurrentSlice = slice.space.minus(previousSlice.space)
                         return SpaceTime(

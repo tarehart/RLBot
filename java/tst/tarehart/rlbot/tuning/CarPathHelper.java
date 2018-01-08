@@ -25,8 +25,8 @@ public class CarPathHelper {
     }
 
     public DistancePlot makePrediction(CarPath actual, boolean hasBoost) {
-        Duration duration = Duration.Companion.between(actual.getSlices().get(0).getTime(), actual.getSlices().get(actual.getSlices().size() - 1).getTime());
-        CarData carData = getCarDataFromSlice(actual.getSlices().get(0));
+        Duration duration = Duration.Companion.between(actual.getFirstSlice().getTime(), actual.getLastSlice().getTime());
+        CarData carData = getCarDataFromSlice(actual.getFirstSlice());
         return AccelerationModel.INSTANCE.simulateAcceleration(carData, duration, hasBoost ? 100 : 0, 0);
     }
 

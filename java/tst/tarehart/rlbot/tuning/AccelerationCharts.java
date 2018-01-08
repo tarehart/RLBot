@@ -54,7 +54,7 @@ public class AccelerationCharts {
         public AccelChart(DistancePlot predicted, CarPath actual) {
             super("Distance Diff");
 
-            start = actual.getSlices().get(0);
+            start = actual.getPath().get(0);
 
             DefaultXYDataset dataset = new DefaultXYDataset();
             dataset.addSeries("predicted", getPredictedDataSeries(predicted, .1));
@@ -93,9 +93,9 @@ public class AccelerationCharts {
             List<Double> xValues = new ArrayList<>();
             List<Double> yValues = new ArrayList<>();
 
-            CarSlice start = actual.getSlices().get(0);
+            CarSlice start = actual.getPath().get(0);
 
-            for (CarSlice slice: actual.getSlices()) {
+            for (CarSlice slice: actual.getPath()) {
                 xValues.add(Duration.Companion.between(start.getTime(), slice.getTime()).getSeconds());
                 yValues.add(getYValue(slice));
             }
