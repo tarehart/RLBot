@@ -50,6 +50,8 @@ public class GrpcService extends BotGrpc.BotImplBase {
                     Bot bot = null;
                     if (translatedInput.getMyCarData().getName().startsWith("JumpingBean")) {
                         bot = new JumpingBeanBot(translatedInput.getTeam(), playerIndex);
+                    } else if (translatedInput.getMyCarData().getName().startsWith("Pain")) {
+                        bot = new DemolitionBot(translatedInput.getTeam(), playerIndex);
                     } else {
                         bot = new ReliefBot(translatedInput.getTeam(), playerIndex);
                     }
