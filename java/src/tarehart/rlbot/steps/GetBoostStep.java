@@ -28,6 +28,10 @@ public class GetBoostStep implements Step {
 
     public Optional<AgentOutput> getOutput(AgentInput input) {
 
+        if (input.getMyCarData().getBoost() > 99) {
+            return Optional.empty();
+        }
+
         if (targetLocation == null) {
             init(input);
         }
