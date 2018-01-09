@@ -3,11 +3,7 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.steps.Step
-import tarehart.rlbot.steps.StepResult
-import tarehart.rlbot.steps.StepStatus
-
-import java.util.ArrayList
-import java.util.Optional
+import java.util.*
 
 open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL) {
     private var unstoppable: Boolean = false
