@@ -22,16 +22,16 @@ import java.util.Optional
 
 import tarehart.rlbot.tuning.BotLog.println
 
-class GetOnOffenseStep : Step {
-    private var plan: Plan? = null
-    private var originalTarget: Vector3? = null
-    private var latestTarget: Vector3? = null
+class GetOnOffenseStep : NestedPlanStep() {
+    private var originalTarget: PositionFacing? = null
+    private var latestBallFuture: Vector3? = null
+    private var latestTarget: PositionFacing? = null
 
-    override val situation: String
-        get() = "Getting on offense"
+    override fun getLocalSituation(): String {
+        return "Getting on offense"
+    }
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
-
+    override fun doInitialComputation(input: AgentInput) {
         val tacticalSituationOption = TacticsTelemetry.get(input.playerIndex)
 
         val ballPath = ArenaModel.predictBallPath(input)
@@ -41,7 +41,7 @@ class GetOnOffenseStep : Step {
                 .orElse(ballPath.getMotionAt(input.time.plusSeconds(4.0)).map { it.space })
                 .orElse(input.ballPosition)
 
-        val car = input.myCarData
+        latestBallFuture = ballFuture
 
         val enemyGoal = GoalUtil.getEnemyGoal(input.team)
         val ownGoal = GoalUtil.getOwnGoal(input.team)
@@ -67,50 +67,50 @@ class GetOnOffenseStep : Step {
             target = ballFuture.minus(goalToBallNormal.scaled(backoff))
         }
 
-        latestTarget = target
+        latestTarget = PositionFacing(target.flatten(), facing)
         if (originalTarget == null) {
-            originalTarget = target
+            originalTarget = latestTarget
         }
-
-        val canInterruptPlan = plan?.canInterrupt() != false
-
-        if ((TacticsAdvisor.getYAxisWrongSidedness(car, ballFuture) < -backoff * .6 ||
-                originalTarget?.distance(target)?.let { it > 10 } != false ||
-                !ArenaModel.isInBoundsBall(target)) && canInterruptPlan) {
-            return Optional.empty()
-        }
-
-        if (plan != null && !plan!!.isComplete()) {
-            val output = plan!!.getOutput(input)
-            if (output.isPresent) {
-                return output
-            }
-        }
-
-        val sensibleFlip = SteerUtil.getSensibleFlip(car, target)
-        if (sensibleFlip.isPresent) {
-            println("Front flip toward offense", input.playerIndex)
-            plan = sensibleFlip.get()
-            return plan!!.getOutput(input)
-        }
-
-        plan = Plan().withStep(SlideToPositionStep { `in` -> Optional.of(PositionFacing(target.flatten(), facing)) })
-        return plan!!.getOutput(input)
     }
 
-    override fun canInterrupt(): Boolean {
-        return plan == null || plan!!.canInterrupt()
+    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+        val car = input.myCarData
+        val target = latestTarget ?: return true
+        val ballFuture = latestBallFuture ?: return true
+        val backoff = ballFuture.flatten().distance(target.position)
+
+        if ((TacticsAdvisor.getYAxisWrongSidedness(car, ballFuture) < -backoff * .6 ||
+                originalTarget?.position?.distance(target.position)?.let { it > 10 } != false ||
+                !ArenaModel.isInBounds(target.position))) {
+            return true
+        }
+
+        return false
+    }
+
+    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+
+        val car = input.myCarData
+        val target = latestTarget ?: return Optional.empty()
+
+        val sensibleFlip = SteerUtil.getSensibleFlip(car, target.position)
+        if (sensibleFlip.isPresent) {
+            println("Front flip toward offense", input.playerIndex)
+            return startPlan(sensibleFlip.get(), input)
+        }
+
+        return startPlan(
+                Plan().withStep(SlideToPositionStep({ Optional.ofNullable(latestTarget) } )),
+                input)
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {
-        if (Plan.activePlan(plan).isPresent) {
-            plan!!.currentStep.drawDebugInfo(graphics)
-        }
+        super.drawDebugInfo(graphics)
 
-        if (latestTarget != null) {
+        latestTarget?.let {
             graphics.color = Color(190, 61, 66)
             graphics.stroke = BasicStroke(1f)
-            val (x, y) = latestTarget!!.flatten()
+            val (x, y) = it.position
             val crossSize = 2
             graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
             graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))

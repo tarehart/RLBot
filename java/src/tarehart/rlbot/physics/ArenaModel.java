@@ -170,8 +170,16 @@ public class ArenaModel {
         }
     }
 
+    public static boolean isInBounds(Vector2 location) {
+        return isInBounds(location.toVector3(), 0);
+    }
+
     public static boolean isInBoundsBall(Vector3 location) {
-        return Math.abs(location.getX()) < SIDE_WALL - BALL_RADIUS && Math.abs(location.getY()) < BACK_WALL - BALL_RADIUS;
+        return isInBounds(location, BALL_RADIUS);
+    }
+
+    private static boolean isInBounds(Vector3 location, double buffer) {
+        return getDistanceFromWall(location) > buffer;
     }
 
     public static boolean isBehindGoalLine(Vector3 position) {
