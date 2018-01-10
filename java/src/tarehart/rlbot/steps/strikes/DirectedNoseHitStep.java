@@ -80,7 +80,7 @@ public class DirectedNoseHitStep extends NestedPlanStep {
 
     @NotNull
     @Override
-    public Optional<AgentOutput> getUnplannedOutput(@NotNull AgentInput input) {
+    public Optional<AgentOutput> doComputationInLieuOfPlan(@NotNull AgentInput input) {
 
         if (earliestPossibleIntercept == null) {
             earliestPossibleIntercept = input.getTime();

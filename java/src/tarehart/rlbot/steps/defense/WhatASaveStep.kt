@@ -34,7 +34,7 @@ class WhatASaveStep : NestedPlanStep() {
     private var whichPost: Double? = null
     private var goingForSuperJump: Boolean = false
 
-    override fun getUnplannedOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
 
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)

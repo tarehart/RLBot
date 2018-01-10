@@ -18,7 +18,9 @@ abstract class NestedPlanStep : Step {
 
     override fun getOutput(input: AgentInput): Optional<AgentOutput> {
 
-        if (zombie) {
+        doInitialComputation(input)
+
+        if (zombie || shouldCancelPlanAndAbort(input) && plan?.canInterrupt() != false) {
             return Optional.empty()
         }
 
@@ -28,10 +30,27 @@ abstract class NestedPlanStep : Step {
             }
         }
 
-        return getUnplannedOutput(input)
+        return doComputationInLieuOfPlan(input)
     }
 
-    abstract fun getUnplannedOutput(input: AgentInput): Optional<AgentOutput>
+    /**
+     * Initializes or updates any fields that will be needed subsequently.
+     * This allows you to avoid duplicate computation, e.g. in the shouldCancelPlanAndAbort function,
+     * by storing the results in a field.
+     */
+    open protected fun doInitialComputation(input: AgentInput) {
+        // Do nothing. Feel free to override.
+    }
+
+    /**
+     * Please avoid side effects. If you want to store the results of computation,
+     * please use the doInitialComputation function.
+     */
+    open protected fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+        return false
+    }
+
+    abstract fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput>
 
     abstract fun getLocalSituation() : String
 

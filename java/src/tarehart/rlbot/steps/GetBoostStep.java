@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps;
 
+import org.jetbrains.annotations.NotNull;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.AgentOutput;
 import tarehart.rlbot.carpredict.AccelerationModel;
@@ -22,41 +23,38 @@ import java.util.Optional;
 
 import static tarehart.rlbot.tuning.BotLog.println;
 
-public class GetBoostStep implements Step {
+public class GetBoostStep extends NestedPlanStep {
     private BoostPad targetLocation = null;
-    private Plan plan;
 
-    public Optional<AgentOutput> getOutput(AgentInput input) {
-
-        if (input.getMyCarData().getBoost() > 99) {
-            return Optional.empty();
-        }
+    @Override
+    public void doInitialComputation(AgentInput input) {
 
         if (targetLocation == null) {
             init(input);
-        }
+        } else {
+            Optional<BoostPad> matchingBoost = input.getBoostData().getFullBoosts().stream()
+                    .filter(b -> b.getLocation().distance(targetLocation.getLocation()) < 1).findFirst();
 
-        Optional<BoostPad> matchingBoost = input.getBoostData().getFullBoosts().stream().filter(b -> b.getLocation().distance(targetLocation.getLocation()) < 1).findFirst();
-        if (!matchingBoost.isPresent()) {
-            return Optional.empty();
+            targetLocation = matchingBoost.orElse(null);
         }
+    }
 
-        targetLocation = matchingBoost.get();
+    @Override
+    public boolean shouldCancelPlanAndAbort(AgentInput input) {
 
-        if (!targetLocation.isActive()) {
-            return Optional.empty();
-        }
+        return input.getMyCarData().getBoost() > 99 ||
+                targetLocation == null || !targetLocation.isActive();
+
+    }
+
+    @NotNull
+    @Override
+    public Optional<AgentOutput> doComputationInLieuOfPlan(@NotNull AgentInput input) {
 
         CarData car = input.getMyCarData();
 
         double distance = SteerUtil.INSTANCE.getDistanceFromCar(car, targetLocation.getLocation());
 
-        if (plan != null && !plan.isComplete()) {
-            Optional<AgentOutput> output = plan.getOutput(input);
-            if (output.isPresent()) {
-                return output;
-            }
-        }
 
         if (distance < 3) {
             return Optional.empty();
@@ -76,8 +74,7 @@ public class GetBoostStep implements Step {
             Optional<Plan> sensibleFlip = SteerUtil.INSTANCE.getSensibleFlip(car, planForCircleTurn.getWaypoint());
             if (sensibleFlip.isPresent()) {
                 println("Flipping toward boost", input.getPlayerIndex());
-                plan = sensibleFlip.get();
-                return plan.getOutput(input);
+                return startPlan(sensibleFlip.get(), input);
             }
 
             return Optional.of(planForCircleTurn.getImmediateSteer());
@@ -135,18 +132,9 @@ public class GetBoostStep implements Step {
 
     }
 
+    @NotNull
     @Override
-    public boolean canInterrupt() {
-        return plan == null || plan.canInterrupt();
-    }
-
-    @Override
-    public String getSituation() {
+    public String getLocalSituation() {
         return "Going for boost";
-    }
-
-    @Override
-    public void drawDebugInfo(Graphics2D graphics) {
-        // Draw nothing.
     }
 }

@@ -29,7 +29,7 @@ public class DribbleStep extends NestedPlanStep {
 
     @NotNull
     @Override
-    public Optional<AgentOutput> getUnplannedOutput(@NotNull AgentInput input) {
+    public Optional<AgentOutput> doComputationInLieuOfPlan(@NotNull AgentInput input) {
 
         CarData car = input.getMyCarData();
 

@@ -34,7 +34,7 @@ class InterceptStep @JvmOverloads constructor(
     private var chosenIntercept: Intercept? = null
     private var originalTouch: BallTouch? = null
 
-    override fun getUnplannedOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
 
         val carData = input.myCarData
 
