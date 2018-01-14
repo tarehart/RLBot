@@ -89,7 +89,7 @@ public class ArenaDisplay extends JPanel {
         }
 
         // Retrieve situation telemetry
-        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(myCar.getPlayerIndex());
+        TacticalSituation situation = TacticsTelemetry.INSTANCE.get(myCar.getPlayerIndex());
 
         //Create a Graphics2D object from g
         Graphics2D graphics2D = (Graphics2D)g;
@@ -114,11 +114,11 @@ public class ArenaDisplay extends JPanel {
         graphics2D.setColor(new Color(59, 133, 81));
         graphics2D.draw(ZoneDefinitions.FULLFIELD.getAwtArea());
 
-        situationOption.ifPresent(situation -> {
+        if (situation != null) {
             drawShotDefenseZones(situation, graphics2D);
             drawDefensiveReachZones(situation, graphics2D);
-            situation.currentPlan.ifPresent(currentPlan -> drawPlan(currentPlan, graphics2D));
-        });
+            Optional.ofNullable(situation.getCurrentPlan()).ifPresent(currentPlan -> drawPlan(currentPlan, graphics2D));
+        }
 
         // Draw the steering waypoint
         // drawWaypoint(graphics2D);
@@ -217,14 +217,14 @@ public class ArenaDisplay extends JPanel {
     }
 
     private void drawShotDefenseZones(TacticalSituation situation, Graphics2D g) {
-        if(situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) {
+        if(situation.getNeedsDefensiveClear() || situation.getWaitToClear() || situation.getForceDefensivePosture()) {
             g.setColor(new Color(255, 0, 0, 79));
             Vector2 myGoalCenter = GoalUtil.INSTANCE.getOwnGoal(myCar.getTeam()).getCenter().flatten();
             Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, myGoalCenter);
             g.draw(shotDefenseZone.getAwtArea());
         }
 
-        if(situation.shotOnGoalAvailable) {
+        if(situation.getShotOnGoalAvailable()) {
             g.setColor(new Color(0, 255, 0, 79));
             Vector2 enemyGoalCenter = GoalUtil.INSTANCE.getEnemyGoal(myCar.getTeam()).getCenter().flatten();
             Polygon shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, enemyGoalCenter);
@@ -237,7 +237,7 @@ public class ArenaDisplay extends JPanel {
         boolean myCarIsInNet = Math.signum(myCar.getPosition().getY()) == Math.signum(myGoalCenter.getY())
                 && Math.abs(myCar.getPosition().getY()) > Math.abs(myGoalCenter.getY());
 
-        if((situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) && myCarIsInNet) {
+        if((situation.getNeedsDefensiveClear() || situation.getWaitToClear() || situation.getForceDefensivePosture()) && myCarIsInNet) {
             g.setColor(new Color(0, 255, 0, 79));
             Polygon shotDefenseZone = ZoneUtil.getDefensiveReach(myCar.getPosition(), myGoalCenter.flatten());
             g.draw(shotDefenseZone.getAwtArea());
@@ -249,7 +249,7 @@ public class ArenaDisplay extends JPanel {
             boolean enemyCarIsInNet = Math.signum(enemyCar.getPosition().getY()) == Math.signum(enemyGoalCenter.getY())
                     && Math.abs(enemyCar.getPosition().getY()) > Math.abs(enemyGoalCenter.getY());
 
-            if (situation.shotOnGoalAvailable && enemyCarIsInNet) {
+            if (situation.getShotOnGoalAvailable() && enemyCarIsInNet) {
                 g.setColor(new Color(255, 0, 0, 79));
                 Polygon shotDefenseZone = ZoneUtil.getDefensiveReach(enemyCar.getPosition(), enemyGoalCenter.flatten());
                 g.draw(shotDefenseZone.getAwtArea());

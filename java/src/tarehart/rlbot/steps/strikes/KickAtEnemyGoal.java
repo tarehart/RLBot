@@ -27,7 +27,7 @@ public class KickAtEnemyGoal implements KickStrategy {
 
     @Override
     public boolean looksViable(CarData car, Vector3 ballPosition) {
-        return TacticsAdvisor.generousShotAngle(GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()), ballPosition.flatten(), car.getPlayerIndex());
+        return TacticsAdvisor.Companion.generousShotAngle(GoalUtil.INSTANCE.getEnemyGoal(car.getTeam()), ballPosition.flatten(), car.getPlayerIndex());
     }
 
     private Vector3 getDirection(CarData car, Vector3 ballPosition, Vector3 easyKick) {

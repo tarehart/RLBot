@@ -36,10 +36,8 @@ class GetOnOffenseStep : NestedPlanStep() {
 
         val ballPath = ArenaModel.predictBallPath(input)
 
-        val ballFuture = tacticalSituationOption
-                .map { situation -> situation.expectedContact.map { it.space } }
-                .orElse(ballPath.getMotionAt(input.time.plusSeconds(4.0)).map { it.space })
-                .orElse(input.ballPosition)
+        val ballFuture = tacticalSituationOption?.expectedContact?.space ?:
+                ballPath.getMotionAt(input.time.plusSeconds(4.0)).map { it.space }.orElse(input.ballPosition)
 
         latestBallFuture = ballFuture
 

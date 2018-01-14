@@ -22,7 +22,7 @@ class EscapeTheGoalStep : Step {
             return Optional.empty()
         }
 
-        val target = TacticsTelemetry.get(car.playerIndex).map { telem -> telem.futureBallMotion.space }.orElse(Vector3())
+        val target = TacticsTelemetry.get(car.playerIndex)?.futureBallMotion?.space ?: Vector3()
         val toTarget = target.minus(car.position)
         val nearestGoal = GoalUtil.getNearestGoal(car.position)
         val goalPlane = nearestGoal.threatPlane

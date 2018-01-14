@@ -96,11 +96,10 @@ public class Readout {
             arenaDisplay.updateBallPrediction(ballPrediction);
         }
 
-        Optional<TacticalSituation> situationOption = TacticsTelemetry.get(input.getPlayerIndex());
+        TacticalSituation tacSituation = TacticsTelemetry.INSTANCE.get(input.getPlayerIndex());
 
-        if (situationOption.isPresent()) {
-            TacticalSituation tacSituation = situationOption.get();
-            arenaDisplay.updateExpectedEnemyContact(tacSituation.expectedEnemyContact);
+        if (tacSituation != null) {
+            arenaDisplay.updateExpectedEnemyContact(Optional.ofNullable(tacSituation.getExpectedEnemyContact()));
         }
 
         updateBallHeightMaxes(input);
@@ -178,38 +177,40 @@ public class Readout {
     }
 
     private void updateTacticsInfo(AgentInput input) {
-        Optional<TacticalSituation> situationOpt = TacticsTelemetry.get(input.getPlayerIndex());
+        TacticalSituation situation = TacticsTelemetry.INSTANCE.get(input.getPlayerIndex());
 
-        if (situationOpt.isPresent()) {
-            TacticalSituation situation = situationOpt.get();
+        if (situation != null) {
 
-            ownGoalFutureProximity.setText(String.format("%.2f", situation.ownGoalFutureProximity));
-            distanceBallIsBehindUs.setText(String.format("%.2f", situation.distanceBallIsBehindUs));
-            enemyOffensiveApproachError.setText(situation.enemyOffensiveApproachError.map(e -> String.format("%.2f", e)).orElse(""));
-            distanceFromEnemyBackWall.setText(String.format("%.2f", situation.distanceFromEnemyBackWall));
-            distanceFromEnemyCorner.setText(String.format("%.2f", situation.distanceFromEnemyCorner));
-            expectedEnemyContact.setText(situation.expectedEnemyContact.map(contact -> contact.getSpace().toString()).orElse(""));
-            scoredOnThreat.setText(situation.scoredOnThreat.map(b -> b.getSpace().toString()).orElse("None"));
+            ownGoalFutureProximity.setText(String.format("%.2f", situation.getOwnGoalFutureProximity()));
+            distanceBallIsBehindUs.setText(String.format("%.2f", situation.getDistanceBallIsBehindUs()));
+            enemyOffensiveApproachError.setText(Optional.ofNullable(situation.getEnemyOffensiveApproachError())
+                    .map(e -> String.format("%.2f", e)).orElse(""));
+            distanceFromEnemyBackWall.setText(String.format("%.2f", situation.getDistanceFromEnemyBackWall()));
+            distanceFromEnemyCorner.setText(String.format("%.2f", situation.getDistanceFromEnemyCorner()));
+            expectedEnemyContact.setText(Optional.ofNullable(situation.getExpectedEnemyContact())
+                    .map(contact -> contact.getSpace().toString()).orElse(""));
+            scoredOnThreat.setText(Optional.ofNullable(situation.getScoredOnThreat())
+                    .map(b -> b.getSpace().toString()).orElse("None"));
 
             needsDefensiveClear.setText("");
-            needsDefensiveClear.setBackground(situation.needsDefensiveClear ? Color.GREEN : Color.WHITE);
-            needsDefensiveClear.setOpaque(situation.needsDefensiveClear);
+            needsDefensiveClear.setBackground(situation.getNeedsDefensiveClear() ? Color.GREEN : Color.WHITE);
+            needsDefensiveClear.setOpaque(situation.getNeedsDefensiveClear());
 
             shotOnGoalAvailable.setText("");
-            shotOnGoalAvailable.setBackground(situation.shotOnGoalAvailable ? Color.GREEN : Color.WHITE);
-            shotOnGoalAvailable.setOpaque(situation.shotOnGoalAvailable);
+            shotOnGoalAvailable.setBackground(situation.getShotOnGoalAvailable() ? Color.GREEN : Color.WHITE);
+            shotOnGoalAvailable.setOpaque(situation.getShotOnGoalAvailable());
 
             goForKickoff.setText("");
-            goForKickoff.setBackground(situation.goForKickoff ? Color.GREEN : Color.WHITE);
-            goForKickoff.setOpaque(situation.goForKickoff);
+            goForKickoff.setBackground(situation.getGoForKickoff() ? Color.GREEN : Color.WHITE);
+            goForKickoff.setOpaque(situation.getGoForKickoff());
 
             waitToClear.setText("");
-            waitToClear.setBackground(situation.waitToClear ? Color.GREEN : Color.WHITE);
-            waitToClear.setOpaque(situation.waitToClear);
+            waitToClear.setBackground(situation.getWaitToClear() ? Color.GREEN : Color.WHITE);
+            waitToClear.setOpaque(situation.getWaitToClear());
 
             forceDefensivePosture.setText("");
-            forceDefensivePosture.setBackground(situation.forceDefensivePosture ? Color.GREEN : Color.WHITE);
-            forceDefensivePosture.setOpaque(situation.forceDefensivePosture);
+            forceDefensivePosture.setBackground(situation.getForceDefensivePosture() ? Color.GREEN : Color.WHITE);
+            forceDefensivePosture.setOpaque(situation.getForceDefensivePosture());
         }
     }
 

@@ -25,9 +25,9 @@ public class ChaseBallStep implements Step {
             }
         }
 
-        Optional<TacticalSituation> tacticalSituationOption = TacticsTelemetry.get(input.getPlayerIndex());
+        TacticalSituation tacticalSituation = TacticsTelemetry.INSTANCE.get(input.getPlayerIndex());
 
-        if (tacticalSituationOption.map(situation -> situation.expectedContact.isPresent()).orElse(false)) {
+        if (tacticalSituation != null && tacticalSituation.getExpectedContact() != null) {
             // There's an intercept, quit this thing.
             // TODO: sometimes the intercept step fails to pick up on this because its accelration model does no front flips.
             return Optional.empty();
