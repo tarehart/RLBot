@@ -143,7 +143,7 @@ class TacticsAdvisor {
         }
     }
 
-    fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan): TacticalSituation {
+    fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
         val enemyIntercept = input.enemyCarData.map { car -> getSoonestIntercept(car, ballPath) }
 

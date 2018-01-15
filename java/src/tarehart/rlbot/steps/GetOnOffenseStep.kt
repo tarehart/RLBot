@@ -98,7 +98,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         }
 
         return startPlan(
-                Plan().withStep(SlideToPositionStep({ Optional.ofNullable(latestTarget) } )),
+                Plan().withStep(SlideToPositionStep({ latestTarget })),
                 input)
     }
 

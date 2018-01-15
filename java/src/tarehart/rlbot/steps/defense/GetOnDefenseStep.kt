@@ -40,7 +40,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
                     goalPos.y - Math.signum(goalPos.y) * AWAY_FROM_GOAL)
 
             val targetFacing = Vector2(-Math.signum(targetPosition.x), 0.0)
-            Optional.of(PositionFacing(targetPosition, targetFacing))
+            PositionFacing(targetPosition, targetFacing)
         })
 
         return startPlan(plan, input)

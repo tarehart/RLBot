@@ -24,22 +24,33 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
 
 
     override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+
+        val positionFacing = calculatePositionFacing(input)
+        val car = input.myCarData
+
+        val positionError = car.position.flatten().distance(positionFacing.position)
+        val facingError = Vector2.angle(car.orientation.noseVector.flatten(), positionFacing.facing)
+
+        if (positionError < 5 && facingError < Math.PI / 8) {
+            return Optional.of(AgentOutput())
+        }
+
         val plan = Plan(Plan.Posture.DEFENSIVE)
-                .withStep(SlideToPositionStep { inp ->
-
-                    val center = GoalUtil.getOwnGoal(inp.team).center
-                    val futureBallPosition = TacticsTelemetry[inp.playerIndex]?.futureBallMotion?.space ?: inp.ballPosition
-
-                    val targetPosition = Vector2(
-                            Math.signum(futureBallPosition.x) * centerOffset,
-                            center.y - Math.signum(center.y) * awayFromGoal)
-                    
-                    val targetFacing = Vector2(-Math.signum(targetPosition.x), 0.0)
-                    Optional.of(PositionFacing(targetPosition, targetFacing))
-                })
-                .withStep(BlindStep(1.0, AgentOutput()))
+                .withStep(SlideToPositionStep { inp -> calculatePositionFacing(inp) })
 
         return startPlan(plan, input)
+    }
+
+    private fun calculatePositionFacing(inp: AgentInput): PositionFacing {
+        val center = GoalUtil.getOwnGoal(inp.team).center
+        val futureBallPosition = TacticsTelemetry[inp.playerIndex]?.futureBallMotion?.space ?: inp.ballPosition
+
+        val targetPosition = Vector2(
+                Math.signum(futureBallPosition.x) * centerOffset,
+                center.y - Math.signum(center.y) * awayFromGoal)
+
+        val targetFacing = Vector2(-Math.signum(targetPosition.x), 0.0)
+        return PositionFacing(targetPosition, targetFacing)
     }
 
     override fun getLocalSituation(): String {
