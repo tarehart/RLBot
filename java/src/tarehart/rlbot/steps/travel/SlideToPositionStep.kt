@@ -19,84 +19,143 @@ import java.util.function.Function
 class SlideToPositionStep(private val targetFunction: (AgentInput) -> PositionFacing?) : NestedPlanStep() {
 
     private var phase = AIM_AT_TARGET
-
+    private var backwards: Boolean = false
     private var turnDirection: Int? = null
-
     private var target: PositionFacing? = null
+    private var shouldSlide = false
 
     override fun getLocalSituation(): String {
         return "Sliding to position"
     }
 
+    private fun reasonableToGoBackwards(car: CarData) : Boolean {
+        return car.velocity.flatten().dotProduct(car.orientation.noseVector.flatten()) < 15
+    }
+
     override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
 
-        val targetOption = targetFunction.invoke(input) ?: return Optional.empty()
-
-        target = targetOption
-
         val car = input.myCarData
-
-        val toTarget = targetOption.position.minus(car.position.flatten())
+        val latestTarget = targetFunction.invoke(input) ?: return Optional.empty()
+        target = latestTarget
+        val toTarget = latestTarget.position.minus(car.position.flatten())
+        val distance = toTarget.magnitude()
+        val facingCorrectionRadians = car.orientation.noseVector.flatten().correctionAngle(latestTarget.facing)
+        val speed = car.velocity.magnitude()
 
         if (phase == AIM_AT_TARGET) {
 
-            if (toTarget.magnitude() < 10) {
-                return Optional.empty()
+            val noseToTargetAngle = Vector2.angle(toTarget, car.orientation.noseVector.flatten())
+            val angle: Double
+            if (backwards || toTarget.magnitude() < 22 &&
+                    noseToTargetAngle > 5 * Math.PI / 6 &&
+                    reasonableToGoBackwards(car)) {
+                backwards = true
+                angle = Math.PI - noseToTargetAngle
+            } else {
+                angle = noseToTargetAngle
+            }
+
+            if (distance < 4) {
+                if (Math.abs(facingCorrectionRadians) < .1 && speed < 3) {
+                    return Optional.empty() // We're already good
+                }
+
+                phase = SLIDE_SPIN
             }
 
 
-            val angle = Vector2.angle(toTarget, car.orientation.noseVector.flatten())
             if (angle < Math.PI / 12) {
                 phase = TRAVEL
             } else {
-                return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.boostData, targetOption.position))
+                if (backwards) {
+                    return Optional.of(SteerUtil.backUpTowardGroundPosition(car, latestTarget.position))
+                }
+                val output = SteerUtil.steerTowardGroundPosition(car, input.boostData, latestTarget.position)
+                if (distance < 20) {
+                    output.withBoost(false)
+                }
+                return Optional.of(output)
             }
         }
 
         if (phase == TRAVEL) {
 
-            val distance = toTarget.magnitude()
+
             val slideDistance = getSlideDistance(car.velocity.magnitude())
 
             if (distance < slideDistance) {
                 phase = SLIDE_SPIN
             } else {
 
-                val correctionRadians = toTarget.correctionAngle(targetOption.facing)
+                if (backwards) {
+                    return Optional.of(SteerUtil.backUpTowardGroundPosition(car, latestTarget.position))
+                } else {
 
-                val offsetVector = VectorUtil
-                        .rotateVector(toTarget, -Math.signum(correctionRadians) * Math.PI / 2)
-                        .scaledToMagnitude(10.0)
+                    val correctionRadians = toTarget.correctionAngle(latestTarget.facing)
 
-                val waypoint = targetOption.position.plus(offsetVector)
+                    val offsetMagnitude = Math.min(10.0, Math.abs(correctionRadians) * 6)
 
-                val sensibleFlip = SteerUtil.getSensibleFlip(car, waypoint)
-                if (sensibleFlip.isPresent) {
-                    return startPlan(sensibleFlip.get(), input)
+                    val offsetVector = VectorUtil
+                            .rotateVector(toTarget, -Math.signum(correctionRadians) * Math.PI / 2)
+                            .scaledToMagnitude(offsetMagnitude)
+
+                    val waypoint = latestTarget.position.plus(offsetVector)
+
+                    val sensibleFlip = SteerUtil.getSensibleFlip(car, waypoint)
+                    if (sensibleFlip.isPresent) {
+                        return startPlan(sensibleFlip.get(), input)
+                    }
+
+                    return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.boostData, waypoint).withBoost(car.boost > 50 && distance > 20))
                 }
-
-                return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.boostData, waypoint).withBoost(car.boost > 50))
             }
         }
 
-        if (phase == SLIDE_SPIN) {
-            val turnDir = turnDirection ?: Math.signum(car.orientation.noseVector.flatten().correctionAngle(toTarget)).toInt()
-            turnDirection = turnDir
 
-            val correctionRadians = car.orientation.noseVector.flatten().correctionAngle(targetOption.facing)
-            val futureRadians = correctionRadians + car.spin.yawRate * .3
+        val turnDir = turnDirection ?: nonZeroSignum(facingCorrectionRadians)
+        turnDirection = turnDir
 
-            return if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {
-                Optional.empty() // Done orienting.
-            } else Optional.of(AgentOutput().withAcceleration(1.0).withSteer(-turnDir.toDouble()).withSlide())
+        shouldSlide = shouldSlide || Math.abs(facingCorrectionRadians) > Math.PI / 3 || distance < 4
 
+        val futureRadians = facingCorrectionRadians + car.spin.yawRate * .3
+        val steerPolarity = if (backwards) 1 else -1
+
+        if (shouldSlide) {
+
+            if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {
+                return Optional.empty() // Done orienting.
+            }
+
+            return Optional.of(AgentOutput()
+                    .withDeceleration(if (backwards) 1.0 else 0.0)
+                    .withAcceleration(if (backwards) 0.0 else 1.0)
+                    .withSteer(turnDir.toDouble() * steerPolarity)
+                    .withSlide())
+
+        } else {
+
+            if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {
+                return Optional.empty() // Done orienting.
+            }
+
+            val tooFast = distance < getBrakeDistance(car.velocity.magnitude())
+            return Optional.of(AgentOutput()
+                    .withAcceleration(if (tooFast == backwards) 1.0 else 0.0)
+                    .withDeceleration(if (tooFast != backwards) 1.0 else 0.0)
+                    .withSteer(turnDir.toDouble() * steerPolarity))
         }
+    }
 
-        return Optional.empty() // Something went wrong
+    private fun nonZeroSignum(value: Double) : Int {
+        return if (value < 0) -1 else 1
     }
 
     private fun getSlideDistance(speed: Double): Double {
-        return speed * .8
+        return speed * speed * .015 + speed * .4
+    }
+
+    private fun getBrakeDistance(speed: Double): Double {
+        return speed * speed * .01 + speed * .1
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {

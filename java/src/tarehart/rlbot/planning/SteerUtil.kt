@@ -122,6 +122,23 @@ object SteerUtil {
         return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false)
     }
 
+    fun backUpTowardGroundPosition(car: CarData, position: Vector2): AgentOutput {
+
+        WaypointTelemetry.set(position, car.team)
+
+        val positionToCar = car.position.flatten() - position
+        val correctionRadians = car.orientation.noseVector.flatten().correctionAngle(positionToCar)
+        val correctionDirection = Math.signum(correctionRadians)
+
+        val difference = Math.abs(correctionRadians)
+        val turnSharpness = difference * 2
+
+        return AgentOutput()
+                .withDeceleration(1.0)
+                .withSteer(correctionDirection * turnSharpness)
+                .withSlide(Math.abs(correctionRadians) > Math.PI / 3)
+    }
+
     private fun steerTowardGroundPositionFromWall(carData: CarData, position: Vector2): AgentOutput {
         val toPositionFlat = position.minus(carData.position.flatten())
         val carShadow = Vector3(carData.position.x, carData.position.y, 0.0)
