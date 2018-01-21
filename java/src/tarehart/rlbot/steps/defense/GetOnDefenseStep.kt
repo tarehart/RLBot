@@ -3,16 +3,13 @@ package tarehart.rlbot.steps.defense
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.Step
-import tarehart.rlbot.steps.travel.SlideToPositionStep
+import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
-import java.awt.*
 import java.util.Optional
 
 class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = DEFAULT_LIFESPAN // seconds
@@ -29,7 +26,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
             startTime = input.time
         }
 
-        val plan = Plan(Plan.Posture.DEFENSIVE).withStep(SlideToPositionStep { inp ->
+        val plan = Plan(Plan.Posture.DEFENSIVE).withStep(ParkTheCarStep { inp ->
 
             val goalPos = GoalUtil.getOwnGoal(inp.team).center
             val futureBallPosition = TacticsTelemetry[inp.playerIndex]?.futureBallMotion?.space ?:

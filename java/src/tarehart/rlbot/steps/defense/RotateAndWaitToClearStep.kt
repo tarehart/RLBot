@@ -2,19 +2,14 @@ package tarehart.rlbot.steps.defense
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.planning.TacticsTelemetry
-import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.Step
-import tarehart.rlbot.steps.travel.SlideToPositionStep
+import tarehart.rlbot.steps.travel.ParkTheCarStep
 
-import java.awt.*
 import java.util.Optional
 
 class RotateAndWaitToClearStep : NestedPlanStep() {
@@ -36,7 +31,7 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
         }
 
         val plan = Plan(Plan.Posture.DEFENSIVE)
-                .withStep(SlideToPositionStep { inp -> calculatePositionFacing(inp) })
+                .withStep(ParkTheCarStep { inp -> calculatePositionFacing(inp) })
 
         return startPlan(plan, input)
     }

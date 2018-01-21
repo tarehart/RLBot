@@ -16,7 +16,7 @@ import java.awt.geom.Line2D
 import java.util.Optional
 import java.util.function.Function
 
-class SlideToPositionStep(private val targetFunction: (AgentInput) -> PositionFacing?) : NestedPlanStep() {
+class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?) : NestedPlanStep() {
 
     private var phase = AIM_AT_TARGET
     private var backwards: Boolean = false
@@ -25,7 +25,7 @@ class SlideToPositionStep(private val targetFunction: (AgentInput) -> PositionFa
     private var shouldSlide = false
 
     override fun getLocalSituation(): String {
-        return "Sliding to position"
+        return "Parking the car"
     }
 
     private fun reasonableToGoBackwards(car: CarData) : Boolean {

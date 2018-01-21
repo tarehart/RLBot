@@ -2,19 +2,12 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
-import tarehart.rlbot.steps.travel.SlideToPositionStep
-import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.steps.travel.ParkTheCarStep
 
 import java.awt.*
 import java.awt.geom.Line2D
@@ -98,7 +91,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         }
 
         return startPlan(
-                Plan().withStep(SlideToPositionStep({ latestTarget })),
+                Plan().withStep(ParkTheCarStep({ latestTarget })),
                 input)
     }
 
