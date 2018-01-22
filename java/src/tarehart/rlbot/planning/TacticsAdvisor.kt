@@ -30,6 +30,7 @@ import java.util.Optional
 import tarehart.rlbot.planning.Plan.Posture.ESCAPEGOAL
 import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
 import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
+import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.tuning.BotLog.println
 
 class TacticsAdvisor {
@@ -73,27 +74,19 @@ class TacticsAdvisor {
 
         val ballPath = ArenaModel.predictBallPath(input)
 
-        val raceResult = calculateRaceResult(situation.expectedContact?.time, situation.expectedEnemyContact?.time)
+        val raceResult = situation.ballAdvantage
 
-        if (raceResult > 2) {
+        if (raceResult.seconds > 2) {
             // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
             return makePlanWithPlentyOfTime(input, situation, ballPath)
         }
 
-        if (raceResult > -.3) {
+        if (raceResult.seconds > -.3) {
 
-            return if (situation.enemyOffensiveApproachError?.let { it < Math.PI / 3 } == true) {
-
+            if (situation.enemyOffensiveApproachError?.let { it < Math.PI / 2 } == true) {
                 // Enemy is threatening us
-
-                if (getYAxisWrongSidedness(input) < 0) {
-
-                    // Consider this to be a 50-50. Go hard for the intercept
-                    Plan(Plan.Posture.OFFENSIVE).withStep(InterceptStep(interceptModifier))
-                } else {
-                    // We're not in a good position to go for a 50-50. Get on defense.
-                    Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep())
-                }
+                // Consider this to be a 50-50. Go hard for the intercept
+                return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
             } else {
                 // Doesn't matter if enemy wins the race, they are out of position.
                 makePlanWithPlentyOfTime(input, situation, ballPath)
@@ -145,7 +138,7 @@ class TacticsAdvisor {
 
     fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
-        val enemyIntercept = input.enemyCarData.map { car -> getSoonestIntercept(car, ballPath) }
+        val enemyIntercept = input.enemyCarData.map { car -> getSoonestIntercept(car, ballPath) }.orElse(null)
 
         val ourIntercept = getSoonestIntercept(input.myCarData, ballPath)
 
@@ -154,25 +147,27 @@ class TacticsAdvisor {
         val opponentCar = input.enemyCarData
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(LOOKAHEAD_SECONDS)).orElse(ballPath.endpoint)
-
-        val situation = TacticalSituation()
-        situation.expectedContact = ourIntercept
-        situation.expectedEnemyContact = enemyIntercept.orElse(null)
-        situation.ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).center, futureBallMotion.space)
-        situation.distanceBallIsBehindUs = measureOutOfPosition(input)
-        situation.enemyOffensiveApproachError = situation.expectedEnemyContact?.let { measureEnemyApproachError(input, it.toSpaceTime()) }
         val enemyGoalY = GoalUtil.getEnemyGoal(input.team).center.y
-        situation.distanceFromEnemyBackWall = Math.abs(enemyGoalY - futureBallMotion.space.y)
-        situation.distanceFromEnemyCorner = getDistanceFromEnemyCorner(futureBallMotion, enemyGoalY)
-        situation.futureBallMotion = futureBallMotion
 
-        situation.scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath)
-        situation.needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath)
-        situation.shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, opponentCar.orElse(null), input.ballPosition, ourIntercept, ballPath)
-        situation.forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition)
-        situation.goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition)
-        situation.waitToClear = getWaitToClear(zonePlan, input)
-        situation.currentPlan = currentPlan
+
+        val situation = TacticalSituation(
+                expectedContact = ourIntercept,
+                expectedEnemyContact = enemyIntercept,
+                ballAdvantage = calculateRaceResult(ourIntercept?.time, enemyIntercept?.time),
+                ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).center, futureBallMotion.space),
+                distanceBallIsBehindUs = measureOutOfPosition(input),
+                enemyOffensiveApproachError = enemyIntercept?.let { measureEnemyApproachError(input, it.toSpaceTime()) },
+                distanceFromEnemyBackWall = Math.abs(enemyGoalY - futureBallMotion.space.y),
+                distanceFromEnemyCorner = getDistanceFromEnemyCorner(futureBallMotion, enemyGoalY),
+                futureBallMotion = futureBallMotion,
+                scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath),
+                needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath),
+                shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, opponentCar.orElse(null), input.ballPosition, ourIntercept, ballPath),
+                forceDefensivePosture = getForceDefensivePosture(input.team, myCar, opponentCar, input.ballPosition),
+                goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition),
+                waitToClear = getWaitToClear(zonePlan, input),
+                currentPlan = currentPlan
+        )
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry[situation] = input.playerIndex
@@ -277,23 +272,20 @@ class TacticsAdvisor {
         private val LOOKAHEAD_SECONDS = 2.0
         private val PLAN_HORIZON = Duration.ofSeconds(6.0)
 
-        fun calculateRaceResult(myIntercept: SpaceTime, enemyCar: CarData, ballPath: BallPath): Double {
+        fun calculateRaceResult(myIntercept: SpaceTime, enemyCar: CarData, ballPath: BallPath): Duration {
             val enemyIntercept = getSoonestIntercept(enemyCar, ballPath)
 
             return calculateRaceResult(myIntercept.time, enemyIntercept?.time)
         }
 
-        private fun calculateRaceResult(ourContact: GameTime?, enemyContact: GameTime?): Double {
-            val raceResult: Double
+        private fun calculateRaceResult(ourContact: GameTime?, enemyContact: GameTime?): Duration {
             if (enemyContact == null) {
-                return 3.0
+                return Duration.ofSeconds(3.0)
             } else if (ourContact == null) {
-                raceResult = -3.0
+                return Duration.ofSeconds(-3.0)
             } else {
-                raceResult = Duration.between(ourContact, enemyContact).seconds
+                return Duration.between(ourContact, enemyContact)
             }
-
-            return raceResult
         }
 
         fun generousShotAngle(goal: Goal, expectedContact: Vector2, playerIndex: Int): Boolean {

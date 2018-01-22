@@ -53,7 +53,8 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
     }
 
     override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
-        return TacticsTelemetry[input.myCarData.playerIndex]?.waitToClear == false
+        val tacticalSituation = TacticsTelemetry[input.myCarData.playerIndex]
+        return tacticalSituation?.waitToClear == false || tacticalSituation?.ballAdvantage?.seconds?.let { it > 0.8 } ?: false
     }
 
 }
