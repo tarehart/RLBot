@@ -13,10 +13,8 @@ class ZonePlan(input: AgentInput) {
 
     val ballPosition: Vector3 = input.ballPosition
     val myCar: CarData = input.myCarData
-    private val opponentCar: CarData? = input.enemyCarData.orElse(null)
     val ballZone: Zone
     val myZone: Zone // DON'T LET ME IN MY ZONE
-    val opponentZone: Zone?
     private val ballIsInMyBox: Boolean
     private val ballIsInOpponentBox: Boolean
 
@@ -26,9 +24,8 @@ class ZonePlan(input: AgentInput) {
 
         ballZone = Zone(getMainZone(ballPosition), getSubZone(ballPosition))
         myZone = Zone(getMainZone(myCar.position), getSubZone(myCar.position))
-        opponentZone = opponentCar?.let { Zone(getMainZone(it.position), getSubZone(it.position)) }
 
-        if (isAnalysisSane(ballZone, myZone, opponentZone, myCar.playerIndex)) {
+        if (isAnalysisSane(ballZone, myZone, myCar.playerIndex)) {
 
             // Determine if the ball is in my our their box
             if (myCar.team == Bot.Team.BLUE) {
@@ -78,7 +75,7 @@ class ZonePlan(input: AgentInput) {
         return if (flatPoint in ZoneDefinitions.BOTTOM) Zone.SubZone.BOTTOM else Zone.SubZone.NONE
     }
 
-    private fun isAnalysisSane(ballZone: Zone, myZone: Zone, opponentZone: Zone?, playerIndex: Int): Boolean {
+    private fun isAnalysisSane(ballZone: Zone, myZone: Zone, playerIndex: Int): Boolean {
         var sanityCheck = true
         if (ballZone.mainZone == Zone.MainZone.NONE) {
             BotLog.println("WTF where is the ball?", playerIndex)
@@ -86,10 +83,6 @@ class ZonePlan(input: AgentInput) {
         }
         if (myZone.mainZone == Zone.MainZone.NONE) {
             BotLog.println("WTF where am I?", playerIndex)
-            sanityCheck = false
-        }
-        if (opponentZone == null || opponentZone.mainZone == Zone.MainZone.NONE) {
-            // BotLog.println("WTF where is the enemy?", team);
             sanityCheck = false
         }
 

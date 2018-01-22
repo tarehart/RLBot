@@ -53,20 +53,14 @@ public class ArenaDisplay extends JPanel {
     public static final Color BOOST_COLOR = new Color(255,207,64);
 
     private AgentInput input;
-    private Optional<CarData> orangeCar;
-    private Optional<CarData> blueCar;
     private CarData myCar;
-    private Optional<CarData> enemyCarOptional;
     private Vector3 ball;
     private Vector3 ballPrediction = new Vector3();
     private Optional<Vector3> expectedEnemyContact = Optional.empty();
 
     public void updateInput(AgentInput input) {
         this.input = input;
-        orangeCar = input.getCarData(Bot.Team.ORANGE);
-        blueCar = input.getCarData(Bot.Team.BLUE);
         myCar = input.getMyCarData();
-        enemyCarOptional = input.getEnemyCarData();
         ball = input.getBallPosition();
         realBallColor = input.getLatestBallTouch().map(bt -> bt.getTeam() == Bot.Team.BLUE ? BLUE_BALL_COLOR : ORANGE_BALL_COLOR)
                 .orElse(NEUTRAL_BALL_COLOR);
@@ -127,8 +121,15 @@ public class ArenaDisplay extends JPanel {
         graphics2D.setStroke(new BasicStroke(0));
 
         // Draw the cars (and their boost values)
-        orangeCar.ifPresent(c -> drawCar(c, graphics2D));
-        blueCar.ifPresent(c -> drawCar(c, graphics2D));
+
+        Optional<CarData> enemyInitiative = Optional.ofNullable(situation).map(TacticalSituation::getEnemyPlayerWithInitiative).map(CarWithIntercept::getCar);
+        Optional<CarData> friendlyInitiative = Optional.ofNullable(situation).map(TacticalSituation::getTeamPlayerWithInitiative).map(CarWithIntercept::getCar);
+
+        Optional<CarData> blueInitiative = input.getTeam() == Bot.Team.BLUE ? friendlyInitiative : enemyInitiative;
+        Optional<CarData> orangeInitiative = input.getTeam() == Bot.Team.ORANGE ? friendlyInitiative : enemyInitiative;
+
+        input.getOrangeCars().forEach(c -> drawCar(c, c == this.myCar, orangeInitiative.map(or -> or == c).orElse(false), graphics2D));
+        input.getBlueCars().forEach(c -> drawCar(c, c == this.myCar, blueInitiative.map(or -> or == c).orElse(false), graphics2D));
 
         // Draw the ball (and its prediction ghosts)
         drawBall(ball, graphics2D, realBallColor);
@@ -156,11 +157,20 @@ public class ArenaDisplay extends JPanel {
         }
     }
 
-    private void drawCar(CarData car, Graphics2D g) {
+    private void drawCar(CarData car, boolean isOurCar, boolean hasInitiative, Graphics2D g) {
         // Draw the car
-        g.setColor(car.getTeam() == Bot.Team.BLUE ? BLUE_COLOR : ORANGE_COLOR);
+        Color c = car.getTeam() == Bot.Team.BLUE ? BLUE_COLOR : ORANGE_COLOR;
+        g.setColor(isOurCar ? c.darker() : c);
         PositionFacing positionFacing = new PositionFacing(car.getPosition().flatten(), car.getOrientation().getNoseVector().flatten());
         drawCar(positionFacing, car.getPosition().getZ(), g);
+
+        if (hasInitiative) {
+            Line2D underline = new Line2D.Double(-2, 0, 2, 0);
+            AffineTransform transform = new AffineTransform();
+            transform.translate(car.getPosition().getX(), car.getPosition().getY() - 4);
+            g.setStroke(new BasicStroke(0.8f));
+            g.draw(transform.createTransformedShape(underline));
+        }
 
     }
 
@@ -243,8 +253,9 @@ public class ArenaDisplay extends JPanel {
             g.draw(shotDefenseZone.getAwtArea());
         }
 
-        if(enemyCarOptional.isPresent()) {
-            CarData enemyCar = enemyCarOptional.get();
+        CarWithIntercept enemyWithInitiative = situation.getEnemyPlayerWithInitiative();
+        if(enemyWithInitiative != null) {
+            CarData enemyCar = enemyWithInitiative.getCar();
             Vector3 enemyGoalCenter = GoalUtil.INSTANCE.getEnemyGoal(myCar.getTeam()).getCenter();
             boolean enemyCarIsInNet = Math.signum(enemyCar.getPosition().getY()) == Math.signum(enemyGoalCenter.getY())
                     && Math.abs(enemyCar.getPosition().getY()) > Math.abs(enemyGoalCenter.getY());

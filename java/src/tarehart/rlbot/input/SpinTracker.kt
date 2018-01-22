@@ -1,22 +1,21 @@
 package tarehart.rlbot.input
 
-import tarehart.rlbot.Bot
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 
 class SpinTracker {
 
-    private val previousOrientations = HashMap<Bot.Team, CarOrientation>()
-    private val spins = HashMap<Bot.Team, CarSpin>()
+    private val previousOrientations = HashMap<Int, CarOrientation>()
+    private val spins = HashMap<Int, CarSpin>()
 
-    fun readInput(orientation: CarOrientation, team: Bot.Team, secondsElapsed: Double) {
+    fun readInput(orientation: CarOrientation, index: Int, secondsElapsed: Double) {
         if (secondsElapsed > 0) {
 
-            previousOrientations[team]?.let {
-                spins.put(team, getCarSpin(it, orientation, secondsElapsed))
+            previousOrientations[index]?.let {
+                spins.put(index, getCarSpin(it, orientation, secondsElapsed))
             }
 
-            previousOrientations.put(team, orientation)
+            previousOrientations.put(index, orientation)
         }
     }
 
@@ -36,7 +35,7 @@ class SpinTracker {
         return Math.asin(projection.magnitude() * Math.signum(projection.dotProduct(previousOrthogonal)))
     }
 
-    fun getSpin(team: Bot.Team): CarSpin {
-        return spins[team] ?: CarSpin(0.0, 0.0, 0.0)
+    fun getSpin(index: Int): CarSpin {
+        return spins[index] ?: CarSpin(0.0, 0.0, 0.0)
     }
 }

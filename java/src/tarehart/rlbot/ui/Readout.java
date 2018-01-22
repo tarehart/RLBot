@@ -104,7 +104,7 @@ public class Readout {
 
         updateBallHeightMaxes(input);
         updateTacticsInfo(input);
-        updateOmniText(input);
+        updateOmniText(input, Optional.ofNullable(tacSituation));
         arenaDisplay.updateInput(input);
         arenaDisplay.repaint();
     }
@@ -148,19 +148,20 @@ public class Readout {
         return predictionOfNow.map(ballPrediction -> ballPrediction.predictedLocation);
     }
 
-    private void updateOmniText(AgentInput input) {
+    private void updateOmniText(AgentInput input, Optional<TacticalSituation> situation) {
 
         Optional<ZonePlan> zonePlanOpt = ZoneTelemetry.get(input.getTeam());
 
+        Optional<CarData> enemy = situation.map(TacticalSituation::getEnemyPlayerWithInitiative).map(CarWithIntercept::getCar);
+
         String text = "" +
-                "Blue Pos: " + input.getBlueCar().map(CarData::getPosition).orElse(new Vector3()) + "\n" +
-                "Blue Vel: " + input.getBlueCar().map(CarData::getVelocity).orElse(new Vector3()) + "\n" +
-                "Orng Pos: " + input.getOrangeCar().map(CarData::getPosition).orElse(new Vector3()) + "\n" +
-                "Orng Vel: " + input.getOrangeCar().map(CarData::getVelocity).orElse(new Vector3()) + "\n" +
+                "Our Pos: " + input.getMyCarData().getPosition() + "\n" +
+                "Our Vel: " + input.getMyCarData().getVelocity() + "\n" +
+                "Enemy Pos: " + enemy.map(CarData::getPosition).orElse(new Vector3()) + "\n" +
+                "Enemy Vel: " + enemy.map(CarData::getVelocity).orElse(new Vector3()) + "\n" +
                 "Ball Pos: " + input.getBallPosition() + "\n" +
                 "\n" +
-                "Blue Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.getTeam() == Bot.Team.BLUE)).orElse("Unknown") + "\n" +
-                "Orng Zone: " + zonePlanOpt.map(zp -> printCarZone(zp, input.getTeam() == Bot.Team.ORANGE)).orElse("Unknown") + "\n" +
+                "Our Car Zone: " + zonePlanOpt.map(this::printCarZone).orElse("Unknown") + "\n" +
                 "Ball Zone: " + zonePlanOpt.map(zp -> zp.getBallZone().toString()).orElse("Unknown") + "\n" +
                 "\n" +
                 "Ball Spin: " + input.getBallSpin() + "\n" +
@@ -170,9 +171,8 @@ public class Readout {
         this.omniText.setText(text);
     }
 
-    private String printCarZone(ZonePlan zp, boolean ownZone) {
-        Zone zone = ownZone ? zp.getMyZone() :
-                zp.getOpponentZone() != null ? zp.getOpponentZone() : new Zone(Zone.MainZone.NONE, Zone.SubZone.NONE);
+    private String printCarZone(ZonePlan zp) {
+        Zone zone = zp.getMyZone();
         return zone.mainZone + " " + zone.subZone;
     }
 

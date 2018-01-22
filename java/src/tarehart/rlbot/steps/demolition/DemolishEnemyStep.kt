@@ -20,19 +20,24 @@ class DemolishEnemyStep : Step {
 
     private var enemyHadWheelContact: Boolean = false
     private var hasDoubleJumped: Boolean = false
+    private var enemyIndex: Int? = null
 
     override val situation = "Demolishing enemy"
 
     override fun getOutput(input: AgentInput): Optional<AgentOutput> {
 
-        val enemyCarOption = input.enemyCarData
-
         val car = input.myCarData
-        if (!enemyCarOption.isPresent || enemyCarOption.get().isDemolished || car.boost == 0.0 && !car.isSupersonic) {
+        val oppositeTeam = input.getTeamRoster(input.team.opposite())
+        val enemyCar = enemyIndex?.let { enemyInd -> oppositeTeam.first { it.playerIndex == enemyInd } } ?:
+                oppositeTeam.minBy { car.position.distance(it.position) }
+
+        if (enemyCar == null || enemyCar.isDemolished || car.boost == 0.0 && !car.isSupersonic) {
             return Optional.empty()
         }
 
-        val enemyCar = enemyCarOption.get()
+        if (enemyCar.position.distance(car.position) < 30) {
+            enemyIndex = enemyCar.playerIndex // Commit to demolishing this particular enemy
+        }
 
         val path = CarPredictor.predictCarMotion(enemyCar, Duration.ofSeconds(4.0))
 

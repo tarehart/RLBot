@@ -17,10 +17,10 @@ import java.util.Optional;
 public class ThreatAssessor {
 
 
-    public double measureThreat(AgentInput input) {
+    public double measureThreat(AgentInput input, Optional<CarData> enemyCarOption) {
 
-        double enemyPosture = measureEnemyPosture(input);
-        double enemyInitiative = measureEnemyInitiative(input);
+        double enemyPosture = measureEnemyPosture(input, enemyCarOption);
+        double enemyInitiative = measureEnemyInitiative(input, enemyCarOption);
         double ballThreat = measureBallThreat(input) *  .3;
 
         double enemyThreat = enemyPosture > 0 && enemyInitiative > .2 ? 10 : 0;
@@ -29,9 +29,8 @@ public class ThreatAssessor {
 
     }
 
-    private double measureEnemyInitiative(AgentInput input) {
+    private double measureEnemyInitiative(AgentInput input, Optional<CarData> enemyCarOption) {
 
-        Optional<CarData> enemyCarOption = input.getEnemyCarData();
         if (!enemyCarOption.isPresent()) {
             return 0;
         }
@@ -59,9 +58,8 @@ public class ThreatAssessor {
         return Duration.Companion.between(myIntercept.getTime(), enemyIntercept.getTime()).getSeconds();
     }
 
-    private double measureEnemyPosture(AgentInput input) {
+    private double measureEnemyPosture(AgentInput input, Optional<CarData> enemyCarOption) {
 
-        Optional<CarData> enemyCarOption = input.getEnemyCarData();
         if (!enemyCarOption.isPresent()) {
             return 0;
         }

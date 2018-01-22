@@ -1,5 +1,6 @@
 package tarehart.rlbot.planning
 
+import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.time.Duration
@@ -20,5 +21,7 @@ class TacticalSituation(
         val goForKickoff: Boolean,
         val waitToClear: Boolean,
         val currentPlan: Plan? = null,
-        val futureBallMotion: BallSlice? = null
+        val futureBallMotion: BallSlice? = null,
+        val enemyPlayerWithInitiative: CarWithIntercept?,
+        val teamPlayerWithInitiative: CarWithIntercept
 )

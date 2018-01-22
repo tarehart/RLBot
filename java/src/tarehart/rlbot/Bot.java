@@ -31,7 +31,11 @@ public abstract class Bot {
 
     public enum Team {
         BLUE,
-        ORANGE
+        ORANGE;
+
+        public Team opposite() {
+            return this == BLUE ? ORANGE : BLUE;
+        }
     }
 
     public Bot(Team team, int playerIndex) {
