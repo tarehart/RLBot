@@ -81,8 +81,6 @@ object SteerUtil {
             return steerTowardGroundPositionFromWall(carData, position)
         }
 
-        WaypointTelemetry.set(position, carData.team)
-
         val correctionAngle = getCorrectionAngleRad(carData, position)
         val myPositionFlat = carData.position.flatten()
         val distance = position.distance(myPositionFlat)
@@ -95,8 +93,6 @@ object SteerUtil {
         if (ArenaModel.isCarOnWall(carData)) {
             return steerTowardGroundPositionFromWall(carData, position)
         }
-
-        WaypointTelemetry.set(position, carData.team)
 
         val correctionAngle = getCorrectionAngleRad(carData, position)
         val myPositionFlat = carData.position.flatten()
@@ -113,8 +109,6 @@ object SteerUtil {
 
         val adjustedPosition = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, boostData, position)).orElse(position)
 
-        WaypointTelemetry.set(adjustedPosition, carData.team)
-
         val correctionAngle = getCorrectionAngleRad(carData, adjustedPosition)
         val myPositionFlat = carData.position.flatten()
         val distance = adjustedPosition.distance(myPositionFlat)
@@ -123,8 +117,6 @@ object SteerUtil {
     }
 
     fun backUpTowardGroundPosition(car: CarData, position: Vector2): AgentOutput {
-
-        WaypointTelemetry.set(position, car.team)
 
         val positionToCar = car.position.flatten() - position
         val correctionRadians = car.orientation.noseVector.flatten().correctionAngle(positionToCar)

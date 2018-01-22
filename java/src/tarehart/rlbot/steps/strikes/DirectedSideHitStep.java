@@ -193,7 +193,7 @@ public class DirectedSideHitStep implements Step {
         if (distanceCountdown < .1 && timeCountdown < .1) {
             // Time to launch!
             double strikeForceCorrection = DirectedKickUtil.INSTANCE.getAngleOfKickFromApproach(car, kickPlan);
-            plan = SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime.get(), false);
+            plan = SetPieces.INSTANCE.jumpSideFlip(strikeForceCorrection > 0, jumpTime.get(), false);
             return plan.getOutput(input);
         } else {
             println(format("Side flip soon. Distance: %.2f, Time: %.2f", distanceCountdown, timeCountdown), input.getPlayerIndex());

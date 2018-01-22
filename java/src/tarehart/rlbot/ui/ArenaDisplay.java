@@ -146,17 +146,6 @@ public class ArenaDisplay extends JPanel {
         }
     }
 
-    private void drawWaypoint(Graphics2D graphics2D) {
-        Optional<Vector2> waypointOption = WaypointTelemetry.get(myCar.getTeam());
-        if (waypointOption.isPresent()) {
-            graphics2D.setColor(new Color(186, 238, 216));
-            graphics2D.setStroke(new BasicStroke(1));
-            Vector2 waypoint = waypointOption.get();
-            Line2D.Double line = new Line2D.Double(myCar.getPosition().getX(), myCar.getPosition().getY(), waypoint.getX(), waypoint.getY());
-            graphics2D.draw(line);
-        }
-    }
-
     private void drawCar(CarData car, boolean isOurCar, boolean hasInitiative, Graphics2D g) {
         // Draw the car
         Color c = car.getTeam() == Bot.Team.BLUE ? BLUE_COLOR : ORANGE_COLOR;

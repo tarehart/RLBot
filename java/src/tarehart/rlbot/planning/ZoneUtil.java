@@ -31,8 +31,8 @@ public class ZoneUtil {
     public static Polygon getShotDefenseZone(Vector3 ballPosition, Vector2 goalCenter) {
         return new Polygon(new Vector2[] {
                 ballPosition.flatten(),
-                new Vector2(goalCenter.getX() + Goal.EXTENT, goalCenter.getY()),
-                new Vector2(goalCenter.getX() - Goal.EXTENT, goalCenter.getY())
+                new Vector2(goalCenter.getX() + Goal.Companion.getEXTENT(), goalCenter.getY()),
+                new Vector2(goalCenter.getX() - Goal.Companion.getEXTENT(), goalCenter.getY())
         });
     }
 
@@ -40,8 +40,8 @@ public class ZoneUtil {
         double extendedDistance = 20;
 
         Vector2 flatCar = defender.flatten();
-        Vector2 topPost = new Vector2(goalCenter.getX() + Goal.EXTENT, goalCenter.getY());
-        Vector2 bottomPost = new Vector2(goalCenter.getX() - Goal.EXTENT, goalCenter.getY());
+        Vector2 topPost = new Vector2(goalCenter.getX() + Goal.Companion.getEXTENT(), goalCenter.getY());
+        Vector2 bottomPost = new Vector2(goalCenter.getX() - Goal.Companion.getEXTENT(), goalCenter.getY());
 
         double topSlope = (flatCar.getY() - topPost.getY()) / (flatCar.getX() - topPost.getX());
         double bottomSlope = (flatCar.getY() - bottomPost.getY()) / (flatCar.getX() - bottomPost.getX());

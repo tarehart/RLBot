@@ -61,7 +61,7 @@ class TacticsAdvisor {
 
         if (situation.teamPlayerWithInitiative.car != input.myCarData) {
 
-            if (GoalUtil.getNearestGoal(situation.futureBallMotion?.space ?: input.ballPosition) == input.team) {
+            if (GoalUtil.getNearestGoal(situation.futureBallMotion?.space ?: input.ballPosition).team == input.team) {
                 // Do something vaguely defensive
                 return Plan(Plan.Posture.NEUTRAL)
                         .withStep(GetBoostStep())

@@ -46,7 +46,7 @@ public class DirectedNoseHitStep extends NestedPlanStep {
     }
 
     public static boolean canMakeDirectedKick(AgentInput input, KickStrategy kickStrategy) {
-        boolean tooBouncy = BallPhysics.getGroundBounceEnergy(input.getBallPosition().getZ(), input.getBallVelocity().getZ()) > 30;
+        boolean tooBouncy = BallPhysics.INSTANCE.getGroundBounceEnergy(input.getBallPosition().getZ(), input.getBallVelocity().getZ()) > 30;
 
         Vector2 kickDirection = kickStrategy.getKickDirection(input).flatten();
         Vector2 carToBall = input.getBallPosition().minus(input.getMyCarData().getPosition()).flatten();

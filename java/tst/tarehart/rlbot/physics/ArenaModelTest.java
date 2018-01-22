@@ -39,7 +39,7 @@ public class ArenaModelTest {
     public void testFallToRailNextToBackWall() {
         ArenaModel model = new ArenaModel();
         float nextToBackWall = ArenaModel.BACK_WALL - ArenaModel.BALL_RADIUS;
-        BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(Goal.EXTENT + 5, nextToBackWall, 30), GameTime.Companion.zero(), new Vector3()), Duration.Companion.ofSeconds(4));
+        BallPath ballPath = model.simulateBall(new BallSlice(new Vector3(Goal.Companion.getEXTENT() + 5, nextToBackWall, 30), GameTime.Companion.zero(), new Vector3()), Duration.Companion.ofSeconds(4));
         System.out.println(nextToBackWall - ballPath.getEndpoint().getSpace().getY());
         Assert.assertTrue(nextToBackWall - ballPath.getEndpoint().getSpace().getY() > 10);
     }

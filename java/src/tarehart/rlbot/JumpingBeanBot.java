@@ -22,7 +22,7 @@ public class JumpingBeanBot extends Bot {
     protected AgentOutput getOutput(AgentInput input) {
 
         if (!Plan.Companion.activePlan(plan).isPresent()) {
-            plan = SetPieces.jumpSuperHigh(10);
+            plan = SetPieces.INSTANCE.jumpSuperHigh(10);
         }
 
         return plan.getOutput(input).get();

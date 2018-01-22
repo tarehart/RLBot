@@ -99,7 +99,7 @@ public class DribbleStep extends NestedPlanStep {
             if (car.getBoost() > 0) {
                 dribble.withAcceleration(1).withBoost();
             } else {
-                return startPlan(SetPieces.frontFlip(), input);
+                return startPlan(SetPieces.INSTANCE.frontFlip(), input);
             }
         }
         return Optional.of(dribble);
@@ -134,7 +134,7 @@ public class DribbleStep extends NestedPlanStep {
             return false;
         }
 
-        if (BallPhysics.getGroundBounceEnergy(input.getBallPosition().getZ(), input.getBallVelocity().getZ()) > 50) {
+        if (BallPhysics.INSTANCE.getGroundBounceEnergy(input.getBallPosition().getZ(), input.getBallVelocity().getZ()) > 50) {
             if (log) {
                 BotLog.println("Ball bouncing too hard to dribble", input.getPlayerIndex());
             }

@@ -211,8 +211,8 @@ public class ArenaModel {
         addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, CEILING + WALL_THICKNESS), arenaBody);
 
 
-        float sideOffest = (float) (WALL_LENGTH / 2 + Goal.EXTENT);
-        float heightOffset = (float) (WALL_LENGTH / 2 + Goal.GOAL_HEIGHT);
+        float sideOffest = (float) (WALL_LENGTH / 2 + Goal.Companion.getEXTENT());
+        float heightOffset = (float) (WALL_LENGTH / 2 + Goal.Companion.getGOAL_HEIGHT());
 
         // Wall on the negative side
         addWallToWorld(new Vector3(0, 1, 0), new Vector3(sideOffest, -BACK_WALL, 0), arenaBody);
@@ -381,6 +381,6 @@ public class ArenaModel {
     }
 
     public static boolean isNearFloorEdge(CarData car) {
-        return Math.abs(car.getPosition().getX()) > Goal.EXTENT && getDistanceFromWall(car.getPosition()) + car.getPosition().getZ() < 6;
+        return Math.abs(car.getPosition().getX()) > Goal.Companion.getEXTENT() && getDistanceFromWall(car.getPosition()) + car.getPosition().getZ() < 6;
     }
 }
