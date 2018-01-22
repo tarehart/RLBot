@@ -107,7 +107,7 @@ class GetBoostStep : NestedPlanStep() {
         val ballPath = ArenaModel.predictBallPath(input)
         val endpoint = ballPath.endpoint.space
         // Add a defensive bias.
-        val idealPlaceToGetBoost = Vector3(endpoint.x, 40 * Math.signum(GoalUtil.getOwnGoal(input.team).center.y), 0.0)
+        val idealPlaceToGetBoost = Vector3(endpoint.x, 50 * Math.signum(GoalUtil.getOwnGoal(input.team).center.y), 0.0)
         return getNearestBoost(input.boostData.fullBoosts, idealPlaceToGetBoost)
     }
 

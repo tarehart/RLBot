@@ -56,7 +56,7 @@ public class ReliefBot extends Bot {
 //        }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (noActivePlanWithPosture(Plan.Posture.KICKOFF) && (!zonePlan.isPresent() || situation.getGoForKickoff())) {
+        if (noActivePlanWithPosture(Plan.Posture.KICKOFF) && (!zonePlan.isPresent() || situation.getGoForKickoff()) && situation.getTeamPlayerWithInitiative().getCar() == car) {
             currentPlan = new Plan(Plan.Posture.KICKOFF).withStep(new GoForKickoffStep());
         }
 

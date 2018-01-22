@@ -60,10 +60,20 @@ class TacticsAdvisor {
         }
 
         if (situation.teamPlayerWithInitiative.car != input.myCarData) {
-            return FirstViableStepPlan(Plan.Posture.NEUTRAL)
-                    .withStep(GetBoostStep())
-                    .withStep(GetOnOffenseStep())
-                    .withStep(DemolishEnemyStep())
+
+            if (GoalUtil.getNearestGoal(situation.futureBallMotion?.space ?: input.ballPosition) == input.team) {
+                // Do something vaguely defensive
+                return Plan(Plan.Posture.NEUTRAL)
+                        .withStep(GetBoostStep())
+                        .withStep(GetOnDefenseStep())
+
+            } else {
+
+                return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                        .withStep(GetBoostStep())
+                        .withStep(GetOnOffenseStep())
+                        .withStep(DemolishEnemyStep())
+            }
         }
 
         val ownGoalCenter = GoalUtil.getOwnGoal(input.team).center
