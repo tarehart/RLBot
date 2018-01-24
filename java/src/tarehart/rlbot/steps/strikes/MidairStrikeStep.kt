@@ -84,15 +84,15 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
                 BotLog.println("Front flip strike", input.playerIndex)
                 startPlan(Plan()
-                        .withStep(BlindStep(AgentOutput(), Duration.ofMillis(5)))
-                        .withStep(BlindStep(AgentOutput().withPitch(-1.0).withJump(), Duration.ofSeconds(1.0))),
+                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput()))
+                        .withStep(BlindStep(Duration.ofSeconds(1.0), AgentOutput().withPitch(-1.0).withJump())),
                         input)
             } else {
                 // Dodge to the side
                 BotLog.println("Side flip strike", input.playerIndex)
                 startPlan(Plan()
-                        .withStep(BlindStep(AgentOutput(), Duration.ofMillis(5)))
-                        .withStep(BlindStep(AgentOutput().withSteer((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump(), Duration.ofMillis(5))),
+                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput()))
+                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput().withSteer((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump())),
                         input)
             }
         }

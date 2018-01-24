@@ -17,22 +17,22 @@ object SetPieces {
 
         return Plan()
                 .unstoppable()
-                .withStep(BlindStep(.05,
+                .withStep(BlindStep(Duration.ofSeconds(.05),
                         AgentOutput()
                                 .withPitch(-1.0)
                                 .withJump(true)
                                 .withAcceleration(1.0)))
-                .withStep(BlindStep(.05,
+                .withStep(BlindStep(Duration.ofSeconds(.05),
                         AgentOutput()
                                 .withPitch(-1.0)
                                 .withAcceleration(1.0)
                 ))
-                .withStep(BlindStep(.3,
+                .withStep(BlindStep(Duration.ofSeconds(.3),
                         AgentOutput()
                                 .withJump(true)
                                 .withAcceleration(1.0)
                                 .withPitch(-1.0)))
-                .withStep(BlindStep(.5,
+                .withStep(BlindStep(Duration.ofSeconds(.5),
                         AgentOutput()
                                 .withAcceleration(1.0)
                                 .withPitch(-1.0)
@@ -45,29 +45,29 @@ object SetPieces {
         return Plan()
                 .unstoppable()
                 .withStep(LineUpInReverseStep(waypoint))
-                .withStep(BlindStep(.05,
+                .withStep(BlindStep(Duration.ofSeconds(.05),
                         AgentOutput()
                                 .withPitch(1.0)
                                 .withJump(true)
                                 .withAcceleration(-1.0)))
-                .withStep(BlindStep(.05,
+                .withStep(BlindStep(Duration.ofSeconds(.05),
                         AgentOutput()
                                 .withPitch(1.0)
                                 .withAcceleration(-1.0)
                 ))
-                .withStep(BlindStep(.05,
+                .withStep(BlindStep(Duration.ofSeconds(.05),
                         AgentOutput()
                                 .withJump(true)
                                 .withPitch(1.0)))
-                .withStep(BlindStep(.15,
+                .withStep(BlindStep(Duration.ofSeconds(.15),
                         AgentOutput()
                                 .withPitch(1.0)))
-                .withStep(BlindStep(.4,
+                .withStep(BlindStep(Duration.ofSeconds(.4),
                         AgentOutput()
                                 .withBoost()
                                 .withPitch(-1.0)
                 ))
-                .withStep(BlindStep(.5,
+                .withStep(BlindStep(Duration.ofSeconds(.5),
                         AgentOutput()
                                 .withBoost()
                                 .withPitch(-1.0)
@@ -80,12 +80,7 @@ object SetPieces {
         val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
 
         return Plan()
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withJump(true)
-                                .withPitch(1.0),
-                        tiltBackDuration
-                ))
+                .withStep(BlindStep(tiltBackDuration, AgentOutput().withJump(true).withPitch(1.0)))
                 .withStep(MidairStrikeStep(tiltBackDuration))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
@@ -94,23 +89,14 @@ object SetPieces {
         val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
 
         return Plan()
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withJump(true)
-                                .withPitch(1.0),
-                        tiltBackDuration
+                .withStep(BlindStep(tiltBackDuration, AgentOutput().withJump(true).withPitch(1.0)))
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()
+                        .withPitch(1.0)
+                        .withBoost(true)
                 ))
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withPitch(1.0)
-                                .withBoost(true),
-                        Duration.ofSeconds(.05)
-                ))
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withBoost(true)
-                                .withJump(true),
-                        Duration.ofSeconds(.05)
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()
+                        .withBoost(true)
+                        .withJump(true)
                 ))
                 .withStep(MidairStrikeStep(tiltBackDuration))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
@@ -123,38 +109,27 @@ object SetPieces {
 
         val plan = Plan()
                 .unstoppable()
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withJump(true)
-                                .withPitch(1.0),
-                        Duration.ofSeconds(pitchBackPortion)
+                .withStep(BlindStep(Duration.ofSeconds(pitchBackPortion), AgentOutput()
+                        .withJump(true)
+                        .withPitch(1.0)
                 ))
 
         if (driftUpPortion > 0) {
-            plan.withStep(BlindStep(
-                    AgentOutput()
-                            .withJump(true),
-                    Duration.ofSeconds(driftUpPortion)
-            ))
+            plan.withStep(BlindStep(Duration.ofSeconds(driftUpPortion), AgentOutput().withJump(true)))
         }
 
-
         return plan
-                .withStep(TapStep(1,
-                        AgentOutput()
-                                .withPitch(-1.0)
-                                .withJump(false)
-                                .withAcceleration(1.0)))
-                .withStep(TapStep(5,
-                        AgentOutput()
-                                .withPitch(-1.0)
-                                .withJump(true)
-                                .withAcceleration(1.0)))
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withAcceleration(1.0)
-                                .withPitch(-1.0),
-                        Duration.ofMillis(800)
+                .withStep(TapStep(1, AgentOutput()
+                        .withPitch(-1.0)
+                        .withJump(false)
+                        .withAcceleration(1.0)))
+                .withStep(TapStep(5, AgentOutput()
+                        .withPitch(-1.0)
+                        .withJump(true)
+                        .withAcceleration(1.0)))
+                .withStep(BlindStep(Duration.ofMillis(800), AgentOutput()
+                        .withAcceleration(1.0)
+                        .withPitch(-1.0)
                 ))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
@@ -184,52 +159,40 @@ object SetPieces {
 
         return Plan()
                 .unstoppable()
-                .withStep(TapStep(2,
-                        AgentOutput()
-                                .withJump(true)
-                                .withAcceleration((if (hurry) 1 else 0).toDouble())))
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withJump(true)
-                                .withBoost(hurry)
-                                .withAcceleration(1.0), jumpTime))
-                .withStep(TapStep(2,
-                        AgentOutput()
-                                .withAcceleration(1.0)
+                .withStep(TapStep(2, AgentOutput()
+                        .withJump(true)
+                        .withAcceleration((if (hurry) 1 else 0).toDouble())))
+                .withStep(BlindStep(jumpTime, AgentOutput()
+                        .withJump(true)
+                        .withBoost(hurry)
+                        .withAcceleration(1.0)))
+                .withStep(TapStep(2, AgentOutput()
+                        .withAcceleration(1.0)
                 ))
-                .withStep(TapStep(2,
-                        AgentOutput()
-                                .withJump(true)
-                                .withAcceleration(1.0)
-                                .withSteer((if (flipLeft) -1 else 1).toDouble())))
+                .withStep(TapStep(2, AgentOutput()
+                        .withJump(true)
+                        .withAcceleration(1.0)
+                        .withSteer((if (flipLeft) -1 else 1).toDouble())))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
 
     fun jumpSuperHigh(howHigh: Double): Plan {
         return Plan()
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withJump(true)
-                                .withPitch(1.0),
-                        Duration.ofSeconds(.3)
+                .withStep(BlindStep(Duration.ofSeconds(.3), AgentOutput()
+                        .withJump(true)
+                        .withPitch(1.0)
                 ))
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withPitch(1.0)
-                                .withBoost(true),
-                        Duration.ofSeconds(.05)
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()
+                        .withPitch(1.0)
+                        .withBoost(true)
                 ))
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withBoost(true)
-                                .withJump(true),
-                        Duration.ofSeconds(.05)
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()
+                        .withBoost(true)
+                        .withJump(true)
                 ))
-                .withStep(BlindStep(
-                        AgentOutput()
-                                .withJump(true)
-                                .withBoost(true),
-                        Duration.ofSeconds(howHigh / 10)
+                .withStep(BlindStep(Duration.ofSeconds(howHigh / 10), AgentOutput()
+                        .withJump(true)
+                        .withBoost(true)
                 ))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
