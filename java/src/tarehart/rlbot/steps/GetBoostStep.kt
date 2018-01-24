@@ -4,19 +4,13 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BoostPad
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.CircleTurnUtil
-import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.time.Duration
 
-import java.awt.*
 import java.util.Optional
 
 import tarehart.rlbot.tuning.BotLog.println
@@ -46,15 +40,15 @@ class GetBoostStep : NestedPlanStep() {
 
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
-        val targetLoc = targetLocation ?: return Optional.empty()
+        val targetLoc = targetLocation ?: return null
 
         val distance = SteerUtil.getDistanceFromCar(car, targetLoc.location)
 
         if (distance < 3) {
-            return Optional.empty()
+            return null
         } else {
 
             val myPosition = car.position.flatten()
@@ -73,7 +67,7 @@ class GetBoostStep : NestedPlanStep() {
                 return startPlan(sensibleFlip.get(), input)
             }
 
-            return Optional.of(planForCircleTurn.immediateSteer)
+            return planForCircleTurn.immediateSteer
         }
     }
 

@@ -53,23 +53,22 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
         return this
     }
 
-    open fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    open fun getOutput(input: AgentInput): AgentOutput? {
 
         if (isComplete()) {
-            return Optional.empty()
+            return null
         }
 
         while (currentStepIndex < steps.size) {
 
             val output = currentStep.getOutput(input)
 
-            if (output.isPresent) {
-                return output
-            }
+            output?.let { return it }
+
             nextStep()
         }
 
-        return Optional.empty()
+        return null
     }
 
     protected fun nextStep() {

@@ -6,16 +6,13 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.Step
 
 import java.awt.*
 import java.awt.geom.Line2D
 import java.util.Optional
-import java.util.function.Function
 
 class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?) : NestedPlanStep() {
 
@@ -33,10 +30,10 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         return car.velocity.flatten().dotProduct(car.orientation.noseVector.flatten()) < 15
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
-        val latestTarget = targetFunction.invoke(input) ?: return Optional.empty()
+        val latestTarget = targetFunction.invoke(input) ?: return null
         target = latestTarget
         val toTarget = latestTarget.position.minus(car.position.flatten())
         val distance = toTarget.magnitude()
@@ -58,7 +55,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
             if (distance < 4) {
                 if (Math.abs(facingCorrectionRadians) < .1 && speed < 3) {
-                    return Optional.empty() // We're already good
+                    return null // We're already good
                 }
 
                 phase = SLIDE_SPIN
@@ -69,13 +66,13 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                 phase = TRAVEL
             } else {
                 if (backwards) {
-                    return Optional.of(SteerUtil.backUpTowardGroundPosition(car, latestTarget.position))
+                    return SteerUtil.backUpTowardGroundPosition(car, latestTarget.position)
                 }
                 val output = SteerUtil.steerTowardGroundPosition(car, input.boostData, latestTarget.position)
                 if (distance < 20) {
                     output.withBoost(false)
                 }
-                return Optional.of(output)
+                return output
             }
         }
 
@@ -89,7 +86,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
             } else {
 
                 if (backwards) {
-                    return Optional.of(SteerUtil.backUpTowardGroundPosition(car, latestTarget.position))
+                    return SteerUtil.backUpTowardGroundPosition(car, latestTarget.position)
                 } else {
 
                     val correctionRadians = toTarget.correctionAngle(latestTarget.facing)
@@ -107,7 +104,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                         return startPlan(sensibleFlip.get(), input)
                     }
 
-                    return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.boostData, waypoint).withBoost(car.boost > 50 && distance > 20))
+                    return SteerUtil.steerTowardGroundPosition(car, input.boostData, waypoint).withBoost(car.boost > 50 && distance > 20)
                 }
             }
         }
@@ -124,26 +121,26 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         if (shouldSlide) {
 
             if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {
-                return Optional.empty() // Done orienting.
+                return null // Done orienting.
             }
 
-            return Optional.of(AgentOutput()
+            return AgentOutput()
                     .withDeceleration(if (backwards) 1.0 else 0.0)
                     .withAcceleration(if (backwards) 0.0 else 1.0)
                     .withSteer(turnDir.toDouble() * steerPolarity)
-                    .withSlide())
+                    .withSlide()
 
         } else {
 
             if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {
-                return Optional.empty() // Done orienting.
+                return null // Done orienting.
             }
 
             val tooFast = distance < getBrakeDistance(car.velocity.magnitude())
-            return Optional.of(AgentOutput()
+            return AgentOutput()
                     .withAcceleration(if (tooFast == backwards) 1.0 else 0.0)
                     .withDeceleration(if (tooFast != backwards) 1.0 else 0.0)
-                    .withSteer(turnDir.toDouble() * steerPolarity))
+                    .withSteer(turnDir.toDouble() * steerPolarity)
         }
     }
 

@@ -14,7 +14,6 @@ import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.routing.StrikePoint
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
@@ -49,13 +48,13 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         recentCar = input.myCarData
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
         doneMoment?.let {
             if (input.time.isAfter(it)) {
-                return Optional.empty()
+                return null
             }
         }
 
@@ -74,7 +73,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         if (!kickPlanOption.isPresent) {
             BotLog.println("Quitting side hit due to failed kick plan.", car.playerIndex)
-            return Optional.empty()
+            return null
         }
 
         val kickPlan = kickPlanOption.get()
@@ -84,7 +83,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             val (x, y, z) = kickPlan.plannedKickForce.scaledToMagnitude(-(DISTANCE_AT_CONTACT + GAP_BEFORE_DODGE))
             interceptModifier = Vector3(x, y, z - 1.4) // Closer to ground
         } else if (kickPlan.intercept.spareTime.seconds > 2) {
-            return Optional.empty() // Too much time to be waiting around.
+            return null // Too much time to be waiting around.
         }
 
         if (!::originalIntercept.isInitialized) {
@@ -93,13 +92,13 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         } else {
             if (originalIntercept.distance(kickPlan.ballAtIntercept.space) > 30) {
                 println("Failed to make the side kick", input.playerIndex)
-                return empty() // Failed to kick it soon enough, new stuff has happened.
+                return null // Failed to kick it soon enough, new stuff has happened.
             }
 
             if (input.latestBallTouch.map{ it.position }.orElse(Vector3()) != originalTouch.map { it.position }.orElse(Vector3())) {
                 // There has been a new ball touch.
                 println("Ball has been touched, quitting side hit", input.playerIndex)
-                return Optional.empty()
+                return null
             }
         }
 
@@ -110,14 +109,14 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         val strikeTime = getStrikeTime(carPositionAtIntercept, GAP_BEFORE_DODGE)
         if (!strikeTime.isPresent) {
-            return Optional.empty()
+            return null
         }
         val expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint)).map { m -> m.speed }.orElse(40.0)
         val backoff = expectedSpeed * strikeTime.get().seconds + 1
 
         if (backoff > car.position.flatten().distance(orthogonalPoint)) {
             BotLog.println("Failed the side hit.", car.playerIndex)
-            return Optional.empty()
+            return null
         }
 
         val carToIntercept = carPositionAtIntercept.minus(car.position).flatten()
@@ -125,7 +124,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         if (Vector2.angle(carToIntercept, facingForSideFlip) > Math.PI / 3) {
             // If we're doing more than a quarter turn, this is a waste of time.
-            return Optional.empty()
+            return null
         }
 
         val steerTarget = orthogonalPoint.minus(facingForSideFlip.scaled(backoff))
@@ -158,7 +157,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         return getJumpTime(carPositionAtIntercept).map { t -> t.plusSeconds(ManeuverMath.secondsForSideFlipTravel(approachDistance)) }
     }
 
-    private fun performFinalApproach(input: AgentInput, kickPlan: DirectedKickPlan?): Optional<AgentOutput> {
+    private fun performFinalApproach(input: AgentInput, kickPlan: DirectedKickPlan?): AgentOutput? {
 
         // You're probably darn close to flip time.
 
@@ -171,7 +170,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         val jumpTime = getJumpTime(carPositionAtIntercept)
         if (!jumpTime.isPresent) {
-            return Optional.empty()
+            return null
         }
         val carAtImpact = kickPlan.ballAtIntercept.space.flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT))
         val toImpact = carAtImpact.minus(car.position.flatten())
@@ -179,7 +178,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         val realApproachDistance = projectedApproach.magnitude()
         val strikeTime = getStrikeTime(carPositionAtIntercept, realApproachDistance)
         if (!strikeTime.isPresent) {
-            return Optional.empty()
+            return null
         }
         val strikeSeconds = strikeTime.get().seconds
         val backoff = car.velocity.magnitude() * strikeSeconds
@@ -193,7 +192,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             return startPlan(SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime.get(), false), input)
         } else {
             println(format("Side flip soon. Distance: %.2f, Time: %.2f", distanceCountdown, timeCountdown), input.playerIndex)
-            return of(SteerUtil.getThereOnTime(car, SpaceTime(orthogonalPoint.toVector3(), kickPlan.intercept.time)))
+            return SteerUtil.getThereOnTime(car, SpaceTime(orthogonalPoint.toVector3(), kickPlan.intercept.time))
         }
     }
 
@@ -201,7 +200,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         return ManeuverMath.secondsForMashJumpHeight(carPositionAtIntercept.z).map { Duration.ofSeconds(it) }
     }
 
-    private fun getNavigation(input: AgentInput, circleTurnOption: SteerPlan): Optional<AgentOutput> {
+    private fun getNavigation(input: AgentInput, circleTurnOption: SteerPlan): AgentOutput? {
         val car = input.myCarData
 
         if (car.boost == 0.0) {
@@ -212,7 +211,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             }
         }
 
-        return Optional.of(circleTurnOption.immediateSteer)
+        return circleTurnOption.immediateSteer
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {

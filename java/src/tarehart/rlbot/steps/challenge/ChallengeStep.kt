@@ -22,7 +22,7 @@ class ChallengeStep: NestedPlanStep() {
         return  "Working on challenge"
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
@@ -33,20 +33,20 @@ class ChallengeStep: NestedPlanStep() {
             if (originalTouch?.position ?: Vector3() != input.latestBallTouch.map({it.position}).orElse(Vector3())) {
                 // There has been a new ball touch.
                 println("Ball has been touched, quitting challenge", input.playerIndex)
-                return Optional.empty()
+                return null
             }
         }
 
-        val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return Optional.empty()
+        val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return null
         val ballAdvantage = tacticalSituation.ballAdvantage
         if (ballAdvantage.seconds > 2.0) {
-            return Optional.empty() // We can probably go for a shot now.
+            return null // We can probably go for a shot now.
         }
 
-        val enemyContact = tacticalSituation.expectedEnemyContact ?: return Optional.empty()
+        val enemyContact = tacticalSituation.expectedEnemyContact ?: return null
 
         if (enemyContact.space.z > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) {
-            return Optional.empty()
+            return null
         }
 
         val enemyShotLine = GoalUtil.getOwnGoal(input.team).center - enemyContact.space
@@ -69,6 +69,6 @@ class ChallengeStep: NestedPlanStep() {
             return startPlan(sensibleFlip.get(), input)
         }
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.boostData, defensiveNode))
+        return SteerUtil.steerTowardGroundPosition(car, input.boostData, defensiveNode)
     }
 }

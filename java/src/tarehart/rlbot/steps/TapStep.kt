@@ -13,7 +13,7 @@ class TapStep(private val numFrames: Int, private val output: AgentOutput) : Ste
 
     override val situation = "Muscle memory"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         if (previousTime == null || input.time.isAfter(previousTime!!)) {
             frameCount++
@@ -21,8 +21,8 @@ class TapStep(private val numFrames: Int, private val output: AgentOutput) : Ste
         }
 
         return if (frameCount > numFrames) {
-            Optional.empty()
-        } else Optional.of(output)
+            null
+        } else output
     }
 
     override fun canInterrupt(): Boolean {

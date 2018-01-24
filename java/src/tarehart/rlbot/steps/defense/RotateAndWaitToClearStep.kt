@@ -18,7 +18,7 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
     private val awayFromGoal = -2.0
 
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val positionFacing = calculatePositionFacing(input)
         val car = input.myCarData
@@ -27,7 +27,7 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
         val facingError = Vector2.angle(car.orientation.noseVector.flatten(), positionFacing.facing)
 
         if (positionError < 5 && facingError < Math.PI / 8) {
-            return Optional.of(AgentOutput())
+            return AgentOutput()
         }
 
         val plan = Plan(Plan.Posture.DEFENSIVE)

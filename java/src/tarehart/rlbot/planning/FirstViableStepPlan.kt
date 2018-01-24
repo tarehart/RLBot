@@ -22,17 +22,17 @@ class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
             return posture.name + " " + (if (committed) "committed" else "sampling") + " - " + currentStep.situation
         }
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         if (isComplete()) {
-            return Optional.empty()
+            return null
         }
 
         while (currentStepIndex < steps.size) {
             val currentStep = currentStep
 
             val output = currentStep.getOutput(input)
-            if (output.isPresent) {
+            if (output != null) {
 
                 if (currentStepIndex < steps.size - 1) {
                     frameCount += 1
@@ -50,6 +50,6 @@ class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
             nextStep()
         }
 
-        return Optional.empty()
+        return null
     }
 }

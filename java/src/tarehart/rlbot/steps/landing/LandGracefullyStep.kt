@@ -2,16 +2,13 @@ package tarehart.rlbot.steps.landing
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.Bot
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.input.CarOrientation
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.Step
 import tarehart.rlbot.steps.rotation.PitchToPlaneStep
 import tarehart.rlbot.steps.rotation.RollToPlaneStep
 import tarehart.rlbot.steps.rotation.YawToPlaneStep
@@ -19,8 +16,6 @@ import tarehart.rlbot.steps.wall.DescendFromWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 
 import java.awt.*
-import java.util.Optional
-import java.util.function.Function
 
 class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : NestedPlanStep() {
 
@@ -45,7 +40,7 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         }
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
         return startPlan(planRotation(input.myCarData, facingFn), input)
     }
 

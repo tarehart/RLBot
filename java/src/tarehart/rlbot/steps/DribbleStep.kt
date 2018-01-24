@@ -2,21 +2,16 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 
 import java.awt.*
@@ -24,12 +19,12 @@ import java.util.Optional
 
 class DribbleStep : NestedPlanStep() {
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
         if (!canDribble(input, true)) {
-            return Optional.empty()
+            return null
         }
 
         val myPositonFlat = car.position.flatten()
@@ -46,7 +41,7 @@ class DribbleStep : NestedPlanStep() {
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         if (motionAfterWallBounce.isPresent && Duration.between(input.time, motionAfterWallBounce.get().time).seconds < 1) {
-            return Optional.empty() // The dribble step is not in the business of wall reads.
+            return null // The dribble step is not in the business of wall reads.
         }
 
         val futureBallPosition: Vector2
@@ -84,7 +79,7 @@ class DribbleStep : NestedPlanStep() {
             // Steer toward a farther-back waypoint.
             val (x, y) = VectorUtil.orthogonal(pushDirection) { v -> v.dotProduct(ballToGoal) < 0 }.scaledToMagnitude(5.0)
 
-            return Optional.of(SteerUtil.getThereOnTime(car, SpaceTime(Vector3(x, y, 0.0), hurryUp)))
+            return SteerUtil.getThereOnTime(car, SpaceTime(Vector3(x, y, 0.0), hurryUp))
         }
 
         val dribble = SteerUtil.getThereOnTime(car, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
@@ -97,7 +92,7 @@ class DribbleStep : NestedPlanStep() {
                 return startPlan(SetPieces.frontFlip(), input)
             }
         }
-        return Optional.of(dribble)
+        return dribble
     }
 
     override fun getLocalSituation(): String {

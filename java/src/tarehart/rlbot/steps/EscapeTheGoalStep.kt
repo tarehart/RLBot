@@ -15,11 +15,11 @@ class EscapeTheGoalStep : Step {
 
     override val situation = "Escaping the goal"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
         if (!ArenaModel.isBehindGoalLine(car.position)) {
-            return Optional.empty()
+            return null
         }
 
         val target = TacticsTelemetry.get(car.playerIndex)?.futureBallMotion?.space ?: Vector3()
@@ -30,7 +30,7 @@ class EscapeTheGoalStep : Step {
 
         val exit = nearestGoal.getNearestEntrance(desiredExit, 2.0)
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, exit).withBoost(false))
+        return SteerUtil.steerTowardGroundPosition(car, exit).withBoost(false)
     }
 
     override fun canInterrupt(): Boolean {

@@ -4,7 +4,6 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 
 import java.awt.*
-import java.util.Optional
 
 interface Step {
 
@@ -15,7 +14,7 @@ interface Step {
      * Return the output you want to pass to the bot.
      * If you pass Optional.empty(), you are declaring yourself to be complete.
      */
-    fun getOutput(input: AgentInput): Optional<AgentOutput>
+    fun getOutput(input: AgentInput): AgentOutput?
 
     fun canInterrupt(): Boolean
 

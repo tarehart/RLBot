@@ -34,7 +34,7 @@ class InterceptStep @JvmOverloads constructor(
     private var chosenIntercept: Intercept? = null
     private var originalTouch: BallTouch? = null
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val carData = input.myCarData
 
@@ -44,7 +44,7 @@ class InterceptStep @JvmOverloads constructor(
         val soonestIntercept = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)
         if (soonestIntercept == null) {
             println("No intercept option found, aborting.", input.playerIndex)
-            return Optional.empty()
+            return null
         }
 
         chosenIntercept = soonestIntercept
@@ -70,12 +70,12 @@ class InterceptStep @JvmOverloads constructor(
             if (originalTouch?.position ?: Vector3() != input.latestBallTouch.map({it.position}).orElse(Vector3())) {
                 // There has been a new ball touch.
                 println("Ball has been touched, quitting intercept", input.playerIndex)
-                return Optional.empty()
+                return null
             }
         }
 
 
-        return Optional.of(getThereOnTime(input, soonestIntercept))
+        return getThereOnTime(input, soonestIntercept)
     }
 
     private fun getThereOnTime(input: AgentInput, intercept: Intercept): AgentOutput {

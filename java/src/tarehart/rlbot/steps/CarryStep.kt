@@ -3,20 +3,16 @@ package tarehart.rlbot.steps
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
 
 import java.awt.*
-import java.util.Optional
 
 import tarehart.rlbot.tuning.BotLog.println
 
@@ -28,10 +24,10 @@ class CarryStep : Step {
     override val situation: String
         get() = "Carrying"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         if (!canCarry(input, true)) {
-            return Optional.empty()
+            return null
         }
 
         val ballVelocityFlat = input.ballVelocity.flatten()
@@ -41,7 +37,7 @@ class CarryStep : Step {
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         if (motionAfterWallBounce.isPresent && Duration.between(input.time, motionAfterWallBounce.get().time).seconds < 1) {
-            return Optional.empty() // The dribble step is not in the business of wall reads.
+            return null // The dribble step is not in the business of wall reads.
         }
 
         val futureBallPosition: Vector2
@@ -65,8 +61,7 @@ class CarryStep : Step {
 
         val hurryUp = input.time.plusSeconds(leadSeconds)
 
-        val dribble = SteerUtil.getThereOnTime(input.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
-        return Optional.of(dribble)
+        return SteerUtil.getThereOnTime(input.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
     }
 
     override fun canInterrupt(): Boolean {

@@ -6,7 +6,6 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.intercept.AirTouchPlanner
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
@@ -21,7 +20,7 @@ class CatchBallStep : Step {
     override val situation: String
         get() = "Catching ball"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
@@ -32,10 +31,10 @@ class CatchBallStep : Step {
         if (catchOpportunity.isPresent) {
             latestCatchLocation = catchOpportunity.get()
             return if (Duration.between(input.time, latestCatchLocation.time).seconds > 2) {
-                Optional.empty() // Don't wait around for so long
-            } else Optional.of(playCatch(car, latestCatchLocation))
+                null // Don't wait around for so long
+            } else playCatch(car, latestCatchLocation)
         } else {
-            return Optional.empty()
+            return null
         }
     }
 

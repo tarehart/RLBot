@@ -11,10 +11,10 @@ class WaitForActive : Step {
     override val situation: String
         get() = "Idling"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
         return if (input.matchInfo.roundActive) {
-            Optional.empty()
-        } else Optional.of(AgentOutput())
+            null
+        } else AgentOutput()
     }
 
     override fun canInterrupt(): Boolean {

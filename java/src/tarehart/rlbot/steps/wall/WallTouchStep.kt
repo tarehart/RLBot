@@ -10,10 +10,8 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
@@ -31,12 +29,12 @@ class WallTouchStep : Step {
     override val situation: String
         get() = "Making a wall touch."
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
         if (!ArenaModel.isCarOnWall(car)) {
             println("Failed to make the wall touch because the car is not on the wall", input.playerIndex)
-            return empty()
+            return null
         }
 
 
@@ -50,14 +48,14 @@ class WallTouchStep : Step {
 
         if (!ballMotion.isPresent) {
             println("Failed to make the wall touch because we see no intercepts on the wall", input.playerIndex)
-            return empty()
+            return null
         }
         val motion = ballMotion.get()
 
         originalIntercept?.let {
             if (it.distance(motion.space) > 20) {
                 println("Failed to make the wall touch because the intercept changed", input.playerIndex)
-                return empty() // Failed to kick it soon enough, new stuff has happened.
+                return null // Failed to kick it soon enough, new stuff has happened.
             }
         }
 
@@ -67,10 +65,10 @@ class WallTouchStep : Step {
 
         if (readyToJump(input, motion.toSpaceTime())) {
             println("Jumping for wall touch.", input.playerIndex)
-            return of(AgentOutput().withAcceleration(1.0).withJump())
+            return AgentOutput().withAcceleration(1.0).withJump()
         }
 
-        return Optional.of(SteerUtil.steerTowardWallPosition(car, motion.space))
+        return SteerUtil.steerTowardWallPosition(car, motion.space)
     }
 
     override fun canInterrupt(): Boolean {

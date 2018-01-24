@@ -2,7 +2,6 @@ package tarehart.rlbot.steps.strikes
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.SpaceTime
@@ -10,7 +9,6 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
@@ -39,7 +37,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         return "Midair Strike"
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         if (! ::lastMomentForDodge.isInitialized) {
             lastMomentForDodge = input.time.plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart)
@@ -68,7 +66,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
                 // Front flip out of confusion
                 startPlan(Plan().withStep(TapStep(2, AgentOutput().withPitch(-1.0).withJump())), input)
             }
-            return Optional.of(AgentOutput().withBoost())
+            return AgentOutput().withBoost()
         }
 
         val latestIntercept = interceptOpportunity.get()
@@ -102,7 +100,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
 
         if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 2 && rightDirection < .6) {
             BotLog.println("Failed aerial on bad angle", input.playerIndex)
-            return Optional.empty()
+            return null
         }
 
         val projectedHeight = AerialMath.getProjectedHeight(
@@ -145,15 +143,15 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         val yawOutput = YawToPlaneStep({yawPlaneNormal}, false).getOutput(input)
         val rollOutput = RollToPlaneStep(Vector3(0.0, 0.0, 1.0), false).getOutput(input)
 
-        return Optional.of(mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput).withBoost().withJump())
+        return mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput).withBoost().withJump()
     }
 
 
-    private fun mergeOrientationOutputs(pitchOutput: Optional<AgentOutput>, yawOutput: Optional<AgentOutput>, rollOutput: Optional<AgentOutput>): AgentOutput {
+    private fun mergeOrientationOutputs(pitchOutput: AgentOutput?, yawOutput: AgentOutput?, rollOutput: AgentOutput?): AgentOutput {
         val output = AgentOutput()
-        pitchOutput.ifPresent { agentOutput -> output.withPitch(agentOutput.pitch) }
-        yawOutput.ifPresent { agentOutput -> output.withSteer(agentOutput.steer) }
-        rollOutput.ifPresent { agentOutput -> output.withRoll(agentOutput.roll) }
+        pitchOutput?.let { output.withPitch(it.pitch) }
+        yawOutput?.let { output.withSteer(it.steer) }
+        rollOutput?.let { output.withRoll(it.roll) }
 
         return output
     }

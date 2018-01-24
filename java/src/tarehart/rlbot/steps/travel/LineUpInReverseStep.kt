@@ -2,7 +2,6 @@ package tarehart.rlbot.steps.travel
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.steps.Step
@@ -16,7 +15,7 @@ class LineUpInReverseStep(private val waypoint: Vector2) : Step {
     override val situation: String
         get() = "Lining up in reverse"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
@@ -31,8 +30,8 @@ class LineUpInReverseStep(private val waypoint: Vector2) : Step {
         val futureRadians = correctionRadians + car.spin.yawRate * .3
 
         return if (futureRadians * correctionDirection!! < 0 && Math.abs(futureRadians) < Math.PI / 4) {
-            Optional.empty() // Done orienting.
-        } else Optional.of(AgentOutput().withDeceleration(1.0).withSteer(correctionDirection!!.toDouble()))
+            null // Done orienting.
+        } else AgentOutput().withDeceleration(1.0).withSteer(correctionDirection!!.toDouble())
 
     }
 

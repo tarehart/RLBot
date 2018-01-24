@@ -4,11 +4,7 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
-import tarehart.rlbot.carpredict.CarPath
 import tarehart.rlbot.carpredict.CarPredictor
-import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.SpaceTime
-import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
@@ -24,7 +20,7 @@ class DemolishEnemyStep : Step {
 
     override val situation = "Demolishing enemy"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
         val oppositeTeam = input.getTeamRoster(input.team.opposite())
@@ -32,7 +28,7 @@ class DemolishEnemyStep : Step {
                 oppositeTeam.minBy { car.position.distance(it.position) }
 
         if (enemyCar == null || enemyCar.isDemolished || car.boost == 0.0 && !car.isSupersonic) {
-            return Optional.empty()
+            return null
         }
 
         if (enemyCar.position.distance(car.position) < 30) {
@@ -78,10 +74,10 @@ class DemolishEnemyStep : Step {
 
             enemyHadWheelContact = enemyCar.hasWheelContact
 
-            return Optional.of(steering)
+            return steering
         }
 
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, input.boostData, enemyCar.position.flatten()))
+        return SteerUtil.steerTowardGroundPosition(car, input.boostData, enemyCar.position.flatten())
     }
 
     override fun canInterrupt(): Boolean {

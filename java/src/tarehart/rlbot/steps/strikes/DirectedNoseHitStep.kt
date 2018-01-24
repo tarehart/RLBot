@@ -55,7 +55,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         }
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
@@ -66,19 +66,19 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         doneMoment?.let {
             if (input.time.isAfter(it)) {
-                return Optional.empty()
+                return null
             }
         }
 
         if (ArenaModel.isCarOnWall(car)) {
-            return Optional.empty()
+            return null
         }
 
         val kickPlanOption = planKick(input)
 
         if (!kickPlanOption.isPresent) {
             BotLog.println("Quitting nose hit due to failed kick plan.", car.playerIndex)
-            return Optional.empty()
+            return null
         }
 
         val kickPlan = kickPlanOption.get()
@@ -96,7 +96,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         if (input.latestBallTouch.map { it.position }.orElse(Vector3()) != originalTouch.map { it.position }.orElse(Vector3())) {
             // There has been a new ball touch.
             println("Ball has been touched, quitting nose hit", input.playerIndex)
-            return Optional.empty()
+            return null
         }
 
         val strikeForceFlat = kickPlan.plannedKickForce.flatten().normalized()
@@ -126,7 +126,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         val timeMismatch = Duration.between(earliestPossibleIntercept, earliestThisTime).seconds
 
         if (Math.abs(positionCorrectionForStrike) > Math.PI / 2 || Math.abs(carLaunchpadInterceptAngle) > Math.PI / 2) {
-            return Optional.empty() // Too much turning.
+            return null // Too much turning.
         }
 
         // If you're facing the intercept, but the circle backoff wants you to backtrack, you should just wait
@@ -169,7 +169,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         if (ArenaModel.getDistanceFromWall(Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0.0)) < -1) {
             println("Failing nose hit because waypoint is out of bounds", input.playerIndex)
-            return empty()
+            return null
         }
 
 
@@ -190,7 +190,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         }
     }
 
-    private fun getNavigation(input: AgentInput, circleTurnOption: SteerPlan): Optional<AgentOutput> {
+    private fun getNavigation(input: AgentInput, circleTurnOption: SteerPlan): AgentOutput? {
         val car = input.myCarData
 
         val sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)
@@ -199,7 +199,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             return startPlan(sensibleFlip.get(), input)
         }
 
-        return Optional.of(circleTurnOption.immediateSteer)
+        return circleTurnOption.immediateSteer
     }
 
     override fun getLocalSituation(): String {

@@ -17,9 +17,9 @@ class GoForKickoffStep : NestedPlanStep() {
 
     private var kickoffType: KickoffType? = null
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
         if (input.ballPosition.flatten().magnitudeSquared() > 0) {
-            return Optional.empty()
+            return null
         }
 
         val car = input.myCarData
@@ -44,7 +44,7 @@ class GoForKickoffStep : NestedPlanStep() {
         } else {
             target = Vector2(0.0, 0.0)
         }
-        return Optional.of(SteerUtil.steerTowardGroundPosition(car, target))
+        return SteerUtil.steerTowardGroundPosition(car, target)
     }
 
     private enum class KickoffType {

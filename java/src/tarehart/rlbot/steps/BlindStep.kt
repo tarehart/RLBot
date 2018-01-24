@@ -13,16 +13,16 @@ class BlindStep(private val duration: Duration, private val output: AgentOutput)
 
     override val situation = "Muscle memory"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
         if (! ::scheduledEndTime.isInitialized) {
             scheduledEndTime = input.time.plus(duration)
         }
 
         if (input.time.isAfter(scheduledEndTime)) {
-            return Optional.empty()
+            return null
         }
 
-        return Optional.of(output)
+        return output
     }
 
     override fun canInterrupt(): Boolean {

@@ -9,7 +9,6 @@ import tarehart.rlbot.steps.Step
 
 import java.awt.*
 import java.util.Optional
-import java.util.function.Function
 
 
 abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vector3, protected var allowUpsideDown: Boolean) : Step {
@@ -69,7 +68,7 @@ abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vect
         return accelerate(correctionRadians > 0)
     }
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
@@ -88,7 +87,7 @@ abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vect
         if (timeToDecelerate) {
             if (getAngularVelocity(car) * originalCorrection!! < 0) {
                 // We're done decelerating
-                return Optional.empty()
+                return null
             }
 
             output = accelerate(originalCorrection!! < 0)
@@ -96,7 +95,7 @@ abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vect
 
         output.withAcceleration(1.0) // Just in case we're stuck on our side on the ground
 
-        return Optional.ofNullable(output)
+        return output
     }
 
     override fun canInterrupt(): Boolean {

@@ -3,26 +3,20 @@ package tarehart.rlbot.steps.defense
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AirTouchPlanner
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikeProfile
-import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.Step
 import tarehart.rlbot.steps.strikes.DirectedSideHitStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.time.Duration
 
-import java.awt.*
 import java.util.Optional
 
 class WhatASaveStep : NestedPlanStep() {
@@ -34,12 +28,12 @@ class WhatASaveStep : NestedPlanStep() {
     private var whichPost: Double? = null
     private var goingForSuperJump: Boolean = false
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)
         val goal = GoalUtil.getOwnGoal(input.team)
-        val currentThreat = GoalUtil.predictGoalEvent(goal, ballPath) ?: return Optional.empty()
+        val currentThreat = GoalUtil.predictGoalEvent(goal, ballPath) ?: return null
 
         if (whichPost == null) {
 
@@ -70,7 +64,7 @@ class WhatASaveStep : NestedPlanStep() {
             if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.time, overHeadSlice.get().time).seconds) {
                 return startPlan(SetPieces.jumpSuperHigh(overheadHeight), input)
             } else {
-                return Optional.of(AgentOutput())
+                return AgentOutput()
             }
         }
 

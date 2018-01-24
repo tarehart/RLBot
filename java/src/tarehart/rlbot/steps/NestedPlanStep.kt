@@ -11,24 +11,20 @@ abstract class NestedPlanStep : Step {
     private var plan : Plan? = null
     protected var zombie : Boolean = false
 
-    protected fun startPlan(p: Plan, input: AgentInput) : Optional<AgentOutput> {
+    protected fun startPlan(p: Plan, input: AgentInput): AgentOutput? {
         plan = p
         return p.getOutput(input)
     }
 
-    final override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    final override fun getOutput(input: AgentInput): AgentOutput? {
 
         doInitialComputation(input)
 
         if (zombie || shouldCancelPlanAndAbort(input) && plan?.canInterrupt() != false) {
-            return Optional.empty()
+            return null
         }
 
-        plan?.getOutput(input)?.let {
-            if (it.isPresent) {
-                return it
-            }
-        }
+        plan?.getOutput(input)?.let { return it }
 
         return doComputationInLieuOfPlan(input)
     }
@@ -50,7 +46,7 @@ abstract class NestedPlanStep : Step {
         return false
     }
 
-    abstract fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput>
+    abstract fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput?
 
     abstract fun getLocalSituation() : String
 

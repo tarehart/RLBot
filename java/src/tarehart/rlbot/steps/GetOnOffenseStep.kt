@@ -79,10 +79,10 @@ class GetOnOffenseStep : NestedPlanStep() {
         return false
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
-        val target = latestTarget ?: return Optional.empty()
+        val target = latestTarget ?: return null
 
         val sensibleFlip = SteerUtil.getSensibleFlip(car, target.position)
         if (sensibleFlip.isPresent) {

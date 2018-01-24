@@ -2,7 +2,6 @@ package tarehart.rlbot.steps.debug
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -19,7 +18,7 @@ class CalibrateStep : Step {
 
     override val situation = "Calibrating"
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
 
@@ -33,12 +32,12 @@ class CalibrateStep : Step {
                 BotLog.println(String.format("Game Latency: %s \nWall Latency: %s",
                         Duration.between(gameClockStart, input.time).seconds,
                         java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), input.playerIndex)
-                return Optional.empty()
+                return null
             }
-            return Optional.of(AgentOutput().withSteer(1.0).withAcceleration(1.0))
+            return AgentOutput().withSteer(1.0).withAcceleration(1.0)
         }
 
-        return Optional.of(AgentOutput().withAcceleration(1.0))
+        return AgentOutput().withAcceleration(1.0)
     }
 
     override fun canInterrupt(): Boolean {

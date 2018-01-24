@@ -10,11 +10,9 @@ import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 
-import java.util.Optional
-
 class TagAlongStep : NestedPlanStep() {
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
         val p = Plan().withStep(ParkTheCarStep { inp ->
             val enemyCar = TacticsTelemetry[inp.playerIndex]?.enemyPlayerWithInitiative?.car!!
             val waypoint = enemyCar.position.plus(enemyCar.orientation.rightVector.scaled(4.0)).flatten()

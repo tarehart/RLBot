@@ -10,8 +10,6 @@ import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
-import java.util.Optional
-
 class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = DEFAULT_LIFESPAN // seconds
 ) : NestedPlanStep() {
 
@@ -21,7 +19,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
 
     private var startTime: GameTime? = null
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): Optional<AgentOutput> {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
         if (startTime == null) {
             startTime = input.time
         }
