@@ -142,7 +142,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         val yawPlaneNormal = VectorUtil.rotateVector(desiredFlatOrientation, -Math.PI / 2).toVector3().normaliseCopy()
 
         val pitchOutput = PitchToPlaneStep(pitchPlaneNormal).getOutput(input)
-        val yawOutput = YawToPlaneStep(yawPlaneNormal, false).getOutput(input)
+        val yawOutput = YawToPlaneStep({yawPlaneNormal}, false).getOutput(input)
         val rollOutput = RollToPlaneStep(Vector3(0.0, 0.0, 1.0), false).getOutput(input)
 
         return Optional.of(mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput).withBoost().withJump())

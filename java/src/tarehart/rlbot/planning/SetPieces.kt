@@ -5,11 +5,9 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.TapStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
-import tarehart.rlbot.steps.landing.LandMindlesslyStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.steps.travel.LineUpInReverseStep
 import tarehart.rlbot.time.Duration
-import tarehart.rlbot.tuning.ManeuverMath
 
 object SetPieces {
 
@@ -37,7 +35,7 @@ object SetPieces {
                                 .withAcceleration(1.0)
                                 .withPitch(-1.0)
                 ))
-                .withStep(LandGracefullyStep())
+                .withStep(LandGracefullyStep({ it.myCarData.velocity.flatten()}))
     }
 
     fun halfFlip(waypoint: Vector2): Plan {
@@ -132,25 +130,6 @@ object SetPieces {
                         .withPitch(-1.0)
                 ))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
-    }
-
-    fun sideFlip(flipLeft: Boolean): Plan {
-        return Plan()
-                .unstoppable()
-                .withStep(TapStep(2,
-                        AgentOutput()
-                                .withJump(true)
-                                .withAcceleration(1.0)))
-                .withStep(TapStep(2,
-                        AgentOutput()
-                                .withAcceleration(1.0)
-                ))
-                .withStep(TapStep(2,
-                        AgentOutput()
-                                .withJump(true)
-                                .withAcceleration(1.0)
-                                .withSteer((if (flipLeft) -1 else 1).toDouble())))
-                .withStep(LandMindlesslyStep())
     }
 
     fun jumpSideFlip(flipLeft: Boolean, rawJumpTime: Duration, hurry: Boolean): Plan {

@@ -16,7 +16,7 @@ abstract class NestedPlanStep : Step {
         return p.getOutput(input)
     }
 
-    override fun getOutput(input: AgentInput): Optional<AgentOutput> {
+    final override fun getOutput(input: AgentInput): Optional<AgentOutput> {
 
         doInitialComputation(input)
 

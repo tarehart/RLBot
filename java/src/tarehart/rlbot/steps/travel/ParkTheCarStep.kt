@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.travel
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
@@ -112,7 +113,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         }
 
 
-        val turnDir = turnDirection ?: nonZeroSignum(facingCorrectionRadians)
+        val turnDir = turnDirection ?: BotMath.nonZeroSignum(facingCorrectionRadians)
         turnDirection = turnDir
 
         shouldSlide = shouldSlide || Math.abs(facingCorrectionRadians) > Math.PI / 3 || distance < 4
@@ -144,10 +145,6 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     .withDeceleration(if (tooFast != backwards) 1.0 else 0.0)
                     .withSteer(turnDir.toDouble() * steerPolarity))
         }
-    }
-
-    private fun nonZeroSignum(value: Double) : Int {
-        return if (value < 0) -1 else 1
     }
 
     private fun getSlideDistance(speed: Double): Double {
