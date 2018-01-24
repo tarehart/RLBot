@@ -4,7 +4,6 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.Plan
 import java.awt.Graphics2D
-import java.util.*
 
 abstract class NestedPlanStep : Step {
 
@@ -20,7 +19,7 @@ abstract class NestedPlanStep : Step {
 
         doInitialComputation(input)
 
-        if (zombie || shouldCancelPlanAndAbort(input) && plan?.canInterrupt() != false) {
+        if (zombie || shouldCancelPlanAndAbort(input) && canAbortPlanInternally()) {
             return null
         }
 
@@ -49,6 +48,10 @@ abstract class NestedPlanStep : Step {
     abstract fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput?
 
     abstract fun getLocalSituation() : String
+
+    protected open fun canAbortPlanInternally(): Boolean {
+        return canInterrupt()
+    }
 
     override fun canInterrupt(): Boolean {
         return plan?.canInterrupt() ?: true

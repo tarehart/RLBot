@@ -44,6 +44,10 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         return startPlan(planRotation(input.myCarData, facingFn), input)
     }
 
+    override fun canAbortPlanInternally(): Boolean {
+        return true
+    }
+
     override fun canInterrupt(): Boolean {
         return false
     }
