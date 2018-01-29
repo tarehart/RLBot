@@ -4,7 +4,9 @@ import grpc
 import time
 
 ####################################################################################################
-# To run this agent successfully, you need to have grpc_demo_server.py running at the same time!
+# To run this agent successfully, you need to:
+# - install the python package "grpcio", e.g. pip install grpcio
+# - have the ReliefBot grpc server running at the same time
 ####################################################################################################
 
 class Agent:
@@ -14,26 +16,27 @@ class Agent:
         self.index = index
         self.stub = None
         self.myPort = '25368'
+        self.connected = False
 
         try:
-            self.init_protobuf()
+            print("Will connect to ReliefBot grpc server on port " + self.myPort + '...')
+            channel = grpc.insecure_channel('localhost:' + self.myPort)
+            self.stub = game_data_pb2_grpc.BotStub(channel)
         except Exception as e:
-            print("Exception when trying to connect to protobuf server: " + str(e))
+            print("Exception when trying to connect to ReliefBot grpc server: " + str(e))
             pass
-
-    def init_protobuf(self):
-        print("Connecting to protobuf server on port " + self.myPort + '...')
-        channel = grpc.insecure_channel('localhost:' + self.myPort)
-        self.stub = game_data_pb2_grpc.BotStub(channel)
-        grpc.channel_ready_future(channel).result()
-        print("Connection to server successful!")
 
     def get_output_vector(self, game_tick_packet):
 
         proto = proto_converter.convert_game_tick(game_tick_packet, self.index)
 
         try:
-            controller_state = self.stub.GetControllerState(proto)
+            controller_state = self.stub.GetControllerState(proto, timeout = 1)
+
+            if not self.connected:
+                print("Connected to grpc server successfully!")
+                self.connected = True
+
             return [
                 controller_state.throttle,
                 controller_state.steer,
@@ -45,13 +48,9 @@ class Agent:
                 controller_state.handbrake
             ]
         except Exception as e:
-            print("Exception when calling protobuf server: " + str(e))
-            print("Will recreate connection in a few seconds...")
+            print("Exception when calling grpc server: " + str(e))
+            print("Will try again in a few seconds...")
+            self.connected = False
             time.sleep(4)
-            try:
-                self.init_protobuf()
-            except Exception as e:
-                print("Reinitialization failed: " + str(e))
-                pass
 
             return [0, 0, 0, 0, 0, 0, 0, 0]  # No motion
