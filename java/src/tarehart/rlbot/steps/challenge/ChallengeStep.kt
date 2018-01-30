@@ -5,10 +5,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.intercept.AirTouchPlanner
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.TacticsTelemetry
+import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.tuning.BotLog.println
@@ -19,6 +16,16 @@ class ChallengeStep: NestedPlanStep() {
 
     override fun getLocalSituation(): String {
         return  "Working on challenge"
+    }
+
+    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+        val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return false
+        return !threatExists(tacticalSituation)
+    }
+
+    private fun threatExists(tacticalSituation: TacticalSituation): Boolean {
+        return tacticalSituation.ballAdvantage.seconds < 1.0 &&
+                tacticalSituation.enemyOffensiveApproachError?.let { it < Math.PI / 3 } == true
     }
 
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {

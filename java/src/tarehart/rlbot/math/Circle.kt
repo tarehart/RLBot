@@ -11,6 +11,38 @@ class Circle(val center: Vector2, val radius: Double) {
         return Ellipse2D.Double(center.x - radius, center.y - radius, radius * 2, radius * 2)
     }
 
+    // https://stackoverflow.com/questions/3349125/circle-circle-intersection-points
+    fun intersect(other: Circle): Pair<Vector2, Vector2>? {
+
+        val d = this.center.distance(other.center)
+
+        if (d >= this.radius + other.radius) {
+            return null
+        }
+
+        if (d < Math.abs(this.radius - other.radius)) {
+            return null
+        }
+
+        val a = (radius * radius - other.radius * other.radius + d * d) / (2 * d)
+        val h = Math.sqrt(radius * radius - a * a)
+        val p2 = (other.center - this.center).scaled(a / d) + this.center
+
+        return Pair(
+                Vector2(p2.x + h*(other.center.y - this.center.y)/d,
+                        p2.y - h*(other.center.x - this.center.x)/d),
+                Vector2(p2.x - h*(other.center.y - this.center.y)/d,
+                        p2.y + h*(other.center.x - this.center.x)/d))
+    }
+
+    fun calculateTangentPoints(outsidePoint: Vector2): Pair<Vector2, Vector2>? {
+        val toMidpoint = (center - outsidePoint).scaled(.5)
+        val midpoint = outsidePoint + toMidpoint
+
+        val thalesCircle = Circle(midpoint, toMidpoint.magnitude())
+        return intersect(thalesCircle)
+    }
+
     companion object {
 
         // https://stackoverflow.com/questions/4103405/what-is-the-algorithm-for-finding-the-center-of-a-circle-from-three-points

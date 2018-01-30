@@ -126,23 +126,19 @@ object CircleTurnUtil {
         val radiusVector = VectorUtil.rotateVector(targetFacing, Math.PI / 2 * if (clockwise) -1 else 1).scaled(turnRadius)
 
         val center = targetPosition.plus(radiusVector)
-        val distanceFromCenter = flatPosition.distance(center)
+        val circle = Circle(center, turnRadius)
 
-        val centerToTangent = VectorUtil.orthogonal(toTarget.scaledToMagnitude(turnRadius)) { v ->
-            val toCenter = center.minus(flatPosition)
-            val toCandidate = center.plus(v).minus(flatPosition)
-            toCandidate.correctionAngle(toCenter) < 0 == clockwise
-        }
-
-        val tangentPoint = center.plus(centerToTangent)
-
-        if (distanceFromCenter < turnRadius) {
-
+        val tangentPoints = circle.calculateTangentPoints(flatPosition) ?:
             return if (currentSpeed < expectedSpeed) {
                 circleWaypoint(car, strikePoint, currentSpeed, currentSpeed)
             } else planWithinCircle(car, strikePoint, currentSpeed)
 
-        }
+        val toCenter = center.minus(flatPosition)
+
+        val tangentPoint = if ((tangentPoints.first - flatPosition).correctionAngle(toCenter) < 0 == clockwise)
+            tangentPoints.first
+        else
+            tangentPoints.second
 
         val toTangent = tangentPoint.minus(flatPosition)
         val facingCorrectionSeconds = getFacingCorrectionSeconds(toTangent, targetFacing, expectedSpeed)
@@ -152,7 +148,7 @@ object CircleTurnUtil {
         if (currentSpeed > expectedSpeed && toTangent.magnitude() < 20) {
             immediateSteer.withAcceleration(0.0).withDeceleration(1.0)
         }
-        val circle = Circle(center, turnRadius)
+
         return SteerPlan(immediateSteer, tangentPoint, strikePoint, circle, Circle.isClockwise(circle, targetPosition, targetFacing))
     }
 
