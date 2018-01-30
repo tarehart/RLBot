@@ -5,8 +5,6 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.TacticsTelemetry
 
-import java.util.Optional
-
 import tarehart.rlbot.tuning.BotLog.println
 
 class ChaseBallStep : NestedPlanStep() {
@@ -22,10 +20,9 @@ class ChaseBallStep : NestedPlanStep() {
 
         val car = input.myCarData
 
-        val sensibleFlip = SteerUtil.getSensibleFlip(car, input.ballPosition)
-        if (sensibleFlip.isPresent) {
+        SteerUtil.getSensibleFlip(car, input.ballPosition)?.let {
             println("Front flip after ball", input.playerIndex)
-            return startPlan(sensibleFlip.get(), input)
+            return startPlan(it, input)
         }
 
         return SteerUtil.steerTowardGroundPosition(car, input.ballPosition)

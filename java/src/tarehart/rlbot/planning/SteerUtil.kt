@@ -11,11 +11,8 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.BallPhysics
-import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.routing.BoostAdvisor
-import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
 
 import java.util.Optional
 
@@ -177,23 +174,28 @@ object SteerUtil {
         return VectorUtil.flatDistance(loc, car.position)
     }
 
-    fun getSensibleFlip(car: CarData, target: Vector3): Optional<Plan> {
+    fun getSensibleFlip(car: CarData, target: Vector3): Plan? {
         return getSensibleFlip(car, target.flatten())
     }
 
-    fun getSensibleFlip(car: CarData, target: Vector2): Optional<Plan> {
+    fun getSensibleFlip(car: CarData, target: Vector2): Plan? {
+
+        if (car.orientation.roofVector.dotProduct(Vector3(0.0, 0.0, 1.0)) < .98 ||
+                !car.hasWheelContact) {
+            return null
+        }
 
         val toTarget = target.minus(car.position.flatten())
         if (toTarget.magnitude() > 40 &&
                 Vector2.angle(car.orientation.noseVector.flatten(), toTarget) > 3 * Math.PI / 4 &&
                 (car.velocity.flatten().dotProduct(toTarget) > 0 || car.velocity.magnitude() < 5)) {
 
-            return Optional.of(SetPieces.halfFlip(target))
+            return SetPieces.halfFlip(target)
         }
 
         val speed = car.velocity.flatten().magnitude()
         if (car.isSupersonic || car.boost > 75 || speed < AccelerationModel.FLIP_THRESHOLD_SPEED) {
-            return Optional.empty()
+            return null
         }
 
         val distanceCovered = AccelerationModel.getFrontFlipDistance(speed)
@@ -207,11 +209,11 @@ object SteerUtil {
             val slideAngle = facing.correctionAngle(car.velocity.flatten())
 
             if (Math.abs(facingCorrection) < GOOD_ENOUGH_ANGLE && Math.abs(slideAngle) < GOOD_ENOUGH_ANGLE) {
-                return Optional.of(SetPieces.frontFlip())
+                return SetPieces.frontFlip()
             }
         }
 
-        return Optional.empty()
+        return null
     }
 
     fun getThereOnTime(car: CarData, groundPositionAndTime: SpaceTime): AgentOutput {

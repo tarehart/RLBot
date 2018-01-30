@@ -11,7 +11,6 @@ import tarehart.rlbot.steps.travel.ParkTheCarStep
 
 import java.awt.*
 import java.awt.geom.Line2D
-import java.util.Optional
 
 import tarehart.rlbot.tuning.BotLog.println
 
@@ -84,10 +83,9 @@ class GetOnOffenseStep : NestedPlanStep() {
         val car = input.myCarData
         val target = latestTarget ?: return null
 
-        val sensibleFlip = SteerUtil.getSensibleFlip(car, target.position)
-        if (sensibleFlip.isPresent) {
+        SteerUtil.getSensibleFlip(car, target.position)?.let {
             println("Front flip toward offense", input.playerIndex)
-            return startPlan(sensibleFlip.get(), input)
+            return startPlan(it, input)
         }
 
         return startPlan(

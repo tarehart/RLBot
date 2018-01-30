@@ -11,8 +11,6 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.time.Duration
 
-import java.util.Optional
-
 import tarehart.rlbot.tuning.BotLog.println
 
 class GetBoostStep : NestedPlanStep() {
@@ -61,10 +59,9 @@ class GetBoostStep : NestedPlanStep() {
 
             val planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing)
 
-            val sensibleFlip = SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint)
-            if (sensibleFlip.isPresent) {
+            SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint)?.let {
                 println("Flipping toward boost", input.playerIndex)
-                return startPlan(sensibleFlip.get(), input)
+                return startPlan(it, input)
             }
 
             return planForCircleTurn.immediateSteer

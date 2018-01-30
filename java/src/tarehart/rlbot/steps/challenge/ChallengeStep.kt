@@ -12,7 +12,6 @@ import tarehart.rlbot.planning.TacticsTelemetry
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.tuning.BotLog.println
-import java.util.*
 
 class ChallengeStep: NestedPlanStep() {
 
@@ -64,10 +63,7 @@ class ChallengeStep: NestedPlanStep() {
                     input)
         }
 
-        val sensibleFlip = SteerUtil.getSensibleFlip(car, defensiveNode)
-        if (sensibleFlip.isPresent) {
-            return startPlan(sensibleFlip.get(), input)
-        }
+        SteerUtil.getSensibleFlip(car, defensiveNode)?.let { return startPlan(it, input) }
 
         return SteerUtil.steerTowardGroundPosition(car, input.boostData, defensiveNode)
     }

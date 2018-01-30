@@ -23,7 +23,6 @@ import tarehart.rlbot.tuning.BotLog
 import java.awt.*
 import java.util.Optional
 
-import java.util.Optional.empty
 import tarehart.rlbot.tuning.BotLog.println
 
 class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
@@ -193,10 +192,9 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
     private fun getNavigation(input: AgentInput, circleTurnOption: SteerPlan): AgentOutput? {
         val car = input.myCarData
 
-        val sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)
-        if (sensibleFlip.isPresent) {
+        SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)?.let {
             println("Front flip toward nose hit", input.playerIndex)
-            return startPlan(sensibleFlip.get(), input)
+            return startPlan(it, input)
         }
 
         return circleTurnOption.immediateSteer

@@ -12,7 +12,6 @@ import tarehart.rlbot.steps.NestedPlanStep
 
 import java.awt.*
 import java.awt.geom.Line2D
-import java.util.Optional
 
 class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?) : NestedPlanStep() {
 
@@ -99,10 +98,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
                     val waypoint = latestTarget.position.plus(offsetVector)
 
-                    val sensibleFlip = SteerUtil.getSensibleFlip(car, waypoint)
-                    if (sensibleFlip.isPresent) {
-                        return startPlan(sensibleFlip.get(), input)
-                    }
+                    SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, input) }
 
                     return SteerUtil.steerTowardGroundPosition(car, input.boostData, waypoint).withBoost(car.boost > 50 && distance > 20)
                 }

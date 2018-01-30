@@ -82,11 +82,10 @@ class InterceptStep @JvmOverloads constructor(
 
         val car = input.myCarData
 
-        val sensibleFlip = SteerUtil.getSensibleFlip(car, intercept.space)
-        if (sensibleFlip.isPresent) {
+        SteerUtil.getSensibleFlip(car, intercept.space)?.let {
             println("Front flip toward intercept", input.playerIndex)
-            startPlan(sensibleFlip.get(), input)
-        }
+            startPlan(it, input)
+        }?.let { return it }
 
         val timeToIntercept = Duration.between(car.time, intercept.time)
         val motionAfterStrike = intercept.distancePlot

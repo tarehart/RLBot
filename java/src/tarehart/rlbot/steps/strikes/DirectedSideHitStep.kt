@@ -23,8 +23,6 @@ import java.awt.*
 import java.util.Optional
 
 import java.lang.String.format
-import java.util.Optional.empty
-import java.util.Optional.of
 import tarehart.rlbot.tuning.BotLog.println
 
 class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
@@ -204,10 +202,9 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         val car = input.myCarData
 
         if (car.boost == 0.0) {
-            val sensibleFlip = SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)
-            if (sensibleFlip.isPresent) {
+            SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)?.let {
                 println("Front flip toward side hit", input.playerIndex)
-                return startPlan(sensibleFlip.get(), input)
+                return startPlan(it, input)
             }
         }
 

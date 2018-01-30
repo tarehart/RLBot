@@ -24,7 +24,7 @@ import java.util.function.BiPredicate
 import java.util.function.Function
 
 object DirectedKickUtil {
-    private val BALL_VELOCITY_INFLUENCE = .3
+    private val BALL_VELOCITY_INFLUENCE = .2
 
     fun planKick(input: AgentInput, kickStrategy: KickStrategy, isSideHit: Boolean): Optional<DirectedKickPlan> {
         val interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2.0)
