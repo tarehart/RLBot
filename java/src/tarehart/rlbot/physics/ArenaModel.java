@@ -47,7 +47,8 @@ public class ArenaModel {
     public static final float BALL_DRAG = .0015f;
     public static final float BALL_RADIUS = 1.8555f;
 
-    public static final Vector2 CORNER_ANGLE_CENTER = new Vector2(70.5, 90.2);
+    public static final double CORNER_BEVEL = 11.8; // 45 degree angle walls come in this far from where the rectangular corner would be.
+    public static final Vector2 CORNER_ANGLE_CENTER = new Vector2(SIDE_WALL, BACK_WALL).minus(new Vector2(CORNER_BEVEL, CORNER_BEVEL));
 
     // The diagonal surfaces that merge the floor and the wall--
     // Higher = more diagonal showing.
@@ -137,6 +138,11 @@ public class ArenaModel {
             Vector3 normal = toV3(c.getContactGeom().normal);
             Vector3 velocity = toV3(ball.getBody().getLinearVel());
 
+            double normXMagnitude = Math.abs(normal.getX());
+            boolean isRollAlongSurface = normXMagnitude > .05 && normXMagnitude < .65 || // Corner half-angle
+                    normXMagnitude < .95 && normXMagnitude > .75; // Corner half-angle
+                    //normal.getZ() > .7 && normal.getZ() < .72; // Floor rail
+
             if (normal.dotProduct(velocity) < 0) {
                 // Ball has already bounced, so don't bother creating a joint.
                 return;
@@ -154,7 +160,7 @@ public class ArenaModel {
 
             c.geom.depth = 0;
             c.surface.mode = OdeConstants.dContactBounce;
-            c.surface.bounce = BALL_RESTITUTION;
+            c.surface.bounce = isRollAlongSurface ? 1 : BALL_RESTITUTION;
 
             Vector3 velocityAlongSurface = velocity.projectToPlane(normal);
             if (!velocityAlongSurface.isZero()) {
@@ -163,7 +169,7 @@ public class ArenaModel {
             }
 
             Vector3 velAlongNormal = VectorUtil.INSTANCE.project(velocity, normal);
-            c.surface.mu = getFriction(velAlongNormal.magnitude());
+            c.surface.mu = isRollAlongSurface ? 0 : getFriction(velAlongNormal.magnitude());
 
             DJoint joint = OdeHelper.createContactJoint(world, contactgroup, contacts.get(i));
             joint.attach(b1, b2);
@@ -231,6 +237,26 @@ public class ArenaModel {
         addWallToWorld(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
         addWallToWorld(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
 
+        // Corner half-angles to make the ball roll smoothly
+        double halfAngleBackoff = 3.5;
+        double angle = Math.PI / 8;
+        double normMajor = Math.cos(angle);
+        double normMinor = Math.sin(angle);
+
+        Vector3 halfAnglePosition = CORNER_ANGLE_CENTER.plus(new Vector2(halfAngleBackoff, halfAngleBackoff)).toVector3();
+        addWallToWorld(new Vector3(normMajor, normMinor, 0), halfAnglePosition.scaled(-1), arenaBody);
+        addWallToWorld(new Vector3(normMinor, normMajor, 0), halfAnglePosition.scaled(-1), arenaBody);
+
+        addWallToWorld(new Vector3(-normMajor, -normMinor, 0), halfAnglePosition, arenaBody);
+        addWallToWorld(new Vector3(-normMinor, -normMajor, 0), halfAnglePosition, arenaBody);
+
+        addWallToWorld(new Vector3(-normMajor, normMinor, 0), new Vector3(halfAnglePosition.getX(), -halfAnglePosition.getY(), 0), arenaBody);
+        addWallToWorld(new Vector3(-normMinor, normMajor, 0), new Vector3(halfAnglePosition.getX(), -halfAnglePosition.getY(), 0), arenaBody);
+
+        addWallToWorld(new Vector3(normMajor, -normMinor, 0), new Vector3(-halfAnglePosition.getX(), halfAnglePosition.getY(), 0), arenaBody);
+        addWallToWorld(new Vector3(normMinor, -normMajor, 0), new Vector3(-halfAnglePosition.getX(), halfAnglePosition.getY(), 0), arenaBody);
+
+
         // 45 degree angle rails on sides
         addWallToWorld(new Vector3(1, 0, 1), new Vector3(-SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
         addWallToWorld(new Vector3(-1, 0, 1), new Vector3(SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
@@ -265,6 +291,7 @@ public class ArenaModel {
         box.setBody(body);
 
         normal = normal.normaliseCopy();
+        box.setData(normal);
         Vector3 thicknessTweak = normal.scaled(-WALL_THICKNESS / 2);
 
         Vector3 finalPosition = position.plus(thicknessTweak);
