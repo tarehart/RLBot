@@ -91,7 +91,7 @@ object AirTouchPlanner {
         // If we have time to tilt back, the nose will be higher and we can cheat a little.
         val requiredHeight = space.z * .7
         val jumpTime = ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8)
-        return StrikeProfile(0.0, jumpTime, 10.0, .15, StrikeProfile.Style.JUMP_HIT)
+        return StrikeProfile(0.0, jumpTime, 10.0, .25, StrikeProfile.Style.JUMP_HIT)
     }
 
     fun isFlipHitAccessible(intercept: SpaceTime): Boolean {

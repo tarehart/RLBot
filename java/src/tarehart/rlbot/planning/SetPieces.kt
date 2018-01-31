@@ -15,12 +15,12 @@ object SetPieces {
 
         return Plan()
                 .unstoppable()
-                .withStep(BlindStep(Duration.ofSeconds(.05),
+                .withStep(BlindStep(Duration.ofSeconds(.09),
                         AgentOutput()
                                 .withPitch(-1.0)
                                 .withJump(true)
                                 .withAcceleration(1.0)))
-                .withStep(BlindStep(Duration.ofSeconds(.05),
+                .withStep(BlindStep(Duration.ofSeconds(.01),
                         AgentOutput()
                                 .withPitch(-1.0)
                                 .withAcceleration(1.0)
