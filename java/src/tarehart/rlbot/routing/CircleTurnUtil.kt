@@ -8,6 +8,7 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.time.Duration
 
 object CircleTurnUtil {
     private val TURN_RADIUS_A = .0153
@@ -55,7 +56,25 @@ object CircleTurnUtil {
             output.withSlide(car.frameCount % (framesBetweenSlidePulses + 1) == 0L)
         }
 
-        return SteerPlan(output, flatPosition, strikePoint, idealCircle, clockwise)
+        val turnDuration = getTurnDuration(idealCircle, flatPosition, targetPosition, clockwise, idealSpeed)
+        return SteerPlan(output, Route(car.time)
+                .withPart(CircleRoutePart(
+                        start = flatPosition,
+                        end = targetPosition,
+                        duration = turnDuration,
+                        circle = idealCircle,
+                        clockwise = clockwise)))
+    }
+
+    private fun getTurnDuration(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean, speed: Double): Duration {
+        return Duration.ofSeconds(getSweepRadians(circle, start, end, clockwise) * circle.radius / speed)
+    }
+
+    fun getSweepRadians(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean): Double {
+        val centerToStart = start - circle.center
+        val centerToEnd = end - circle.center
+
+        return centerToStart.correctionAngle(centerToEnd, clockwise)
     }
 
     private fun getTurnRadius(speed: Double): Double {
@@ -149,7 +168,21 @@ object CircleTurnUtil {
             immediateSteer.withAcceleration(0.0).withDeceleration(1.0)
         }
 
-        return SteerPlan(immediateSteer, tangentPoint, strikePoint, circle, Circle.isClockwise(circle, targetPosition, targetFacing))
+        val turnDuration = getTurnDuration(circle, flatPosition, targetPosition, clockwise, expectedSpeed)
+
+        return SteerPlan(
+                immediateSteer,
+                Route(strikePoint.gameTime, workBackwards = true)
+                        .withPart(AccelerationRoutePart(
+                                flatPosition,
+                                tangentPoint,
+                                Duration.between(car.time, strikePoint.gameTime - turnDuration)))
+                        .withPart(CircleRoutePart(
+                                start = tangentPoint,
+                                end = targetPosition,
+                                duration = turnDuration,
+                                circle = circle,
+                                clockwise = clockwise)))
     }
 
     fun getPlanForCircleTurn(car: CarData, distancePlot: DistancePlot, flatten: Vector2, facing: Vector2): SteerPlan {

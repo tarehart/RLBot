@@ -12,9 +12,7 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.routing.CircleTurnUtil
-import tarehart.rlbot.routing.SteerPlan
-import tarehart.rlbot.routing.StrikePoint
+import tarehart.rlbot.routing.*
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -137,7 +135,14 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         } else if (kickPlan.intercept.space.z < AirTouchPlanner.NEEDS_JUMP_HIT_THRESHOLD) {
             earliestPossibleIntercept = earliestPossibleIntercept.plusSeconds(timeMismatch / 2)
         } else if (Math.abs(positionCorrectionForStrike) < MAX_NOSE_HIT_ANGLE) {
-            val circleTurnPlan = SteerPlan(SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat), interceptLocationFlat, kickPlan.launchPad!!)
+            val circleTurnPlan = SteerPlan(
+                    SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat),
+                    Route(car.time)
+                            .withPart(AccelerationRoutePart(
+                                    car.position.flatten(),
+                                    kickPlan.launchPad!!.position,
+                                    Duration.between(car.time, kickPlan.launchPad.gameTime))))
+
             recentCircleTurnPlan = circleTurnPlan
             return getNavigation(input, circleTurnPlan)
         }
