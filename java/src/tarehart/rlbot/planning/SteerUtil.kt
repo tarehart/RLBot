@@ -21,14 +21,14 @@ object SteerUtil {
     private val GOOD_ENOUGH_ANGLE = Math.PI / 12
     private val DEAD_ZONE = 0.0
 
-    fun getCatchOpportunity(carData: CarData, ballPath: BallPath, boostBudget: Double): Optional<SpaceTime> {
+    fun getCatchOpportunity(carData: CarData, ballPath: BallPath, boostBudget: Double): SpaceTime? {
 
         var searchStart = carData.time
 
         val groundBounceEnergy = BallPhysics.getGroundBounceEnergy(ballPath.startPoint.space.z, ballPath.startPoint.velocity.z)
 
         if (groundBounceEnergy < 50) {
-            return Optional.empty()
+            return null
         }
 
         for (i in 0..2) {
@@ -37,16 +37,16 @@ object SteerUtil {
             if (landingOption != null) {
                 val landing = landingOption.toSpaceTime()
                 if (canGetUnder(carData, landing, boostBudget)) {
-                    return Optional.of(landing)
+                    return landing
                 } else {
                     searchStart = landing.time.plusSeconds(1.0)
                 }
             } else {
-                return Optional.empty()
+                return null
             }
         }
 
-        return Optional.empty()
+        return null
     }
 
     private fun canGetUnder(carData: CarData, spaceTime: SpaceTime, boostBudget: Double): Boolean {

@@ -123,31 +123,38 @@ class TacticsAdvisor {
 
         val car = input.myCarData
 
+        if (DribbleStep.canDribble(input, false) && input.ballVelocity.magnitude() > 15) {
+            println("Beginning dribble", input.playerIndex)
+            return Plan(OFFENSIVE).withStep(DribbleStep())
+        }
+
+        if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
+            return Plan(Plan.Posture.OFFENSIVE).withStep(MountWallStep()).withStep(WallTouchStep()).withStep(DescendFromWallStep())
+        }
+
         if (!generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
-            val catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, car.boost)
-            if (catchOpportunity.isPresent) {
+            SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
                 return Plan(Plan.Posture.OFFENSIVE).withStep(CatchBallStep())
             }
         }
 
-        if (DribbleStep.canDribble(input, false) && input.ballVelocity.magnitude() > 15) {
-            println("Beginning dribble", input.playerIndex)
-            return Plan(OFFENSIVE).withStep(DribbleStep())
-        } else if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
-            return Plan(Plan.Posture.OFFENSIVE).withStep(MountWallStep()).withStep(WallTouchStep()).withStep(DescendFromWallStep())
-        } else if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex) && DirectedNoseHitStep.canMakeDirectedKick(input, KickAtEnemyGoal())) {
+        if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex) && DirectedNoseHitStep.canMakeDirectedKick(input, KickAtEnemyGoal())) {
             return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
                     .withStep(DirectedNoseHitStep(FunnelTowardEnemyGoal()))
                     .withStep(GetOnOffenseStep())
-        } else if (car.boost < 50) {
+        }
+
+        if (car.boost < 50) {
             return Plan().withStep(GetBoostStep())
-        } else if (getYAxisWrongSidedness(input) > 0) {
+        }
+
+        if (getYAxisWrongSidedness(input) > 0) {
             println("Getting behind the ball", input.playerIndex)
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
-        } else {
-            return Plan(Plan.Posture.NEUTRAL).withStep(GetBoostStep())
         }
+
+        return Plan(Plan.Posture.NEUTRAL).withStep(DemolishEnemyStep())
     }
 
     fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {

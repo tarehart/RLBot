@@ -25,17 +25,13 @@ class CatchBallStep : Step {
         val car = input.myCarData
 
         val ballPath = ArenaModel.predictBallPath(input)
-        val catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car))
+        val catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car)) ?: return null
 
         // Weed out any intercepts after a catch opportunity. Should just catch it.
-        if (catchOpportunity.isPresent) {
-            latestCatchLocation = catchOpportunity.get()
-            return if (Duration.between(input.time, latestCatchLocation.time).seconds > 2) {
-                null // Don't wait around for so long
-            } else playCatch(car, latestCatchLocation)
-        } else {
-            return null
-        }
+        latestCatchLocation = catchOpportunity
+        return if (Duration.between(input.time, latestCatchLocation.time).seconds > 2) {
+            null // Don't wait around for so long
+        } else playCatch(car, latestCatchLocation)
     }
 
     private fun playCatch(car: CarData, catchLocation: SpaceTime): AgentOutput {
