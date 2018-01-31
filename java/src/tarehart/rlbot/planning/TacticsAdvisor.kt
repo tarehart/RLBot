@@ -76,11 +76,6 @@ class TacticsAdvisor {
             }
         }
 
-        val ownGoalCenter = GoalUtil.getOwnGoal(input.team).center
-        val interceptPosition = situation.expectedContact?.space ?: input.ballPosition
-        val toOwnGoal = ownGoalCenter.minus(interceptPosition)
-        val interceptModifier = toOwnGoal.normaliseCopy()
-
         if (situation.shotOnGoalAvailable) {
 
             return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
@@ -88,6 +83,7 @@ class TacticsAdvisor {
                     .withStep(DirectedSideHitStep(KickAtEnemyGoal()))
                     .withStep(CatchBallStep())
                     .withStep(GetOnOffenseStep())
+                    .withStep(GetBoostStep())
         }
 
         val ballPath = ArenaModel.predictBallPath(input)
@@ -118,7 +114,7 @@ class TacticsAdvisor {
         } else {
             // Enemy is just gonna hit it for the sake of hitting it, presumably. Let's try to stay on offense if possible.
             // TODO: make sure we don't own-goal it with this
-            Plan(Plan.Posture.OFFENSIVE).withStep(GetOnOffenseStep()).withStep(InterceptStep(Vector3()))
+            Plan(Plan.Posture.OFFENSIVE).withStep(GetOnOffenseStep())
         }
 
     }
@@ -150,7 +146,7 @@ class TacticsAdvisor {
             println("Getting behind the ball", input.playerIndex)
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
         } else {
-            return Plan(Plan.Posture.OFFENSIVE).withStep(InterceptStep(Vector3()))
+            return Plan(Plan.Posture.NEUTRAL).withStep(GetBoostStep())
         }
     }
 
