@@ -43,14 +43,13 @@ class WallTouchStep : Step {
 
         val interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
                 car, ballPath, fullAcceleration, Vector3(), { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) })
-        val ballMotion = interceptOpportunity.flatMap { inter -> ballPath.getMotionAt(inter.time) }
+        val motion = interceptOpportunity?.let{ ballPath.getMotionAt(it.time) }
 
 
-        if (!ballMotion.isPresent) {
+        if (motion == null) {
             println("Failed to make the wall touch because we see no intercepts on the wall", input.playerIndex)
             return null
         }
-        val motion = ballMotion.get()
 
         originalIntercept?.let {
             if (it.distance(motion.space) > 20) {
@@ -114,15 +113,15 @@ class WallTouchStep : Step {
         fun hasWallTouchOpportunity(input: AgentInput, ballPath: BallPath): Boolean {
 
             val nearWallOption = ballPath.findSlice { ballPosition: BallSlice -> isBallOnWall(ballPosition) }
-            if (nearWallOption.isPresent) {
-                val (_, time) = nearWallOption.get()
+            if (nearWallOption != null) {
+                val time = nearWallOption.time
                 if (Duration.between(input.time, time).seconds > 3) {
                     return false // Not on wall soon enough
                 }
 
                 val ballLater = ballPath.getMotionAt(time.plusSeconds(1.0))
-                if (ballLater.isPresent) {
-                    val (space) = ballLater.get()
+                if (ballLater != null) {
+                    val (space) = ballLater
                     if (ArenaModel.getDistanceFromWall(space) > ACCEPTABLE_WALL_DISTANCE) {
                         return false
                     }

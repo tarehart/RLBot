@@ -62,7 +62,7 @@ object BoostAdvisor {
         val distance = car.position.flatten().distance(boostPad.location.flatten())
 
         val realDuration = distancePlot.getMotionAfterDistance(distance)
-                .map { it.time.plusSeconds(orientSeconds) }.orElse(Duration.ofSeconds(100.0))
+                ?.time?.plusSeconds(orientSeconds) ?: Duration.ofSeconds(100.0)
 
         val greedBonus = if (boostPad.boostValue > 50) Duration.ofSeconds(1.0) else Duration.ofMillis(0)
 

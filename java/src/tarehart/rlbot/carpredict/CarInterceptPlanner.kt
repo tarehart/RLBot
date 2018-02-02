@@ -1,15 +1,11 @@
 package tarehart.rlbot.carpredict
 
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.time.Duration
-
-import java.util.Optional
 
 object CarInterceptPlanner {
 
@@ -26,24 +22,21 @@ object CarInterceptPlanner {
             val slice = enemyPath.path[i]
             val spaceTime = SpaceTime(slice.space, slice.time)
             val strikeProfile = StrikeProfile()
-            val motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile)
-            if (motionAt.isPresent) {
-                val dts = motionAt.get()
-                val interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space)
-                if (dts.distance + CAR_CONTACT_DISTANCE > interceptDistance) {
-                    if (i > 0) {
-                        // Take the average of the current slice and the previous slice to avoid systematic pessimism.
-                        val previousSlice = enemyPath.path[i - 1]
-                        val timeDiff = Duration.between(previousSlice.time, slice.time).seconds
-                        val toCurrentSlice = slice.space.minus(previousSlice.space)
-                        return SpaceTime(
-                                previousSlice.space + toCurrentSlice.scaled(.5),
-                                previousSlice.time.plusSeconds(timeDiff * .5))
+            val dts = acceleration.getMotionAfterDuration(
+                    carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile) ?: return null
 
-                    }
-                    return null
+            val interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space)
+            if (dts.distance + CAR_CONTACT_DISTANCE > interceptDistance) {
+                if (i > 0) {
+                    // Take the average of the current slice and the previous slice to avoid systematic pessimism.
+                    val previousSlice = enemyPath.path[i - 1]
+                    val timeDiff = Duration.between(previousSlice.time, slice.time).seconds
+                    val toCurrentSlice = slice.space.minus(previousSlice.space)
+                    return SpaceTime(
+                            previousSlice.space + toCurrentSlice.scaled(.5),
+                            previousSlice.time.plusSeconds(timeDiff * .5))
+
                 }
-            } else {
                 return null
             }
         }

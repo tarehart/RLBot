@@ -61,20 +61,19 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             return performFinalApproach(input, recentKickPlan)
         }
 
-        val kickPlanOption: Optional<DirectedKickPlan>
+        val kickPlan: DirectedKickPlan?
         if (::interceptModifier.isInitialized) {
             val strikeProfile = StrikeProfile(maneuverSeconds, 0.0, 0.0, 0.0, StrikeProfile.Style.SIDE_HIT)
-            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, { strikeProfile }, input.time)
+            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, { strikeProfile }, input.time)
         } else {
-            kickPlanOption = DirectedKickUtil.planKick(input, kickStrategy, true)
+            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, true)
         }
 
-        if (!kickPlanOption.isPresent) {
+        if (kickPlan == null) {
             BotLog.println("Quitting side hit due to failed kick plan.", car.playerIndex)
             return null
         }
 
-        val kickPlan = kickPlanOption.get()
         recentKickPlan = kickPlan
 
         if (!::interceptModifier.isInitialized) {
@@ -109,7 +108,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         if (!strikeTime.isPresent) {
             return null
         }
-        val expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint)).map { m -> m.speed }.orElse(40.0)
+        val expectedSpeed = kickPlan.distancePlot.getMotionAfterDistance(car.position.flatten().distance(orthogonalPoint))?.speed ?: 40.0
         val backoff = expectedSpeed * strikeTime.get().seconds + 1
 
         if (backoff > car.position.flatten().distance(orthogonalPoint)) {

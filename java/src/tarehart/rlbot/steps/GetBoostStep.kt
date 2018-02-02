@@ -84,10 +84,10 @@ class GetBoostStep : NestedPlanStep() {
         val distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), carData.boost)
         for (boost in input.boostData.fullBoosts) {
             val travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.location)
-            if (travelSeconds.isPresent && travelSeconds.get().seconds < minTime &&
-                    (boost.isActive || travelSeconds.get().minus(Duration.between(input.time, boost.activeTime)).seconds > 1)) {
+            if (travelSeconds != null && travelSeconds.seconds < minTime &&
+                    (boost.isActive || travelSeconds.minus(Duration.between(input.time, boost.activeTime)).seconds > 1)) {
 
-                minTime = travelSeconds.get().seconds
+                minTime = travelSeconds.seconds
                 nearestLocation = boost
             }
         }

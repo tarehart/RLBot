@@ -36,14 +36,11 @@ class CarryStep : Step {
         val ballPath = ArenaModel.predictBallPath(input)
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
-        if (motionAfterWallBounce.isPresent && Duration.between(input.time, motionAfterWallBounce.get().time).seconds < 1) {
-            return null // The dribble step is not in the business of wall reads.
+        motionAfterWallBounce?.time?.let {
+            if (Duration.between(input.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
         }
 
-        val futureBallPosition: Vector2
-        val (space) = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds)).get()
-        futureBallPosition = space.flatten()
-
+        val futureBallPosition = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
 
         val scoreLocation = GoalUtil.getEnemyGoal(input.team).getNearestEntrance(input.ballPosition, 3.0).flatten()
 

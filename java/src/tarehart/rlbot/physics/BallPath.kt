@@ -7,10 +7,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
-
-import java.util.ArrayList
-import java.util.Optional
-import java.util.function.Predicate
+import java.util.*
 
 class BallPath(start: BallSlice) {
 
@@ -30,9 +27,9 @@ class BallPath(start: BallSlice) {
         this.slices.add(spaceTime)
     }
 
-    fun getMotionAt(time: GameTime): Optional<BallSlice> {
+    fun getMotionAt(time: GameTime): BallSlice? {
         if (time.isBefore(this.slices[0].time) || time.isAfter(this.slices[this.slices.size - 1].time)) {
-            return Optional.empty()
+            return null
         }
 
         for (i in 0 until this.slices.size - 1) {
@@ -46,11 +43,11 @@ class BallPath(start: BallSlice) {
                 val toTween = toNext.scaled(tweenPoint)
                 val space = space1.plus(toTween)
                 val velocity = VectorUtil.weightedAverage(velocity1, velocity2, 1 - tweenPoint)
-                return Optional.of(BallSlice(space, time, velocity, spin))
+                return BallSlice(space, time, velocity, spin)
             }
         }
 
-        return Optional.of(endpoint)
+        return endpoint
     }
 
     /**
@@ -58,7 +55,7 @@ class BallPath(start: BallSlice) {
      *
      * 0 is not a valid input.
      */
-    fun getMotionAfterWallBounce(targetBounce: Int): Optional<BallSlice> {
+    fun getMotionAfterWallBounce(targetBounce: Int): BallSlice? {
 
         assert(targetBounce > 0)
 
@@ -74,12 +71,12 @@ class BallPath(start: BallSlice) {
 
             if (numBounces == targetBounce) {
                 return if (this.slices.size == i + 1) {
-                    Optional.empty()
-                } else Optional.of(spt)
+                    null
+                } else spt
             }
         }
 
-        return Optional.empty()
+        return null
     }
 
     private fun isWallBounce(previousVelocity: Vector3, currentVelocity: Vector3): Boolean {
@@ -168,12 +165,7 @@ class BallPath(start: BallSlice) {
         return VectorUtil.getPlaneIntersection(plane, start, end.minus(start))
     }
 
-    fun findSlice(decider: (BallSlice) -> Boolean): Optional<BallSlice> {
-        for (i in 1 until this.slices.size) {
-            if (decider.invoke(this.slices[i])) {
-                return Optional.of(this.slices[i])
-            }
-        }
-        return Optional.empty()
+    fun findSlice(decider: (BallSlice) -> Boolean): BallSlice? {
+        return this.slices.drop(1).firstOrNull { decider.invoke(it) }
     }
 }

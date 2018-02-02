@@ -71,20 +71,19 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             return null
         }
 
-        val kickPlanOption = planKick(input)
+        val kickPlan = planKick(input)
 
-        if (!kickPlanOption.isPresent) {
+        if (kickPlan == null) {
             BotLog.println("Quitting nose hit due to failed kick plan.", car.playerIndex)
             return null
         }
 
-        val kickPlan = kickPlanOption.get()
         recentKickPlan = kickPlan
 
         if (!::originalIntercept.isInitialized) {
             originalIntercept = kickPlan.ballAtIntercept
         } else {
-            if (kickPlan.ballPath.getMotionAt(originalIntercept.time).map { (space) -> space.distance(originalIntercept.space) > 20 }.orElse(true)) {
+            if (kickPlan.ballPath.getMotionAt(originalIntercept.time)?.space?.distance(originalIntercept.space)?.takeIf { it > 20 } != null) {
                 println("Ball slices has diverged from expectation, will quit.", input.playerIndex)
                 zombie = true
             }
@@ -147,13 +146,8 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             return getNavigation(input, circleTurnPlan)
         }
 
-        val asapSeconds = kickPlan.distancePlot
-                .getMotionUponArrival(
-                        car,
-                        kickPlan.ballAtIntercept.space,
-                        StrikeProfile())
-                .map { it.time }
-                .orElse(Duration.between(input.time, kickPlan.ballAtIntercept.time)).seconds
+        val asapSeconds = kickPlan.distancePlot.getMotionUponArrival(car, kickPlan.ballAtIntercept.space, StrikeProfile())
+                ?.time ?: Duration.between(input.time, kickPlan.ballAtIntercept.time).seconds
 
         //            if (secondsTillIntercept > asapSeconds + .5) {
         //                plan = new Plan(Plan.Posture.OFFENSIVE)
@@ -180,7 +174,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         return getNavigation(input, circleTurnPlan)
     }
 
-    private fun planKick(input: AgentInput): Optional<DirectedKickPlan> {
+    private fun planKick(input: AgentInput): DirectedKickPlan? {
         return if (::interceptModifier.isInitialized) {
             DirectedKickUtil.planKick(
                     input,

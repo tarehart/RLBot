@@ -24,11 +24,11 @@ object AccelerationModel {
     private val BOOST_CONSUMED_PER_SECOND = 25.0
 
 
-    fun getTravelSeconds(carData: CarData, plot: DistancePlot, target: Vector3): Optional<Duration> {
+    fun getTravelSeconds(carData: CarData, plot: DistancePlot, target: Vector3): Duration? {
         val distance = carData.position.distance(target)
         val travelTime = plot.getTravelTime(distance)
         val penaltySeconds = getSteerPenaltySeconds(carData, target)
-        return travelTime.map { time -> time.plusSeconds(penaltySeconds) }
+        return travelTime?.plusSeconds(penaltySeconds)
     }
 
     fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {

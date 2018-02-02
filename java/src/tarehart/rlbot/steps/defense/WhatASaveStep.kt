@@ -49,19 +49,19 @@ class WhatASaveStep : NestedPlanStep() {
 
 
         val (space1) = InterceptCalculator.getInterceptOpportunity(car, ballPath, plot)
-                .orElse(Intercept(currentThreat.space, currentThreat.time, 0.0, StrikeProfile(), plot, Duration.ofMillis(0)))
+                ?: Intercept(currentThreat.space, currentThreat.time, 0.0, StrikeProfile(), plot, Duration.ofMillis(0))
 
         val carToIntercept = space1.minus(car.position)
         val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
 
         val overHeadSlice = ballPath.findSlice { (space2) -> car.position.flatten().distance(space2.flatten()) < ArenaModel.BALL_RADIUS }
 
-        if (overHeadSlice.isPresent && (goingForSuperJump || AirTouchPlanner.isVerticallyAccessible(car, overHeadSlice.get().toSpaceTime()))) {
+        if (overHeadSlice != null && (goingForSuperJump || AirTouchPlanner.isVerticallyAccessible(car, overHeadSlice.toSpaceTime()))) {
 
             goingForSuperJump = true
 
-            val overheadHeight = overHeadSlice.get().space.z
-            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.time, overHeadSlice.get().time).seconds) {
+            val overheadHeight = overHeadSlice.space.z
+            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.time, overHeadSlice.time).seconds) {
                 return startPlan(SetPieces.jumpSuperHigh(overheadHeight), input)
             } else {
                 return AgentOutput()

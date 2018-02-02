@@ -59,7 +59,7 @@ object SteerUtil {
                 StrikeProfile())
 
         val requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.space)
-        return dts.filter { travel -> travel.distance > requiredDistance }.isPresent
+        return dts?.takeIf { it.distance > requiredDistance } != null
     }
 
     fun getCorrectionAngleRad(carData: CarData, target: Vector3): Double {

@@ -83,8 +83,9 @@ class ArenaModelTest {
         Assert.assertTrue(ballPath.endpoint.velocity.x > -20)
 
         val motionAfterBounce = ballPath.getMotionAfterWallBounce(1)
-        Assert.assertTrue(motionAfterBounce.isPresent)
-        Assert.assertEquals(nextToSideWall.toDouble(), motionAfterBounce.get().space.x, 3.0)
+        Assert.assertNotNull(motionAfterBounce)
+        motionAfterBounce ?: throw AssertionError()
+        Assert.assertEquals(nextToSideWall.toDouble(), motionAfterBounce.space.x, 3.0)
     }
 
     @Test
@@ -94,7 +95,8 @@ class ArenaModelTest {
         val ballPath = model.simulateBall(BallSlice(Vector3(0.0, 0.0, 30.0), now, Vector3(0.0, 10.0, 0.0)), Duration.ofMillis(200))
         println(ballPath.endpoint)
 
-        val yVal = ballPath.getMotionAt(now.plus(Duration.ofMillis(100))).get().space.y
+        val yVal = ballPath.getMotionAt(now.plus(Duration.ofMillis(100)))?.space?.y
+        yVal ?: throw AssertionError()
         Assert.assertTrue(yVal < 1)
     }
 
@@ -109,9 +111,9 @@ class ArenaModelTest {
         Assert.assertTrue(ballPath.endpoint.velocity.x > -60)
 
         val motionAfterBounce = ballPath.getMotionAfterWallBounce(1)
-        Assert.assertTrue(motionAfterBounce.isPresent)
-        println(nextToSideWall - motionAfterBounce.get().space.x)
-        Assert.assertTrue(nextToSideWall - motionAfterBounce.get().space.x < 2.5)
+        motionAfterBounce ?: throw AssertionError()
+        println(nextToSideWall - motionAfterBounce.space.x)
+        Assert.assertTrue(nextToSideWall - motionAfterBounce.space.x < 2.5)
     }
 
     @Test

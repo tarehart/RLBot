@@ -28,7 +28,7 @@ class MountWallStep : Step {
             return null
         }
 
-        val (space) = ballPath.getMotionAt(input.time.plusSeconds(3.0)).orElse(ballPath.endpoint)
+        val (space) = ballPath.getMotionAt(input.time.plusSeconds(3.0)) ?: ballPath.endpoint
         val ballPositionExaggerated = space.scaled(1.04) // This assumes the ball is close to the wall
 
         return SteerUtil.steerTowardGroundPosition(car, ballPositionExaggerated)

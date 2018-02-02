@@ -4,14 +4,11 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AirTouchPlanner
-import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikeProfile
-import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.routing.StrikePoint
@@ -20,13 +17,11 @@ import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
 
 import java.util.Optional
-import java.util.function.BiPredicate
-import java.util.function.Function
 
 object DirectedKickUtil {
     private val BALL_VELOCITY_INFLUENCE = .2
 
-    fun planKick(input: AgentInput, kickStrategy: KickStrategy, isSideHit: Boolean): Optional<DirectedKickPlan> {
+    fun planKick(input: AgentInput, kickStrategy: KickStrategy, isSideHit: Boolean): DirectedKickPlan? {
         val interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2.0)
         val strikeProfile = StrikeProfile()
         return planKick(input, kickStrategy, isSideHit, interceptModifier, { strikeProfile }, input.time)
@@ -38,7 +33,7 @@ object DirectedKickUtil {
             isSideHit: Boolean,
             interceptModifier: Vector3,
             strikeFn: (Vector3) -> StrikeProfile,
-            earliestPossibleIntercept: GameTime): Optional<DirectedKickPlan> {
+            earliestPossibleIntercept: GameTime): DirectedKickPlan? {
 
         val car = input.myCarData
 
@@ -55,21 +50,14 @@ object DirectedKickUtil {
         val ballPath = ArenaModel.predictBallPath(input)
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost, 0.0)
 
-        val interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
-                car, ballPath, distancePlot, interceptModifier, overallPredicate, strikeFn)
+        val intercept = InterceptCalculator.getFilteredInterceptOpportunity(
+                car, ballPath, distancePlot, interceptModifier, overallPredicate, strikeFn) ?: return null
 
-
-        if (!interceptOpportunity.isPresent) {
-            return Optional.empty()
-        }
-
-        val intercept = interceptOpportunity.get()
-        val ballMotion = ballPath.getMotionAt(intercept.time)
-        val ballAtIntercept = ballMotion.get()
+        val ballAtIntercept = ballPath.getMotionAt(intercept.time) ?: return null
 
 
         val secondsTillImpactRoughly = Duration.between(input.time, ballAtIntercept.time)
-        val approachSpeed = distancePlot.getMotionAfterDuration(secondsTillImpactRoughly).map(DistanceTimeSpeed::speed).orElse(AccelerationModel.SUPERSONIC_SPEED)
+        val approachSpeed = distancePlot.getMotionAfterDuration(secondsTillImpactRoughly)?.speed ?: AccelerationModel.SUPERSONIC_SPEED
         val impactSpeed = if (isSideHit) ManeuverMath.DODGE_SPEED else approachSpeed
 
         val easyForce: Vector3
@@ -121,7 +109,7 @@ object DirectedKickUtil {
                 interceptModifier = interceptModifier,
                 ballPath = ballPath,
                 distancePlot = distancePlot,
-                intercept = interceptOpportunity.get(),
+                intercept = intercept,
                 ballAtIntercept = ballAtIntercept,
                 plannedKickForce = plannedKickForce,
                 desiredBallVelocity = desiredBallVelocity,
@@ -129,7 +117,7 @@ object DirectedKickUtil {
                 easyKickAllowed = easyKickAllowed
         )
 
-        return Optional.of(kickPlan)
+        return kickPlan
     }
 
 

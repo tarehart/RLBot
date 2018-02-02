@@ -59,8 +59,8 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
             }
         }
 
-        val interceptOpportunity = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
-        if (!interceptOpportunity.isPresent) {
+        val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
+        if (latestIntercept == null) {
             confusionCount++
             if (confusionCount > 3) {
                 // Front flip out of confusion
@@ -69,7 +69,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
             return AgentOutput().withBoost()
         }
 
-        val latestIntercept = interceptOpportunity.get()
         intercept = latestIntercept
         val carToIntercept = latestIntercept.space.minus(car.position)
         val millisTillIntercept = Duration.between(input.time, latestIntercept.time).millis

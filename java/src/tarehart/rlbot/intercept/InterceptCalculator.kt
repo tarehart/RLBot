@@ -12,18 +12,16 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
 import java.util.Optional
-import java.util.function.BiPredicate
-import java.util.function.Function
 
 object InterceptCalculator {
 
-    fun getInterceptOpportunityAssumingMaxAccel(carData: CarData, ballPath: BallPath, boostBudget: Double): Optional<Intercept> {
+    fun getInterceptOpportunityAssumingMaxAccel(carData: CarData, ballPath: BallPath, boostBudget: Double): Intercept? {
         val plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), boostBudget)
 
         return getInterceptOpportunity(carData, ballPath, plot)
     }
 
-    fun getInterceptOpportunity(carData: CarData, ballPath: BallPath, acceleration: DistancePlot): Optional<Intercept> {
+    fun getInterceptOpportunity(carData: CarData, ballPath: BallPath, acceleration: DistancePlot): Intercept? {
         return getFilteredInterceptOpportunity(carData, ballPath, acceleration, Vector3(), { _, _ ->  true })
     }
 
@@ -34,7 +32,7 @@ object InterceptCalculator {
             acceleration: DistancePlot,
             interceptModifier: Vector3,
             predicate: (CarData, SpaceTime) -> Boolean,
-            strikeProfileFn: (Vector3) -> StrikeProfile = { StrikeProfile() }): Optional<Intercept> {
+            strikeProfileFn: (Vector3) -> StrikeProfile = { StrikeProfile() }): Intercept? {
 
         val groundNormal = Vector3(0.0, 0.0, 1.0)
         return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, strikeProfileFn, groundNormal)
@@ -58,7 +56,7 @@ object InterceptCalculator {
             interceptModifier: Vector3,
             predicate: (CarData, SpaceTime) -> Boolean,
             strikeProfileFn: (Vector3) -> StrikeProfile,
-            planeNormal: Vector3): Optional<Intercept> {
+            planeNormal: Vector3): Intercept? {
 
         val myPosition = carData.position
         var firstMomentInRange: GameTime? = null
@@ -68,10 +66,9 @@ object InterceptCalculator {
             val slice = ballPath.slices[i]
             val spaceTime = SpaceTime(slice.space.plus(interceptModifier), slice.time)
             val strikeProfile = strikeProfileFn.invoke(spaceTime.space)
-            val motionAt = acceleration.getMotionAfterDuration(carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile)
-            if (!motionAt.isPresent) return Optional.empty()
+            val dts = acceleration.getMotionAfterDuration(
+                    carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile) ?: return null
 
-            val dts = motionAt.get()
             val interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space, planeNormal)
             val rangeDeficiency = interceptDistance - dts.distance
             if (rangeDeficiency <= 0) {
@@ -84,14 +81,14 @@ object InterceptCalculator {
                     val boostNeeded = boostNeededForAerial(spaceTime.space.z)
                     val spareTime = if (tweenedSlice.time > firstMomentInRange) tweenedSlice.time - firstMomentInRange else Duration.ofMillis(0)
 
-                    return Optional.of(Intercept(tweenedSlice.space + interceptModifier, tweenedSlice.time, boostNeeded, strikeProfile, acceleration, spareTime))
+                    return Intercept(tweenedSlice.space + interceptModifier, tweenedSlice.time, boostNeeded, strikeProfile, acceleration, spareTime)
                 }
             }
             previousRangeDeficiency = rangeDeficiency
         }
 
         // No slices in the ball slices were in range and satisfied the predicate
-        return Optional.empty()
+        return null
     }
 
     private fun boostNeededForAerial(height: Double) : Double {
@@ -106,7 +103,7 @@ object InterceptCalculator {
         val previousSliceTime = ballPath.slices[currentSliceIndex - 1].time
         val sliceSeconds = Duration.between(previousSliceTime, currentSlice.time).seconds
         val moment = previousSliceTime.plusSeconds(sliceSeconds * tweenPoint)
-        return ballPath.getMotionAt(moment).orElse(currentSlice)
+        return ballPath.getMotionAt(moment) ?: currentSlice
     }
 
     /**
@@ -120,7 +117,7 @@ object InterceptCalculator {
             carData: CarData,
             ballPath: BallPath,
             interceptModifier: Vector3,
-            launchMoment: GameTime): Optional<SpaceTime> {
+            launchMoment: GameTime): SpaceTime? {
 
         val myPosition = carData.position
 
@@ -141,19 +138,15 @@ object InterceptCalculator {
             else
                 InterceptStep.AERIAL_STRIKE_PROFILE
 
-            val motionAt = acceleration.getMotionAfterDuration(
-                    carData, intercept.space, Duration.between(carData.time, intercept.time), strikeProfile)
+            val dts = acceleration.getMotionAfterDuration(
+                    carData, intercept.space, Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
-            if (motionAt.isPresent) {
-                val dts = motionAt.get()
-                val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
-                if (dts.distance > interceptDistance) {
-                    return Optional.of(intercept)
-                }
-            } else {
-                return Optional.empty()
+            val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
+            if (dts.distance > interceptDistance) {
+                return intercept
             }
+
         }
-        return Optional.empty()
+        return null
     }
 }

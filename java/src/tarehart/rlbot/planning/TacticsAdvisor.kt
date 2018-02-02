@@ -168,7 +168,7 @@ class TacticsAdvisor {
         val zonePlan = ZoneTelemetry.get(input.team)
         val myCar = input.myCarData
 
-        val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(LOOKAHEAD_SECONDS)).orElse(ballPath.endpoint)
+        val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
         val enemyGoalY = GoalUtil.getEnemyGoal(input.team).center.y
 
 

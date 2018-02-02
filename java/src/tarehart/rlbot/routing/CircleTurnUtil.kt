@@ -112,9 +112,7 @@ object CircleTurnUtil {
         val targetPosition = strikePoint.position
         val targetFacing = strikePoint.facing
         val distance = car.position.flatten().distance(targetPosition)
-        val maxSpeed = distancePlot.getMotionAfterDistance(distance)
-                .map { dts -> dts.speed }
-                .orElse(AccelerationModel.SUPERSONIC_SPEED)
+        val maxSpeed = distancePlot.getMotionAfterDistance(distance)?.speed ?: AccelerationModel.SUPERSONIC_SPEED
         val idealSpeed = getIdealCircleSpeed(car, targetFacing)
         val currentSpeed = car.velocity.magnitude()
 

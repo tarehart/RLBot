@@ -24,8 +24,8 @@ object GoalUtil {
 
     fun ballLingersInBox(goal: Goal, ballPath: BallPath): Boolean {
         val firstSlice = ballPath.findSlice({ slice -> goal.isInBox(slice.space) })
-        val secondSlice = firstSlice.flatMap { (_, time) -> ballPath.getMotionAt(time.plusSeconds(2.0)) }
-        return secondSlice.isPresent && goal.isInBox(secondSlice.get().space)
+        val secondSlice = firstSlice?.let { fs -> ballPath.getMotionAt(fs.time.plusSeconds(2.0)) }
+        return secondSlice != null && goal.isInBox(secondSlice.space)
     }
 
     fun getNearestGoal(position: Vector3): Goal {
