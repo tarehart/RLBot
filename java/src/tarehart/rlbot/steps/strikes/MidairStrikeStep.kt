@@ -99,7 +99,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
                 BotLog.println("Side flip strike", input.playerIndex)
                 startPlan(Plan()
                         .withStep(BlindStep(Duration.ofMillis(5), AgentOutput()))
-                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput().withSteer((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump())),
+                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput().withYaw((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump())),
                         input)
             }
         }

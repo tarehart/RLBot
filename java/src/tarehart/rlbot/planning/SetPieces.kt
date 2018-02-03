@@ -69,8 +69,7 @@ object SetPieces {
                         AgentOutput()
                                 .withBoost()
                                 .withPitch(-1.0)
-                                .withSteer(1.0)
-                                .withSlide()
+                                .withRoll(1.0)
                 ))
     }
 
@@ -151,7 +150,7 @@ object SetPieces {
                 .withStep(TapStep(2, AgentOutput()
                         .withJump(true)
                         .withThrottle(1.0)
-                        .withSteer((if (flipLeft) -1 else 1).toDouble())))
+                        .withYaw((if (flipLeft) -1 else 1).toDouble())))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
 
