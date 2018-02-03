@@ -20,7 +20,6 @@ import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep
 import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.DescendFromWallStep
-import tarehart.rlbot.steps.wall.MountWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -130,7 +129,7 @@ class TacticsAdvisor {
         }
 
         if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
-            return Plan(Plan.Posture.OFFENSIVE).withStep(MountWallStep()).withStep(WallTouchStep()).withStep(DescendFromWallStep())
+            return Plan(Plan.Posture.OFFENSIVE).withStep(WallTouchStep()).withStep(DescendFromWallStep())
         }
 
         if (!generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
@@ -245,13 +244,7 @@ class TacticsAdvisor {
             }
         }
 
-        if (myCar.position.distance(ballPosition) < 80 &&
-                generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept, myCar.playerIndex)) {
-            return true
-        }
-
-        return opponentCar?.let { ZoneUtil.isMyOffensiveBreakaway(team, myCar, it, ballPosition) } ?: false
-
+        return generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept, myCar.playerIndex)
     }
 
     // Checks to see if the ball is in the corner and if the opponent is closer to it

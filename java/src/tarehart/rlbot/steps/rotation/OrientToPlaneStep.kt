@@ -28,7 +28,9 @@ abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vect
      * This does not consider direction. You should only call it if you are already rotating toward your target.
      */
     protected fun timeToDecelerate(angularVelocity: Double, radiansRemaining: Double): Boolean {
-        return getRadiansSpentDecelerating(angularVelocity) >= Math.abs(radiansRemaining)
+        // knock off a few frames to compensate for lag
+        val compensatedRadiansRemaining = radiansRemaining - angularVelocity * .03
+        return getRadiansSpentDecelerating(angularVelocity) >= Math.abs(compensatedRadiansRemaining)
     }
 
     /**

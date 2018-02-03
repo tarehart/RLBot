@@ -270,5 +270,16 @@ class ArenaModelTest {
         Assert.assertTrue(ArenaModel.SIDE_WALL - ArenaModel.BALL_RADIUS - ballPath.endpoint.space.x < 2)
     }
 
+    @Test
+    fun testNearestPlane() {
+        val groundPlane = ArenaModel.getNearestPlane(Vector3(0.0, 0.0, 0.0))
+        Assert.assertEquals(1.0, groundPlane.normal.z, 0.0)
+
+        val sideWall = ArenaModel.getNearestPlane(Vector3(ArenaModel.SIDE_WALL - 10.0, 30.0, 16.0))
+        Assert.assertEquals(-1.0, sideWall.normal.x, 0.0)
+
+        val ceiling = ArenaModel.getNearestPlane(Vector3(16.0, 30.0, ArenaModel.CEILING - 10.0))
+        Assert.assertEquals(-1.0, ceiling.normal.z, 0.0)
+    }
 
 }

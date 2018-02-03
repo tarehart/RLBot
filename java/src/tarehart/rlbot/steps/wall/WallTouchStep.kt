@@ -29,8 +29,8 @@ class WallTouchStep : Step {
     override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
-        if (!ArenaModel.isCarOnWall(car)) {
-            println("Failed to make the wall touch because the car is not on the wall", input.playerIndex)
+        if (!car.hasWheelContact) {
+            println("Failed to make the wall touch because the car has no wheel contact", input.playerIndex)
             return null
         }
 
@@ -48,11 +48,18 @@ class WallTouchStep : Step {
             return null
         }
 
+
         originalIntercept?.let {
             if (it.distance(motion.space) > 20) {
                 println("Failed to make the wall touch because the intercept changed", input.playerIndex)
                 return null // Failed to kick it soon enough, new stuff has happened.
             }
+        }
+
+        val plane = ArenaModel.getNearestPlane(motion.space)
+        if (plane.normal.z == 1.0) {
+            println("Failed to make the wall touch because the ball is now close to the ground", input.playerIndex)
+            return null
         }
 
         if (originalIntercept == null) {
@@ -64,7 +71,7 @@ class WallTouchStep : Step {
             return AgentOutput().withThrottle(1.0).withJump()
         }
 
-        return SteerUtil.steerTowardWallPosition(car, motion.space)
+        return SteerUtil.steerTowardPositionAcrossSeam(car, motion.space)
     }
 
     override fun canInterrupt(): Boolean {
@@ -90,7 +97,7 @@ class WallTouchStep : Step {
 
         private fun readyToJump(input: AgentInput, carPositionAtContact: SpaceTime): Boolean {
 
-            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) > ArenaModel.BALL_RADIUS + .5) {
+            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) > ArenaModel.BALL_RADIUS + .7) {
                 return false // Really close to wall, no need to jump. Just chip it.
             }
             val car = input.myCarData

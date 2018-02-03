@@ -33,7 +33,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
     private var intercept: SpaceTime? = null
-    private val disruptionMeter = InterceptDisruptionMeter(distanceThreshold = 20.0)
+    private val disruptionMeter = InterceptDisruptionMeter(distanceThreshold = 30.0)
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
@@ -66,17 +66,22 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         }
 
         val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
-        if (latestIntercept == null) {
+        if (latestIntercept == null || disruptionMeter.isDisrupted(latestIntercept.ballSlice)) {
+            if (input.latestBallTouch.isPresent) {
+                val latestTouch = input.latestBallTouch.get()
+                if (latestTouch.playerIndex == car.playerIndex && Duration.between(latestTouch.time, car.time).seconds < 0.5) {
+                    // We successfully hit the ball. Let's go for a double touch by resetting the disruption meter.
+                    latestIntercept ?.let {
+                        disruptionMeter.reset(it.ballSlice)
+                    }
+                }
+            }
             confusionCount++
             if (confusionCount > 3) {
-                // Front flip out of confusion
-                startPlan(Plan().withStep(TapStep(2, AgentOutput().withPitch(-1.0).withJump())), input)
+                BotLog.println("Intercept has unacceptable disruption, quitting midair strike.", car.playerIndex)
+                return null
             }
             return AgentOutput().withBoost()
-        }
-
-        if (disruptionMeter.isDisrupted(latestIntercept.ballSlice)) {
-            return null
         }
 
         intercept = latestIntercept.toSpaceTime()
@@ -130,7 +135,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
 
         val desiredNoseVector: Vector3
 
-        if (millisTillIntercept < NOSE_FINESSE_TIME.millis && latestIntercept.time.isAfter(lastMomentForDodge) && heightError > 0 && offset.z > 0) {
+        val finesseMode = millisTillIntercept < NOSE_FINESSE_TIME.millis && latestIntercept.time.isAfter(lastMomentForDodge) && heightError > 0 && offset.z > 0
+
+        if (finesseMode) {
             // Nose into the ball
             desiredNoseVector = offset.scaled(-1.0).normaliseCopy()
         } else {
@@ -152,14 +159,16 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         val yawOutput = YawToPlaneStep({yawPlaneNormal}, false).getOutput(input)
         val rollOutput = RollToPlaneStep(Vector3(0.0, 0.0, 1.0), false).getOutput(input)
 
-        return mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput).withBoost().withJump()
+        return mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput)
+                .withBoost(finesseMode || desiredNoseVector.dotProduct(car.orientation.noseVector) > .5)
+                .withJump()
     }
 
 
     private fun mergeOrientationOutputs(pitchOutput: AgentOutput?, yawOutput: AgentOutput?, rollOutput: AgentOutput?): AgentOutput {
         val output = AgentOutput()
         pitchOutput?.let { output.withPitch(it.pitch) }
-        yawOutput?.let { output.withSteer(it.steer) }
+        yawOutput?.let { output.withYaw(it.yaw) }
         rollOutput?.let { output.withRoll(it.roll) }
 
         return output

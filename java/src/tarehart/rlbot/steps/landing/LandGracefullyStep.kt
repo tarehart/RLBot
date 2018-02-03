@@ -13,10 +13,8 @@ import tarehart.rlbot.steps.rotation.PitchToPlaneStep
 import tarehart.rlbot.steps.rotation.RollToPlaneStep
 import tarehart.rlbot.steps.rotation.YawToPlaneStep
 import tarehart.rlbot.steps.wall.DescendFromWallStep
-import tarehart.rlbot.steps.wall.MountWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
-
-import java.awt.*
+import java.awt.Graphics2D
 
 class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : NestedPlanStep() {
 
@@ -35,7 +33,7 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         if (ArenaModel.isCarOnWall(car) || car.hasWheelContact && ArenaModel.isNearFloorEdge(car)) {
 
             if (WallTouchStep.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input))) {
-                return startPlan(Plan().withStep(MountWallStep()).withStep(WallTouchStep()), input)
+                return startPlan(Plan().withStep(WallTouchStep()), input)
             }
 
             return startPlan(Plan().withStep(DescendFromWallStep()), input)

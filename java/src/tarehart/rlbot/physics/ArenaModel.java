@@ -3,6 +3,8 @@ package tarehart.rlbot.physics;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Streams;
+import org.jetbrains.annotations.NotNull;
 import org.ode4j.math.DQuaternion;
 import org.ode4j.math.DQuaternionC;
 import org.ode4j.math.DVector3;
@@ -11,6 +13,7 @@ import org.ode4j.ode.*;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.Plane;
 import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
@@ -18,6 +21,8 @@ import tarehart.rlbot.planning.Goal;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /*
@@ -61,6 +66,32 @@ public class ArenaModel {
     private DSpace space;
     private DSphere ball;
     private final DJointGroup contactgroup;
+
+    private static List<Plane> majorUnbrokenPlanes = new ArrayList<>();
+    private static List<Plane> backWallPlanes = new ArrayList<>();
+
+    static {
+        // Floor
+        majorUnbrokenPlanes.add(new Plane(new Vector3(0, 0, 1), new Vector3(0, 0, 0)));
+
+        // Side walls
+        majorUnbrokenPlanes.add(new Plane(new Vector3(1, 0, 0), new Vector3(-SIDE_WALL, 0, 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(-1, 0, 0), new Vector3(SIDE_WALL, 0, 0)));
+
+        // Ceiling
+        majorUnbrokenPlanes.add(new Plane(new Vector3(0, 0, -1), new Vector3(0, 0, CEILING)));
+
+        // 45 angle corners
+        majorUnbrokenPlanes.add(new Plane(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0)));
+
+
+        // Do the back wall major surfaces separately to avoid duplicate planes.
+        backWallPlanes.add(new Plane(new Vector3(0, 1, 0), new Vector3(0, -BACK_WALL, 0)));
+        backWallPlanes.add(new Plane(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, 0)));
+    }
 
     public static final Duration SIMULATION_DURATION = Duration.Companion.ofSeconds(6);
     private static final LoadingCache<BallSlice, BallPath> pathCache = CacheBuilder.newBuilder()
@@ -206,36 +237,22 @@ public class ArenaModel {
         DBody arenaBody = OdeHelper.createBody(world);
         arenaBody.setKinematic();
 
-        // Floor
-        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, 0), arenaBody);
+        for (Plane p : majorUnbrokenPlanes) {
+            addWallToWorld(p.getNormal(), p.getPosition(), arenaBody);
+        }
 
-        // Side walls
-        addWallToWorld(new Vector3(1, 0, 0), new Vector3(-SIDE_WALL, 0, 0), arenaBody);
-        addWallToWorld(new Vector3(-1, 0, 0), new Vector3(SIDE_WALL, 0, 0), arenaBody);
-
-        // Ceiling
-        addWallToWorld(new Vector3(0, 0, 1), new Vector3(0, 0, CEILING + WALL_THICKNESS), arenaBody);
-
-
-        float sideOffest = (float) (WALL_LENGTH / 2 + Goal.Companion.getEXTENT());
+        float sideOffset = (float) (WALL_LENGTH / 2 + Goal.Companion.getEXTENT());
         float heightOffset = (float) (WALL_LENGTH / 2 + Goal.Companion.getGOAL_HEIGHT());
 
         // Wall on the negative side
-        addWallToWorld(new Vector3(0, 1, 0), new Vector3(sideOffest, -BACK_WALL, 0), arenaBody);
-        addWallToWorld(new Vector3(0, 1, 0), new Vector3(-sideOffest, -BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(sideOffset, -BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(-sideOffset, -BACK_WALL, 0), arenaBody);
         addWallToWorld(new Vector3(0, 1, 0), new Vector3(0, -BACK_WALL, heightOffset), arenaBody);
 
         // Wall on the positive side
-        addWallToWorld(new Vector3(0, -1, 0), new Vector3(sideOffest, BACK_WALL, 0), arenaBody);
-        addWallToWorld(new Vector3(0, -1, 0), new Vector3(-sideOffest, BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(sideOffset, BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(-sideOffset, BACK_WALL, 0), arenaBody);
         addWallToWorld(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, heightOffset), arenaBody);
-
-
-        // 45 angle corners
-        addWallToWorld(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
-        addWallToWorld(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
-        addWallToWorld(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
-        addWallToWorld(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0), arenaBody);
 
         // Corner half-angles to make the ball roll smoothly
         double halfAngleBackoff = 3.5;
@@ -262,10 +279,10 @@ public class ArenaModel {
         addWallToWorld(new Vector3(-1, 0, 1), new Vector3(SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
 
         // 45 degree angle rails on back walls, either side of the goal
-        addWallToWorld(new Vector3(0, 1, 1), new Vector3(sideOffest, -BACK_WALL, RAIL_HEIGHT), arenaBody);
-        addWallToWorld(new Vector3(0, 1, 1), new Vector3(-sideOffest, -BACK_WALL, RAIL_HEIGHT), arenaBody);
-        addWallToWorld(new Vector3(0, -1, 1), new Vector3(sideOffest, BACK_WALL, RAIL_HEIGHT), arenaBody);
-        addWallToWorld(new Vector3(0, -1, 1), new Vector3(-sideOffest, BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(sideOffset, -BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(-sideOffset, -BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(sideOffset, BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(-sideOffset, BACK_WALL, RAIL_HEIGHT), arenaBody);
 
         // Floor rails in the corners
         float normalizedVertical = (float) Math.sqrt(2);
@@ -308,6 +325,14 @@ public class ArenaModel {
 
         if (fromVec.dotProduct(toVec) > .99999) {
             return new DQuaternion(1, 0, 0, 0);
+        }
+
+        if (fromVec.dotProduct(toVec) < -.99999) {
+            if (fromVec.getZ() < 1) {
+                return new DQuaternion(0, 0, 0, 1);
+            } else {
+                return new DQuaternion(0, 0, 1, 0);
+            }
         }
 
         Vector3 cross = fromVec.crossProduct(toVec);
@@ -409,5 +434,19 @@ public class ArenaModel {
 
     public static boolean isNearFloorEdge(CarData car) {
         return Math.abs(car.getPosition().getX()) > Goal.Companion.getEXTENT() && getDistanceFromWall(car.getPosition()) + car.getPosition().getZ() < 6;
+    }
+
+    @NotNull
+    public static Plane getNearestPlane(@NotNull Vector3 position) {
+
+        return Streams.concat(majorUnbrokenPlanes.stream(), backWallPlanes.stream()).min((p1, p2) -> {
+            double p1Distance = p1.distance(position);
+            double p2Distance = p2.distance(position);
+            if (p1Distance > p2Distance) {
+                return 1;
+            }
+
+            return -1;
+        }).get();
     }
 }

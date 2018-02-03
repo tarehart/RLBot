@@ -76,7 +76,7 @@ object SteerUtil {
     fun steerTowardGroundPosition(carData: CarData, position: Vector2): AgentOutput {
 
         if (ArenaModel.isCarOnWall(carData)) {
-            return steerTowardGroundPositionFromWall(carData, position)
+            return steerTowardPositionAcrossSeam(carData, position.toVector3())
         }
 
         val correctionAngle = getCorrectionAngleRad(carData, position)
@@ -89,7 +89,7 @@ object SteerUtil {
     fun steerTowardGroundPosition(carData: CarData, position: Vector2, noBoosting: Boolean): AgentOutput {
 
         if (ArenaModel.isCarOnWall(carData)) {
-            return steerTowardGroundPositionFromWall(carData, position)
+            return steerTowardPositionAcrossSeam(carData, position.toVector3())
         }
 
         val correctionAngle = getCorrectionAngleRad(carData, position)
@@ -102,7 +102,7 @@ object SteerUtil {
     fun steerTowardGroundPosition(carData: CarData, boostData: BoostData, position: Vector2): AgentOutput {
 
         if (ArenaModel.isCarOnWall(carData)) {
-            return steerTowardGroundPositionFromWall(carData, position)
+            return steerTowardPositionAcrossSeam(carData, position.toVector3())
         }
 
         val adjustedPosition = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, boostData, position)).orElse(position)
@@ -129,15 +129,22 @@ object SteerUtil {
                 .withSlide(Math.abs(correctionRadians) > Math.PI / 3)
     }
 
-    private fun steerTowardGroundPositionFromWall(carData: CarData, position: Vector2): AgentOutput {
-        val toPositionFlat = position.minus(carData.position.flatten())
-        val carShadow = Vector3(carData.position.x, carData.position.y, 0.0)
-        val heightOnWall = carData.position.z
-        val wallNormal = carData.orientation.roofVector
-        val distanceOntoField = VectorUtil.project(toPositionFlat, wallNormal.flatten()).magnitude()
-        val wallWeight = heightOnWall / (heightOnWall + distanceOntoField)
-        val toPositionAlongSeam = Vector3(toPositionFlat.x, toPositionFlat.y, 0.0).projectToPlane(wallNormal)
-        val seamPosition = carShadow.plus(toPositionAlongSeam.scaled(wallWeight))
+    fun steerTowardPositionAcrossSeam(carData: CarData, position: Vector3): AgentOutput {
+
+        val carPlane = ArenaModel.getNearestPlane(carData.position)
+        val targetPlane = ArenaModel.getNearestPlane(position)
+
+        if (carPlane.normal == targetPlane.normal) {
+            return steerTowardWallPosition(carData, position)
+        }
+
+        val toPositionOnTargetPlane = (position - carData.position).projectToPlane(targetPlane.normal)
+        val carShadowOnTargetPlane = carData.position.projectToPlane(targetPlane.normal)
+        val distanceFromTargetPlane = VectorUtil.project(carData.position, targetPlane.normal).magnitude() // Height above plane carData.position.z
+        val targetDistanceFromCarPlane = VectorUtil.project(toPositionOnTargetPlane, carPlane.normal).magnitude()
+        val carPlaneWeight = distanceFromTargetPlane / (distanceFromTargetPlane + targetDistanceFromCarPlane)
+        val toPositionAlongSeam = toPositionOnTargetPlane.projectToPlane(carPlane.normal)
+        val seamPosition = carShadowOnTargetPlane.plus(toPositionAlongSeam.scaled(carPlaneWeight))
 
         return steerTowardWallPosition(carData, seamPosition)
     }
