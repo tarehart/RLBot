@@ -101,10 +101,10 @@ class InterceptStep @JvmOverloads constructor(
             val agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.space.flatten(), car.boost <= intercept.airBoost)
             if (pace > 1.1 && currentSpeed > averageSpeedNeeded) {
                 // Slow down
-                agentOutput.withAcceleration(0.0).withBoost(false).withDeceleration(Math.max(0.0, pace - 1.5)) // Hit the brakes, but keep steering!
+                agentOutput.withThrottle(Math.min(0.0, -pace + 1.5)).withBoost(false) // Hit the brakes, but keep steering!
                 if (car.orientation.noseVector.dotProduct(car.velocity) < 0) {
                     // car is going backwards
-                    agentOutput.withDeceleration(0.0).withSteer(0.0)
+                    agentOutput.withThrottle(0.0).withSteer(0.0)
                 }
             }
             return agentOutput

@@ -34,6 +34,6 @@ class YawToPlaneStep(planeNormalFn: (AgentInput) -> Vector3, allowUpsideDown: Bo
     }
 
     override fun accelerate(positiveRadians: Boolean): AgentOutput {
-        return AgentOutput().withSteer((if (positiveRadians) 1 else -1).toDouble())
+        return AgentOutput().withYaw((if (positiveRadians) 1 else -1).toDouble())
     }
 }

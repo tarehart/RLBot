@@ -9,6 +9,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.tuning.ManeuverMath
 
 import java.awt.*
 import java.awt.geom.Line2D
@@ -121,8 +122,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
             }
 
             return AgentOutput()
-                    .withDeceleration(if (backwards) 1.0 else 0.0)
-                    .withAcceleration(if (backwards) 0.0 else 1.0)
+                    .withThrottle(if (backwards) -1.0 else 1.0)
                     .withSteer(turnDir.toDouble() * steerPolarity)
                     .withSlide()
 
@@ -132,10 +132,9 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                 return null // Done orienting.
             }
 
-            val tooFast = distance < getBrakeDistance(car.velocity.magnitude())
+            val tooFast = distance < ManeuverMath.getBrakeDistance(car.velocity.magnitude())
             return AgentOutput()
-                    .withAcceleration(if (tooFast == backwards) 1.0 else 0.0)
-                    .withDeceleration(if (tooFast != backwards) 1.0 else 0.0)
+                    .withThrottle(if (tooFast == backwards) 1.0 else -1.0)
                     .withSteer(turnDir.toDouble() * steerPolarity)
         }
     }
@@ -144,9 +143,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         return speed * speed * .015 + speed * .4
     }
 
-    private fun getBrakeDistance(speed: Double): Double {
-        return speed * speed * .01 + speed * .1
-    }
+
 
     override fun drawDebugInfo(graphics: Graphics2D) {
         super.drawDebugInfo(graphics)

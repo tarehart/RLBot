@@ -15,7 +15,6 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
 import java.awt.*
-import java.util.Optional
 
 class DribbleStep : NestedPlanStep() {
 
@@ -85,7 +84,7 @@ class DribbleStep : NestedPlanStep() {
                 flatDistance > 3 && flatDistance < 5 && input.ballPosition.z < 2 && approachDistance < 2
                 && Vector2.angle(myDirectionFlat, carToPressurePoint) < Math.PI / 12) {
             if (car.boost > 0) {
-                dribble.withAcceleration(1.0).withBoost()
+                dribble.withThrottle(1.0).withBoost()
             } else {
                 return startPlan(SetPieces.frontFlip(), input)
             }

@@ -124,7 +124,7 @@ object SteerUtil {
         val turnSharpness = difference * 2
 
         return AgentOutput()
-                .withDeceleration(1.0)
+                .withThrottle(-1.0)
                 .withSteer(correctionDirection * turnSharpness)
                 .withSlide(Math.abs(correctionRadians) > Math.PI / 3)
     }
@@ -160,9 +160,8 @@ object SteerUtil {
         val shouldBoost = !noBoosting && !shouldBrake && difference < Math.PI / 6 && !isSupersonic
 
         return AgentOutput()
-                .withAcceleration((if (shouldBrake) 0 else 1).toDouble())
-                .withDeceleration((if (shouldBrake) 1 else 0).toDouble())
-                .withSteer((-Math.signum(correctionAngle) * turnSharpness).toFloat().toDouble())
+                .withThrottle(if (shouldBrake) -1.0 else 1.0)
+                .withSteer(-Math.signum(correctionAngle) * turnSharpness)
                 .withSlide(shouldSlide)
                 .withBoost(shouldBoost)
     }
@@ -246,19 +245,19 @@ object SteerUtil {
             agentOutput.withBoost(false)
             if (currentSpeed > averageSpeedNeeded) {
                 // Slow down
-                agentOutput.withAcceleration(0.0).withBoost(false).withDeceleration(Math.max(0.0, distanceRatio - 1.5)) // Hit the brakes, but keep steering!
+                agentOutput.withThrottle(Math.min(0.0, -distanceRatio + 1.5)).withBoost(false) // Hit the brakes, but keep steering!
                 if (car.orientation.noseVector.dotProduct(car.velocity) < 0) {
                     // car is going backwards
-                    agentOutput.withDeceleration(0.0).withSteer(0.0)
+                    agentOutput.withThrottle(0.0).withSteer(0.0)
                 }
             } else if (distanceRatio > 1.5) {
-                agentOutput.withAcceleration(.5)
+                agentOutput.withThrottle(.5)
             }
         }
 
         if (currentSpeed > averageSpeedNeeded) {
             agentOutput.withBoost(false)
-            agentOutput.withAcceleration(averageSpeedNeeded / currentSpeed)
+            agentOutput.withThrottle(averageSpeedNeeded / currentSpeed)
         }
         return agentOutput
     }

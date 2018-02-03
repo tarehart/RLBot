@@ -38,7 +38,7 @@ object CircleTurnUtil {
         val centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(idealCircle.center), lookaheadRadians * if (clockwise) -1 else 1)
         val steerTarget = idealCircle.center.plus(centerToSteerTarget)
 
-        val output = SteerUtil.steerTowardGroundPosition(car, steerTarget).withBoost(false).withSlide(false).withDeceleration(0.0).withAcceleration(1.0)
+        val output = SteerUtil.steerTowardGroundPosition(car, steerTarget).withBoost(false).withSlide(false).withThrottle(1.0)
 
         if (speedRatio < 1) {
             output.withBoost(currentSpeed >= AccelerationModel.MEDIUM_SPEED && speedRatio < .8 || speedRatio < .7)
@@ -46,7 +46,7 @@ object CircleTurnUtil {
             val framesBetweenSlidePulses: Int
             if (speedRatio > 2) {
                 framesBetweenSlidePulses = 3
-                output.withAcceleration(0.0)
+                output.withThrottle(0.0)
             } else if (speedRatio > 1.5) {
                 framesBetweenSlidePulses = 6
             } else if (speedRatio > 1.2) {
@@ -177,7 +177,7 @@ object CircleTurnUtil {
         val momentToStartTurning = strikePoint.gameTime.minus(turnDuration)
         val immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning), input.boostData)
         if (currentSpeed > expectedSpeed && toTangent.magnitude() < 20) {
-            immediateSteer.withAcceleration(0.0).withDeceleration(1.0)
+            immediateSteer.withThrottle(-1.0)  // TODO: This is probably out of place, we have more subtle ways of doing this now
         }
 
 

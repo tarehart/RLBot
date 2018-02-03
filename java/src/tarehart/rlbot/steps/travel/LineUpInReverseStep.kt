@@ -31,7 +31,7 @@ class LineUpInReverseStep(private val waypoint: Vector2) : Step {
 
         return if (futureRadians * correctionDirection!! < 0 && Math.abs(futureRadians) < Math.PI / 4) {
             null // Done orienting.
-        } else AgentOutput().withDeceleration(1.0).withSteer(correctionDirection!!.toDouble())
+        } else AgentOutput().withThrottle(-1.0).withSteer(correctionDirection!!.toDouble())
 
     }
 

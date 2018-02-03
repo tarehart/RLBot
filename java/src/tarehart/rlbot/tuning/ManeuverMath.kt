@@ -59,4 +59,9 @@ object ManeuverMath {
         return VectorUtil.project(car.velocity, car.orientation.noseVector).magnitude() * Math.signum(car.velocity.dotProduct(car.orientation.noseVector))
     }
 
+    fun getBrakeDistance(speed: Double): Double {
+        // TODO: make this incorporate BRAKING_DECELERATION, and make it accurate
+        return speed * speed * .01 + speed * .1
+    }
+
 }

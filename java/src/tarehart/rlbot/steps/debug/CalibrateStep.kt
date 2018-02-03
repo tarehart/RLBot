@@ -9,7 +9,6 @@ import tarehart.rlbot.tuning.BotLog
 
 import java.awt.*
 import java.time.LocalDateTime
-import java.util.Optional
 
 
 class CalibrateStep : Step {
@@ -34,10 +33,10 @@ class CalibrateStep : Step {
                         java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), input.playerIndex)
                 return null
             }
-            return AgentOutput().withSteer(1.0).withAcceleration(1.0)
+            return AgentOutput().withSteer(1.0).withThrottle(1.0)
         }
 
-        return AgentOutput().withAcceleration(1.0)
+        return AgentOutput().withThrottle(1.0)
     }
 
     override fun canInterrupt(): Boolean {

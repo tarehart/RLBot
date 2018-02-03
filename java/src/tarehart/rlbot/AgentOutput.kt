@@ -1,6 +1,7 @@
 package tarehart.rlbot
 
 import rlbot.api.GameData
+import tarehart.rlbot.math.Clamper
 
 class AgentOutput {
 
@@ -12,24 +13,31 @@ class AgentOutput {
     var pitch: Double = 0.0
         private set
 
+    var yaw: Double = 0.0
+        private set
+
     var roll: Double = 0.0
         private set
 
-    // 0 is none, 1 is full
-    private var acceleration: Double = 0.0
-    private var deceleration: Double = 0.0
+    // -1 is reverse, 0 is idle, 1 is full
+    private var throttle: Double = 0.0
 
     private var jumpDepressed: Boolean = false
     private var boostDepressed: Boolean = false
     private var slideDepressed: Boolean = false
 
     fun withSteer(steeringTilt: Double): AgentOutput {
-        this.steer = Math.max(-1.0, Math.min(1.0, steeringTilt))
+        this.steer = Clamper.clamp(steeringTilt, -1.0, 1.0)
         return this
     }
 
     fun withPitch(pitchTilt: Double): AgentOutput {
-        this.pitch = Math.max(-1.0, Math.min(1.0, pitchTilt))
+        this.pitch = Clamper.clamp(pitchTilt, -1.0, 1.0)
+        return this
+    }
+
+    fun withYaw(yawTilt: Double): AgentOutput {
+        this.yaw = Clamper.clamp(yawTilt, -1.0, 1.0)
         return this
     }
 
@@ -38,13 +46,8 @@ class AgentOutput {
         return this
     }
 
-    fun withAcceleration(acceleration: Double): AgentOutput {
-        this.acceleration = Math.max(0.0, Math.min(1.0, acceleration))
-        return this
-    }
-
-    fun withDeceleration(deceleration: Double): AgentOutput {
-        this.deceleration = Math.max(0.0, Math.min(1.0, deceleration))
+    fun withThrottle(throttle: Double): AgentOutput {
+        this.throttle = Clamper.clamp(throttle, -1.0, 1.0)
         return this
     }
 
@@ -78,42 +81,41 @@ class AgentOutput {
         return this
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-        val that = o as AgentOutput?
+        other as AgentOutput
 
-        if (java.lang.Double.compare(that!!.steer, steer) != 0) return false
-        if (java.lang.Double.compare(that.pitch, pitch) != 0) return false
-        if (java.lang.Double.compare(that.acceleration, acceleration) != 0) return false
-        if (java.lang.Double.compare(that.deceleration, deceleration) != 0) return false
-        if (jumpDepressed != that.jumpDepressed) return false
-        return if (boostDepressed != that.boostDepressed) false else slideDepressed == that.slideDepressed
+        if (steer != other.steer) return false
+        if (pitch != other.pitch) return false
+        if (yaw != other.yaw) return false
+        if (roll != other.roll) return false
+        if (throttle != other.throttle) return false
+        if (jumpDepressed != other.jumpDepressed) return false
+        if (boostDepressed != other.boostDepressed) return false
+        if (slideDepressed != other.slideDepressed) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        var result: Int
-        var temp: Long
-        temp = java.lang.Double.doubleToLongBits(steer)
-        result = (temp xor temp.ushr(32)).toInt()
-        temp = java.lang.Double.doubleToLongBits(pitch)
-        result = 31 * result + (temp xor temp.ushr(32)).toInt()
-        temp = java.lang.Double.doubleToLongBits(acceleration)
-        result = 31 * result + (temp xor temp.ushr(32)).toInt()
-        temp = java.lang.Double.doubleToLongBits(deceleration)
-        result = 31 * result + (temp xor temp.ushr(32)).toInt()
-        result = 31 * result + if (jumpDepressed) 1 else 0
-        result = 31 * result + if (boostDepressed) 1 else 0
-        result = 31 * result + if (slideDepressed) 1 else 0
+        var result = steer.hashCode()
+        result = 31 * result + pitch.hashCode()
+        result = 31 * result + yaw.hashCode()
+        result = 31 * result + roll.hashCode()
+        result = 31 * result + throttle.hashCode()
+        result = 31 * result + jumpDepressed.hashCode()
+        result = 31 * result + boostDepressed.hashCode()
+        result = 31 * result + slideDepressed.hashCode()
         return result
     }
 
     fun toControllerState(): GameData.ControllerState {
         return GameData.ControllerState.newBuilder()
-                .setThrottle((acceleration - deceleration).toFloat())
+                .setThrottle(throttle.toFloat())
                 .setSteer(steer.toFloat())
-                .setYaw(if (slideDepressed) 0f else steer.toFloat())
+                .setYaw(yaw.toFloat())
                 .setRoll(if (roll != 0.0) roll.toFloat() else if (slideDepressed) steer.toFloat() else 0f)
                 .setPitch(pitch.toFloat())
                 .setBoost(boostDepressed)

@@ -17,10 +17,7 @@ import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 
 import java.awt.*
-import java.util.Optional
 
-import java.util.Optional.empty
-import java.util.Optional.of
 import tarehart.rlbot.tuning.BotLog.println
 
 class WallTouchStep : Step {
@@ -64,7 +61,7 @@ class WallTouchStep : Step {
 
         if (readyToJump(input, motion.toSpaceTime())) {
             println("Jumping for wall touch.", input.playerIndex)
-            return AgentOutput().withAcceleration(1.0).withJump()
+            return AgentOutput().withThrottle(1.0).withJump()
         }
 
         return SteerUtil.steerTowardWallPosition(car, motion.space)

@@ -8,7 +8,6 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.steps.Step
 
 import java.awt.*
-import java.util.Optional
 
 
 abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vector3, protected var allowUpsideDown: Boolean) : Step {
@@ -97,7 +96,7 @@ abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vect
             output = accelerate(originalCorrection!! < 0)
         }
 
-        output.withAcceleration(1.0) // Just in case we're stuck on our side on the ground
+        output.withThrottle(1.0) // Just in case we're stuck on our side on the ground
 
         return output
     }
