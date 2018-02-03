@@ -81,7 +81,7 @@ class WallTouchStep : Step {
     companion object {
         val ACCEPTABLE_WALL_DISTANCE = (ArenaModel.BALL_RADIUS + 5).toDouble()
         val WALL_DEPART_SPEED = 10.0
-        private val MIN_HEIGHT = 10.0
+        private val MIN_HEIGHT = 6.0
 
         private fun isBallOnWall(car: CarData, ballPosition: SpaceTime): Boolean {
             return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE

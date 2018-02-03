@@ -223,7 +223,7 @@ object SteerUtil {
             timeToIntercept = Duration.ofMillis(1)
         }
         val distancePlot = AccelerationModel.simulateAcceleration(
-                car, timeToIntercept, car.boost, 0.0)
+                car, timeToIntercept, 0.0, 0.0)
         val dts = distancePlot.getEndPoint()
         val maxDistance = dts.distance
 

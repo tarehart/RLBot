@@ -80,7 +80,7 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         }
 
         private fun getFacingPlane(desiredFacing: Vector2): Vector3 {
-            val (x, y) = VectorUtil.rotateVector(desiredFacing, -Math.PI / 2)
+            val (x, y) = VectorUtil.rotateVector(desiredFacing.normalized(), -Math.PI / 2)
             return Vector3(x, y, 0.0)
         }
     }
