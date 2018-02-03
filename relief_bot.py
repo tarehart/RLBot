@@ -15,8 +15,16 @@ class Agent:
         self.team = team  # use self.team to determine what team you are. I will set to "blue" or "orange"
         self.index = index
         self.stub = None
-        self.myPort = '25368'
+        self.myPort = '22868'
         self.connected = False
+
+        try:
+            with open("reliefbot-port.txt", "r") as portFile:
+                self.myPort = portFile.readline()
+        except ValueError:
+            print("Failed to parse port file! Will proceed with hard-coded port number.")
+        except:
+            pass
 
         try:
             print("Will connect to ReliefBot grpc server on port " + self.myPort + '...')

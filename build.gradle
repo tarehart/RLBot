@@ -36,7 +36,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
 
@@ -60,9 +60,10 @@ idea {
 
 mainClassName = 'tarehart.rlbot.GrpcServerKt'
 
+// You can run gradew distZip to generate a zip file suitable for tournament submissions
 applicationDistribution.from("$projectDir") {
     into 'README'
-    include 'README_Tournament.md', 'ReliefBot.py'
+    include 'README_Tournament.md', 'relief_bot.py', 'relief_bot.cfg'
 }
 
 

@@ -9,7 +9,7 @@ import javax.swing.JFrame
 import javax.swing.UIManager
 import javax.swing.WindowConstants
 
-private const val DEFAULT_PORT = 25368
+private const val DEFAULT_PORT = 22868
 private val statusSummary = StatusSummary()
 
 fun main(args: Array<String>) {
@@ -44,7 +44,7 @@ fun main(args: Array<String>) {
 
 private fun readPortFromFile(): Optional<Int> {
     try {
-        val lines = Files.lines(Paths.get("port.txt"))
+        val lines = Files.lines(Paths.get("reliefbot-port.txt"))
         val firstLine = lines.findFirst()
         return firstLine.map{ Integer.parseInt(it) }
     } catch (e: NumberFormatException) {
