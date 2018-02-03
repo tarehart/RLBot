@@ -29,19 +29,18 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         return input.myCarData.position.z < NEEDS_LANDING_HEIGHT || ArenaModel.isBehindGoalLine(input.myCarData.position)
     }
 
-    override fun doInitialComputation(input: AgentInput) {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+
         val car = input.myCarData
-        if (ArenaModel.isCarOnWall(car) || ArenaModel.isNearFloorEdge(car)) {
+        if (ArenaModel.isCarOnWall(car) || car.hasWheelContact && ArenaModel.isNearFloorEdge(car)) {
 
             if (WallTouchStep.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input))) {
-                startPlan(Plan().withStep(MountWallStep()).withStep(WallTouchStep()), input)
+                return startPlan(Plan().withStep(MountWallStep()).withStep(WallTouchStep()), input)
             }
 
-            startPlan(Plan().withStep(DescendFromWallStep()), input)
+            return startPlan(Plan().withStep(DescendFromWallStep()), input)
         }
-    }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
         return startPlan(planRotation(input.myCarData, facingFn), input)
     }
 

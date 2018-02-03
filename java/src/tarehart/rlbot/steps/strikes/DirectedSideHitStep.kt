@@ -145,7 +145,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         maneuverSeconds = angle * MANEUVER_SECONDS_PER_RADIAN
 
-        val circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, strikePoint)
+        val circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(input, kickPlan.distancePlot, strikePoint)
         recentCircleTurnPlan = circleTurnPlan
 
         return getNavigation(input, circleTurnPlan)

@@ -72,6 +72,10 @@ abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vect
 
         val car = input.myCarData
 
+        if (car.hasWheelContact) {
+            return null
+        }
+
         planeNormal = planeNormalFn.invoke(input)
 
         if (originalCorrection == null) {

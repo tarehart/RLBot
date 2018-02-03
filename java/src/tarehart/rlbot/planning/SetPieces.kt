@@ -20,7 +20,7 @@ object SetPieces {
                                 .withPitch(-1.0)
                                 .withJump(true)
                                 .withAcceleration(1.0)))
-                .withStep(BlindStep(Duration.ofSeconds(.01),
+                .withStep(BlindStep(Duration.ofSeconds(.02),
                         AgentOutput()
                                 .withPitch(-1.0)
                                 .withAcceleration(1.0)

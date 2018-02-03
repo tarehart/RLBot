@@ -4,8 +4,15 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.planning.FirstViableStepPlan
+import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.steps.challenge.ChallengeStep
+import tarehart.rlbot.steps.strikes.DirectedNoseHitStep
+import tarehart.rlbot.steps.strikes.InterceptStep
+import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
+import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 import java.awt.Graphics2D
 import java.util.*
@@ -16,6 +23,8 @@ class GoForKickoffStep : NestedPlanStep() {
     }
 
     private var kickoffType: KickoffType? = null
+    private var counterAttack = Math.random() < .3
+    private lateinit var startTime: GameTime
 
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
         if (input.ballPosition.flatten().magnitudeSquared() > 0) {
@@ -26,23 +35,20 @@ class GoForKickoffStep : NestedPlanStep() {
 
         if (kickoffType == null) {
             kickoffType = getKickoffType(car)
+            startTime = input.time
         }
 
-        val distance = car.position.magnitude()
-        if (distance < 14) {
-            startPlan(SetPieces.frontFlip(), input)
+        if (kickoffType != KickoffType.SLANTERD && counterAttack && (input.time - startTime).seconds < 8) {
+            return AgentOutput() // Wait for them to hit it, then counter attack
         }
-
-        val ySide = Math.signum(car.position.y)
 
         val target: Vector2
         if (kickoffType == KickoffType.CHEATIN && Math.abs(car.position.y) > CHEATIN_BOOST_Y + 10) {
             // Steer toward boost
+            val ySide = Math.signum(car.position.y)
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
-        } else if (distance > 30) {
-            target = Vector2(0.0, ySide * 15)
         } else {
-            target = Vector2(0.0, 0.0)
+            return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()), input)
         }
         return SteerUtil.steerTowardGroundPosition(car, target)
     }
@@ -77,10 +83,6 @@ class GoForKickoffStep : NestedPlanStep() {
 
     override fun canInterrupt(): Boolean {
         return false
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 
     companion object {

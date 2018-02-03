@@ -57,7 +57,7 @@ class GetBoostStep : NestedPlanStep() {
             val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost)
             val facing = VectorUtil.orthogonal(target.flatten()) { v -> v.dotProduct(toBoost) > 0 }.normalized()
 
-            val planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, target.flatten(), facing)
+            val planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(input, distancePlot, target.flatten(), facing)
 
             SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint)?.let {
                 println("Flipping toward boost", input.playerIndex)
@@ -96,9 +96,10 @@ class GetBoostStep : NestedPlanStep() {
         }
 
         val ballPath = ArenaModel.predictBallPath(input)
-        val endpoint = ballPath.endpoint.space
+        val endpoint = ballPath.getMotionAt(input.time.plusSeconds(3.0)) ?: ballPath.endpoint
         // Add a defensive bias.
-        val idealPlaceToGetBoost = Vector3(endpoint.x, 50 * Math.signum(GoalUtil.getOwnGoal(input.team).center.y), 0.0)
+        val defensiveBias = 50 * Math.signum(GoalUtil.getOwnGoal(input.team).center.y)
+        val idealPlaceToGetBoost = Vector3(endpoint.space.x, endpoint.space.y + defensiveBias, 0.0)
         return getNearestBoost(input.boostData.fullBoosts, idealPlaceToGetBoost)
     }
 

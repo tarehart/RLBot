@@ -31,16 +31,17 @@ class CatchBallStep : Step {
         latestCatchLocation = catchOpportunity
         return if (Duration.between(input.time, latestCatchLocation.time).seconds > 2) {
             null // Don't wait around for so long
-        } else playCatch(car, latestCatchLocation)
+        } else playCatch(input, latestCatchLocation)
     }
 
-    private fun playCatch(car: CarData, catchLocation: SpaceTime): AgentOutput {
+    private fun playCatch(input: AgentInput, catchLocation: SpaceTime): AgentOutput {
+        val car = input.myCarData
         val enemyGoal = GoalUtil.getEnemyGoal(car.team).center
         val enemyGoalToLoc = catchLocation.space.minus(enemyGoal)
         val offset = Vector3(enemyGoalToLoc.x, enemyGoalToLoc.y, 0.0).scaledToMagnitude(1.2)
         val target = catchLocation.space.plus(offset)
 
-        return SteerUtil.getThereOnTime(car, SpaceTime(target, catchLocation.time))
+        return SteerUtil.getThereOnTime(car, SpaceTime(target, catchLocation.time), input.boostData)
     }
 
     override fun canInterrupt(): Boolean {
