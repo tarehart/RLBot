@@ -9,7 +9,7 @@ interface RoutePart {
     val start: Vector2
     val end: Vector2
     val duration: Duration
-    val waypoint: Vector2
+    val waypoint: Vector2?
 
     fun drawDebugInfo(graphics: Graphics2D)
 }

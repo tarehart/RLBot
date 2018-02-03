@@ -6,6 +6,7 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.ManeuverMath
 
 import java.util.Optional
 
@@ -44,7 +45,7 @@ object AccelerationModel {
     @JvmOverloads
     fun simulateAcceleration(carData: CarData, duration: Duration, boostBudget: Double, flipCutoffDistance: Double = java.lang.Double.MAX_VALUE): DistancePlot {
 
-        var currentSpeed = VectorUtil.project(carData.velocity, carData.orientation.noseVector).magnitude()
+        var currentSpeed = ManeuverMath.forwardSpeed(carData)
         val plot = DistancePlot(DistanceTimeSpeed(0.0, Duration.ofMillis(0), currentSpeed))
 
         var boostRemaining = boostBudget

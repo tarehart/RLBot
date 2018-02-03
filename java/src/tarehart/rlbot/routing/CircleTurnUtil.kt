@@ -67,7 +67,7 @@ object CircleTurnUtil {
     }
 
     private fun getTurnDuration(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean, speed: Double): Duration {
-        return Duration.ofSeconds(getSweepRadians(circle, start, end, clockwise) * circle.radius / speed)
+        return Duration.ofSeconds(Math.abs(getSweepRadians(circle, start, end, clockwise)) * circle.radius / speed)
     }
 
     fun getSweepRadians(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean): Double {
@@ -100,27 +100,33 @@ object CircleTurnUtil {
         return p + q
     }
 
-    private fun getFacingCorrectionSeconds(approach: Vector2, targetFacing: Vector2, expectedSpeed: Double): Double {
-
-        val correction = approach.correctionAngle(targetFacing)
-        return getTurnRadius(expectedSpeed) * Math.abs(correction) / expectedSpeed
-    }
-
     fun getPlanForCircleTurn(
             car: CarData, distancePlot: DistancePlot, strikePoint: StrikePoint): SteerPlan {
 
         val targetPosition = strikePoint.position
-        val targetFacing = strikePoint.facing
         val distance = car.position.flatten().distance(targetPosition)
         val maxSpeed = distancePlot.getMotionAfterDistance(distance)?.speed ?: AccelerationModel.SUPERSONIC_SPEED
-        val idealSpeed = getIdealCircleSpeed(car, targetFacing)
+        val idealSpeed = getIdealCircleSpeed(PositionFacing(car.position.flatten(), car.orientation.noseVector.flatten()), strikePoint.positionFacing)
         val currentSpeed = car.velocity.magnitude()
 
-        return circleWaypoint(car, strikePoint, currentSpeed, Math.min(maxSpeed, idealSpeed))
+        return circleWaypoint(car, strikePoint, currentSpeed, Math.min(maxSpeed, idealSpeed), distancePlot)
     }
 
-    private fun getIdealCircleSpeed(car: CarData, targetFacing: Vector2): Double {
-        val orientationCorrection = car.orientation.noseVector.flatten().correctionAngle(targetFacing)
+    private fun getIdealCircleSpeed(currentFacing: PositionFacing, targetFacing: PositionFacing): Double {
+        val approachAngle = targetFacing.position - currentFacing.position
+
+        // When we are close to the target, the current orientation matters, and is probably taking the circle
+        // tangent point into account if we have been approaching the circle for a few frames, so currentFacing
+        // is most accurate.
+
+        // When we are far from the target, we should bias for the approach angle because it guards us against the
+        // situation where we just found out about the circle and the car is pointed the completely wrong way. Also
+        // the approach angle is a pretty good approximation when we are far away.
+
+        // This summation leads to a weighted average of the two vectors depending on distance.
+        val estimatedEntryAngle = currentFacing.facing + approachAngle.scaled(0.05)
+
+        val orientationCorrection = estimatedEntryAngle.correctionAngle(targetFacing.facing)
         val angleAllowingFullSpeed = Math.PI / 6
         val speedPenaltyPerRadian = 20.0
         val rawPenalty = speedPenaltyPerRadian * (Math.abs(orientationCorrection) - angleAllowingFullSpeed)
@@ -128,7 +134,12 @@ object CircleTurnUtil {
         return Math.max(15.0, AccelerationModel.SUPERSONIC_SPEED - correctionPenalty)
     }
 
-    private fun circleWaypoint(car: CarData, strikePoint: StrikePoint, currentSpeed: Double, expectedSpeed: Double): SteerPlan {
+    private fun circleWaypoint(
+            car: CarData,
+            strikePoint: StrikePoint,
+            currentSpeed: Double,
+            expectedSpeed: Double,
+            distancePlot: DistancePlot): SteerPlan {
 
         val targetPosition = strikePoint.position
         val targetFacing = strikePoint.facing
@@ -147,7 +158,7 @@ object CircleTurnUtil {
 
         val tangentPoints = circle.calculateTangentPoints(flatPosition) ?:
             return if (currentSpeed < expectedSpeed) {
-                circleWaypoint(car, strikePoint, currentSpeed, currentSpeed)
+                circleWaypoint(car, strikePoint, currentSpeed, currentSpeed, distancePlot)
             } else planWithinCircle(car, strikePoint, currentSpeed)
 
         val toCenter = center.minus(flatPosition)
@@ -158,29 +169,31 @@ object CircleTurnUtil {
             tangentPoints.second
 
         val toTangent = tangentPoint.minus(flatPosition)
-        val facingCorrectionSeconds = getFacingCorrectionSeconds(toTangent, targetFacing, expectedSpeed)
+        val turnDuration = getTurnDuration(circle, flatPosition, targetPosition, clockwise, expectedSpeed)
 
-        val momentToStartTurning = strikePoint.gameTime.minusSeconds(facingCorrectionSeconds)
+        val momentToStartTurning = strikePoint.gameTime.minus(turnDuration)
         val immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning))
         if (currentSpeed > expectedSpeed && toTangent.magnitude() < 20) {
             immediateSteer.withAcceleration(0.0).withDeceleration(1.0)
         }
 
-        val turnDuration = getTurnDuration(circle, flatPosition, targetPosition, clockwise, expectedSpeed)
 
-        return SteerPlan(
-                immediateSteer,
-                Route(strikePoint.gameTime, workBackwards = true)
-                        .withPart(AccelerationRoutePart(
-                                flatPosition,
-                                tangentPoint,
-                                Duration.between(car.time, strikePoint.gameTime - turnDuration)))
-                        .withPart(CircleRoutePart(
-                                start = tangentPoint,
-                                end = targetPosition,
-                                duration = turnDuration,
-                                circle = circle,
-                                clockwise = clockwise)))
+
+        val route = Route(strikePoint.gameTime, workBackwards = true)
+        route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(AccelerationModel.getSteerPenaltySeconds(car, tangentPoint.toVector3()))))
+
+        val arrivalParts = RoutePlanner.arriveWithSpeed(flatPosition, tangentPoint, expectedSpeed, distancePlot) ?:
+            listOf(AccelerationRoutePart(flatPosition, tangentPoint, Duration.between(car.time, strikePoint.gameTime - turnDuration)))
+
+        arrivalParts.forEach { route.withPart(it) }
+        route.withPart(CircleRoutePart(
+                start = tangentPoint,
+                end = targetPosition,
+                duration = turnDuration,
+                circle = circle,
+                clockwise = clockwise))
+
+        return SteerPlan(immediateSteer, route)
     }
 
     fun getPlanForCircleTurn(car: CarData, distancePlot: DistancePlot, flatten: Vector2, facing: Vector2): SteerPlan {

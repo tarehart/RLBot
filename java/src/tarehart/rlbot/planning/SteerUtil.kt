@@ -13,6 +13,7 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.ManeuverMath
 
 import java.util.Optional
 
@@ -230,7 +231,7 @@ object SteerUtil {
         val distanceToIntercept = car.position.flatten().distance(groundPositionAndTime.space.flatten())
         val distanceRatio = maxDistance / distanceToIntercept
         val averageSpeedNeeded = distanceToIntercept / timeToIntercept.seconds
-        val currentSpeed = car.velocity.magnitude()
+        val currentSpeed = ManeuverMath.forwardSpeed(car)
 
         val agentOutput = SteerUtil.steerTowardGroundPosition(car, groundPositionAndTime.space.flatten())
         if (distanceRatio > 1.1) {

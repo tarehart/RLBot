@@ -14,41 +14,17 @@ import java.awt.geom.Arc2D
 import java.awt.geom.Ellipse2D
 import java.awt.geom.Line2D
 
-class SteerPlan(val immediateSteer: AgentOutput, private val route: Route) {
+class SteerPlan(val immediateSteer: AgentOutput, val route: Route) {
 
     val waypoint: Vector2
-        get() { return route.parts.get(0).waypoint }
+        get() {
+            for (part: RoutePart in route.parts) {
+                part.waypoint?.let { return it }
+            }
+            throw NoSuchElementException("No route parts with a waypoint!")
+        }
 
     fun drawDebugInfo(graphics: Graphics2D, car: CarData) {
-
-
         route.drawDebugInfo(graphics)
-
-//        graphics.stroke = BasicStroke(1f)
-//        graphics.draw(Line2D.Double(car.position.x, car.position.y, waypoint.x, waypoint.y))
-//        if (circle != null) {
-//            val circleShape = circle.toShape()
-//
-//
-//            //graphics.draw(circleShape);
-//
-//            if (waypoint.distance(strikePoint.position) > .01) {
-//
-//                val centerToWaypoint = waypoint.minus(circle.center)
-//                val centerToFinal = strikePoint.position.minus(circle.center)
-//                val waypointAngle = Math.atan2(centerToWaypoint.y, centerToWaypoint.x)
-//                val waypointDegrees = -waypointAngle * 180 / Math.PI
-//                val radians = centerToWaypoint.correctionAngle(centerToFinal, clockwise)
-//                val extent = -radians * 180 / Math.PI
-//
-//                val arc = Arc2D.Double(circleShape.bounds2D, waypointDegrees, extent, Arc2D.OPEN)
-//                graphics.draw(arc)
-//            }
-//
-//            graphics.draw(Circle(waypoint, 1.0).toShape())
-//
-//            strikePoint.positionFacing.drawDebugInfo(graphics)
-//        }
-
     }
 }

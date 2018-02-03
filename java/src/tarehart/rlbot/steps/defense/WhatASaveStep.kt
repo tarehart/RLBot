@@ -17,8 +17,6 @@ import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.time.Duration
 
-import java.util.Optional
-
 class WhatASaveStep : NestedPlanStep() {
 
     override fun getLocalSituation(): String {
@@ -49,7 +47,7 @@ class WhatASaveStep : NestedPlanStep() {
 
 
         val (space1) = InterceptCalculator.getInterceptOpportunity(car, ballPath, plot)
-                ?: Intercept(currentThreat.space, currentThreat.time, 0.0, StrikeProfile(), plot, Duration.ofMillis(0))
+                ?: Intercept(currentThreat.space, currentThreat.time, 0.0, StrikeProfile(), plot, Duration.ofMillis(0), currentThreat)
 
         val carToIntercept = space1.minus(car.position)
         val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())

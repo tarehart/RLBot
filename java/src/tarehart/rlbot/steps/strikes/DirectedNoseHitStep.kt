@@ -34,15 +34,6 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
     private var recentCar: CarData? = null
     private lateinit var earliestPossibleIntercept: GameTime
 
-    private fun calculateManeuverSeconds(car: CarData): Double {
-        var seconds = Math.abs(carLaunchpadInterceptAngle) * .1
-        recentCircleTurnPlan?.let {
-            val noseToWaypoint = Vector2.angle(it.waypoint.minus(car.position.flatten()), car.orientation.noseVector.flatten())
-            seconds += noseToWaypoint * .4
-        }
-        return seconds
-    }
-
     override fun doInitialComputation(input: AgentInput) {
         recentCar = input.myCarData
 
@@ -104,9 +95,6 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         val positionCorrectionForStrike = carToIntercept.correctionAngle(strikeForceFlat)
         val orientationCorrectionForStrike = car.orientation.noseVector.flatten().correctionAngle(strikeForceFlat)
 
-        recentCircleTurnPlan = null
-
-
         if (!::interceptModifier.isInitialized) {
             interceptModifier = kickPlan.plannedKickForce.scaledToMagnitude(-1.4)
         }
@@ -117,8 +105,10 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         }
 
 
-        val freshManeuverSeconds = calculateManeuverSeconds(car)
-        val earliestThisTime = kickPlan.intercept.time.plusSeconds(freshManeuverSeconds).minus(kickPlan.intercept.spareTime)
+        val timeAfterRoute = recentCircleTurnPlan?.route?.duration?.let { car.time.plus(it) }
+        val earliestThisTime = timeAfterRoute?.let {
+            if (it > kickPlan.intercept.time) it else kickPlan.intercept.time
+        } ?: kickPlan.intercept.time
         val timeMismatch = Duration.between(earliestPossibleIntercept, earliestThisTime).seconds
 
         if (Math.abs(positionCorrectionForStrike) > Math.PI / 2 || Math.abs(carLaunchpadInterceptAngle) > Math.PI / 2) {

@@ -5,6 +5,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.Step
+import tarehart.rlbot.tuning.BotLog
 
 import java.awt.*
 import java.util.Optional
@@ -25,6 +26,7 @@ class MountWallStep : Step {
         val ballPath = ArenaModel.predictBallPath(input)
         if (!WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
             // Failed to mount the wall in time.
+            BotLog.println("Canceling wall mount because we lost the wall touch opportunity.", input.playerIndex)
             return null
         }
 

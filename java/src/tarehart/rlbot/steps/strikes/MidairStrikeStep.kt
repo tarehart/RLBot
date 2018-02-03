@@ -12,6 +12,7 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.TapStep
@@ -32,9 +33,14 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
     private var intercept: SpaceTime? = null
+    private val disruptionMeter = InterceptDisruptionMeter(distanceThreshold = 20.0)
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
+    }
+
+    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+        return input.myCarData.hasWheelContact
     }
 
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
@@ -69,7 +75,11 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
             return AgentOutput().withBoost()
         }
 
-        intercept = latestIntercept
+        if (disruptionMeter.isDisrupted(latestIntercept.ballSlice)) {
+            return null
+        }
+
+        intercept = latestIntercept.toSpaceTime()
         val carToIntercept = latestIntercept.space.minus(car.position)
         val millisTillIntercept = Duration.between(input.time, latestIntercept.time).millis
         val distance = car.position.distance(input.ballPosition)

@@ -37,7 +37,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         val ownGoal = GoalUtil.getOwnGoal(input.team)
 
 
-        val backoff = 15 + ballFuture.z
+        val backoff = 20 + ballFuture.z
         val facing: Vector2
 
         val target: Vector3

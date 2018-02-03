@@ -25,6 +25,10 @@ class DistancePlot(start: DistanceTimeSpeed) {
         plot.add(dts)
     }
 
+    fun getStartPoint(): DistanceTimeSpeed {
+        return plot[0]
+    }
+
     fun getEndPoint(): DistanceTimeSpeed {
         return plot[plot.size - 1]
     }

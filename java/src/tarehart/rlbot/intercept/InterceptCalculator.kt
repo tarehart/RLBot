@@ -11,8 +11,6 @@ import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
-import java.util.Optional
-
 object InterceptCalculator {
 
     fun getInterceptOpportunityAssumingMaxAccel(carData: CarData, ballPath: BallPath, boostBudget: Double): Intercept? {
@@ -81,7 +79,14 @@ object InterceptCalculator {
                     val boostNeeded = boostNeededForAerial(spaceTime.space.z)
                     val spareTime = if (tweenedSlice.time > firstMomentInRange) tweenedSlice.time - firstMomentInRange else Duration.ofMillis(0)
 
-                    return Intercept(tweenedSlice.space + interceptModifier, tweenedSlice.time, boostNeeded, strikeProfile, acceleration, spareTime)
+                    return Intercept(
+                            tweenedSlice.space + interceptModifier,
+                            tweenedSlice.time,
+                            boostNeeded,
+                            strikeProfile,
+                            acceleration,
+                            spareTime,
+                            tweenedSlice)
                 }
             }
             previousRangeDeficiency = rangeDeficiency
@@ -117,15 +122,15 @@ object InterceptCalculator {
             carData: CarData,
             ballPath: BallPath,
             interceptModifier: Vector3,
-            launchMoment: GameTime): SpaceTime? {
+            launchMoment: GameTime): Intercept? {
 
         val myPosition = carData.position
 
-        for ((space, time) in ballPath.slices) {
-            val intercept = SpaceTime(space.plus(interceptModifier), time)
+        for (slice in ballPath.slices) {
+            val intercept = SpaceTime(slice.space.plus(interceptModifier), slice.time)
 
             val timeSinceLaunch = Duration.between(launchMoment, carData.time)
-            val duration = Duration.between(carData.time, time)
+            val duration = Duration.between(carData.time, slice.time)
             val zComponent = AerialMath.getDesiredZComponentBasedOnAccel(intercept.space.z, duration, timeSinceLaunch, carData)
             val desiredNoseAngle = Math.asin(zComponent)
             val currentNoseAngle = Math.asin(carData.orientation.noseVector.z)
@@ -143,7 +148,14 @@ object InterceptCalculator {
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
             if (dts.distance > interceptDistance) {
-                return intercept
+                return Intercept(
+                        intercept.space,
+                        intercept.time,
+                        airBoost = 0.0,
+                        strikeProfile = StrikeProfile(),
+                        distancePlot = acceleration,
+                        spareTime = Duration.ofMillis(0),
+                        ballSlice = slice)
             }
 
         }

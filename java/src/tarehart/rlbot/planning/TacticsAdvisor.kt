@@ -33,6 +33,7 @@ import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.tuning.ManeuverMath
 
 class TacticsAdvisor {
 
@@ -103,7 +104,7 @@ class TacticsAdvisor {
                 return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
             } else {
                 // Doesn't matter if enemy wins the race, they are out of position.
-                makePlanWithPlentyOfTime(input, situation, ballPath)
+                return makePlanWithPlentyOfTime(input, situation, ballPath)
             }
         }
 
@@ -234,11 +235,22 @@ class TacticsAdvisor {
     private fun getShotOnGoalAvailable(team: Bot.Team, myCar: CarData, opponentCar: CarData?,
                                        ballPosition: Vector3, soonestIntercept: Intercept?, ballPath: BallPath): Boolean {
 
-        return if (myCar.position.distance(ballPosition) < 80 &&
-                GoalUtil.ballLingersInBox(GoalUtil.getEnemyGoal(team), ballPath) &&
+        if (!ManeuverMath.isOnGround(myCar)) {
+            return false
+        }
+
+        soonestIntercept?.let {
+            if (ArenaModel.SIDE_WALL - it.space.x < 10) {
+                return false
+            }
+        }
+
+        if (myCar.position.distance(ballPosition) < 80 &&
                 generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept, myCar.playerIndex)) {
-            true
-        } else opponentCar?.let { ZoneUtil.isMyOffensiveBreakaway(team, myCar, it, ballPosition) } ?: false
+            return true
+        }
+
+        return opponentCar?.let { ZoneUtil.isMyOffensiveBreakaway(team, myCar, it, ballPosition) } ?: false
 
     }
 
