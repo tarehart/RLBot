@@ -89,11 +89,4 @@ abstract class Bot(private val team: Team, private val playerIndex: Int) {
 
     protected abstract fun getOutput(input: AgentInput): AgentOutput
 
-    protected fun canInterruptPlanFor(posture: Plan.Posture): Boolean {
-        return currentPlan?.let { it.isComplete() || it.posture.lessUrgentThan(posture) && it.canInterrupt() } ?: true
-    }
-
-    protected fun noActivePlanWithPosture(posture: Plan.Posture): Boolean {
-        return currentPlan?.let { it.isComplete() || it.posture !== posture } ?: true
-    }
 }

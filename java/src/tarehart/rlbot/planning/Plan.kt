@@ -1,5 +1,6 @@
 package tarehart.rlbot.planning
 
+import com.sun.org.apache.xpath.internal.operations.Bool
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.steps.Step
@@ -40,6 +41,10 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
 
         fun lessUrgentThan(other: Posture): Boolean {
             return urgency < other.urgency
+        }
+
+        fun canInterrupt(plan: Plan?): Boolean {
+            return plan?.let { it.isComplete() || it.posture.lessUrgentThan(this) && it.canInterrupt() } ?: true
         }
     }
 
@@ -83,12 +88,6 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
 
         fun concatSituation(baseSituation: String, plan: Plan?): String {
             return baseSituation + if (plan != null && !plan.isComplete()) "(" + plan.situation + ")" else ""
-        }
-
-        fun activePlan(plan: Plan?): Optional<Plan> {
-            return if (plan != null && !plan.isComplete()) {
-                Optional.of(plan)
-            } else Optional.empty()
         }
 
         fun activePlanKt(plan: Plan?): Plan? {

@@ -22,7 +22,7 @@ class LatencyBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) {
             return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.plus(Vector3(20.0, 0.0, 0.0)))
         }
 
-        if (noActivePlanWithPosture(Plan.Posture.NEUTRAL)) {
+        if (Plan.Posture.NEUTRAL.canInterrupt(currentPlan)) {
             currentPlan = Plan().withStep(CalibrateStep())
         }
 

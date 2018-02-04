@@ -9,55 +9,84 @@ import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector2.Companion
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
+import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
 import tarehart.rlbot.steps.*
+import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep
 import tarehart.rlbot.steps.defense.WhatASaveStep
+import tarehart.rlbot.steps.demolition.DemolishEnemyStep
+import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.DescendFromWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
-
-import java.util.Optional
-
-import tarehart.rlbot.planning.Plan.Posture.ESCAPEGOAL
-import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
-import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
-import tarehart.rlbot.steps.challenge.ChallengeStep
-import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
+import java.util.*
 
 class TacticsAdvisor {
 
-    fun makePlan(input: AgentInput, situation: TacticalSituation): Plan {
+    fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
-        if (situation.scoredOnThreat != null) {
+        val car = input.myCarData
+        val zonePlan = ZoneTelemetry.get(input.team)
+
+        // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
+        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative.car == car) {
+            return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+        }
+
+        if (Plan.Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
+                car.position.z > 5 &&
+                !ArenaModel.isBehindGoalLine(car.position)) {
+            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+        }
+
+        if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+            println("Canceling current plan. Need to go for save!", input.playerIndex)
             return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
         }
-        //        if (ArenaModel.isBehindGoalLine(input.getMyCarData().getPosition())) {
-        //            return new Plan(ESCAPEGOAL).withStep(new EscapeTheGoalStep());
-        //        }
-        if (situation.waitToClear) {
+
+        if (situation.waitToClear && Plan.Posture.WAITTOCLEAR.canInterrupt(currentPlan)) {
+            println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
             return Plan(Plan.Posture.WAITTOCLEAR).withStep(RotateAndWaitToClearStep())
         }
-        if (situation.needsDefensiveClear && situation.teamPlayerWithInitiative.car == input.myCarData) {
+
+        if (zonePlan.isPresent && situation.forceDefensivePosture && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+            println("Canceling current plan. Forcing defensive rotation!", input.playerIndex)
+            val secondsToOverrideFor = 0.25
+            return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
+        }
+
+        if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
+            println("Canceling current plan. Going for clear!", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.CLEAR)
                     .withStep(DirectedNoseHitStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
                     .withStep(DirectedSideHitStep(KickAwayFromOwnGoal()))
                     .withStep(EscapeTheGoalStep())
                     .withStep(GetOnDefenseStep())
         }
-        if (situation.forceDefensivePosture) {
-            val secondsToOverrideFor = 0.25
-            return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
+
+        if (situation.shotOnGoalAvailable && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
+            println("Canceling current plan. Shot opportunity!", input.playerIndex)
+            return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
+                    .withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
+                    .withStep(DirectedSideHitStep(KickAtEnemyGoal()))
+                    .withStep(CatchBallStep())
+                    .withStep(GetOnOffenseStep())
+                    .withStep(GetBoostStep())
         }
+
+        return null
+    }
+
+    fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
 
         if (situation.teamPlayerWithInitiative.car != input.myCarData) {
 
@@ -74,16 +103,6 @@ class TacticsAdvisor {
                         .withStep(GetOnOffenseStep())
                         .withStep(DemolishEnemyStep())
             }
-        }
-
-        if (situation.shotOnGoalAvailable) {
-
-            return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
-                    .withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
-                    .withStep(DirectedSideHitStep(KickAtEnemyGoal()))
-                    .withStep(CatchBallStep())
-                    .withStep(GetOnOffenseStep())
-                    .withStep(GetBoostStep())
         }
 
         val ballPath = ArenaModel.predictBallPath(input)

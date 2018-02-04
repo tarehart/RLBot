@@ -12,7 +12,7 @@ class JumpingBeanBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) 
 
     override fun getOutput(input: AgentInput): AgentOutput {
 
-        if (!Plan.activePlan(currentPlan).isPresent) {
+        if (Plan.activePlanKt(currentPlan) == null) {
             currentPlan = SetPieces.jumpSuperHigh(10.0)
         }
 
