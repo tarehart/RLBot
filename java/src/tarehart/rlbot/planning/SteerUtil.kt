@@ -139,10 +139,11 @@ object SteerUtil {
         }
 
         val toPositionOnTargetPlane = (position - carData.position).projectToPlane(targetPlane.normal)
-        val carShadowOnTargetPlane = carData.position.projectToPlane(targetPlane.normal)
-        val distanceFromTargetPlane = VectorUtil.project(carData.position, targetPlane.normal).magnitude() // Height above plane carData.position.z
-        val targetDistanceFromCarPlane = VectorUtil.project(toPositionOnTargetPlane, carPlane.normal).magnitude()
-        val carPlaneWeight = distanceFromTargetPlane / (distanceFromTargetPlane + targetDistanceFromCarPlane)
+        val carShadowOnTargetPlane = carData.position.shadowOntoPlane(targetPlane)
+        val distanceFromTargetPlane = targetPlane.distance(carData.position)
+        val targetDistanceFromCarPlane =  carPlane.distance(position)
+        val hurryToSeamBias = 1.5 // 1.0 would be neutral
+        val carPlaneWeight = distanceFromTargetPlane / (distanceFromTargetPlane + targetDistanceFromCarPlane * hurryToSeamBias)
         val toPositionAlongSeam = toPositionOnTargetPlane.projectToPlane(carPlane.normal)
         val seamPosition = carShadowOnTargetPlane.plus(toPositionAlongSeam.scaled(carPlaneWeight))
 

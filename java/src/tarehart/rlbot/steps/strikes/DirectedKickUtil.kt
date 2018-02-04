@@ -96,7 +96,7 @@ object DirectedKickUtil {
         val launchPad: StrikePoint?
 
         if (!isSideHit) {
-            val backoff = 5 + (ballAtIntercept.space.z - ArenaModel.BALL_RADIUS) * 2 + intercept.spareTime.seconds * 5
+            val backoff = 5 + (ballAtIntercept.space.z - ArenaModel.BALL_RADIUS) * .05 * ManeuverMath.forwardSpeed(car) + intercept.spareTime.seconds * 5
             val facing = plannedKickForce.flatten().normalized()
             val launchPosition = ballAtIntercept.space.flatten() - facing.scaledToMagnitude(backoff)
             // Time is chosen with a bias toward hurrying

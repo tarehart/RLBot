@@ -11,17 +11,23 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.carpredict.AccelerationModel
+import tarehart.rlbot.intercept.Intercept
+import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 
 import java.awt.*
 
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.ui.ArenaDisplay
 
 class WallTouchStep : Step {
-    private var originalIntercept: Vector3? = null
+    private var latestIntercept: Intercept? = null
+    private var disruptionMeter = InterceptDisruptionMeter(20.0)
+    private var confusion = 0
 
     override val situation: String
         get() = "Making a wall touch."
@@ -39,31 +45,35 @@ class WallTouchStep : Step {
         val fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
 
         val interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
-                car, ballPath, fullAcceleration, Vector3(), { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) })
-        val motion = interceptOpportunity?.let{ ballPath.getMotionAt(it.time) }
+                car,
+                ballPath,
+                fullAcceleration,
+                interceptModifier = Vector3(),
+                predicate = { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) },
+                strikeProfileFn = { StrikeProfile() },
+                planeNormal = car.orientation.roofVector)
 
+        latestIntercept = interceptOpportunity
 
-        if (motion == null) {
-            println("Failed to make the wall touch because we see no intercepts on the wall", input.playerIndex)
-            return null
-        }
+        val motion = interceptOpportunity?.ballSlice
 
-
-        originalIntercept?.let {
-            if (it.distance(motion.space) > 20) {
-                println("Failed to make the wall touch because the intercept changed", input.playerIndex)
-                return null // Failed to kick it soon enough, new stuff has happened.
+        if (motion == null || disruptionMeter.isDisrupted(motion) || interceptOpportunity.spareTime > Duration.ofSeconds(0.5)) {
+            if (!ArenaModel.isNearFloorEdge(input.ballPosition)) { // The ball simulation screws up when it's rolling up the seam
+                confusion++
             }
+            if (confusion > 1) {
+                println("Failed to make the wall touch because the intercept changed", input.playerIndex)
+                return null
+            }
+            return AgentOutput().withThrottle(1.0)
+        } else {
+            confusion = 0
         }
 
         val plane = ArenaModel.getNearestPlane(motion.space)
         if (plane.normal.z == 1.0) {
             println("Failed to make the wall touch because the ball is now close to the ground", input.playerIndex)
             return null
-        }
-
-        if (originalIntercept == null) {
-            originalIntercept = motion.space
         }
 
         if (readyToJump(input, motion.toSpaceTime())) {
@@ -79,7 +89,9 @@ class WallTouchStep : Step {
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
+        latestIntercept?.let {
+            ArenaDisplay.drawBall(it.space, graphics, Color(16, 194, 140))
+        }
     }
 
     companion object {
@@ -97,19 +109,19 @@ class WallTouchStep : Step {
 
         private fun readyToJump(input: AgentInput, carPositionAtContact: SpaceTime): Boolean {
 
-            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) > ArenaModel.BALL_RADIUS + .7) {
+            val car = input.myCarData
+            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .2 || !ArenaModel.isCarOnWall(car)) {
                 return false // Really close to wall, no need to jump. Just chip it.
             }
-            val car = input.myCarData
             val toPosition = carPositionAtContact.space.minus(car.position)
             val correctionAngleRad = VectorUtil.getCorrectionAngle(car.orientation.noseVector, toPosition, car.orientation.roofVector)
             val secondsTillIntercept = Duration.between(input.time, carPositionAtContact.time).seconds
             val wallDistanceAtIntercept = ArenaModel.getDistanceFromWall(carPositionAtContact.space)
             val tMinus = secondsTillIntercept - wallDistanceAtIntercept / WALL_DEPART_SPEED
-            val linedUp = Math.abs(correctionAngleRad) < Math.PI / 8
-            if (tMinus < 3) {
-                println("Correction angle: " + correctionAngleRad, input.playerIndex)
-            }
+            val linedUp = Math.abs(correctionAngleRad) < Math.PI / 20
+//            if (tMinus < 3) {
+//                println("Correction angle: " + correctionAngleRad, input.playerIndex)
+//            }
 
             return tMinus < 0.1 && tMinus > -.4 && linedUp
         }

@@ -1,5 +1,7 @@
 package tarehart.rlbot.math.vector
 
+import tarehart.rlbot.math.Plane
+
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
 
     val isZero: Boolean
@@ -77,6 +79,11 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         val d = dotProduct(planeNormal)
         val antidote = planeNormal.scaled(-d)
         return plus(antidote)
+    }
+
+    fun shadowOntoPlane(plane: Plane): Vector3 {
+        val distance = plane.distance(this)
+        return this - plane.normal.scaledToMagnitude(distance)
     }
 
     override fun toString(): String {

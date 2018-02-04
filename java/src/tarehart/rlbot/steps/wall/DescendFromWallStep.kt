@@ -21,7 +21,7 @@ class DescendFromWallStep : Step {
         if (ArenaModel.isCarOnWall(car)) {
             val ballShadow = Vector3(input.ballPosition.x, input.ballPosition.y, 0.0)
             return SteerUtil.steerTowardWallPosition(car, ballShadow)
-        } else if (ArenaModel.isNearFloorEdge(car)) {
+        } else if (ArenaModel.isNearFloorEdge(car.position)) {
             return SteerUtil.steerTowardPositionAcrossSeam(car, input.ballPosition)
         }
 

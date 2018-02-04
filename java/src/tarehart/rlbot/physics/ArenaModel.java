@@ -432,8 +432,8 @@ public class ArenaModel {
         return car.getHasWheelContact() && isCarNearWall(car) && Math.abs(car.getOrientation().getRoofVector().getZ()) < 0.05;
     }
 
-    public static boolean isNearFloorEdge(CarData car) {
-        return Math.abs(car.getPosition().getX()) > Goal.Companion.getEXTENT() && getDistanceFromWall(car.getPosition()) + car.getPosition().getZ() < 6;
+    public static boolean isNearFloorEdge(Vector3 position) {
+        return Math.abs(position.getX()) > Goal.Companion.getEXTENT() && getDistanceFromWall(position) + position.getZ() < 6;
     }
 
     @NotNull

@@ -239,7 +239,7 @@ class TacticsAdvisor {
         }
 
         soonestIntercept?.let {
-            if (ArenaModel.SIDE_WALL - it.space.x < 10) {
+            if (ArenaModel.SIDE_WALL - Math.abs(it.space.x) < 10) {
                 return false
             }
         }

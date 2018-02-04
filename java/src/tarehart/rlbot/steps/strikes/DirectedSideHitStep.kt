@@ -189,7 +189,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             val strikeForceCorrection = DirectedKickUtil.getAngleOfKickFromApproach(car, kickPlan)
             return startPlan(SetPieces.jumpSideFlip(strikeForceCorrection > 0, jumpTime.get(), false), input)
         } else {
-            println(format("Side flip soon. Distance: %.2f, Time: %.2f", distanceCountdown, timeCountdown), input.playerIndex)
+            //println(format("Side flip soon. Distance: %.2f, Time: %.2f", distanceCountdown, timeCountdown), input.playerIndex)
             return SteerUtil.getThereOnTime(car, SpaceTime(orthogonalPoint.toVector3(), kickPlan.intercept.time))
         }
     }
