@@ -26,6 +26,12 @@ class WhatASaveStep : NestedPlanStep() {
     private var whichPost: Double? = null
     private var goingForSuperJump: Boolean = false
 
+    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+        val ballPath = ArenaModel.predictBallPath(input)
+        val goal = GoalUtil.getOwnGoal(input.team)
+        return GoalUtil.predictGoalEvent(goal, ballPath) == null
+    }
+
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
