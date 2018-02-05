@@ -6,7 +6,7 @@ import tarehart.rlbot.planning.TacticsAdvisor
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 
-class DemolitionBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) {
+class AdversityBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) {
 
     override fun getOutput(input: AgentInput): AgentOutput {
 

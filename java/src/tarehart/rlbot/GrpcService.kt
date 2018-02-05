@@ -47,8 +47,8 @@ class GrpcService(private val statusSummary: StatusSummary) : BotGrpc.BotImplBas
         val newBot: Bot
         if (translatedInput.myCarData.name.startsWith("JumpingBean")) {
             newBot = JumpingBeanBot(translatedInput.team, playerIndex)
-        } else if (translatedInput.myCarData.name.startsWith("Pain")) {
-            newBot = DemolitionBot(translatedInput.team, playerIndex)
+        } else if (translatedInput.myCarData.name.startsWith("AdversityBot")) {
+            newBot = AdversityBot(translatedInput.team, playerIndex)
         } else {
             newBot = ReliefBot(translatedInput.team, playerIndex)
         }
