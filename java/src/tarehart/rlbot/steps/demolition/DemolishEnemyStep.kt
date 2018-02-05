@@ -25,9 +25,9 @@ class DemolishEnemyStep : Step {
         val car = input.myCarData
         val oppositeTeam = input.getTeamRoster(input.team.opposite())
         val enemyCar = enemyIndex?.let { enemyInd -> oppositeTeam.first { it.playerIndex == enemyInd } } ?:
-                oppositeTeam.minBy { car.position.distance(it.position) }
+                oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) }
 
-        if (enemyCar == null || enemyCar.isDemolished || car.boost == 0.0 && !car.isSupersonic) {
+        if (enemyCar == null || enemyCar.isDemolished || car.boost < 15 && !car.isSupersonic) {
             return null
         }
 

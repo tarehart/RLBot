@@ -95,7 +95,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
 
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, latestIntercept.space)
 
-        if (input.time.isBefore(lastMomentForDodge) && distance < DODGE_TIME.seconds * car.velocity.magnitude()) {
+        if (input.time.isBefore(lastMomentForDodge) && distance < DODGE_TIME.seconds * car.velocity.magnitude() && latestIntercept.space.z - car.position.z < 1.5) {
             // Let's flip into the ball!
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
                 BotLog.println("Front flip strike", input.playerIndex)
