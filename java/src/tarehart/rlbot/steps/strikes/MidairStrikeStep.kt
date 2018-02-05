@@ -43,6 +43,10 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         return input.myCarData.hasWheelContact
     }
 
+    override fun canAbortPlanInternally(): Boolean {
+        return true
+    }
+
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         if (! ::lastMomentForDodge.isInitialized) {
@@ -96,15 +100,15 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
                 BotLog.println("Front flip strike", input.playerIndex)
                 startPlan(Plan()
-                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput()))
+                        .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
                         .withStep(BlindStep(Duration.ofSeconds(1.0), AgentOutput().withPitch(-1.0).withJump())),
                         input)
             } else {
                 // Dodge to the side
                 BotLog.println("Side flip strike", input.playerIndex)
                 startPlan(Plan()
-                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput()))
-                        .withStep(BlindStep(Duration.ofMillis(5), AgentOutput().withYaw((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump())),
+                        .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
+                        .withStep(BlindStep(Duration.ofMillis(30), AgentOutput().withYaw((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump())),
                         input)
             }
         }

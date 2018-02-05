@@ -54,7 +54,7 @@ abstract class NestedPlanStep : Step {
     }
 
     override fun canInterrupt(): Boolean {
-        return plan?.canInterrupt() ?: true
+        return Plan.activePlanKt(plan)?.canInterrupt() ?: true
     }
 
     override val situation: String

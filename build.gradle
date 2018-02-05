@@ -63,7 +63,7 @@ mainClassName = 'tarehart.rlbot.GrpcServerKt'
 // You can run gradew distZip to generate a zip file suitable for tournament submissions
 applicationDistribution.from("$projectDir") {
     into 'README'
-    include 'README_Tournament.md', 'relief_bot.py', 'relief_bot.cfg', 'adversity_bot.cfg'
+    include 'README_Tournament.md', 'relief_bot.py', 'relief_bot.cfg', 'adversity_bot.cfg', 'air_bud.cfg'
 }
 
 

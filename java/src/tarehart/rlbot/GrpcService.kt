@@ -3,10 +3,7 @@ package tarehart.rlbot
 import io.grpc.stub.StreamObserver
 import rlbot.api.BotGrpc
 import rlbot.api.GameData
-import tarehart.rlbot.bots.AdversityBot
-import tarehart.rlbot.bots.Bot
-import tarehart.rlbot.bots.JumpingBeanBot
-import tarehart.rlbot.bots.ReliefBot
+import tarehart.rlbot.bots.*
 import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.input.SpinTracker
 import tarehart.rlbot.ui.StatusSummary
@@ -53,6 +50,8 @@ class GrpcService(private val statusSummary: StatusSummary) : BotGrpc.BotImplBas
             newBot = JumpingBeanBot(translatedInput.team, playerIndex)
         } else if (translatedInput.myCarData.name.startsWith("AdversityBot")) {
             newBot = AdversityBot(translatedInput.team, playerIndex)
+        } else if (translatedInput.myCarData.name.startsWith("Air Bud")) {
+            newBot = AirBudBot(translatedInput.team, playerIndex)
         } else {
             newBot = ReliefBot(translatedInput.team, playerIndex)
         }
