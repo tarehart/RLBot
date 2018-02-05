@@ -282,4 +282,10 @@ class ArenaModelTest {
         Assert.assertEquals(-1.0, ceiling.normal.z, 0.0)
     }
 
+    @Test
+    fun testBouncePlane() {
+        val bouncePlane = ArenaModel.getBouncePlane(Vector3(0.0, 0.0, 5.0), Vector3(1.0, 0.0, 0.0))
+        Assert.assertEquals(-1.0, bouncePlane.normal.x, 0.0)
+    }
+
 }

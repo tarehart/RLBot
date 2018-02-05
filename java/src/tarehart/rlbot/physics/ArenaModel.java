@@ -21,9 +21,9 @@ import tarehart.rlbot.planning.Goal;
 import tarehart.rlbot.time.Duration;
 import tarehart.rlbot.time.GameTime;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /*
 TODO: Start using a real arena mesh.
@@ -448,5 +448,21 @@ public class ArenaModel {
 
             return -1;
         }).get();
+    }
+
+    @NotNull
+    public static Plane getBouncePlane(@NotNull Vector3 origin, @NotNull Vector3 direction) {
+        Vector3 longDirection = direction.scaledToMagnitude(500);
+
+        Map<Plane, Double> intersectionDistances = Streams.concat(majorUnbrokenPlanes.stream(), backWallPlanes.stream())
+                .collect(Collectors.toMap(p -> p, p -> {
+                    Vector3 intersection = VectorUtil.INSTANCE.getPlaneIntersection(p, origin, longDirection);
+                    if (intersection == null) {
+                        return Double.MAX_VALUE;
+                    }
+                    return intersection.distance(origin);
+                }));
+
+        return intersectionDistances.entrySet().stream().min(Comparator.comparing(Map.Entry::getValue)).get().getKey();
     }
 }

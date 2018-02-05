@@ -190,7 +190,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
     }
 
     override fun getLocalSituation(): String {
-        return "Directed nose hit"
+        return "Nose hit - " + kickStrategy.javaClass.simpleName
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {
@@ -206,20 +206,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
     }
 
     companion object {
-        val MAX_NOSE_HIT_ANGLE = Math.PI / 18
-
-        fun canMakeDirectedKick(input: AgentInput, kickStrategy: KickStrategy): Boolean {
-            val tooBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 30
-
-            val kickDirection = kickStrategy.getKickDirection(input).flatten()
-            val carToBall = input.ballPosition.minus(input.myCarData.position).flatten()
-
-            val angle = Vector2.angle(kickDirection, carToBall)
-
-            val wrongSide = angle > Math.PI * 2 / 3
-
-            return !tooBouncy && !wrongSide
-        }
+        const val MAX_NOSE_HIT_ANGLE = Math.PI / 18
 
         /**
          * First you drive from where you are zero to the launchpad.

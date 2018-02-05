@@ -22,7 +22,8 @@ object DirectedKickUtil {
     private val BALL_VELOCITY_INFLUENCE = .2
 
     fun planKick(input: AgentInput, kickStrategy: KickStrategy, isSideHit: Boolean): DirectedKickPlan? {
-        val interceptModifier = kickStrategy.getKickDirection(input).normaliseCopy().scaled(-2.0)
+        val kickDirection = kickStrategy.getKickDirection(input) ?: return null
+        val interceptModifier = kickDirection.normaliseCopy().scaled(-2.0)
         val strikeProfile = StrikeProfile()
         return planKick(input, kickStrategy, isSideHit, interceptModifier, { strikeProfile }, input.time)
     }
@@ -70,7 +71,7 @@ object DirectedKickUtil {
         }
 
         val easyKick = bump(ballAtIntercept.velocity, easyForce)
-        val kickDirection = kickStrategy.getKickDirection(input, ballAtIntercept.space, easyKick)
+        val kickDirection = kickStrategy.getKickDirection(input, ballAtIntercept.space, easyKick) ?: return null
 
         val plannedKickForce: Vector3
         val desiredBallVelocity: Vector3

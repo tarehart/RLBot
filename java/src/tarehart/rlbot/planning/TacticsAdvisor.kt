@@ -78,6 +78,7 @@ class TacticsAdvisor {
             return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
                     .withStep(DirectedSideHitStep(KickAtEnemyGoal()))
+                    .withStep(DirectedNoseHitStep(WallPass()))
                     .withStep(CatchBallStep())
                     .withStep(GetOnOffenseStep())
                     .withStep(GetBoostStep())
@@ -148,20 +149,18 @@ class TacticsAdvisor {
         }
 
         if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
-            return Plan(Plan.Posture.OFFENSIVE).withStep(WallTouchStep()).withStep(DescendFromWallStep())
+            return FirstViableStepPlan(Plan.Posture.OFFENSIVE).withStep(WallTouchStep()).withStep(DirectedNoseHitStep(WallPass()))
         }
 
-        if (!generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
-            SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
-                return Plan(Plan.Posture.OFFENSIVE).withStep(CatchBallStep())
-            }
-        }
-
-        if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex) && DirectedNoseHitStep.canMakeDirectedKick(input, KickAtEnemyGoal())) {
+        if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
             return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
-                    .withStep(DirectedNoseHitStep(FunnelTowardEnemyGoal()))
+                    .withStep(DirectedNoseHitStep(WallPass()))
                     .withStep(GetOnOffenseStep())
+        }
+
+        SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
+            return Plan(Plan.Posture.OFFENSIVE).withStep(CatchBallStep())
         }
 
         if (car.boost < 50) {
@@ -173,7 +172,9 @@ class TacticsAdvisor {
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
         }
 
-        return Plan(Plan.Posture.NEUTRAL).withStep(DemolishEnemyStep())
+        return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                .withStep(DirectedNoseHitStep(WallPass()))
+                .withStep(DemolishEnemyStep())
     }
 
     fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {

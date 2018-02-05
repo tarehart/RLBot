@@ -37,6 +37,10 @@ object VectorUtil {
         // Compute the X value for the directed line ray intersecting the plane
         val x = (d - plane.normal.dotProduct(segmentPosition)) / plane.normal.dotProduct(segmentVector)
 
+        if (x < 0) {
+            return null; // This means the 'intersection' is in the opposite direction.
+        }
+
         // output contact point
         val intersection = segmentPosition.plus(segmentVector.scaled(x))
 

@@ -67,7 +67,7 @@ class ChallengeStep: NestedPlanStep() {
 
         val flatPosition = car.position.flatten()
         val contactDistance = flatPosition.distance(enemyContact.space.flatten())
-        val defensiveNode = enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(Math.min(backoff, contactDistance / 2))
+        val defensiveNode = enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(backoff)
         latestDefensiveNode = defensiveNode
 
         val defensiveNodeDistance = flatPosition.distance(defensiveNode)
