@@ -1,7 +1,7 @@
-package tarehart.rlbot
+package tarehart.rlbot.bots
 
-import tarehart.rlbot.carpredict.CarSlice
-import tarehart.rlbot.input.CarData
+import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.Plan
@@ -9,11 +9,9 @@ import tarehart.rlbot.planning.ZonePlan
 import tarehart.rlbot.planning.ZoneTelemetry
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tuning.BotLog
-import tarehart.rlbot.tuning.CarRecorder
 import tarehart.rlbot.ui.Readout
 
 import javax.swing.*
-import java.util.Objects
 import java.util.Optional
 
 import tarehart.rlbot.tuning.BotLog.println

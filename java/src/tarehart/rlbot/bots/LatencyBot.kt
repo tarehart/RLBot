@@ -1,12 +1,14 @@
-package tarehart.rlbot
+package tarehart.rlbot.bots
 
+import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.debug.CalibrateStep
 
-class LatencyBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) {
+class LatencyBot(team: Team, playerIndex: Int) : Bot(team, playerIndex) {
 
     private var hasJumped: Boolean = false
 

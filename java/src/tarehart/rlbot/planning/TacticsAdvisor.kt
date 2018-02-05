@@ -1,7 +1,7 @@
 package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentInput
-import tarehart.rlbot.Bot
+import tarehart.rlbot.bots.Bot
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept

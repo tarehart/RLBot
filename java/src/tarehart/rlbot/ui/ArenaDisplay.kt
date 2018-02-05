@@ -1,7 +1,7 @@
 package tarehart.rlbot.ui
 
 import tarehart.rlbot.AgentInput
-import tarehart.rlbot.Bot
+import tarehart.rlbot.bots.Bot
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.Polygon

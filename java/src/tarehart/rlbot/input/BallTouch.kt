@@ -1,6 +1,6 @@
 package tarehart.rlbot.input
 
-import tarehart.rlbot.Bot
+import tarehart.rlbot.bots.Bot
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.GameTime
 

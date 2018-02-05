@@ -1,6 +1,6 @@
 package tarehart.rlbot.ui
 
-import tarehart.rlbot.Bot
+import tarehart.rlbot.bots.Bot
 import java.awt.Color
 import java.awt.FlowLayout
 import javax.swing.JButton

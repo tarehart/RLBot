@@ -3,6 +3,10 @@ package tarehart.rlbot
 import io.grpc.stub.StreamObserver
 import rlbot.api.BotGrpc
 import rlbot.api.GameData
+import tarehart.rlbot.bots.AdversityBot
+import tarehart.rlbot.bots.Bot
+import tarehart.rlbot.bots.JumpingBeanBot
+import tarehart.rlbot.bots.ReliefBot
 import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.input.SpinTracker
 import tarehart.rlbot.ui.StatusSummary

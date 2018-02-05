@@ -3,7 +3,7 @@ package tarehart.rlbot.ui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import tarehart.rlbot.Bot;
+import tarehart.rlbot.bots.Bot;
 
 import javax.swing.*;
 import java.awt.*;

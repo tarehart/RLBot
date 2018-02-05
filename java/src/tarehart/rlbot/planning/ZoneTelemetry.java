@@ -1,6 +1,6 @@
 package tarehart.rlbot.planning;
 
-import tarehart.rlbot.Bot;
+import tarehart.rlbot.bots.Bot;
 
 import java.util.HashMap;
 import java.util.Map;

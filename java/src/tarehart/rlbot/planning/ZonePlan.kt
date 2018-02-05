@@ -1,13 +1,10 @@
 package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentInput
-import tarehart.rlbot.Bot
+import tarehart.rlbot.bots.Bot
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.tuning.BotLog
-
-import java.util.Optional
 
 class ZonePlan(input: AgentInput) {
 

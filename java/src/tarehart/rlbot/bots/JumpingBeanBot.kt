@@ -1,14 +1,11 @@
-package tarehart.rlbot
+package tarehart.rlbot.bots
 
-import tarehart.rlbot.input.CarData
+import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
-import tarehart.rlbot.planning.TacticsAdvisor
-import tarehart.rlbot.time.GameTime
 
-import java.util.Optional
-
-class JumpingBeanBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) {
+class JumpingBeanBot(team: Team, playerIndex: Int) : Bot(team, playerIndex) {
 
     override fun getOutput(input: AgentInput): AgentOutput {
 

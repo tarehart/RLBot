@@ -1,6 +1,6 @@
 package tarehart.rlbot.planning;
 
-import tarehart.rlbot.Bot;
+import tarehart.rlbot.bots.Bot;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.Polygon;
 import tarehart.rlbot.math.vector.Vector2;

@@ -1,12 +1,12 @@
-package tarehart.rlbot
+package tarehart.rlbot.bots
 
+import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SetPieces
-import tarehart.rlbot.planning.TacticsAdvisor
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 
-class AdversityBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) {
+class AdversityBot(team: Team, playerIndex: Int) : Bot(team, playerIndex) {
 
     override fun getOutput(input: AgentInput): AgentOutput {
 

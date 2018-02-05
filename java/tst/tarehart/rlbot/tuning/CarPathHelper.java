@@ -1,7 +1,7 @@
 package tarehart.rlbot.tuning;
 
 import com.google.gson.Gson;
-import tarehart.rlbot.Bot;
+import tarehart.rlbot.bots.Bot;
 import tarehart.rlbot.carpredict.AccelerationModel;
 import tarehart.rlbot.carpredict.CarPath;
 import tarehart.rlbot.carpredict.CarSlice;

@@ -1,11 +1,13 @@
-package tarehart.rlbot
+package tarehart.rlbot.bots
 
+import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.TacticsAdvisor
 
-class ReliefBot(team: Bot.Team, playerIndex: Int) : Bot(team, playerIndex) {
+class ReliefBot(team: Team, playerIndex: Int) : Bot(team, playerIndex) {
 
     private val tacticsAdvisor: TacticsAdvisor = TacticsAdvisor()
 
