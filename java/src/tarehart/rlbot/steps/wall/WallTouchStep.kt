@@ -14,8 +14,11 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
+import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 
@@ -24,15 +27,17 @@ import java.awt.*
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.ui.ArenaDisplay
 
-class WallTouchStep : Step {
+class WallTouchStep : NestedPlanStep() {
+
     private var latestIntercept: Intercept? = null
     private var disruptionMeter = InterceptDisruptionMeter(20.0)
     private var confusion = 0
 
-    override val situation: String
-        get() = "Making a wall touch."
+    override fun getLocalSituation(): String {
+        return "Making a wall touch."
+    }
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
         if (!car.hasWheelContact) {
@@ -78,17 +83,20 @@ class WallTouchStep : Step {
 
         if (readyToJump(input, motion.toSpaceTime())) {
             println("Jumping for wall touch.", input.playerIndex)
-            return AgentOutput().withThrottle(1.0).withJump()
+            // Continue this step until it becomes quite likely that we've hit the ball. Transitioning to
+            // midair strike immediately before ball contact is unpleasant.
+            return startPlan(
+                    Plan(Plan.Posture.NEUTRAL)
+                            .withStep(BlindStep(Duration.ofSeconds(.6), AgentOutput().withThrottle(1.0).withJump())),
+                    input)
         }
 
         return SteerUtil.steerTowardPositionAcrossSeam(car, motion.space)
     }
 
-    override fun canInterrupt(): Boolean {
-        return true
-    }
-
     override fun drawDebugInfo(graphics: Graphics2D) {
+        super.drawDebugInfo(graphics)
+
         latestIntercept?.let {
             ArenaDisplay.drawBall(it.space, graphics, Color(16, 194, 140))
         }
