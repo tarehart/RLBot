@@ -149,7 +149,7 @@ public class Readout {
 
     private void updateOmniText(AgentInput input, Optional<TacticalSituation> situation) {
 
-        Optional<ZonePlan> zonePlanOpt = ZoneTelemetry.get(input.getTeam());
+        ZonePlan zonePlan = ZoneTelemetry.INSTANCE.get(input.getPlayerIndex());
 
         Optional<CarData> enemy = situation.map(TacticalSituation::getEnemyPlayerWithInitiative).map(CarWithIntercept::getCar);
 
@@ -160,8 +160,8 @@ public class Readout {
                 "Enemy Vel: " + enemy.map(CarData::getVelocity).orElse(new Vector3()) + "\n" +
                 "Ball Pos: " + input.getBallPosition() + "\n" +
                 "\n" +
-                "Our Car Zone: " + zonePlanOpt.map(this::printCarZone).orElse("Unknown") + "\n" +
-                "Ball Zone: " + zonePlanOpt.map(zp -> zp.getBallZone().toString()).orElse("Unknown") + "\n" +
+                "Our Car Zone: " + (zonePlan != null ? printCarZone(zonePlan) : "Unknown") + "\n" +
+                "Ball Zone: " + (zonePlan != null ? zonePlan.getBallZone().toString() : "Unknown") + "\n" +
                 "\n" +
                 "Ball Spin: " + input.getBallSpin() + "\n" +
                 "\n" +

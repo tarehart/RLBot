@@ -48,13 +48,13 @@ abstract class Bot(private val team: Team, private val playerIndex: Int) {
         val output: AgentOutput
         var ballPath = Optional.empty<BallPath>()
 
-        if (input.matchInfo.matchEnded) {
+        if (input.matchInfo.matchEnded || input.myCarData.isDemolished) {
             currentPlan = Plan(Plan.Posture.MENU).withStep(WaitForActive())
             output = AgentOutput()
         } else {
             ballPath = Optional.of(ArenaModel.predictBallPath(input))
             val zonePlan = ZonePlan(input)
-            ZoneTelemetry.set(zonePlan, input.team)
+            ZoneTelemetry.set(zonePlan, input.playerIndex)
 
             //        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
             //        if (input.ballVelocity.magnitudeSquared() > 0) {

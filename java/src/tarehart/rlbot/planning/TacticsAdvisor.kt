@@ -35,7 +35,7 @@ class TacticsAdvisor {
     fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
         val car = input.myCarData
-        val zonePlan = ZoneTelemetry.get(input.team)
+        val zonePlan = ZoneTelemetry.get(input.playerIndex)
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
         if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative.car == car) {
@@ -58,7 +58,7 @@ class TacticsAdvisor {
             return Plan(Plan.Posture.WAITTOCLEAR).withStep(RotateAndWaitToClearStep())
         }
 
-        if (zonePlan.isPresent && situation.forceDefensivePosture && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+        if (zonePlan != null && situation.forceDefensivePosture && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex)
             val secondsToOverrideFor = 0.25
             return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
@@ -185,7 +185,7 @@ class TacticsAdvisor {
 
         val ourIntercept = getSoonestIntercept(input.myCarData, ballPath)
 
-        val zonePlan = ZoneTelemetry.get(input.team)
+        val zonePlan = ZoneTelemetry.get(input.playerIndex)
         val myCar = input.myCarData
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
@@ -237,13 +237,13 @@ class TacticsAdvisor {
     }
 
     // Really only used for avoiding "Disable Goal Reset" own goals
-    private fun getGoForKickoff(zonePlan: Optional<ZonePlan>, team: Bot.Team, ballPosition: Vector3): Boolean {
-        if (zonePlan.isPresent) {
+    private fun getGoForKickoff(zonePlan: ZonePlan?, team: Bot.Team, ballPosition: Vector3): Boolean {
+        if (zonePlan != null) {
             if (ballPosition.flatten().magnitudeSquared() == 0.0) {
                 return if (team == Bot.Team.BLUE)
-                    zonePlan.get().myZone.mainZone == Zone.MainZone.BLUE
+                    zonePlan.myZone.mainZone == Zone.MainZone.BLUE
                 else
-                    zonePlan.get().myZone.mainZone == Zone.MainZone.ORANGE
+                    zonePlan.myZone.mainZone == Zone.MainZone.ORANGE
             }
         }
 
@@ -268,7 +268,7 @@ class TacticsAdvisor {
     }
 
     // Checks to see if the ball is in the corner and if the opponent is closer to it
-    private fun getWaitToClear(zonePlan: Optional<ZonePlan>, input: AgentInput, enemyCar: CarData?): Boolean {
+    private fun getWaitToClear(zonePlan: ZonePlan?, input: AgentInput, enemyCar: CarData?): Boolean {
         val myGoalLocation = GoalUtil.getOwnGoal(input.team).center
         val myBallDistance = input.ballPosition.distance(input.myCarData.position)
         val enemyBallDistance = enemyCar?.let { c -> input.ballPosition.distance(c.position) } ?: java.lang.Double.MAX_VALUE
@@ -276,16 +276,16 @@ class TacticsAdvisor {
         val myDistanceToGoal = input.myCarData.position.distance(myGoalLocation)
         //double enemyDistanceToGoal = input.getEnemyCarData().position.distance(myGoalLocation);
 
-        return if (zonePlan.isPresent
+        return if (zonePlan != null
                 && (myBallDistance > enemyBallDistance // Enemy is closer
                 || myDistanceToGoal > ballDistanceToGoal) // Wrong side of the ball
 
-                && (zonePlan.get().ballZone.subZone == Zone.SubZone.TOPCORNER || zonePlan.get().ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
+                && (zonePlan.ballZone.subZone == Zone.SubZone.TOPCORNER || zonePlan.ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
 
             if (input.team == Bot.Team.BLUE)
-                zonePlan.get().ballZone.mainZone == Zone.MainZone.BLUE
+                zonePlan.ballZone.mainZone == Zone.MainZone.BLUE
             else
-                zonePlan.get().ballZone.mainZone == Zone.MainZone.ORANGE
+                zonePlan.ballZone.mainZone == Zone.MainZone.ORANGE
         } else false
 
     }
