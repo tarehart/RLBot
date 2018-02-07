@@ -38,7 +38,7 @@ class GoForKickoffStep : NestedPlanStep() {
             startTime = input.time
         }
 
-        if (kickoffType != KickoffType.SLANTERD && counterAttack && (input.time - startTime).seconds < 8) {
+        if ((kickoffType == KickoffType.CENTER || kickoffType == KickoffType.CHEATIN) && counterAttack && (input.time - startTime).seconds < 8) {
             return AgentOutput() // Wait for them to hit it, then counter attack
         }
 

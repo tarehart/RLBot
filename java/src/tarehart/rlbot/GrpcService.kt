@@ -7,10 +7,10 @@ import tarehart.rlbot.bots.*
 import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.input.SpinTracker
 import tarehart.rlbot.ui.StatusSummary
-import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class GrpcService(private val statusSummary: StatusSummary) : BotGrpc.BotImplBase() {
-    private val bots = HashMap<Int, Bot>()
+    private val bots = ConcurrentHashMap<Int, Bot>()
     private val chronometer = Chronometer()
     private val spinTracker = SpinTracker()
 

@@ -2,12 +2,13 @@ package tarehart.rlbot.bots
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.steps.*
+import tarehart.rlbot.steps.EscapeTheGoalStep
+import tarehart.rlbot.steps.GetBoostStep
+import tarehart.rlbot.steps.GetOnOffenseStep
+import tarehart.rlbot.steps.GoForKickoffStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
@@ -55,7 +56,7 @@ class AirBudBot(team: Team, playerIndex: Int) : Bot(team, playerIndex) {
         }
 
         val enemyGoalProximity = GoalUtil.getEnemyGoal(car.team).center.distance(input.ballPosition)
-        if (situation.shotOnGoalAvailable && enemyGoalProximity < 80) {
+        if (situation.shotOnGoalAvailable && enemyGoalProximity < 80 && situation.teamPlayerWithInitiative.car == car) {
             plan.withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
             if (enemyGoalProximity < 50) {
                 plan.withStep(DirectedSideHitStep(KickAtEnemyGoal()))
