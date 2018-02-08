@@ -261,9 +261,7 @@ object SteerUtil {
             } else if (distanceRatio > 1.5) {
                 agentOutput.withThrottle(.5)
             }
-        }
-
-        if (currentSpeed > averageSpeedNeeded) {
+        } else if (currentSpeed > averageSpeedNeeded) {
             agentOutput.withBoost(false)
             agentOutput.withThrottle(averageSpeedNeeded / currentSpeed)
         }
