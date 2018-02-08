@@ -62,11 +62,11 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         }
 
         val kickPlan: DirectedKickPlan?
+        val strikeProfile = StrikeProfile(maneuverSeconds, 0.0, 0.0, 0.0, StrikeProfile.Style.SIDE_HIT)
         if (::interceptModifier.isInitialized) {
-            val strikeProfile = StrikeProfile(maneuverSeconds, 0.0, 0.0, 0.0, StrikeProfile.Style.SIDE_HIT)
-            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, true, interceptModifier, { strikeProfile }, input.time)
+            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, interceptModifier, { strikeProfile }, input.time)
         } else {
-            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, true)
+            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, { strikeProfile })
         }
 
         if (kickPlan == null) {

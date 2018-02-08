@@ -175,7 +175,7 @@ class InterceptStep @JvmOverloads constructor(
         private fun getFlipHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
             return InterceptCalculator.getFilteredInterceptOpportunity(
                     carData, ballPath, fullAcceleration, interceptModifier,
-                    { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isFlipHitAccessible(st) },
+                    { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isFlipHitAccessible(st.space) },
                     { FLIP_HIT_STRIKE_PROFILE })
         }
     }

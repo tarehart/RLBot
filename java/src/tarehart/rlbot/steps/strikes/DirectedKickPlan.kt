@@ -20,7 +20,7 @@ class DirectedKickPlan (
     val interceptModifier: Vector3,
     val desiredBallVelocity: Vector3,
     val plannedKickForce: Vector3,
-    val launchPad: StrikePoint?,
+    val launchPad: StrikePoint,
     val easyKickAllowed: Boolean
 ) {
 

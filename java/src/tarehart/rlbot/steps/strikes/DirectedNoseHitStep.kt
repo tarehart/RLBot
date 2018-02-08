@@ -169,12 +169,11 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             DirectedKickUtil.planKick(
                     input,
                     kickStrategy,
-                    false,
                     interceptModifier,
-                    { StrikeProfile() },
+                    AirTouchPlanner::getStraightOnStrikeProfile,
                     earliestPossibleIntercept)
         } else {
-            DirectedKickUtil.planKick(input, kickStrategy, false)
+            DirectedKickUtil.planKick(input, kickStrategy, AirTouchPlanner::getStraightOnStrikeProfile)
         }
     }
 

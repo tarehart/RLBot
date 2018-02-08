@@ -21,30 +21,24 @@ import java.util.Optional
 object DirectedKickUtil {
     private val BALL_VELOCITY_INFLUENCE = .2
 
-    fun planKick(input: AgentInput, kickStrategy: KickStrategy, isSideHit: Boolean): DirectedKickPlan? {
+    fun planKick(input: AgentInput, kickStrategy: KickStrategy, strikeFn: (Vector3) -> StrikeProfile): DirectedKickPlan? {
         val kickDirection = kickStrategy.getKickDirection(input) ?: return null
         val interceptModifier = kickDirection.normaliseCopy().scaled(-2.0)
-        val strikeProfile = StrikeProfile()
-        return planKick(input, kickStrategy, isSideHit, interceptModifier, { strikeProfile }, input.time)
+        return planKick(input, kickStrategy, interceptModifier, strikeFn, input.time)
     }
 
     fun planKick(
             input: AgentInput,
             kickStrategy: KickStrategy,
-            isSideHit: Boolean,
             interceptModifier: Vector3,
             strikeFn: (Vector3) -> StrikeProfile,
             earliestPossibleIntercept: GameTime): DirectedKickPlan? {
 
         val car = input.myCarData
 
-        val verticalPredicate =
-                if (isSideHit) { carData: CarData, intercept: SpaceTime -> AirTouchPlanner.isJumpHitAccessible(carData, intercept) }
-                else { carData, intercept -> AirTouchPlanner.isVerticallyAccessible(carData, intercept) }
-
         val overallPredicate = { cd: CarData, st: SpaceTime ->
             st.time >= earliestPossibleIntercept - Duration.ofMillis(50) &&
-                    verticalPredicate.invoke(cd, st) &&
+                    strikeFn.invoke(st.space).verticallyAccessible.invoke(cd, st) &&
                     kickStrategy.looksViable(cd, st.space)
         }
 
@@ -56,17 +50,17 @@ object DirectedKickUtil {
 
         val ballAtIntercept = ballPath.getMotionAt(intercept.time) ?: return null
 
-
         val secondsTillImpactRoughly = Duration.between(input.time, ballAtIntercept.time)
-        val approachSpeed = distancePlot.getMotionAfterDuration(secondsTillImpactRoughly)?.speed ?: AccelerationModel.SUPERSONIC_SPEED
-        val impactSpeed = if (isSideHit) ManeuverMath.DODGE_SPEED else approachSpeed
+        val impactSpeed: Double
 
         val easyForce: Vector3
-        if (isSideHit) {
+        if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) {
+            impactSpeed = ManeuverMath.DODGE_SPEED
             val carToIntercept = (intercept.space - car.position).flatten()
             val (x, y) = VectorUtil.orthogonal(carToIntercept) { v -> v.dotProduct(interceptModifier.flatten()) < 0 }
             easyForce = Vector3(x, y, 0.0).scaledToMagnitude(impactSpeed)
         } else {
+            impactSpeed = distancePlot.getMotionAfterDuration(secondsTillImpactRoughly)?.speed ?: AccelerationModel.SUPERSONIC_SPEED
             easyForce = (ballAtIntercept.space - car.position).scaledToMagnitude(impactSpeed)
         }
 
@@ -94,17 +88,13 @@ object DirectedKickUtil {
                     desiredBallVelocity.z)
         }
 
-        val launchPad: StrikePoint?
+        val backoff = 5 + (ballAtIntercept.space.z - ArenaModel.BALL_RADIUS) * .05 * ManeuverMath.forwardSpeed(car) + intercept.spareTime.seconds * 5
+        val facing = plannedKickForce.flatten().normalized()
+        val launchPosition = ballAtIntercept.space.flatten() - facing.scaledToMagnitude(backoff)
+        // Time is chosen with a bias toward hurrying
+        val launchPad = StrikePoint(launchPosition, facing, intercept.time - Duration.ofSeconds(backoff / car.velocity.magnitude()))
+        // TODO: make the launchpad strikeProfile-aware
 
-        if (!isSideHit) {
-            val backoff = 5 + (ballAtIntercept.space.z - ArenaModel.BALL_RADIUS) * .05 * ManeuverMath.forwardSpeed(car) + intercept.spareTime.seconds * 5
-            val facing = plannedKickForce.flatten().normalized()
-            val launchPosition = ballAtIntercept.space.flatten() - facing.scaledToMagnitude(backoff)
-            // Time is chosen with a bias toward hurrying
-            launchPad = StrikePoint(launchPosition, facing, intercept.time - Duration.ofSeconds(backoff / car.velocity.magnitude()))
-        } else {
-            launchPad = null
-        }
 
         val kickPlan = DirectedKickPlan(
                 interceptModifier = interceptModifier,

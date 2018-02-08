@@ -4,6 +4,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
@@ -94,8 +95,21 @@ object AirTouchPlanner {
         return StrikeProfile(0.0, jumpTime, 10.0, .25, StrikeProfile.Style.JUMP_HIT)
     }
 
-    fun isFlipHitAccessible(intercept: SpaceTime): Boolean {
-        return intercept.space.z <= MAX_FLIP_HIT
+    fun getStraightOnStrikeProfile(space: Vector3): StrikeProfile {
+        if (isFlipHitAccessible(space)) {
+            return InterceptStep.FLIP_HIT_STRIKE_PROFILE
+        }
+        if (space.z > MAX_JUMP_HIT) {
+            return getJumpHitStrikeProfile(space)
+        }
+        if (space.z > 10) {
+            return InterceptStep.AERIAL_STRIKE_PROFILE
+        }
+        return StrikeProfile(0.0, 0.0, 10.0, .25, StrikeProfile.Style.AERIAL)
+    }
+
+    fun isFlipHitAccessible(space: Vector3): Boolean {
+        return space.z <= MAX_FLIP_HIT
     }
 
     private fun getAerialLaunchCountdown(height: Double, secondsTillIntercept: Double): Double {
