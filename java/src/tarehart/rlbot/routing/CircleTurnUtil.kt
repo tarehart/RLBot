@@ -172,7 +172,7 @@ object CircleTurnUtil {
             tangentPoints.second
 
         val toTangent = tangentPoint.minus(flatPosition)
-        val turnDuration = getTurnDuration(circle, flatPosition, targetPosition, clockwise, expectedSpeed)
+        val turnDuration = getTurnDuration(circle, tangentPoint, targetPosition, clockwise, expectedSpeed)
 
         val momentToStartTurning = strikePoint.gameTime.minus(turnDuration)
         val immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning), input.boostData)
