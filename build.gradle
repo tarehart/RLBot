@@ -84,6 +84,7 @@ protobuf {
 }
 
 compileKotlin.dependsOn ':generateProto'
+tasks.idea.dependsOn ':generateProto'
 
 compileKotlin {
     kotlinOptions {
