@@ -4,7 +4,11 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.awt.Graphics2D
 
-class Route(val anchorTime: GameTime, val workBackwards: Boolean = false) {
+/**
+ * Route should represent the minimum time required to satisfy position and velocity constraints,
+ * even if we're actually going to go at a leisurely pace, e.g. to wait for the ball.
+ */
+class Route {
 
     val parts = ArrayList<RoutePart>()
     var duration = Duration.ofMillis(0)

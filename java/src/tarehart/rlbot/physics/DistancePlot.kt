@@ -77,7 +77,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
 
     fun getMotionUponArrival(carData: CarData, destination: Vector3, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
 
-        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination) + strikeProfile.travelDelay
+        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination)
         val distance = carData.position.flatten().distance(destination.flatten())
 
         return getMotionAfterDistance(distance)?.let { DistanceTimeSpeed(it.distance, it.time.plusSeconds(orientSeconds), it.speed) }
@@ -85,12 +85,10 @@ class DistancePlot(start: DistanceTimeSpeed) {
         // TODO: incorporate the speedup from the strike profile.
     }
 
-    fun getMotionAfterDuration(carData: CarData, target: Vector3, time: Duration, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
-
-        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, target) + strikeProfile.travelDelay
+    fun getMotionAfterDuration(time: Duration, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
 
         val totalSeconds = time.seconds
-        val secondsSpentAccelerating = Math.max(0.0, totalSeconds - orientSeconds)
+        val secondsSpentAccelerating = totalSeconds
 
         if (strikeProfile.dodgeSeconds == 0.0 || strikeProfile.speedBoost == 0.0) {
             val motion = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating))

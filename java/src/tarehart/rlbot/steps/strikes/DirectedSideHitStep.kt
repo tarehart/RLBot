@@ -9,6 +9,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.routing.SteerPlan
@@ -22,7 +23,6 @@ import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.*
 import java.util.Optional
 
-import java.lang.String.format
 import tarehart.rlbot.tuning.BotLog.println
 
 class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
@@ -61,12 +61,14 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             return performFinalApproach(input, recentKickPlan)
         }
 
+        val ballPath = ArenaModel.predictBallPath(input)
+
         val kickPlan: DirectedKickPlan?
-        val strikeProfile = StrikeProfile(maneuverSeconds, 0.0, 0.0, 0.0, StrikeProfile.Style.SIDE_HIT)
+        val strikeProfile = StrikeProfile(0.0, 0.0, 0.0, StrikeProfile.Style.SIDE_HIT)
         if (::interceptModifier.isInitialized) {
-            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, interceptModifier, { strikeProfile }, input.time)
+            kickPlan = DirectedKickUtil.planKick(car, ballPath, kickStrategy, interceptModifier, { strikeProfile }, input.time)
         } else {
-            kickPlan = DirectedKickUtil.planKick(input, kickStrategy, { strikeProfile })
+            kickPlan = DirectedKickUtil.planKick(car, ballPath, kickStrategy, { strikeProfile })
         }
 
         if (kickPlan == null) {
@@ -84,10 +86,10 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         }
 
         if (!::originalIntercept.isInitialized) {
-            originalIntercept = kickPlan.ballAtIntercept.space
+            originalIntercept = kickPlan.intercept.ballSlice.space
             originalTouch = input.latestBallTouch
         } else {
-            if (originalIntercept.distance(kickPlan.ballAtIntercept.space) > 30) {
+            if (originalIntercept.distance(kickPlan.intercept.ballSlice.space) > 30) {
                 println("Failed to make the side kick", input.playerIndex)
                 return null // Failed to kick it soon enough, new stuff has happened.
             }
@@ -145,7 +147,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         maneuverSeconds = angle * MANEUVER_SECONDS_PER_RADIAN
 
-        val circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(input, kickPlan.distancePlot, strikePoint)
+        val circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, strikePoint)
         recentCircleTurnPlan = circleTurnPlan
 
         return getNavigation(input, circleTurnPlan)
@@ -170,7 +172,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         if (!jumpTime.isPresent) {
             return null
         }
-        val carAtImpact = kickPlan.ballAtIntercept.space.flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT))
+        val carAtImpact = kickPlan.intercept.ballSlice.space.flatten().plus(strikeDirection.scaled(-DISTANCE_AT_CONTACT))
         val toImpact = carAtImpact.minus(car.position.flatten())
         val projectedApproach = VectorUtil.project(toImpact, car.orientation.rightVector.flatten())
         val realApproachDistance = projectedApproach.magnitude()

@@ -137,19 +137,40 @@ object SetPieces {
 
         return Plan()
                 .unstoppable()
-                .withStep(TapStep(2, AgentOutput()
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
                         .withJump(true)
                         .withThrottle((if (hurry) 1 else 0).toDouble())))
                 .withStep(BlindStep(jumpTime, AgentOutput()
                         .withJump(true)
                         .withBoost(hurry)
                         .withThrottle(1.0)))
-                .withStep(TapStep(2, AgentOutput()
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
                         .withThrottle(1.0)
                 ))
-                .withStep(TapStep(2, AgentOutput()
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
                         .withJump(true)
                         .withThrottle(1.0)
+                        .withYaw((if (flipLeft) -1 else 1).toDouble())))
+                .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+    }
+
+    fun diagonalFlip(flipLeft: Boolean, rawJumpTime: Duration): Plan {
+
+        val jumpTime = if (rawJumpTime.millis < 0) Duration.ofMillis(0) else rawJumpTime
+
+        return Plan()
+                .unstoppable()
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
+                        .withJump(true)))
+                .withStep(BlindStep(jumpTime, AgentOutput()
+                        .withJump(true)))
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
+                        .withThrottle(1.0)
+                ))
+                .withStep(BlindStep(Duration.ofMillis(500), AgentOutput()
+                        .withJump(true)
+                        .withThrottle(1.0)
+                        .withPitch(-1.0)
                         .withYaw((if (flipLeft) -1 else 1).toDouble())))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }

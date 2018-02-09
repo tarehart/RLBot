@@ -16,7 +16,6 @@ class DirectedKickPlan (
     val intercept: Intercept,
     val ballPath: BallPath,
     val distancePlot: DistancePlot,
-    val ballAtIntercept: BallSlice,
     val interceptModifier: Vector3,
     val desiredBallVelocity: Vector3,
     val plannedKickForce: Vector3,
@@ -26,10 +25,19 @@ class DirectedKickPlan (
 
     fun drawDebugInfo(graphics: Graphics2D) {
         graphics.color = Color(73, 111, 73)
-        ArenaDisplay.drawBall(ballAtIntercept.space, graphics, graphics.color)
+        val ball = intercept.ballSlice.space
+        ArenaDisplay.drawBall(ball, graphics, graphics.color)
         graphics.stroke = BasicStroke(1f)
 
-        val (x, y) = intercept.space.flatten()
+        graphics.color = Color(200, 0, 0)
+        graphics.draw(Line2D.Double(ball.x, ball.y, ball.x + plannedKickForce.x * .4, ball.y + plannedKickForce.y * .4))
+
+        graphics.color = Color(100, 30, 200)
+        graphics.draw(Line2D.Double(ball.x, ball.y, ball.x + desiredBallVelocity.x * .4, ball.y + desiredBallVelocity.y * .4))
+
+        graphics.color = Color(0, 0, 0)
+
+        val (x, y) = launchPad.position
         val crossSize = 2
         graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
         graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))

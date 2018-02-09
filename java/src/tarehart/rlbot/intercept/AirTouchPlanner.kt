@@ -43,10 +43,32 @@ object AirTouchPlanner {
         return checklist
     }
 
+    fun checkSideHitReadiness(car: CarData, intercept: Intercept): LaunchChecklist {
+
+        val checklist = LaunchChecklist()
+        checkLaunchReadiness(checklist, car, intercept)
+        checklist.linedUp = true // TODO: calculate this properly
+        val strikeProfile = intercept.strikeProfile
+        val jumpHitTime = strikeProfile.strikeDuration.seconds
+        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < jumpHitTime
+        return checklist
+    }
+
+    fun checkDiagonalHitReadiness(car: CarData, intercept: Intercept): LaunchChecklist {
+
+        val checklist = LaunchChecklist()
+        checkLaunchReadiness(checklist, car, intercept)
+        checklist.linedUp = true // TODO: calculate this properly
+        val strikeProfile = intercept.strikeProfile
+        val jumpHitTime = strikeProfile.strikeDuration.seconds
+        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < jumpHitTime
+        return checklist
+    }
+
     fun checkFlipHitReadiness(car: CarData, intercept: Intercept): LaunchChecklist {
         val checklist = LaunchChecklist()
         checkLaunchReadiness(checklist, car, intercept)
-        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < intercept.strikeProfile.strikeDuration.seconds
+        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds <= intercept.strikeProfile.strikeDuration.seconds
         return checklist
     }
 
@@ -66,7 +88,7 @@ object AirTouchPlanner {
         val secondsTillIntercept = Duration.between(carData.time, intercept.time).seconds
 
         if (intercept.space.z < NEEDS_AERIAL_THRESHOLD) {
-            val tMinus = secondsTillIntercept - getJumpHitStrikeProfile(intercept.space).strikeDuration.seconds
+            val tMinus = secondsTillIntercept - getJumpHitStrikeProfile(intercept.space.z).strikeDuration.seconds
             return tMinus >= -0.1
         }
 
@@ -83,33 +105,60 @@ object AirTouchPlanner {
         }
 
         val secondsTillIntercept = Duration.between(carData.time, intercept.time).seconds
-        val (travelDelay) = getJumpHitStrikeProfile(intercept.space)
+        val (travelDelay) = getJumpHitStrikeProfile(intercept.space.z)
         val tMinus = secondsTillIntercept - travelDelay
         return tMinus >= -0.1
     }
 
-    fun getJumpHitStrikeProfile(space: Vector3): StrikeProfile {
+    fun getJumpHitStrikeProfile(height: Double): StrikeProfile {
         // If we have time to tilt back, the nose will be higher and we can cheat a little.
-        val requiredHeight = space.z * .7
+        val requiredHeight = height * .7
         val jumpTime = ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8)
-        return StrikeProfile(0.0, jumpTime, 10.0, .25, StrikeProfile.Style.JUMP_HIT)
+        return StrikeProfile(jumpTime, 10.0, .15, StrikeProfile.Style.JUMP_HIT)
     }
 
-    fun getStraightOnStrikeProfile(space: Vector3): StrikeProfile {
-        if (isFlipHitAccessible(space)) {
+    fun getDiagonalJumpHitStrikeProfile(height: Double): StrikeProfile {
+        // If we have time to tilt back, the nose will be higher and we can cheat a little.
+        val requiredHeight = height * .7
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8)
+        return StrikeProfile(jumpTime, 10.0, .15, StrikeProfile.Style.DIAGONAL_HIT)
+    }
+
+    fun getSideHitStrikeProfile(height: Double): StrikeProfile {
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height).orElse(.8)
+        return StrikeProfile(jumpTime, 10.0, .15, StrikeProfile.Style.SIDE_HIT)
+    }
+
+    fun getStraightOnStrikeProfile(height: Double): StrikeProfile {
+        if (isFlipHitAccessible(height)) {
             return InterceptStep.FLIP_HIT_STRIKE_PROFILE
         }
-        if (space.z > MAX_JUMP_HIT) {
-            return getJumpHitStrikeProfile(space)
+        if (height < MAX_JUMP_HIT) {
+            return getJumpHitStrikeProfile(height)
         }
-        if (space.z > 10) {
+        if (height > 10) {
             return InterceptStep.AERIAL_STRIKE_PROFILE
         }
-        return StrikeProfile(0.0, 0.0, 10.0, .25, StrikeProfile.Style.AERIAL)
+        return StrikeProfile(0.0, 10.0, .25, StrikeProfile.Style.AERIAL)
     }
 
-    fun isFlipHitAccessible(space: Vector3): Boolean {
-        return space.z <= MAX_FLIP_HIT
+    fun getStrikeProfile(height: Double, approachAngle: Double): StrikeProfile {
+
+        if (approachAngle < Math.PI / 8) {
+            return getStraightOnStrikeProfile(height)
+        }
+
+        if (height < MAX_JUMP_HIT) {
+            if (approachAngle < Math.PI * 3 / 8) {
+                return getDiagonalJumpHitStrikeProfile(height)
+            }
+            return getSideHitStrikeProfile(height)
+        }
+        return InterceptStep.AERIAL_STRIKE_PROFILE
+    }
+
+    fun isFlipHitAccessible(height: Double): Boolean {
+        return height <= MAX_FLIP_HIT
     }
 
     private fun getAerialLaunchCountdown(height: Double, secondsTillIntercept: Double): Double {

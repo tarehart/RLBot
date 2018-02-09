@@ -52,10 +52,9 @@ class WhatASaveStep : NestedPlanStep() {
         val plot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5.0), car.boost, distance - 15)
 
 
-        val (space1) = InterceptCalculator.getInterceptOpportunity(car, ballPath, plot)
-                ?: Intercept(currentThreat.space, currentThreat.time, 0.0, StrikeProfile(), plot, Duration.ofMillis(0), currentThreat)
+        val threatPosition = InterceptCalculator.getInterceptOpportunity(car, ballPath, plot)?.space ?: currentThreat.space
 
-        val carToIntercept = space1.minus(car.position)
+        val carToIntercept = threatPosition.minus(car.position)
         val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
 
         val overHeadSlice = ballPath.findSlice { (space2) -> car.position.flatten().distance(space2.flatten()) < ArenaModel.BALL_RADIUS }

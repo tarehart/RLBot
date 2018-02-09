@@ -6,6 +6,8 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.TacticsAdvisor
+import tarehart.rlbot.steps.strikes.FlexibleKickStep
+import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
 
 class ReliefBot(team: Team, playerIndex: Int) : Bot(team, playerIndex) {
 
@@ -23,6 +25,7 @@ class ReliefBot(team: Team, playerIndex: Int) : Bot(team, playerIndex) {
 
         if (Plan.activePlanKt(currentPlan) == null) {
             currentPlan = tacticsAdvisor.makeFreshPlan(input, situation)
+            //currentPlan = Plan().withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
         currentPlan?.let {

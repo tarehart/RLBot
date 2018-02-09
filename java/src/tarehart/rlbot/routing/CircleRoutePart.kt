@@ -17,12 +17,13 @@ class CircleRoutePart(
     override val waypoint: Vector2
         get() = start
 
+    val sweepRadians = CircleTurnUtil.getSweepRadians(circle, start, end, clockwise)
+
     override fun drawDebugInfo(graphics: Graphics2D) {
         if (start.distance(end) > .01) {
 
             val centerToStart = start - circle.center
             val startRadians = Math.atan2(centerToStart.y, centerToStart.x)
-            val sweepRadians = CircleTurnUtil.getSweepRadians(circle, start, end, clockwise)
 
             val startDegrees = -startRadians * 180 / Math.PI
             val sweepDegrees = -sweepRadians * 180 / Math.PI

@@ -7,10 +7,9 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AirTouchPlanner
 import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPhysics
+import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.*
 import tarehart.rlbot.steps.NestedPlanStep
@@ -62,7 +61,8 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             return null
         }
 
-        val kickPlan = planKick(input)
+        val ballPath = ArenaModel.predictBallPath(input)
+        val kickPlan = planKick(car, ballPath)
 
         if (kickPlan == null) {
             BotLog.println("Quitting nose hit due to failed kick plan.", car.playerIndex)
@@ -72,7 +72,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         recentKickPlan = kickPlan
 
         if (!::originalIntercept.isInitialized) {
-            originalIntercept = kickPlan.ballAtIntercept
+            originalIntercept = kickPlan.intercept.ballSlice
         } else {
             if (kickPlan.ballPath.getMotionAt(originalIntercept.time)?.space?.distance(originalIntercept.space)?.takeIf { it > 20 } != null) {
                 println("Ball slices has diverged from expectation, will quit.", input.playerIndex)
@@ -126,18 +126,18 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         } else if (Math.abs(positionCorrectionForStrike) < MAX_NOSE_HIT_ANGLE) {
             val circleTurnPlan = SteerPlan(
                     SteerUtil.steerTowardGroundPosition(car, interceptLocationFlat),
-                    Route(car.time)
+                    Route()
                             .withPart(AccelerationRoutePart(
                                     car.position.flatten(),
-                                    kickPlan.launchPad!!.position,
+                                    kickPlan.launchPad.position,
                                     Duration.between(car.time, kickPlan.launchPad.gameTime))))
 
             recentCircleTurnPlan = circleTurnPlan
             return getNavigation(input, circleTurnPlan)
         }
 
-        val asapSeconds = kickPlan.distancePlot.getMotionUponArrival(car, kickPlan.ballAtIntercept.space, StrikeProfile())
-                ?.time ?: Duration.between(input.time, kickPlan.ballAtIntercept.time).seconds
+        val asapSeconds = kickPlan.distancePlot.getMotionUponArrival(car, kickPlan.intercept.ballSlice.space, StrikeProfile())
+                ?.time ?: Duration.between(input.time, kickPlan.intercept.ballSlice.time).seconds
 
         //            if (secondsTillIntercept > asapSeconds + .5) {
         //                plan = new Plan(Plan.Posture.OFFENSIVE)
@@ -148,11 +148,11 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         // Line up for a nose hit
         val fullSpeed = kickPlan.intercept.spareTime.seconds < .2 && kickPlan.intercept.space.z < 2
         val launchPad = if (fullSpeed)
-            StrikePoint(kickPlan.launchPad!!.position, kickPlan.launchPad.facing, GameTime(0))
+            StrikePoint(kickPlan.launchPad.position, kickPlan.launchPad.facing, GameTime(0))
         else
             kickPlan.launchPad
 
-        val circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(input, kickPlan.distancePlot, launchPad!!)
+        val circleTurnPlan = CircleTurnUtil.getPlanForCircleTurn(car, kickPlan.distancePlot, launchPad)
         recentCircleTurnPlan = circleTurnPlan
 
         if (ArenaModel.getDistanceFromWall(Vector3(circleTurnPlan.waypoint.x, circleTurnPlan.waypoint.y, 0.0)) < -1) {
@@ -164,16 +164,17 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         return getNavigation(input, circleTurnPlan)
     }
 
-    private fun planKick(input: AgentInput): DirectedKickPlan? {
+    private fun planKick(car: CarData, ballPath: BallPath): DirectedKickPlan? {
         return if (::interceptModifier.isInitialized) {
             DirectedKickUtil.planKick(
-                    input,
+                    car,
+                    ballPath,
                     kickStrategy,
                     interceptModifier,
                     AirTouchPlanner::getStraightOnStrikeProfile,
                     earliestPossibleIntercept)
         } else {
-            DirectedKickUtil.planKick(input, kickStrategy, AirTouchPlanner::getStraightOnStrikeProfile)
+            DirectedKickUtil.planKick(car, ballPath, kickStrategy, AirTouchPlanner::getStraightOnStrikeProfile)
         }
     }
 

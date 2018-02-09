@@ -42,6 +42,28 @@ object StrikePlanner {
             return null
         }
 
+        if (strikeStyle === StrikeProfile.Style.SIDE_HIT) {
+            val checklist = AirTouchPlanner.checkSideHitReadiness(car, intercept)
+            if (checklist.readyToLaunch()) {
+                BotLog.println("Performing SideHit!", car.playerIndex)
+                val toIntercept = intercept.space.flatten() - car.position.flatten()
+                val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
+                return SetPieces.jumpSideFlip(left, Duration.ofSeconds(intercept.strikeProfile.hangTime), intercept.spareTime.seconds <= 0)
+            }
+            return null
+        }
+
+        if (strikeStyle === StrikeProfile.Style.DIAGONAL_HIT) {
+            val checklist = AirTouchPlanner.checkDiagonalHitReadiness(car, intercept)
+            if (checklist.readyToLaunch()) {
+                BotLog.println("Performing DiagonalHit!", car.playerIndex)
+                val toIntercept = intercept.space.flatten() - car.position.flatten()
+                val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
+                return SetPieces.diagonalFlip(left, Duration.ofSeconds(intercept.strikeProfile.hangTime))
+            }
+            return null
+        }
+
         if (strikeStyle === StrikeProfile.Style.FLIP_HIT) {
             val checklist = AirTouchPlanner.checkFlipHitReadiness(car, intercept)
             if (checklist.readyToLaunch()) {

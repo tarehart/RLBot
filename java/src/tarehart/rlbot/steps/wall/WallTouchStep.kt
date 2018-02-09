@@ -19,7 +19,6 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 
 import java.awt.*
@@ -54,7 +53,7 @@ class WallTouchStep : NestedPlanStep() {
                 ballPath,
                 fullAcceleration,
                 interceptModifier = Vector3(),
-                predicate = { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) },
+                spatialPredicate = { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) },
                 strikeProfileFn = { StrikeProfile() },
                 planeNormal = car.orientation.roofVector)
 

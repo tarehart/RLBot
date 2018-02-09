@@ -7,10 +7,6 @@ import tarehart.rlbot.time.Duration
 
 data class StrikeProfile @JvmOverloads constructor(
         /**
-         * the extra approach time added by final maneuvers before striking the ball
-         */
-        val travelDelay: Double = 0.0,
-        /**
          * The amount of time between strike initiation and any dodge.
          */
         val hangTime: Double = 0.0,
@@ -34,13 +30,15 @@ data class StrikeProfile @JvmOverloads constructor(
                 return { _, st -> st.space.z < ArenaModel.BALL_RADIUS + .3 }
             }
             if (style == Style.FLIP_HIT) {
-                return { _, st -> AirTouchPlanner.isFlipHitAccessible(st.space) }
+                return { _, st -> AirTouchPlanner.isFlipHitAccessible(st.space.z) }
             }
             if (style == Style.AERIAL) {
                 return AirTouchPlanner::isVerticallyAccessible
             }
             return AirTouchPlanner::isJumpHitAccessible
         }
+
+    val isForward: Boolean = style != Style.SIDE_HIT && style != Style.DIAGONAL_HIT
 
     enum class Style {
         RAM,

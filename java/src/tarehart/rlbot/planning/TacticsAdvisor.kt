@@ -67,8 +67,7 @@ class TacticsAdvisor {
         if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
             println("Canceling current plan. Going for clear!", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.CLEAR)
-                    .withStep(DirectedNoseHitStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
-                    .withStep(DirectedSideHitStep(KickAwayFromOwnGoal()))
+                    .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
                     .withStep(EscapeTheGoalStep())
                     .withStep(GetOnDefenseStep())
         }
@@ -76,9 +75,8 @@ class TacticsAdvisor {
         if (situation.shotOnGoalAvailable && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
-                    .withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
-                    .withStep(DirectedSideHitStep(KickAtEnemyGoal()))
-                    .withStep(DirectedNoseHitStep(WallPass()))
+                    .withStep(FlexibleKickStep(KickAtEnemyGoal()))
+                    .withStep(FlexibleKickStep(WallPass()))
                     .withStep(CatchBallStep())
                     .withStep(GetOnOffenseStep())
                     .withStep(GetBoostStep())
@@ -149,13 +147,13 @@ class TacticsAdvisor {
         }
 
         if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
-            return FirstViableStepPlan(Plan.Posture.OFFENSIVE).withStep(WallTouchStep()).withStep(DirectedNoseHitStep(WallPass()))
+            return FirstViableStepPlan(Plan.Posture.OFFENSIVE).withStep(WallTouchStep()).withStep(FlexibleKickStep(WallPass()))
         }
 
         if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
             return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
-                    .withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
-                    .withStep(DirectedNoseHitStep(WallPass()))
+                    .withStep(FlexibleKickStep(KickAtEnemyGoal()))
+                    .withStep(FlexibleKickStep(WallPass()))
                     .withStep(GetOnOffenseStep())
         }
 
@@ -173,7 +171,7 @@ class TacticsAdvisor {
         }
 
         return FirstViableStepPlan(Plan.Posture.NEUTRAL)
-                .withStep(DirectedNoseHitStep(WallPass()))
+                .withStep(FlexibleKickStep(WallPass()))
                 .withStep(DemolishEnemyStep())
     }
 

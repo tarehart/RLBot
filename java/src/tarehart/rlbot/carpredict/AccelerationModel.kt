@@ -1,6 +1,7 @@
 package tarehart.rlbot.carpredict
 
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
@@ -30,6 +31,13 @@ object AccelerationModel {
         val travelTime = plot.getTravelTime(distance)
         val penaltySeconds = getSteerPenaltySeconds(carData, target)
         return travelTime?.plusSeconds(penaltySeconds)
+    }
+
+    fun getOrientDuration(strikeProfile: StrikeProfile, carData: CarData, space: Vector3): Duration {
+        return if (strikeProfile.isForward)
+            Duration.ofSeconds(getSteerPenaltySeconds(carData, space))
+        else
+            Duration.ofMillis(0)
     }
 
     fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {

@@ -22,8 +22,8 @@ object CarInterceptPlanner {
             val slice = enemyPath.path[i]
             val spaceTime = SpaceTime(slice.space, slice.time)
             val strikeProfile = StrikeProfile()
-            val dts = acceleration.getMotionAfterDuration(
-                    carData, spaceTime.space, Duration.between(carData.time, spaceTime.time), strikeProfile) ?: return null
+            val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, spaceTime.space)
+            val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - Duration.ofSeconds(orientSeconds), strikeProfile) ?: return null
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space)
             if (dts.distance + CAR_CONTACT_DISTANCE > interceptDistance) {

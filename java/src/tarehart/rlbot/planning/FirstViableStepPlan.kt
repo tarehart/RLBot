@@ -11,7 +11,7 @@ class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
 
     // If a step runs successfully for this number of frames, then we decide that it was viable, and commit to it.
     // When that step ends, the plan is complete, even if there were originally subsequent steps.
-    private val framesTillCommitment = 3
+    private val framesTillCommitment = 6
 
     override val situation: String
         get() {

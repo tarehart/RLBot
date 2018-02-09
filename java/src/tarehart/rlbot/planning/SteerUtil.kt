@@ -53,11 +53,11 @@ object SteerUtil {
     private fun canGetUnder(carData: CarData, spaceTime: SpaceTime, boostBudget: Double): Boolean {
         val plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), boostBudget, carData.position.distance(spaceTime.space))
 
+        val strikeProfile = StrikeProfile()
+        val orientDuration = AccelerationModel.getOrientDuration(strikeProfile, carData, spaceTime.space)
         val dts = plot.getMotionAfterDuration(
-                carData,
-                spaceTime.space,
-                Duration.between(carData.time, spaceTime.time),
-                StrikeProfile())
+                Duration.between(carData.time, spaceTime.time) - orientDuration,
+                strikeProfile)
 
         val requiredDistance = SteerUtil.getDistanceFromCar(carData, spaceTime.space)
         return dts?.takeIf { it.distance > requiredDistance } != null

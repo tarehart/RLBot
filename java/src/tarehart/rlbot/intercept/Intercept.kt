@@ -1,6 +1,7 @@
 package tarehart.rlbot.intercept
 
 import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
@@ -14,7 +15,8 @@ data class Intercept(
         val strikeProfile: StrikeProfile,
         val distancePlot: DistancePlot,
         val spareTime: Duration,
-        val ballSlice: BallSlice) {
+        val ballSlice: BallSlice,
+        val accelSlice: DistanceTimeSpeed) {
 
     fun toSpaceTime(): SpaceTime {
         return SpaceTime(space, time)

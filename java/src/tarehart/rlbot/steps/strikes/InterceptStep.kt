@@ -88,33 +88,25 @@ class InterceptStep @JvmOverloads constructor(
         }?.let { return it }
 
         val timeToIntercept = Duration.between(car.time, intercept.time)
-        val motionAfterStrike = intercept.distancePlot
-                .getMotionAfterDuration(car, intercept.space, timeToIntercept, intercept.strikeProfile)
+        val motionAfterStrike = intercept.accelSlice
 
-        if (motionAfterStrike != null) {
-            val maxDistance = motionAfterStrike.distance
-            val distanceToIntercept = car.position.flatten().distance(intercept.space.flatten())
-            val pace = maxDistance / distanceToIntercept
-            val averageSpeedNeeded = distanceToIntercept / timeToIntercept.seconds
-            val currentSpeed = car.velocity.magnitude()
+        val maxDistance = motionAfterStrike.distance
+        val distanceToIntercept = car.position.flatten().distance(intercept.space.flatten())
+        val pace = maxDistance / distanceToIntercept
+        val averageSpeedNeeded = distanceToIntercept / timeToIntercept.seconds
+        val currentSpeed = car.velocity.magnitude()
 
-            val agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.space.flatten(), car.boost <= intercept.airBoost)
-            if (pace > 1.1 && currentSpeed > averageSpeedNeeded) {
-                // Slow down
-                agentOutput.withThrottle(Math.min(0.0, -pace + 1.5)).withBoost(false) // Hit the brakes, but keep steering!
-                if (car.orientation.noseVector.dotProduct(car.velocity) < 0) {
-                    // car is going backwards
-                    agentOutput.withThrottle(0.0).withSteer(0.0)
-                }
+        val agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.space.flatten(), car.boost <= intercept.airBoost)
+        if (pace > 1.1 && currentSpeed > averageSpeedNeeded) {
+            // Slow down
+            agentOutput.withThrottle(Math.min(0.0, -pace + 1.5)).withBoost(false) // Hit the brakes, but keep steering!
+            if (car.orientation.noseVector.dotProduct(car.velocity) < 0) {
+                // car is going backwards
+                agentOutput.withThrottle(0.0).withSteer(0.0)
             }
-            return agentOutput
-        } else {
-            val output = SteerUtil.getThereOnTime(car, intercept.toSpaceTime())
-            if (car.boost <= intercept.airBoost + 5) {
-                output.withBoost(false)
-            }
-            return output
         }
+        return agentOutput
+
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {
@@ -132,8 +124,8 @@ class InterceptStep @JvmOverloads constructor(
     }
 
     companion object {
-        val AERIAL_STRIKE_PROFILE = StrikeProfile(0.0, 0.0, 0.0, 0.0, StrikeProfile.Style.AERIAL)
-        val FLIP_HIT_STRIKE_PROFILE = StrikeProfile(0.0, 0.0, 10.0, .4, StrikeProfile.Style.FLIP_HIT)
+        val AERIAL_STRIKE_PROFILE = StrikeProfile(0.0, 0.0, 0.0, StrikeProfile.Style.AERIAL)
+        val FLIP_HIT_STRIKE_PROFILE = StrikeProfile(0.0, 10.0, .4, StrikeProfile.Style.FLIP_HIT)
 
         fun getSoonestIntercept(
                 carData: CarData,
@@ -169,13 +161,13 @@ class InterceptStep @JvmOverloads constructor(
             return InterceptCalculator.getFilteredInterceptOpportunity(
                     carData, ballPath, fullAcceleration, interceptModifier,
                     { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isJumpHitAccessible(cd, st) },
-                    { space: Vector3 -> AirTouchPlanner.getJumpHitStrikeProfile(space) })
+                    { height: Double -> AirTouchPlanner.getJumpHitStrikeProfile(height) })
         }
 
         private fun getFlipHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
             return InterceptCalculator.getFilteredInterceptOpportunity(
                     carData, ballPath, fullAcceleration, interceptModifier,
-                    { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isFlipHitAccessible(st.space) },
+                    { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isFlipHitAccessible(st.space.z) },
                     { FLIP_HIT_STRIKE_PROFILE })
         }
     }

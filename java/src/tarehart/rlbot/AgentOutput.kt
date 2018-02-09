@@ -20,11 +20,17 @@ class AgentOutput {
         private set
 
     // -1 is reverse, 0 is idle, 1 is full
-    private var throttle: Double = 0.0
+    var throttle: Double = 0.0
+        private set
 
-    private var jumpDepressed: Boolean = false
-    private var boostDepressed: Boolean = false
-    private var slideDepressed: Boolean = false
+    var jumpDepressed: Boolean = false
+        private set
+
+    var boostDepressed: Boolean = false
+        private set
+
+    var slideDepressed: Boolean = false
+        private set
 
     fun withSteer(steeringTilt: Double): AgentOutput {
         this.steer = Clamper.clamp(steeringTilt, -1.0, 1.0)

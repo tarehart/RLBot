@@ -168,4 +168,11 @@ class BallPath(start: BallSlice) {
     fun findSlice(decider: (BallSlice) -> Boolean): BallSlice? {
         return this.slices.drop(1).firstOrNull { decider.invoke(it) }
     }
+
+    fun startingFrom(earliestIntercept: GameTime): BallPath? {
+        val otherPath = BallPath(startPoint)
+        otherPath.slices.clear()
+        otherPath.slices.addAll(slices.dropWhile { slice -> slice.time < earliestIntercept })
+        return otherPath
+    }
 }

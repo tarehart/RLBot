@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps.strikes
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -8,18 +7,14 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 
 class WallPass : KickStrategy {
-    override fun getKickDirection(input: AgentInput): Vector3? {
-        return getKickDirection(input, input.ballPosition)
-    }
 
-    override fun getKickDirection(input: AgentInput, ballPosition: Vector3): Vector3? {
-        val car = input.myCarData
+    override fun getKickDirection(car: CarData, ballPosition: Vector3): Vector3? {
         val toBall = ballPosition.minus(car.position)
         return getDirection(car, ballPosition, toBall)
     }
 
-    override fun getKickDirection(input: AgentInput, ballPosition: Vector3, easyKick: Vector3): Vector3? {
-        return getDirection(input.myCarData, ballPosition, easyKick)
+    override fun getKickDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3? {
+        return getDirection(car, ballPosition, easyKick)
     }
 
     override fun looksViable(car: CarData, ballPosition: Vector3): Boolean {
