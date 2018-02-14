@@ -58,15 +58,25 @@ object RoutePlanner{
         val approachError = Vector2.angle(toPad, launchPad.facing)
         val orientationError = Vector2.angle(car.orientation.noseVector.flatten(), launchPad.facing)
 
-        if (orientationError < Math.PI / 12) {
-            if (approachError < Math.PI / 12) {
-                val duration = distancePlot.getMotionAfterDistance(toPad.magnitude())!!.time
-                val route = Route().withPart(AccelerationRoutePart(car.position.flatten(), launchPad.position, duration))
-                return SteerPlan(SteerUtil.getThereOnTime(car, SpaceTime(launchPad.position.toVector3(), launchPad.gameTime)), route)
+        if (orientationError < Math.PI / 12 && (approachError < Math.PI / 12 || toPad.magnitude() < 5)) {
+
+//            if (ManeuverMath.hasBlownPast(car, launchPad.position, launchPad.facing)) {
+//
+//            }
+
+            val waypoint = if (ManeuverMath.hasBlownPast(car, launchPad.position, launchPad.facing)) {
+                car.position.flatten() + launchPad.facing
+            } else {
+                launchPad.position
             }
-            if (toPad.magnitude() < 2) {
-                return SteerPlan(AgentOutput().withThrottle(1.0).withBoost(), Route())
+
+            if (launchPad.waitUntil != null) {
+                val route = Route().withPart(AccelerationRoutePart(car.position.flatten(), waypoint, launchPad.waitUntil - car.time))
+                return SteerPlan(SteerUtil.getThereOnTime(car, SpaceTime(waypoint.toVector3(), launchPad.waitUntil)), route)
             }
+            val duration = distancePlot.getMotionAfterDistance(toPad.magnitude())!!.time
+            val route = Route().withPart(AccelerationRoutePart(car.position.flatten(), waypoint, duration))
+            return SteerPlan(SteerUtil.steerTowardGroundPosition(car, waypoint + launchPad.facing.scaled(100.0)), route)
         }
 
         return CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, launchPad)

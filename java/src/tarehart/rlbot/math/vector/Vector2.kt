@@ -55,6 +55,11 @@ data class Vector2(val x: Double, val y: Double) {
     }
 
     fun correctionAngle(ideal: Vector2): Double {
+
+        if (isZero || ideal.isZero) {
+            return 0.0
+        }
+
         var currentRad = Math.atan2(y, x)
         var idealRad = Math.atan2(ideal.y, ideal.x)
 
@@ -71,6 +76,11 @@ data class Vector2(val x: Double, val y: Double) {
     }
 
     fun correctionAngle(ideal: Vector2, clockwise: Boolean): Double {
+
+        if (isZero || ideal.isZero) {
+            return 0.0
+        }
+
         var currentRad = Math.atan2(y, x)
         var idealRad = Math.atan2(ideal.y, ideal.x)
 

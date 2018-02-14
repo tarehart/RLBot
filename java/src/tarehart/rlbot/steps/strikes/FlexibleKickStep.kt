@@ -66,6 +66,11 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         val situation = TacticsTelemetry[car.playerIndex] ?: return null
 
+//        if (situation.ballAdvantage < Duration.ofSeconds(-0.2)) {
+//            // TODO: be a little more optimistic about the opponent screwing up in certain situations
+//            return null // We need to go for a challenge, so abort this.
+//        }
+
         //val ballAtIntercept = recentPrecisionPlan?.kickPlan?.intercept?.ballSlice?.space ?: situation.expectedContact?.ballSlice?.space ?: input.ballPosition
         //val kickDirection = kickStrategy.getKickDirection(input.myCarData, ballAtIntercept) ?: return null
 
@@ -119,11 +124,8 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
 
 
-        val durationTillLaunchpad = Duration.between(car.time, precisionPlan.kickPlan.launchPad.gameTime)
-        if (durationTillLaunchpad.millis < 500 && car.position.flatten().distance(precisionPlan.kickPlan.launchPad.position) < 3) {
-            StrikePlanner.planImmediateLaunch(car, precisionPlan.kickPlan.intercept)?.let {
-                return startPlan(it, input)
-            }
+        if (FinalApproachStep.readyForFinalApproach(car, precisionPlan.kickPlan.launchPad)) {
+            return startPlan(Plan().withStep(FinalApproachStep(precisionPlan.kickPlan)), input)
         }
 
 

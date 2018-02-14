@@ -9,6 +9,7 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.CircleTurnUtil
+import tarehart.rlbot.routing.StrikePoint
 import tarehart.rlbot.time.Duration
 
 import tarehart.rlbot.tuning.BotLog.println
@@ -57,7 +58,7 @@ class GetBoostStep : NestedPlanStep() {
             val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost)
             val facing = VectorUtil.orthogonal(target.flatten()) { v -> v.dotProduct(toBoost) > 0 }.normalized()
 
-            val planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(input, distancePlot, target.flatten(), facing)
+            val planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(input.myCarData, distancePlot, StrikePoint(target.flatten(), facing, input.time))
 
             SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint)?.let {
                 println("Flipping toward boost", input.playerIndex)

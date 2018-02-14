@@ -1,6 +1,7 @@
 package tarehart.rlbot.routing
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Circle
@@ -180,12 +181,17 @@ object CircleTurnUtil {
         val distanceToTangent = tangentPoint.distance(flatPosition)
         val turnDuration = getTurnDuration(circle, tangentPoint, targetPosition, clockwise, expectedSpeed)
 
-        val momentToStartTurning = strikePoint.gameTime.minus(turnDuration)
-        val immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning))
+        val immediateSteer: AgentOutput
+        if (strikePoint.waitUntil != null) {
+            val momentToStartTurning = strikePoint.waitUntil - turnDuration
+            immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning))
+        } else {
+            immediateSteer = SteerUtil.steerTowardGroundPosition(car, tangentPoint)
+        }
+
         if (currentSpeed > expectedSpeed && distanceToTangent < 20) {
             immediateSteer.withThrottle(-1.0)  // TODO: This is probably out of place, we have more subtle ways of doing this now
         }
-
 
 
         val route = Route()
@@ -204,9 +210,5 @@ object CircleTurnUtil {
                 clockwise = clockwise))
 
         return SteerPlan(immediateSteer, route)
-    }
-
-    fun getPlanForCircleTurn(input: AgentInput, distancePlot: DistancePlot, flatten: Vector2, facing: Vector2): SteerPlan {
-        return getPlanForCircleTurn(input.myCarData, distancePlot, StrikePoint(flatten, facing, input.time))
     }
 }

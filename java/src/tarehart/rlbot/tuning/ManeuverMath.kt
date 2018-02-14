@@ -2,6 +2,7 @@ package tarehart.rlbot.tuning
 
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 
 import java.util.Optional
@@ -62,6 +63,26 @@ object ManeuverMath {
     fun getBrakeDistance(speed: Double): Double {
         // TODO: make this incorporate BRAKING_DECELERATION, and make it accurate
         return speed * speed * .01 + speed * .1
+    }
+
+    /**
+     * Does it look like the car successfully drove through a position-facing a moment ago, and is now on the wrong
+     * side of it?
+     */
+    fun hasBlownPast(car: CarData, position: Vector2, facing: Vector2): Boolean {
+        val toPad = position - car.position.flatten()
+        val approachError = Vector2.angle(toPad, facing)
+        val orientationError = Vector2.angle(car.orientation.noseVector.flatten(), facing)
+
+        if (orientationError > Math.PI / 12) {
+            return false // Never lined up to begin with
+        }
+
+        if (approachError < Math.PI / 12) {
+            return false // haven't blown past yet, still looking good
+        }
+
+        return forwardSpeed(car) > 0 && (toPad.magnitude() < 2 || approachError > Math.PI * 11 / 12)
     }
 
 }

@@ -261,12 +261,7 @@ object SteerUtil {
             } else if (distanceRatio > 1.5) {
                 agentOutput.withThrottle(.5)
             }
-        }
-
-        // TODO: This should be an else-if on the distanceRatio. However, this bug
-        // counteracts some other bugs where we slow down too much when approaching kicks.
-        // Leaving it like this for the tournament.
-        if (currentSpeed > averageSpeedNeeded) {
+        } else if (currentSpeed > averageSpeedNeeded) {
             agentOutput.withBoost(false)
             agentOutput.withThrottle(averageSpeedNeeded / currentSpeed)
         }

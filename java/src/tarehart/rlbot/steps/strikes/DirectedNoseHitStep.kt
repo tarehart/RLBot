@@ -130,7 +130,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
                             .withPart(AccelerationRoutePart(
                                     car.position.flatten(),
                                     kickPlan.launchPad.position,
-                                    Duration.between(car.time, kickPlan.launchPad.gameTime))))
+                                    kickPlan.launchPad.expectedTime - car.time)))
 
             recentCircleTurnPlan = circleTurnPlan
             return getNavigation(input, circleTurnPlan)
