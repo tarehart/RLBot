@@ -1,15 +1,14 @@
 package tarehart.rlbot.tuning;
 
 import com.google.gson.Gson;
-import tarehart.rlbot.math.SpaceTimeVelocity;
+import tarehart.rlbot.math.BallSlice;
 import tarehart.rlbot.physics.BallPath;
+import tarehart.rlbot.time.GameTime;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 public class BallRecorder {
 
@@ -17,10 +16,10 @@ public class BallRecorder {
 
     // This is going to be an actual ballpath, not predicted.
     private static BallPath ballPath;
-    private static LocalDateTime endTime;
+    private static GameTime endTime;
     private static Gson gson = new Gson();
 
-    public static void startRecording(SpaceTimeVelocity startPoint, LocalDateTime endTime) {
+    public static void startRecording(BallSlice startPoint, GameTime endTime) {
 
         if (ballPath == null) {
             ballPath = new BallPath(startPoint);
@@ -28,12 +27,12 @@ public class BallRecorder {
         }
     }
 
-    public static void recordPosition(SpaceTimeVelocity ballPosition) {
+    public static void recordPosition(BallSlice ballPosition) {
         if (ballPath != null) {
 
             if (ballPosition.getTime().isAfter(endTime)) {
                 // Write to a file
-                Path path = Paths.get("./" + DIRECTORY + "/" + endTime.atOffset(ZoneOffset.UTC).toEpochSecond() + ".json");
+                Path path = Paths.get("./" + DIRECTORY + "/" + endTime.toMillis() + ".json");
                 try {
                     Files.write(path, gson.toJson(ballPath).getBytes());
                 } catch (IOException e) {

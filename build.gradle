@@ -1,4 +1,5 @@
 apply plugin: 'idea'
+apply plugin: 'kotlin'
 apply plugin: 'application'
 apply plugin: 'maven'
 
@@ -8,11 +9,13 @@ repositories {
 }
 
 buildscript {
+    ext.kotlin_version = '1.2.20'
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.3"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -23,13 +26,17 @@ def grpcVersion = '1.7.0'
 dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
     compile group: 'net.sf.py4j', name: 'py4j', version: '0.10.6'
-    compile group: 'cz.advel.jbullet', name: 'jbullet', version: '20101010-1'
+    compile group: 'org.ode4j', name: 'core', version: '0.3.1'
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
+    compile 'com.google.guava:guava:23.4-jre'
     compile "io.grpc:grpc-netty:${grpcVersion}"
     compile "io.grpc:grpc-protobuf:${grpcVersion}"
     compile "io.grpc:grpc-stub:${grpcVersion}"
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
 
@@ -51,11 +58,12 @@ idea {
     }
 }
 
-mainClassName = 'tarehart.rlbot.GrpcServer'
+mainClassName = 'tarehart.rlbot.GrpcServerKt'
 
+// You can run gradew distZip to generate a zip file suitable for tournament submissions
 applicationDistribution.from("$projectDir") {
     into 'README'
-    include 'README_Tournament.md', 'ReliefBot.py'
+    include 'README_Tournament.md', 'relief_bot.py', 'relief_bot.cfg', 'adversity_bot.cfg', 'air_bud.cfg'
 }
 
 
@@ -72,6 +80,20 @@ protobuf {
         all()*.plugins {
             grpc {}
         }
+    }
+}
+
+compileKotlin.dependsOn ':generateProto'
+tasks.idea.dependsOn ':generateProto'
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 

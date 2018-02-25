@@ -1,349 +1,468 @@
 package tarehart.rlbot.physics;
 
-import com.bulletphysics.collision.broadphase.AxisSweep3;
-import com.bulletphysics.collision.dispatch.CollisionConfiguration;
-import com.bulletphysics.collision.dispatch.CollisionDispatcher;
-import com.bulletphysics.collision.dispatch.CollisionObject;
-import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.collision.shapes.SphereShape;
-import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
-import com.bulletphysics.dynamics.DynamicsWorld;
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
-import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
-import com.bulletphysics.linearmath.Transform;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Streams;
+import org.jetbrains.annotations.NotNull;
+import org.ode4j.math.DQuaternion;
+import org.ode4j.math.DQuaternionC;
+import org.ode4j.math.DVector3;
+import org.ode4j.math.DVector3C;
+import org.ode4j.ode.*;
+import tarehart.rlbot.AgentInput;
+import tarehart.rlbot.input.CarData;
+import tarehart.rlbot.math.BallSlice;
+import tarehart.rlbot.math.Plane;
+import tarehart.rlbot.math.VectorUtil;
 import tarehart.rlbot.math.vector.Vector2;
 import tarehart.rlbot.math.vector.Vector3;
-import tarehart.rlbot.AgentInput;
-import tarehart.rlbot.Bot;
-import tarehart.rlbot.input.CarData;
-import tarehart.rlbot.math.SpaceTimeVelocity;
-import tarehart.rlbot.math.TimeUtil;
 import tarehart.rlbot.planning.Goal;
-import tarehart.rlbot.planning.GoalUtil;
-import tarehart.rlbot.tuning.BallTelemetry;
+import tarehart.rlbot.time.Duration;
+import tarehart.rlbot.time.GameTime;
 
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
+/*
+TODO: Start using a real arena mesh.
+it's not that hard to get, i'm just using this tool to decrypt .upk files
+https://www.reddit.com/r/RocketLeague/comments/5751g0/i_fixed_the_decryptor_tool_we_now_have_exact/
+then using umodel to scroll through the models and export .psk files
+http://www.gildor.org/en/projects/umodel
+i'm using blender it has an addon to import psk files
 
+-Marvin
+
+TODO: Try using the libgdx wrapper around the bullet physics engine instead of ODE:
+https://github.com/libgdx/libgdx/wiki/Bullet-physics
+This gives us a much clearer slices to importing the arena model, and possibly better performance.
+ */
 public class ArenaModel {
 
     public static final float SIDE_WALL = 81.92f;
     public static final float BACK_WALL = 102.4f;
     public static final float CEILING = 40.88f;
-    public static final float BALL_ANGULAR_DAMPING = 1f;
+    public static final float BALL_ANGULAR_DAMPING = 0f;
 
     private static final int WALL_THICKNESS = 10;
     private static final int WALL_LENGTH = 400;
     public static final float GRAVITY = 13f;
-    public static final Duration SIMULATION_STEP = Duration.ofMillis(100);
-    public static final float BALL_DRAG = .0305f;
+    public static final float BALL_DRAG = .0015f;
     public static final float BALL_RADIUS = 1.8555f;
 
-    public static final Vector2 CORNER_ANGLE_CENTER = new Vector2(70.5, 90.2);
+    public static final double CORNER_BEVEL = 11.8; // 45 degree angle walls come in this far from where the rectangular corner would be.
+    public static final Vector2 CORNER_ANGLE_CENTER = new Vector2(SIDE_WALL, BACK_WALL).minus(new Vector2(CORNER_BEVEL, CORNER_BEVEL));
 
     // The diagonal surfaces that merge the floor and the wall--
     // Higher = more diagonal showing.
-    public static final float RAIL_HEIGHT = 1.8f;
-    public static final float BALL_RESTITUTION = .583f;
-    public static final float WALL_RESTITUTION = 1f;
-    public static final float WALL_FRICTION = .5f;
-    public static final float BALL_FRICTION = .6f;
-    public static final int STEPS_PER_SECOND = 10;
-    private static final int STEPS_PER_SECOND_HIGH_RES = 50;
+    public static final float RAIL_HEIGHT = 2.5f;
+    public static final float BALL_RESTITUTION = .6f;
+    public static final int STEPS_PER_SECOND = 20;
+    public static final float MOMENT_OF_INERTIA_BONUS = 1.45f;
 
-    private DynamicsWorld world;
-    private RigidBody ball;
+    private DWorld world;
+    private DSpace space;
+    private DSphere ball;
+    private final DJointGroup contactgroup;
 
-    private static Map<Bot.Team, ArenaModel> modelMap = new HashMap<>();
+    private static List<Plane> majorUnbrokenPlanes = new ArrayList<>();
+    private static List<Plane> backWallPlanes = new ArrayList<>();
 
+    static {
+        // Floor
+        majorUnbrokenPlanes.add(new Plane(new Vector3(0, 0, 1), new Vector3(0, 0, 0)));
+
+        // Side walls
+        majorUnbrokenPlanes.add(new Plane(new Vector3(1, 0, 0), new Vector3(-SIDE_WALL, 0, 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(-1, 0, 0), new Vector3(SIDE_WALL, 0, 0)));
+
+        // Ceiling
+        majorUnbrokenPlanes.add(new Plane(new Vector3(0, 0, -1), new Vector3(0, 0, CEILING)));
+
+        // 45 angle corners
+        majorUnbrokenPlanes.add(new Plane(new Vector3(1, 1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(-1, 1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(1, -1, 0), new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0)));
+        majorUnbrokenPlanes.add(new Plane(new Vector3(-1, -1, 0), new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), 0)));
+
+
+        // Do the back wall major surfaces separately to avoid duplicate planes.
+        backWallPlanes.add(new Plane(new Vector3(0, 1, 0), new Vector3(0, -BACK_WALL, 0)));
+        backWallPlanes.add(new Plane(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, 0)));
+    }
+
+    public static final Duration SIMULATION_DURATION = Duration.Companion.ofSeconds(6);
+    private static final LoadingCache<BallSlice, BallPath> pathCache = CacheBuilder.newBuilder()
+            .maximumSize(100)
+            .build(new CacheLoader<BallSlice, BallPath>() {
+                @Override
+                public BallPath load(BallSlice key) throws Exception {
+                    synchronized (lock) {
+                        // Always use a new ArenaModel. There's a nasty bug
+                        // where bounces stop working properly and I can't track it down.
+                        return new ArenaModel().simulateBall(key, SIMULATION_DURATION);
+                    }
+                }
+            });
+
+    private static final Object lock = new Object();
+
+    static {
+        OdeHelper.initODE2(0);
+    }
+
+    private static double getFriction(double normalSpeed) {
+        return Math.max(0, 460 * normalSpeed);
+    }
 
     public ArenaModel() {
-        world = initPhysics();
+
+        world = OdeHelper.createWorld();
+        space = OdeHelper.createSimpleSpace();
+        world.setGravity(0, 0, -GRAVITY);
+        world.setDamping(0, 0);
         setupWalls();
         ball = initBallPhysics();
-        world.addRigidBody(ball);
+
+        contactgroup = OdeHelper.createJointGroup();
+    }
+
+    private DSphere initBallPhysics() {
+
+        DSphere sphere = OdeHelper.createSphere(space, BALL_RADIUS);
+        DBody body = OdeHelper.createBody(world);
+        DMass mass = OdeHelper.createMass();
+        mass.setSphere(1, BALL_RADIUS * MOMENT_OF_INERTIA_BONUS); // Huge moment of inertia
+        body.setMass(mass);
+        sphere.setBody(body);
+        body.setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
+
+        return sphere;
+    }
+
+    private DGeom.DNearCallback nearCallback = this::nearCallback;
+
+    // this is called by dSpaceCollide when two objects in space are
+    // potentially colliding.
+
+    /**
+     * https://www.ode-wiki.org/wiki/index.php?title=Manual:_Concepts#Physics_model
+     * https://www.ode-wiki.org/wiki/index.php?title=Manual:_Joint_Types_and_Functions#Contact
+     */
+    private void nearCallback (Object data, DGeom o1, DGeom o2) {
+        // only collide things with the ball
+        if (!(o1 == ball || o2 == ball)) {
+            return;
+        }
+
+        DBody b1 = o1.getBody();
+        DBody b2 = o2.getBody();
+
+        DContactBuffer contacts = new DContactBuffer(1);
+        int numContacts = OdeHelper.collide(o1, o2,1, contacts.getGeomBuffer());
+        for (int i = 0; i < numContacts; i++) {
+
+            DContact c = contacts.get(i);
+
+            Vector3 normal = toV3(c.getContactGeom().normal);
+            Vector3 velocity = toV3(ball.getBody().getLinearVel());
+
+            double normXMagnitude = Math.abs(normal.getX());
+            boolean isRollAlongSurface = normXMagnitude > .05 && normXMagnitude < .65 || // Corner half-angle
+                    normXMagnitude < .95 && normXMagnitude > .75; // Corner half-angle
+                    //normal.getZ() > .7 && normal.getZ() < .72; // Floor rail
+
+            if (normal.dotProduct(velocity) < 0) {
+                // Ball has already bounced, so don't bother creating a joint.
+                return;
+            }
+
+            // The depth of the contact affects the moment of inertia.
+            // For example, if the ball penetrates the wall a lot, almost to a whole radius,
+            // the ball won't be able to spin because there's extremely low torque.
+
+            // To combat this, move the ball to the surface manually.
+            // ball position += collision normal * depth * -1
+            Vector3 positionModifier = normal.scaled(c.geom.depth * -1);
+            ball.setPosition(ball.getPosition().clone().add(toV3f(positionModifier)));
+            ball.getAABB(); // This forces a recompute.
+
+            c.geom.depth = 0;
+            c.surface.mode = OdeConstants.dContactBounce;
+            c.surface.bounce = isRollAlongSurface ? 1 : BALL_RESTITUTION;
+
+            Vector3 velocityAlongSurface = velocity.projectToPlane(normal);
+            if (!velocityAlongSurface.isZero()) {
+                c.surface.mode |= OdeConstants.dContactFDir1;
+                c.fdir1.set(toV3f(velocityAlongSurface.normaliseCopy()));
+            }
+
+            Vector3 velAlongNormal = VectorUtil.INSTANCE.project(velocity, normal);
+            c.surface.mu = isRollAlongSurface ? 0 : getFriction(velAlongNormal.magnitude());
+
+            DJoint joint = OdeHelper.createContactJoint(world, contactgroup, contacts.get(i));
+            joint.attach(b1, b2);
+        }
+    }
+
+    public static boolean isInBounds(Vector2 location) {
+        return isInBounds(location.toVector3(), 0);
     }
 
     public static boolean isInBoundsBall(Vector3 location) {
-        return Math.abs(location.x) < SIDE_WALL - BALL_RADIUS && Math.abs(location.y) < BACK_WALL - BALL_RADIUS;
+        return isInBounds(location, BALL_RADIUS);
+    }
+
+    private static boolean isInBounds(Vector3 location, double buffer) {
+        return getDistanceFromWall(location) > buffer;
     }
 
     public static boolean isBehindGoalLine(Vector3 position) {
-        return Math.abs(position.y) > BACK_WALL;
+        return Math.abs(position.getY()) > BACK_WALL;
     }
 
-    public static BallPath predictBallPath(AgentInput input, double seconds) {
-        return predictBallPath(input, input.time, TimeUtil.toDuration(seconds));
-    }
-
-    public static BallPath predictBallPath(AgentInput input, LocalDateTime startingAt, Duration duration) {
-
-        if (!modelMap.containsKey(input.team)) {
-            modelMap.put(input.team, new ArenaModel());
-        }
-
-        ArenaModel arenaModel = modelMap.get(input.team);
-
-        Optional<BallPath> pathOption = BallTelemetry.getPath(input.team);
-
-        if (pathOption.isPresent()) {
-            BallPath ballPath = pathOption.get();
-            if (ballPath.getEndpoint().getTime().isBefore(startingAt.plus(duration))) {
-                arenaModel.extendSimulation(ballPath, startingAt.plus(duration));
-            }
-            return ballPath;
-        } else {
-            BallPath ballPath = arenaModel.simulateBall(new SpaceTimeVelocity(input.ballPosition, startingAt, input.ballVelocity), duration);
-            BallTelemetry.setPath(ballPath, input.team);
-            return ballPath;
+    public static BallPath predictBallPath(AgentInput input) {
+        try {
+            BallSlice key = new BallSlice(input.getBallPosition(), input.getTime(), input.getBallVelocity(), input.getBallSpin());
+            return pathCache.get(key);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Failed to compute ball slices!", e);
         }
     }
 
     private void setupWalls() {
-        // Floor
-        addWallToWorld(new Vector3f(0, 0, 1), new Vector3f(0, 0, 0));
 
-        // Side walls
-        addWallToWorld(new Vector3f(1, 0, 0), new Vector3f(-SIDE_WALL, 0, 0));
-        addWallToWorld(new Vector3f(-1, 0, 0), new Vector3f(SIDE_WALL, 0, 0));
+        DBody arenaBody = OdeHelper.createBody(world);
+        arenaBody.setKinematic();
 
-        // Ceiling
-        addWallToWorld(new Vector3f(0, 0, 1), new Vector3f(0, 0, CEILING + WALL_THICKNESS));
+        for (Plane p : majorUnbrokenPlanes) {
+            addWallToWorld(p.getNormal(), p.getPosition(), arenaBody);
+        }
 
-
-        float sideOffest = (float) (WALL_LENGTH / 2 + Goal.EXTENT);
-        float heightOffset = (float) (WALL_LENGTH / 2 + Goal.GOAL_HEIGHT);
+        float sideOffset = (float) (WALL_LENGTH / 2 + Goal.Companion.getEXTENT());
+        float heightOffset = (float) (WALL_LENGTH / 2 + Goal.Companion.getGOAL_HEIGHT());
 
         // Wall on the negative side
-        addWallToWorld(new Vector3f(0, 1, 0), new Vector3f(sideOffest, -BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, 1, 0), new Vector3f(-sideOffest, -BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, 1, 0), new Vector3f(0, -BACK_WALL, heightOffset));
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(sideOffset, -BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(-sideOffset, -BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 0), new Vector3(0, -BACK_WALL, heightOffset), arenaBody);
 
         // Wall on the positive side
-        addWallToWorld(new Vector3f(0, -1, 0), new Vector3f(sideOffest, BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, -1, 0), new Vector3f(-sideOffest, BACK_WALL, 0));
-        addWallToWorld(new Vector3f(0, -1, 0), new Vector3f(0, BACK_WALL, heightOffset));
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(sideOffset, BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(-sideOffset, BACK_WALL, 0), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, heightOffset), arenaBody);
+
+        // Corner half-angles to make the ball roll smoothly
+        double halfAngleBackoff = 3.5;
+        double angle = Math.PI / 8;
+        double normMajor = Math.cos(angle);
+        double normMinor = Math.sin(angle);
+
+        Vector3 halfAnglePosition = CORNER_ANGLE_CENTER.plus(new Vector2(halfAngleBackoff, halfAngleBackoff)).toVector3();
+        addWallToWorld(new Vector3(normMajor, normMinor, 0), halfAnglePosition.scaled(-1), arenaBody);
+        addWallToWorld(new Vector3(normMinor, normMajor, 0), halfAnglePosition.scaled(-1), arenaBody);
+
+        addWallToWorld(new Vector3(-normMajor, -normMinor, 0), halfAnglePosition, arenaBody);
+        addWallToWorld(new Vector3(-normMinor, -normMajor, 0), halfAnglePosition, arenaBody);
+
+        addWallToWorld(new Vector3(-normMajor, normMinor, 0), new Vector3(halfAnglePosition.getX(), -halfAnglePosition.getY(), 0), arenaBody);
+        addWallToWorld(new Vector3(-normMinor, normMajor, 0), new Vector3(halfAnglePosition.getX(), -halfAnglePosition.getY(), 0), arenaBody);
+
+        addWallToWorld(new Vector3(normMajor, -normMinor, 0), new Vector3(-halfAnglePosition.getX(), halfAnglePosition.getY(), 0), arenaBody);
+        addWallToWorld(new Vector3(normMinor, -normMajor, 0), new Vector3(-halfAnglePosition.getX(), halfAnglePosition.getY(), 0), arenaBody);
 
 
-        // 45 angle corners
-        addWallToWorld(new Vector3f(1, 1, 0), new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3f(-1, 1, 0), new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) -CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3f(1, -1, 0), new Vector3f((float) -CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
-        addWallToWorld(new Vector3f(-1, -1, 0), new Vector3f((float) CORNER_ANGLE_CENTER.x, (float) CORNER_ANGLE_CENTER.y, 0));
+        // 45 degree angle rails on sides
+        addWallToWorld(new Vector3(1, 0, 1), new Vector3(-SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(-1, 0, 1), new Vector3(SIDE_WALL, 0, RAIL_HEIGHT), arenaBody);
 
-        // 45 degree angle rails at floor
-        addWallToWorld(new Vector3f(1, 0, 1), new Vector3f(-SIDE_WALL, 0, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(-1, 0, 1), new Vector3f(SIDE_WALL, 0, RAIL_HEIGHT));
+        // 45 degree angle rails on back walls, either side of the goal
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(sideOffset, -BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, 1, 1), new Vector3(-sideOffset, -BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(sideOffset, BACK_WALL, RAIL_HEIGHT), arenaBody);
+        addWallToWorld(new Vector3(0, -1, 1), new Vector3(-sideOffset, BACK_WALL, RAIL_HEIGHT), arenaBody);
 
-        addWallToWorld(new Vector3f(0, 1, 1), new Vector3f(sideOffest, -BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(0, 1, 1), new Vector3f(-sideOffest, -BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(0, -1, 1), new Vector3f(sideOffest, BACK_WALL, RAIL_HEIGHT));
-        addWallToWorld(new Vector3f(0, -1, 1), new Vector3f(-sideOffest, BACK_WALL, RAIL_HEIGHT));
+        // Floor rails in the corners
+        float normalizedVertical = (float) Math.sqrt(2);
+        float normalizedFlats = .5f;
+        addWallToWorld(
+                new Vector3(normalizedFlats, normalizedFlats, normalizedVertical),
+                new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
+        addWallToWorld(
+                new Vector3(-normalizedFlats, normalizedFlats, normalizedVertical),
+                new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) -CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
+        addWallToWorld(
+                new Vector3(normalizedFlats, -normalizedFlats, normalizedVertical),
+                new Vector3((float) -CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
+        addWallToWorld(
+                new Vector3(-normalizedFlats, -normalizedFlats, normalizedVertical),
+                new Vector3((float) CORNER_ANGLE_CENTER.getX(), (float) CORNER_ANGLE_CENTER.getY(), RAIL_HEIGHT), arenaBody);
+
     }
 
-    private void addWallToWorld(Vector3f normal, Vector3f position) {
+    private void addWallToWorld(Vector3 normal, Vector3 position, DBody body) {
 
-        normal.normalize();
+        DBox box = OdeHelper.createBox(space, WALL_LENGTH, WALL_LENGTH, WALL_THICKNESS);
+        box.setBody(body);
 
-        // A large, flattish box laying on the ground.
-        CollisionShape boxGround = new BoxShape(new Vector3f(WALL_LENGTH / 2, WALL_LENGTH / 2, WALL_THICKNESS /2));
+        normal = normal.normaliseCopy();
+        box.setData(normal);
+        Vector3 thicknessTweak = normal.scaled(-WALL_THICKNESS / 2);
 
-        Transform wallTransform = new Transform();
-        wallTransform.setIdentity();
+        Vector3 finalPosition = position.plus(thicknessTweak);
 
-        Vector3f thicknessTweak = new Vector3f(normal);
-        thicknessTweak.scale(-WALL_THICKNESS / 2);
+        box.setOffsetPosition(finalPosition.getX(), finalPosition.getY(), finalPosition.getZ());
 
-        Vector3f finalPosition = new Vector3f();
-        finalPosition.add(position);
-        finalPosition.add(thicknessTweak);
-        wallTransform.origin.set(finalPosition);
-
-        Vector3f straightUp = new Vector3f(0, 0, 1);
-        Quat4f quat = getRotationFrom(straightUp, normal);
-        wallTransform.setRotation(quat);
-
-        RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(
-                0, null, boxGround, new Vector3f());
-        RigidBody wall = new RigidBody(rbInfo);
-        wall.setRestitution(WALL_RESTITUTION);
-        wall.setFriction(WALL_FRICTION);
-        wall.setWorldTransform(wallTransform);
-
-        world.addRigidBody(wall);
+        Vector3 straightUp = new Vector3(0, 0, 1);
+        DQuaternionC quat = getRotationFrom(straightUp, normal);
+        box.setOffsetQuaternion(quat);
     }
 
     // https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
-    private Quat4f getRotationFrom(Vector3f fromVec, Vector3f toVec) {
+    private DQuaternionC getRotationFrom(Vector3 fromVec, Vector3 toVec) {
 
-        if (fromVec.dot(toVec) > .99999) {
-            return new Quat4f(0, 0, 0, 1);
+        if (fromVec.dotProduct(toVec) > .99999) {
+            return new DQuaternion(1, 0, 0, 0);
         }
 
-        Vector3f cross = new Vector3f();
-        cross.cross(fromVec, toVec);
-        float magnitude = (float) (Math.sqrt(fromVec.lengthSquared() * toVec.lengthSquared()) + fromVec.dot(toVec));
-        Quat4f rot = new Quat4f();
-        rot.set(cross.x, cross.y, cross.z, magnitude);
+        if (fromVec.dotProduct(toVec) < -.99999) {
+            if (fromVec.getZ() < 1) {
+                return new DQuaternion(0, 0, 0, 1);
+            } else {
+                return new DQuaternion(0, 0, 1, 0);
+            }
+        }
+
+        Vector3 cross = fromVec.crossProduct(toVec);
+        float magnitude = (float) (Math.sqrt(fromVec.magnitudeSquared() * toVec.magnitudeSquared()) + fromVec.dotProduct(toVec));
+        DQuaternion rot = new DQuaternion(magnitude, cross.getX(), cross.getY(), cross.getZ());
         rot.normalize();
         return rot;
     }
 
     private Vector3 getBallPosition() {
-        Transform trans = new Transform();
-        ball.getWorldTransform(trans);
-        return new Vector3(trans.origin.x, trans.origin.y, trans.origin.z);
+        return toV3(ball.getBody().getPosition());
     }
 
-    public BallPath simulateBall(SpaceTimeVelocity start, Duration duration) {
+    public BallPath simulateBall(BallSlice start, Duration duration) {
         BallPath ballPath = new BallPath(start);
         simulateBall(ballPath, start.getTime().plus(duration));
         return ballPath;
     }
 
-    public BallPath simulateBall(SpaceTimeVelocity start, LocalDateTime endTime) {
-        BallPath ballPath = new BallPath(start);
-        simulateBall(ballPath, endTime);
-        return ballPath;
-    }
-
-    public void extendSimulation(BallPath ballPath, LocalDateTime endTime) {
+    private void extendSimulation(BallPath ballPath, GameTime endTime) {
         simulateBall(ballPath, endTime);
     }
 
-    private void simulateBall(BallPath ballPath, LocalDateTime endTime) {
-        SpaceTimeVelocity start = ballPath.getEndpoint();
-        LocalDateTime simulationTime = LocalDateTime.from(start.getTime());
-        if (simulationTime.isAfter(endTime)) {
+    private void simulateBall(BallPath ballPath, GameTime endTime) {
+        BallSlice start = ballPath.getEndpoint();
+
+        if (start.getTime().isAfter(endTime)) {
             return;
         }
 
-        ball.clearForces();
-        ball.setLinearVelocity(toV3f(start.getVelocity()));
-        Transform ballTransform = new Transform();
-        ballTransform.setIdentity();
-        ballTransform.origin.set(toV3f(start.getSpace()));
-        ball.setWorldTransform(ballTransform);
-
+        ball.getBody().setForce(0, 0, 0);
+        ball.getBody().setLinearVel(toV3f(start.getVelocity()));
+        ball.getBody().setAngularVel(toV3f(start.getSpin()));
+        ball.getBody().setPosition(toV3f(start.getSpace()));
 
         // Do some simulation
+        runSimulation(ballPath, start.getTime(), endTime);
+    }
+
+    private void runSimulation(BallPath ballPath, GameTime startTime, GameTime endTime) {
+        GameTime simulationTime = startTime;
+        Vector3 ballVel = new Vector3();
+
         while (simulationTime.isBefore(endTime)) {
-            float stepsPerSecond = STEPS_PER_SECOND;
-            if (simulationTime.isBefore(start.getTime().plusSeconds(1))) {
-                stepsPerSecond = STEPS_PER_SECOND_HIGH_RES;
+            float stepSize = 1.0f / STEPS_PER_SECOND;
+
+            synchronized (lock) {
+                space.collide(null, nearCallback);
+                world.step(stepSize);
+                contactgroup.empty();
             }
 
-            world.stepSimulation(1.0f / stepsPerSecond, 2, 0.5f / stepsPerSecond);
-            simulationTime = simulationTime.plus(TimeUtil.toDuration(1 / stepsPerSecond));
+            simulationTime = simulationTime.plusSeconds(stepSize);
             Vector3 ballVelocity = getBallVelocity();
-            ballPath.addSlice(new SpaceTimeVelocity(getBallPosition(), simulationTime, ballVelocity));
-            double speed = ballVelocity.magnitude();
-            if (speed < 10) {
-                ball.setFriction(0);
-                ball.setDamping(0, BALL_ANGULAR_DAMPING);
+            Vector3 ballSpin = getBallSpin();
+            Vector3 ballPosition = getBallPosition();
+            if (Math.abs(ballPosition.getY()) > BACK_WALL + BALL_RADIUS) {
+                // The ball has crossed the goal plane. Freeze it in place.
+                // This is handy for making the bot not give up on saves / follow through on shots.
+                ball.getBody().setKinematic();
+                ball.getBody().setLinearVel(0, 0, 0);
             } else {
-                ball.setFriction(BALL_FRICTION);
-                ball.setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
+                ballVel = ballVelocity;
             }
+            ballPath.addSlice(new BallSlice(ballPosition, simulationTime, ballVel, ballSpin));
         }
     }
 
     private Vector3 getBallVelocity() {
-        Vector3f ballVel = new Vector3f();
-        ball.getLinearVelocity(ballVel);
-        return toV3(ballVel);
+        return toV3(ball.getBody().getLinearVel());
     }
 
-    private static Vector3f toV3f(Vector3 v) {
-        return new Vector3f((float) v.x, (float) v.y, (float) v.z);
+    private Vector3 getBallSpin() {
+        return toV3(ball.getBody().getAngularVel());
     }
 
-    private static Vector3 toV3(Vector3f v) {
-        return new Vector3(v.x, v.y, v.z);
+    private static DVector3C toV3f(Vector3 v) {
+        return new DVector3(v.getX(), v.getY(), v.getZ());
     }
 
-    private DynamicsWorld initPhysics() {
-        // collision configuration contains default setup for memory, collision
-        // setup. Advanced users can create their own configuration.
-        CollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
-
-        // use the default collision dispatcher. For parallel processing you
-        // can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-        CollisionDispatcher dispatcher = new CollisionDispatcher(
-                collisionConfiguration);
-
-        // the maximum size of the collision world. Make sure objects stay
-        // within these boundaries
-        // Don't make the world AABB size too large, it will harm simulation
-        // quality and performance
-        Vector3f worldAabbMin = new Vector3f(-1000, -1000, -1000);
-        Vector3f worldAabbMax = new Vector3f(1000, 1000, 1000);
-        int maxProxies = 1024;
-        AxisSweep3 overlappingPairCache =
-                new AxisSweep3(worldAabbMin, worldAabbMax, maxProxies);
-
-        SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
-
-        DiscreteDynamicsWorld dynamicsWorld = new DiscreteDynamicsWorld(
-                dispatcher, overlappingPairCache, solver,
-                collisionConfiguration);
-
-        dynamicsWorld.setGravity(new Vector3f(0, 0, -GRAVITY));
-
-        return dynamicsWorld;
-    }
-
-    private RigidBody initBallPhysics() {
-        SphereShape collisionShape = new SphereShape(BALL_RADIUS);
-
-        // Create Dynamic Objects
-        Transform startTransform = new Transform();
-        startTransform.setIdentity();
-
-        float mass = 1f;
-
-        Vector3f localInertia = new Vector3f(0, 0, 0);
-        collisionShape.calculateLocalInertia(mass, localInertia);
-
-        startTransform.origin.set(new Vector3f(0, 0, 0));
-
-        RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(
-                mass, null, collisionShape, localInertia);
-        RigidBody body = new RigidBody(rbInfo);
-        body.setDamping(BALL_DRAG, BALL_ANGULAR_DAMPING);
-        body.setRestitution(BALL_RESTITUTION);
-        body.setFriction(BALL_FRICTION);
-        body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-
-        return body;
+    private static Vector3 toV3(DVector3C v) {
+        return new Vector3(v.get0(), v.get1(), v.get2());
     }
 
     public static boolean isCarNearWall(CarData car) {
-        return getDistanceFromWall(car.position) < 2;
+        return getDistanceFromWall(car.getPosition()) < 2;
     }
 
     public static double getDistanceFromWall(Vector3 position) {
-        double sideWall = SIDE_WALL - Math.abs(position.x);
-        double backWall = BACK_WALL - Math.abs(position.y);
-        double diagonal = CORNER_ANGLE_CENTER.x + CORNER_ANGLE_CENTER.y - Math.abs(position.x) - Math.abs(position.y);
+        double sideWall = SIDE_WALL - Math.abs(position.getX());
+        double backWall = BACK_WALL - Math.abs(position.getY());
+        double diagonal = CORNER_ANGLE_CENTER.getX() + CORNER_ANGLE_CENTER.getY() - Math.abs(position.getX()) - Math.abs(position.getY());
         return Math.min(Math.min(sideWall, backWall), diagonal);
     }
 
     public static boolean isCarOnWall(CarData car) {
-        return isCarNearWall(car) && Math.abs(car.orientation.roofVector.z) < 0.05;
+        return car.getHasWheelContact() && isCarNearWall(car) && Math.abs(car.getOrientation().getRoofVector().getZ()) < 0.05;
     }
 
-    public static boolean isNearFloorEdge(CarData car) {
-        return Math.abs(car.position.x) > Goal.EXTENT && getDistanceFromWall(car.position) + car.position.z < 6;
+    public static boolean isNearFloorEdge(Vector3 position) {
+        return Math.abs(position.getX()) > Goal.Companion.getEXTENT() && getDistanceFromWall(position) + position.getZ() < 6;
+    }
+
+    @NotNull
+    public static Plane getNearestPlane(@NotNull Vector3 position) {
+
+        return Streams.concat(majorUnbrokenPlanes.stream(), backWallPlanes.stream()).min((p1, p2) -> {
+            double p1Distance = p1.distance(position);
+            double p2Distance = p2.distance(position);
+            if (p1Distance > p2Distance) {
+                return 1;
+            }
+
+            return -1;
+        }).get();
+    }
+
+    @NotNull
+    public static Plane getBouncePlane(@NotNull Vector3 origin, @NotNull Vector3 direction) {
+        Vector3 longDirection = direction.scaledToMagnitude(500);
+
+        Map<Plane, Double> intersectionDistances = Streams.concat(majorUnbrokenPlanes.stream(), backWallPlanes.stream())
+                .collect(Collectors.toMap(p -> p, p -> {
+                    Vector3 intersection = VectorUtil.INSTANCE.getPlaneIntersection(p, origin, longDirection);
+                    if (intersection == null) {
+                        return Double.MAX_VALUE;
+                    }
+                    return intersection.distance(origin);
+                }));
+
+        return intersectionDistances.entrySet().stream().min(Comparator.comparing(Map.Entry::getValue)).get().getKey();
     }
 }
