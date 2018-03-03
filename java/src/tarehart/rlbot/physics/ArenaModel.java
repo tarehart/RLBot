@@ -346,9 +346,28 @@ public class ArenaModel {
         return toV3(ball.getBody().getPosition());
     }
 
+    private static BallPath previousBallPath = null;
     public BallPath simulateBall(BallSlice start, Duration duration) {
-        BallPath ballPath = new BallPath(start);
+        final BallPath prevPath = previousBallPath;
+        final BallPath ballPath;
+        if (prevPath != null) {
+            final BallSlice prevPrediction = prevPath.getMotionAt(start.getTime());
+            if (prevPrediction != null &&
+                    prevPrediction.getSpace().distance(start.getSpace()) < .3 &&
+                    prevPrediction.getSpace().flatten().distance(start.getSpace().flatten()) < .1 &&
+                    prevPrediction.getVelocity().distance(start.getVelocity()) < .3 &&
+                    prevPrediction.getVelocity().flatten().distance(start.getVelocity().flatten()) < .1) {
+
+                ballPath = prevPath; // Previous prediction is still legit, build on top of it.
+            } else {
+                ballPath = new BallPath(start);
+            }
+        } else {
+            ballPath = new BallPath(start);  // Start over from scratch
+            System.out.println("s");
+        }
         simulateBall(ballPath, start.getTime().plus(duration));
+        previousBallPath = ballPath;
         return ballPath;
     }
 

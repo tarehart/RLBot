@@ -79,7 +79,11 @@ class ChallengeStep: NestedPlanStep() {
                     input)
         }
 
-        SteerUtil.getSensibleFlip(car, defensiveNode)?.let { return startPlan(it, input) }
+        SteerUtil.getSensibleFlip(car, defensiveNode)?.let {
+            if (car.boost < 1) { // Use more boost and less flipping during challenges.
+                return startPlan(it, input)
+            }
+        }
 
         return SteerUtil.steerTowardGroundPosition(car, input.boostData, defensiveNode)
     }
