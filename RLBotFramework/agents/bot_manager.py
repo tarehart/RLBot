@@ -1,6 +1,6 @@
 
 from RLBotFramework.utils import rate_limiter
-from RLBotFramework.utils.agent_creator import import_agent, get_agent_class_location
+from RLBotFramework.utils.class_importer import import_agent, get_agent_class_location
 from RLBotFramework.utils.logging_utils import get_logger
 from RLBotFramework.utils.structures import game_data_struct as gd, bot_input_struct as bi
 from datetime import datetime, timedelta
@@ -60,7 +60,7 @@ class BotManager:
     def load_agent(self, agent_class):
         agent = agent_class(self.name, self.team, self.index)
         agent.logger = self.logger
-        agent.load_config(self.bot_configuration)
+        agent.load_config(self.bot_configuration.get_header("Bot Parameters"))
         agent.initialize_agent()
 
         self.update_metadata_queue(agent)

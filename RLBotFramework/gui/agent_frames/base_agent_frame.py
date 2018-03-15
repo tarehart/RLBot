@@ -3,7 +3,7 @@ import tkinter as tk
 import os
 
 from RLBotFramework.agents.base_agent import BaseAgent, BOT_CONFIG_MODULE_HEADER, AGENT_MODULE_KEY
-from RLBotFramework.utils.agent_creator import import_agent, get_base_import_package
+from RLBotFramework.utils.class_importer import import_agent, get_base_import_package
 from RLBotFramework.utils.rlbot_config_parser import PARTICIPANT_CONFIGURATION_HEADER, PARTICIPANT_CONFIG_KEY,\
     PARTICIPANT_BOT_KEY, PARTICIPANT_RLBOT_KEY, PARTICIPANT_BOT_SKILL_KEY
 
@@ -18,6 +18,7 @@ class BaseAgentFrame(tk.Frame):
     agent_config_path = None  # The config path for the agent config file
     agent_class = None  # The class for the agent
     agent_config = None
+    looks_config = None
 
     def __init__(self, parent, team_index, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, *kwargs)
@@ -106,4 +107,4 @@ class BaseAgentFrame(tk.Frame):
         pass
 
     def get_config(self):
-        return self.overall_index, self.agent_config
+        return self.overall_index, self.agent_config, self.looks_config
