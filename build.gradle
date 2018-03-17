@@ -2,8 +2,8 @@ group 'RLBot'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'com.jfrog.bintray'
-apply plugin: 'de.undercouch.download'
-apply plugin: 'ru.vyarus.use-python'
+//apply plugin: 'ru.vyarus.use-python'
+
 
 def apiFile = new File('apikey')
 def apikey = ''
@@ -17,23 +17,38 @@ buildscript {
     repositories {
         mavenCentral()
         jcenter()
+        pyGradlePyPi()
     }
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-        classpath 'org.apache.ivy:ivy:2.3.0'
-        classpath 'de.undercouch:gradle-download-task:3.4.1'
-        classpath 'ru.vyarus:gradle-use-python-plugin:1.0.1'
+//        classpath 'org.apache.ivy:ivy:2.3.0'
+//        classpath 'ru.vyarus:gradle-use-python-plugin:1.0.1'
+        classpath 'com.linkedin.pygradle:pygradle-plugin:0.7.3'
     }
 }
 
-python {
-    pip 'psutil:5.4.3'
-    pip 'grpcio:1.00.0'
+apply plugin: 'com.linkedin.python-sdist'
+
+repositories {
+    jcenter()
 }
 
-task build {
-    println('Building')
+dependencies {
+    compile 'RLBot:Framework.proto:0.0.1'
 }
+
+
+
+task pythonRequirements(type: Exec) {
+    commandLine 'pip install psutil'
+}
+
+assemble.dependsOn pythonRequirements
+
+//python {
+//    pip 'psutil:5.4.3'
+//    pip 'grpcio:1.00.0'
+//}
 
 bintray {
     user = 'rlbotofficial'
@@ -58,8 +73,4 @@ bintray {
     }
 }
 
-task setup {
-    println('installing tools')
-}
-
-setup.dependsOn pipInstall
+// python.dependsOn pipInstall
