@@ -117,3 +117,5 @@ ENV/
 .gradle
 
 apikey
+# Generated integration test data
+/integration_test/history.pb.bin

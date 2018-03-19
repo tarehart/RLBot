@@ -1,8 +1,10 @@
 import tkinter as tk
+from tkinter import ttk
 
+from configparser import RawConfigParser
 import os
 
-from RLBotFramework.agents.base_agent import BaseAgent, BOT_CONFIG_MODULE_HEADER, AGENT_MODULE_KEY
+from RLBotFramework.agents.base_agent import BaseAgent, BOT_CONFIG_MODULE_HEADER, AGENT_MODULE_KEY, LOADOUT_MODULE_KEY
 from RLBotFramework.utils.class_importer import import_agent, get_base_import_package
 from RLBotFramework.utils.rlbot_config_parser import PARTICIPANT_CONFIGURATION_HEADER, PARTICIPANT_CONFIG_KEY,\
     PARTICIPANT_BOT_KEY, PARTICIPANT_RLBOT_KEY, PARTICIPANT_BOT_SKILL_KEY
@@ -69,35 +71,30 @@ class BaseAgentFrame(tk.Frame):
         return self.overall_config.set_value(PARTICIPANT_CONFIGURATION_HEADER, PARTICIPANT_BOT_SKILL_KEY,
                                              bot_skill, self.overall_index)
 
-    def load_agent_config(self, agent_class=None):
+    def load_agent_configs(self, agent_class=None):
         """
         Loads the config specific to the agent.
         This only happens if the frame is for a custom agent otherwise this method is skipped
         :param agent_class: If passed in and there is not a config file this agent is used.
         :return:
         """
-        if self.is_participant_bot() and self.is_participant_custom_bot():
-            agent_config_path = self.get_agent_config_path()
-            base_agent_config = BaseAgent.create_agent_configurations()
-            if agent_config_path is None:
-                if agent_class is not None:
-                    self.agent_class = agent_class
-                    self.agent_config = self.agent_class.create_agent_configurations()
-                else:
-                    self.agent_config = base_agent_config
-            else:
-                base_agent_config.parse_file(agent_config_path)
-                bot_module = base_agent_config.get(BOT_CONFIG_MODULE_HEADER, AGENT_MODULE_KEY)
-                base_import = get_base_import_package(os.path.dirname(agent_config_path))
-                self.agent_class = import_agent(base_import + '.' + bot_module)
-                self.agent_config = self.agent_class.create_agent_configurations()
-                self.agent_config.parse_file(agent_config_path)
+        config_path = self.get_agent_config_path()
+        agent_cfg = RawConfigParser()
+        agent_cfg.read(config_path)
+        bot_module = agent_cfg.get(BOT_CONFIG_MODULE_HEADER, AGENT_MODULE_KEY)
+        self.agent_class = import_agent(bot_module)
+        self.agent_config = self.agent_class.create_agent_configurations()
+        self.agent_config.parse_file(agent_cfg)
+
+        looks_path = agent_cfg.get(BOT_CONFIG_MODULE_HEADER, LOADOUT_MODULE_KEY)
+        self.looks_config = BaseAgent.create_looks_configurations()
+        self.looks_config.parse_file(looks_path)
 
     def load_config(self, overall_config_file, overall_index):
         """Loads the config data into the agent"""
         self.overall_config = overall_config_file
         self.overall_index = overall_index
-        self.load_agent_config()
+        self.load_agent_configs()
 
     def load_agent_from_path(self, agent_file_path):
         module = get_base_import_package(agent_file_path)
@@ -108,3 +105,49 @@ class BaseAgentFrame(tk.Frame):
 
     def get_config(self):
         return self.overall_index, self.agent_config, self.looks_config
+
+    @staticmethod
+    def transfer_config_value(config_value, tkinter_var, index=None):
+        tkinter_var.set(config_value.get_value(index))
+        config_value.set_value(tkinter_var, index)
+
+    @staticmethod
+    def grid_custom_options_header(header_frame, header, exceptions=None, row_offset=0, column_offset=0):
+        for parameter_index, (parameter_name, parameter) in enumerate(header.values.items()):
+            if exceptions is not None and parameter_name in exceptions:
+                continue
+
+            ttk.Label(header_frame, text=parameter_name + ":", anchor='e').grid(
+                row=parameter_index + row_offset, column=0 + column_offset, sticky="ew")
+            big = 20000000
+            if parameter.type == int:
+                if parameter.value is None:
+                    parameter.value = tk.IntVar(value=parameter.default)
+                elif not isinstance(parameter.value, tk.Variable):
+                    parameter.value = tk.IntVar(value=parameter.value)
+                widget = tk.Spinbox(header_frame, textvariable=parameter.value, from_=0, to=big)
+            elif parameter.type == float:
+                if parameter.value is None:
+                    parameter.value = tk.DoubleVar(value=parameter.default)
+                elif not isinstance(parameter.value, tk.Variable):
+                    parameter.value = tk.DoubleVar(value=parameter.value)
+                widget = tk.Spinbox(header_frame, textvariable=parameter.value, from_=0, to=big,
+                                    increment=.001)
+            elif parameter.type == bool:
+                if parameter.value is None:
+                    parameter.value = tk.BooleanVar()
+                elif not isinstance(parameter.value, tk.Variable):
+                    parameter.value = tk.BooleanVar(value=parameter.value)
+                widget = ttk.Combobox(header_frame, textvariable=parameter.value, values=(False, True),
+                                      state="readonly")
+                widget.current(parameter.default)
+            elif parameter.type == str:
+                if parameter.value is None:
+                    parameter.value = tk.StringVar(value=parameter.default)
+                elif not isinstance(parameter.value, tk.Variable):
+                    parameter.value = tk.StringVar(value=parameter.value)
+                widget = ttk.Entry(header_frame, textvariable=parameter.value)
+            else:
+                widget = ttk.Label("Unknown type")
+
+            widget.grid(row=parameter_index + row_offset, column=1 + column_offset, sticky="ew")
