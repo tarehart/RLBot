@@ -25,6 +25,9 @@ repositories {
 dependencies {
     compile 'rlbotofficial.RLBotProtoMaven:proto-interface:0.0.2:game_data@py'
     compile 'rlbotofficial.RLBotProtoMaven:proto-interface:0.0.2'
+    compile group: 'net.java.dev.jna', name: 'jna', version: '4.5.1'
+    compile group: 'net.java.dev.jna', name: 'jna-platform', version: '4.5.1'
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.1.0'
 }
 
 task assembleProto(type: Copy) {
@@ -57,27 +60,4 @@ run.dependsOn build
 processResources.dependsOn pipInstallRequirements
 processResources.dependsOn assembleProto
 
-
-bintray {
-    user = 'rlbotofficial'
-    key = apikey
-    pkg {
-        repo = 'RLBot'
-        name = 'framework'
-        licenses = ['MIT']
-        vcsUrl = 'https://github.com/RLBot/RLBotProtobuf.git'
-        version {
-            name = '0.0.1-Initial'
-            released = new Date()
-            vcsTag = '0.0.1'
-        }
-    }
-    filesSpec {
-        from('.') {
-            include '*.py'
-        }
-        from 'RLBotFramework'
-        into 'RLBotFramework'
-    }
-}
 
