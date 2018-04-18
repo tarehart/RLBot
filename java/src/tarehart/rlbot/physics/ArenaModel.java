@@ -346,7 +346,7 @@ public class ArenaModel {
         return toV3(ball.getBody().getPosition());
     }
 
-    private static BallPath previousBallPath = null;
+    private BallPath previousBallPath = null;
     public BallPath simulateBall(BallSlice start, Duration duration) {
         final BallPath prevPath = previousBallPath;
         final BallPath ballPath;
