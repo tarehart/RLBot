@@ -364,7 +364,6 @@ public class ArenaModel {
             }
         } else {
             ballPath = new BallPath(start);  // Start over from scratch
-            System.out.println("s");
         }
         simulateBall(ballPath, start.getTime().plus(duration));
         previousBallPath = ballPath;
