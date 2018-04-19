@@ -13,12 +13,11 @@ import tarehart.rlbot.planning.ZonePlan
 import tarehart.rlbot.planning.ZoneTelemetry
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tuning.BotLog
-import tarehart.rlbot.ui.Readout
-
-import javax.swing.*
-import java.util.Optional
-
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.ui.Readout
+import java.time.Instant
+import java.util.*
+import javax.swing.JFrame
 
 abstract class BaseBot(private val team: Team, private val playerIndex: Int) : Bot {
     internal var currentPlan: Plan? = null
@@ -31,6 +30,7 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
     private val chronometer = Chronometer()
     private val spinTracker = SpinTracker()
     private var frameCount: Long = 0
+    private var previousTime = Instant.now()
 
     val debugWindow: JFrame
         get() {
@@ -44,6 +44,12 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
     override fun processInput(request: GameData.GameTickPacket?): GameData.ControllerState {
 
         request ?: return AgentOutput().toControllerState()
+
+        val elapsedMillis = java.time.Duration.between(previousTime, Instant.now()).toMillis()
+        if (elapsedMillis > 20) {
+            BotLog.println("SLOW FRAME took $elapsedMillis ms!", playerIndex)
+        }
+        previousTime = Instant.now()
 
         try {
             // Do nothing if we know nothing about our car
