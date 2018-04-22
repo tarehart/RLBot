@@ -2,9 +2,9 @@
 
 ## Initial RLBot Setup
 
-ReliefBot uses a framework called RLBot. 
-- General description: https://github.com/drssoccer55/RLBot
-- Initial setup instructions: https://github.com/drssoccer55/RLBot/wiki/Setup-Instructions
+ReliefBot uses a framework called RLBot.
+- General description: https://github.com/RLBot/RLBot
+- Initial setup instructions: https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29
 
 ## ReliefBot Development Environment Setup
 
@@ -23,11 +23,12 @@ In brief:
 ## Running ReliefBot
 
 1. Look in rlbot.cfg and modify as desired.
-2. Prepare a game in Rocket League, per the instructions at https://github.com/drssoccer55/RLBot/wiki/Setup-Instructions
-3. Launch the java component of ReliefBot. You've got options:
+2. Launch the java component of ReliefBot. You've got options:
    - In IntelliJ, right click on `java/src/tarehart/rlbot/GrpcServer.java` and choose Run or Debug
    - Or, on the command line, run `gradlew.bat run`
-4. On the command line, run `python runner.py`
+3. On the command line, run `python runner.py`
+
+For more advanced ways to use rlbot.cfg, see https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29
 
 ## Tournament Submissions
 
