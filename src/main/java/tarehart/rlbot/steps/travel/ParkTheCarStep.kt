@@ -72,7 +72,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                 if (backwards) {
                     return SteerUtil.backUpTowardGroundPosition(car, latestTarget.position)
                 }
-                val output = SteerUtil.steerTowardGroundPosition(car, input.boostData, latestTarget.position)
+                val output = SteerUtil.steerTowardGroundPositionGreedily(car, latestTarget.position)
                 if (distance < 20) {
                     output.withBoost(false)
                 }
@@ -108,7 +108,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
                     val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, AccelerationModel.MEDIUM_SPEED, distancePlot)
 
-                    val steer = SteerUtil.steerTowardGroundPosition(car, input.boostData, waypoint).withBoost(car.boost > 50 && distance > 20)
+                    val steer = SteerUtil.steerTowardGroundPositionGreedily(car, waypoint).withBoost(car.boost > 50 && distance > 20)
 
                     if (decelerationPeriod.distance >= distance) {
                         steer.withThrottle(-1.0)

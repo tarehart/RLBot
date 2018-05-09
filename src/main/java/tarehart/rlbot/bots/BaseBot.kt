@@ -1,7 +1,7 @@
 package tarehart.rlbot.bots
 
-import rlbot.Bot
-import rlbot.api.GameData
+import rlbot.FlatBot
+import rlbot.flat.GameTickPacket
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.Chronometer
@@ -19,7 +19,7 @@ import java.time.Instant
 import java.util.*
 import javax.swing.JFrame
 
-abstract class BaseBot(private val team: Team, private val playerIndex: Int) : Bot {
+abstract class BaseBot(private val team: Team, private val playerIndex: Int) : FlatBot {
     internal var currentPlan: Plan? = null
     private var previousPlan: Plan? = null
     internal var currentZonePlan: ZonePlan? = null
@@ -41,9 +41,9 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
             return frame
         }
 
-    override fun processInput(request: GameData.GameTickPacket?): GameData.ControllerState {
+    override fun processInput(request: GameTickPacket?): AgentOutput {
 
-        request ?: return AgentOutput().toControllerState()
+        request ?: return AgentOutput()
 
         val elapsedMillis = java.time.Duration.between(previousTime, Instant.now()).toMillis()
         if (elapsedMillis > 20) {
@@ -53,16 +53,16 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
 
         try {
             // Do nothing if we know nothing about our car
-            if (request.playersCount <= playerIndex) {
-                return AgentOutput().toControllerState()
+            if (request.playersLength() <= playerIndex) {
+                return AgentOutput()
             }
 
             val translatedInput = AgentInput(request, playerIndex, chronometer, spinTracker, frameCount++)
 
-            return processInput(translatedInput).toControllerState()
+            return processInput(translatedInput)
         } catch (e: Exception) {
             e.printStackTrace()
-            return AgentOutput().toControllerState()
+            return AgentOutput()
         }
     }
 

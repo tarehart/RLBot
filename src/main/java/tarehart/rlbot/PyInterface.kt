@@ -1,7 +1,7 @@
 package tarehart.rlbot
 
-import rlbot.Bot
-import rlbot.manager.BotManager
+import rlbot.FlatBot
+import rlbot.manager.FlatBotManager
 import rlbot.py.PythonInterface
 import tarehart.rlbot.bots.AdversityBot
 import tarehart.rlbot.bots.AirBudBot
@@ -12,7 +12,7 @@ import tarehart.rlbot.ui.StatusSummary
 /**
  * The public methods of this class will be called directly from the python component of the RLBot framework.
  */
-class PyInterface(private val botManager: BotManager, private val statusSummary: StatusSummary) : PythonInterface {
+class PyInterface(private val botManager: FlatBotManager, private val statusSummary: StatusSummary) : PythonInterface {
 
 
     fun ensureStarted() {
@@ -31,7 +31,7 @@ class PyInterface(private val botManager: BotManager, private val statusSummary:
         botManager.retireBot(index)
     }
 
-    fun initBot(index: Int, botType: String, team: Int): Bot {
+    fun initBot(index: Int, botType: String, team: Int): FlatBot {
         val newBot: tarehart.rlbot.bots.BaseBot
         val teamEnum = AgentInput.teamFromInt(team)
 

@@ -58,7 +58,7 @@ class InterceptStep @JvmOverloads constructor(
 
         if (originalIntercept == null) {
             originalIntercept = soonestIntercept
-            originalTouch = input.latestBallTouch.orElse(null)
+            originalTouch = input.latestBallTouch
 
         } else {
 
@@ -67,7 +67,7 @@ class InterceptStep @JvmOverloads constructor(
                 zombie = true
             }
 
-            if (originalTouch?.position ?: Vector3() != input.latestBallTouch.map({it.position}).orElse(Vector3())) {
+            if (originalTouch?.position ?: Vector3() != input.latestBallTouch?.position ?: Vector3()) {
                 // There has been a new ball touch.
                 println("Ball has been touched, quitting intercept", input.playerIndex)
                 return null

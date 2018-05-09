@@ -7,6 +7,7 @@ import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.Polygon
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.routing.PositionFacing
 import java.awt.*
 import java.awt.geom.*
@@ -26,9 +27,9 @@ class ArenaDisplay : JPanel() {
         this.input = input
         myCar = input.myCarData
         ball = input.ballPosition
-        realBallColor = input.latestBallTouch.map {
-            bt -> if (bt.team === Team.BLUE) BLUE_BALL_COLOR else ORANGE_BALL_COLOR
-        }.orElse(NEUTRAL_BALL_COLOR)
+        realBallColor = input.latestBallTouch?.let{
+            if (it.team === Team.BLUE) BLUE_BALL_COLOR else ORANGE_BALL_COLOR
+        } ?: NEUTRAL_BALL_COLOR
     }
 
     fun updateBallPrediction(ballPrediction: Vector3) {
@@ -127,7 +128,7 @@ class ArenaDisplay : JPanel() {
     }
 
     private fun drawBoosts(g: Graphics2D) {
-        input?.boostData?.fullBoosts?.forEach { (location, isActive) ->
+        BoostAdvisor.boostData.fullBoosts.forEach { (location, isActive) ->
             if (isActive) {
                 drawBoost(location, g)
             }

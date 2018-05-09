@@ -9,7 +9,8 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.SetPieces
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.routing.StrikePoint
@@ -17,19 +18,17 @@ import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
-import tarehart.rlbot.tuning.ManeuverMath
-
-import java.awt.*
-import java.util.Optional
-
-import java.lang.String.format
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.tuning.ManeuverMath
+import java.awt.Color
+import java.awt.Graphics2D
+import java.util.*
 
 class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
 
     private lateinit var originalIntercept: Vector3
-    private lateinit var originalTouch: Optional<BallTouch>
+    private var originalTouch: BallTouch? = null
     private var doneMoment: GameTime? = null
     private lateinit var interceptModifier: Vector3
     private var maneuverSeconds = 0.0
@@ -92,7 +91,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
                 return null // Failed to kick it soon enough, new stuff has happened.
             }
 
-            if (input.latestBallTouch.map{ it.position }.orElse(Vector3()) != originalTouch.map { it.position }.orElse(Vector3())) {
+            if (input.latestBallTouch?.position ?: Vector3() != originalTouch?.position ?: Vector3()) {
                 // There has been a new ball touch.
                 println("Ball has been touched, quitting side hit", input.playerIndex)
                 return null

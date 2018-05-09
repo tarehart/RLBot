@@ -1,9 +1,8 @@
 package tarehart.rlbot
 
-import rlbot.api.GameData
 import tarehart.rlbot.math.Clamper
 
-class AgentOutput {
+class AgentOutput : rlbot.ControllerState {
 
     // 0 is straight, -1 is hard left, 1 is hard right.
     var steer: Double = 0.0
@@ -111,16 +110,35 @@ class AgentOutput {
         return result
     }
 
-    fun toControllerState(): GameData.ControllerState {
-        return GameData.ControllerState.newBuilder()
-                .setThrottle(throttle.toFloat())
-                .setSteer(steer.toFloat())
-                .setYaw(yaw.toFloat())
-                .setRoll(if (roll != 0.0) roll.toFloat() else if (slideDepressed) steer.toFloat() else 0f)
-                .setPitch(pitch.toFloat())
-                .setBoost(boostDepressed)
-                .setHandbrake(slideDepressed)
-                .setJump(jumpDepressed)
-                .build()
+    override fun getYaw(): Float {
+        return yaw.toFloat()
+    }
+
+    override fun getSteer(): Float {
+        return steer.toFloat()
+    }
+
+    override fun getThrottle(): Float {
+        return throttle.toFloat()
+    }
+
+    override fun getPitch(): Float {
+        return pitch.toFloat()
+    }
+
+    override fun getRoll(): Float {
+        return roll.toFloat()
+    }
+
+    override fun holdHandbrake(): Boolean {
+        return slideDepressed
+    }
+
+    override fun holdBoost(): Boolean {
+        return boostDepressed
+    }
+
+    override fun holdJump(): Boolean {
+        return jumpDepressed
     }
 }

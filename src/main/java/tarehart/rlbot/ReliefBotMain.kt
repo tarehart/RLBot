@@ -1,6 +1,7 @@
 package tarehart.rlbot
 
 import rlbot.manager.BotManager
+import rlbot.manager.FlatBotManager
 import rlbot.py.PythonServer
 import tarehart.rlbot.ui.StatusSummary
 import java.nio.file.Files
@@ -26,7 +27,7 @@ fun main(args: Array<String>) {
     // organizer make a file called "port.txt" in the same directory as your .jar, and put some other number in it.
     // This matches code in JavaAgent.py
     val port = readPortFromFile().orElse(DEFAULT_PORT)
-    val botManager = BotManager()
+    val botManager = FlatBotManager()
     val pythonInterface = PyInterface(botManager, statusSummary)
     val pythonServer = PythonServer(pythonInterface, port)
     pythonServer.start()

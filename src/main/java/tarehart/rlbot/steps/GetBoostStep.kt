@@ -8,6 +8,7 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.time.Duration
 
@@ -22,7 +23,7 @@ class GetBoostStep : NestedPlanStep() {
             init(input)
         } else {
             targetLocation?.let {
-                val matchingBoost = input.boostData.fullBoosts.stream()
+                val matchingBoost = BoostAdvisor.boostData.fullBoosts.stream()
                         .filter { (location) -> location.distance(it.location) < 1 }.findFirst()
 
                 targetLocation = matchingBoost.orElse(null)
@@ -82,7 +83,7 @@ class GetBoostStep : NestedPlanStep() {
         var minTime = java.lang.Double.MAX_VALUE
         val carData = input.myCarData
         val distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), carData.boost)
-        for (boost in input.boostData.fullBoosts) {
+        for (boost in BoostAdvisor.boostData.fullBoosts) {
             val travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.location)
             if (travelSeconds != null && travelSeconds.seconds < minTime &&
                     (boost.isActive || travelSeconds.minus(Duration.between(input.time, boost.activeTime)).seconds > 1)) {
@@ -100,7 +101,7 @@ class GetBoostStep : NestedPlanStep() {
         // Add a defensive bias.
         val defensiveBias = 50 * Math.signum(GoalUtil.getOwnGoal(input.team).center.y)
         val idealPlaceToGetBoost = Vector3(endpoint.space.x, endpoint.space.y + defensiveBias, 0.0)
-        return getNearestBoost(input.boostData.fullBoosts, idealPlaceToGetBoost)
+        return getNearestBoost(BoostAdvisor.boostData.fullBoosts, idealPlaceToGetBoost)
     }
 
     private fun getNearestBoost(boosts: List<BoostPad>, position: Vector3): BoostPad? {

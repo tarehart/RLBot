@@ -20,12 +20,10 @@ buildscript {
 
 dependencies {
     // Fetch the framework jar file
-    compile 'com.github.RLBot:RLBot:d41ee96'
+    compile 'org.rlbot.commons:framework:0.0.1'
 
-    // Fetch the framework zip file. This will automatically stay up-to-date with the latest changes in the v4 branch.
-    // This is useful for automatically getting fixes when the framework breaks due to Rocket League patches.
-    // For different behavior, e.g. freezing at a specific version of the framework, see https://jitpack.io/docs/
-    compile 'com.github.RLBot:RLBot:v4-SNAPSHOT:python@zip'
+    // Fetch the framework zip file
+    compile 'org.rlbot.commons:framework:0.0.1:python@zip'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'

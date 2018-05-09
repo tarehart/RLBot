@@ -43,7 +43,7 @@ class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             }
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, input.boostData, input.ballPosition.flatten()).withBoost(false)
+        return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
     }
 
     private fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {

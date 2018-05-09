@@ -10,7 +10,6 @@ import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 
 import java.awt.*
-import java.util.Optional
 
 class DemolishEnemyStep : Step {
 
@@ -77,7 +76,7 @@ class DemolishEnemyStep : Step {
             return steering
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, input.boostData, enemyCar.position.flatten())
+        return SteerUtil.steerTowardGroundPositionGreedily(car, enemyCar.position.flatten())
     }
 
     override fun canInterrupt(): Boolean {

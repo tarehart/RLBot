@@ -41,7 +41,7 @@ class CatchBallStep : Step {
         val offset = Vector3(enemyGoalToLoc.x, enemyGoalToLoc.y, 0.0).scaledToMagnitude(1.2)
         val target = catchLocation.space.plus(offset)
 
-        return SteerUtil.getThereOnTime(car, SpaceTime(target, catchLocation.time), input.boostData)
+        return SteerUtil.getThereOnTime(car, SpaceTime(target, catchLocation.time), true)
     }
 
     override fun canInterrupt(): Boolean {

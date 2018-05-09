@@ -25,7 +25,7 @@ import tarehart.rlbot.tuning.BotLog.println
 
 class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
     private lateinit var originalIntercept: BallSlice
-    private lateinit var originalTouch: Optional<BallTouch>
+    private var originalTouch: BallTouch? = null
     private var doneMoment: GameTime? = null
     private lateinit var interceptModifier: Vector3
     private var carLaunchpadInterceptAngle: Double = 0.0
@@ -80,7 +80,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
             }
         }
 
-        if (input.latestBallTouch.map { it.position }.orElse(Vector3()) != originalTouch.map { it.position }.orElse(Vector3())) {
+        if (input.latestBallTouch?.position ?: Vector3() != originalTouch?.position ?: Vector3()) {
             // There has been a new ball touch.
             println("Ball has been touched, quitting nose hit", input.playerIndex)
             return null

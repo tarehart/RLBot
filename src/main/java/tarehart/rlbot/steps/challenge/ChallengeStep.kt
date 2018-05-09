@@ -41,10 +41,10 @@ class ChallengeStep: NestedPlanStep() {
         val car = input.myCarData
 
         if (originalTouch == null) {
-            originalTouch = input.latestBallTouch.orElse(null)
+            originalTouch = input.latestBallTouch
         } else {
 
-            if (originalTouch?.position ?: Vector3() != input.latestBallTouch.map({it.position}).orElse(Vector3())) {
+            if (originalTouch?.position ?: Vector3() != input.latestBallTouch?.position ?: Vector3()) {
                 // There has been a new ball touch.
                 println("Ball has been touched, quitting challenge", input.playerIndex)
                 return null
@@ -85,7 +85,7 @@ class ChallengeStep: NestedPlanStep() {
             }
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, input.boostData, defensiveNode)
+        return SteerUtil.steerTowardGroundPositionGreedily(car, defensiveNode)
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {

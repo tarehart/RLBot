@@ -1,6 +1,9 @@
 package tarehart.rlbot
 
-import rlbot.api.GameData
+import rlbot.flat.GameInfo
+import rlbot.flat.GameTickPacket
+import rlbot.flat.PlayerInfo
+import rlbot.flat.Touch
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.*
 import tarehart.rlbot.math.vector.Vector3
@@ -8,26 +11,23 @@ import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
-import java.util.Optional
-
-class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronometer: Chronometer, spinTracker: SpinTracker, private val frameCount: Long) {
+class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chronometer, spinTracker: SpinTracker, private val frameCount: Long) {
 
     val blueCars: List<CarData>
     val orangeCars: List<CarData>
     private val ourCar: CarData
 
-    private val blueScore: Int
-    private val orangeScore: Int
-    private val blueDemo: Int
-    private val orangeDemo: Int
+//    private val blueScore: Int
+//    private val orangeScore: Int
+//    private val blueDemo: Int
+//    private val orangeDemo: Int
     val ballPosition: Vector3
     val ballVelocity: Vector3
     val team: Team
     val ballSpin: Vector3
     var time: GameTime
-    val boostData: BoostData
     val matchInfo: MatchInfo
-    val latestBallTouch: Optional<BallTouch>
+    val latestBallTouch: BallTouch?
 
     // We can do an unprotected get here because the car corresponding to our own color
     // will always be present because it's us.
@@ -35,36 +35,40 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
         get() = ourCar
 
     init {
-        this.matchInfo = getMatchInfo(request.gameInfo)
+        this.matchInfo = getMatchInfo(request.gameInfo())
 
-        val angVel = request.ball.angularVelocity
+        val ballPhysics = request.ball().physics()
+        val angVel = ballPhysics.angularVelocity()
 
         // Flip the x-axis, same as all our other vector handling.
         // According to the game, when the spin vector is pointed at you, the ball is spinning clockwise.
         // However, we will invert this concept because the ode4j physics engine disagrees.
-        this.ballSpin = Vector3(angVel.x.toDouble(), (-angVel.y).toDouble(), (-angVel.z).toDouble())
+        this.ballSpin = Vector3(angVel.x().toDouble(), (-angVel.y()).toDouble(), (-angVel.z()).toDouble())
 
-        ballPosition = convert(request.ball.location)
-        ballVelocity = convert(request.ball.velocity)
+        ballPosition = convertVector(ballPhysics.location())
+        ballVelocity = convertVector(ballPhysics.velocity())
 
-        chronometer.readInput(request.gameInfo.secondsElapsed.toDouble())
-
-        val self = request.getPlayers(playerIndex)
-
-        this.team = Companion.teamFromInt(self.team)
+        chronometer.readInput(request.gameInfo().secondsElapsed().toDouble())
         time = chronometer.gameTime
-
-        val blueCarInput = if (this.team == Team.BLUE) self else getSomeCar(request.playersList, Team.BLUE)
-        val orangeCarInput = if (this.team == Team.ORANGE) self else getSomeCar(request.playersList, Team.ORANGE)
-
-        blueScore = (blueCarInput?.scoreInfo?.goals ?: 0) + (orangeCarInput?.scoreInfo?.ownGoals ?: 0)
-        orangeScore = (orangeCarInput?.scoreInfo?.goals ?: 0) + (blueCarInput?.scoreInfo?.goals ?: 0)
-        blueDemo = blueCarInput?.scoreInfo?.demolitions ?: 0
-        orangeDemo = orangeCarInput?.scoreInfo?.demolitions ?: 0
-
         val elapsedSeconds = chronometer.timeDiff.seconds
 
-        val allCars = request.playersList.mapIndexed{ index, playerInfo -> convert(playerInfo, index, spinTracker, elapsedSeconds, frameCount)}
+        val allCars = ArrayList<CarData>(request.playersLength())
+        for (i in 0 until request.playersLength()) {
+            allCars.add(convert(request.players(i), i, spinTracker, elapsedSeconds, frameCount))
+        }
+
+        val self = allCars[playerIndex]
+
+        this.team = self.team
+
+//        val blueCarInput = if (this.team == Team.BLUE) self else getSomeCar(allCars, Team.BLUE)
+//        val orangeCarInput = if (this.team == Team.ORANGE) self else getSomeCar(allCars, Team.ORANGE)
+//
+//        blueScore = (blueCarInput?.scoreInfo?.goals ?: 0) + (orangeCarInput?.scoreInfo?.ownGoals ?: 0)
+//        orangeScore = (orangeCarInput?.scoreInfo?.goals ?: 0) + (blueCarInput?.scoreInfo?.goals ?: 0)
+//        blueDemo = blueCarInput?.scoreInfo?.demolitions ?: 0
+//        orangeDemo = orangeCarInput?.scoreInfo?.demolitions ?: 0
+
 
         blueCars = allCars.filter{ it.team == Team.BLUE }
         orangeCars = allCars.filter{ it.team == Team.ORANGE }
@@ -72,85 +76,77 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
         val ourTeam = getTeamRoster(this.team)
         ourCar = ourTeam.first{ it.playerIndex == playerIndex }
 
-        boostData = BoostData(
-                fullBoosts = request.boostPadsList.mapNotNull {
-                    BoostAdvisor.getFullBoostLocation(convert(it.location))?.let {
-                        loc -> BoostPad(loc, it.isActive, if (it.isActive) time else time + Duration.ofMillis(it.timer.toLong()), 100.0 ) }
-                },
-                smallBoosts = request.boostPadsList.mapNotNull {
-                    val location = convert(it.location)
-                    if (BoostAdvisor.getFullBoostLocation(location) == null) {
-                        BoostPad(location, it.isActive, if (it.isActive) time else time + Duration.ofMillis(it.timer.toLong()), 15.0)
-                    } else null
-                }
-        )
+        BoostAdvisor.loadGameTickPacket(request, time)
 
-        this.latestBallTouch = getLatestBallTouch(request)
+        this.latestBallTouch = getLatestBallTouch(request.ball().latestTouch(), allCars)
     }
 
     fun getTeamRoster(team: Team): List<CarData> {
         return if (team == Team.BLUE) blueCars else orangeCars
     }
 
-    private fun getLatestBallTouch(request: GameData.GameTickPacket): Optional<BallTouch> {
-        val latestTouch = request.ball.latestTouch
-        if (!latestTouch.playerName.isEmpty()) {
-            val toucher = latestTouch.playerName
-            val toucherInfo = request.playersList.stream()
+    private fun getLatestBallTouch(touch: Touch?, players: List<CarData>): BallTouch? {
+
+        val latestTouch = touch ?: return null
+        if (!latestTouch.playerName().isEmpty()) {
+            val toucher = latestTouch.playerName()
+            val toucherInfo = players.stream()
                     .filter { pi -> pi.name == toucher }
                     .findFirst()
 
             if (toucherInfo.isPresent) {
                 val realToucher = toucherInfo.get()
-                val index = request.playersList.indexOf(realToucher)
-                val touchTime = GameTime.fromGameSeconds(latestTouch.gameSeconds.toDouble())
+                val index = players.indexOf(realToucher)
+                val touchTime = GameTime.fromGameSeconds(latestTouch.gameSeconds().toDouble())
 
                 val ballTouch = BallTouch(
-                        team = Companion.teamFromInt(realToucher.team),
+                        team = realToucher.team,
                         playerIndex = index,
                         time = touchTime,
-                        position = convert(latestTouch.location),
-                        normal = convert(latestTouch.normal))
+                        position = convertVector(latestTouch.location()),
+                        normal = convertVector(latestTouch.normal()))
 
-                return Optional.of(ballTouch)
+                return ballTouch
             }
         }
-        return Optional.empty()
+        return null
     }
 
-    private fun getSomeCar(playersList: List<GameData.PlayerInfo>, team: Team): GameData.PlayerInfo? {
-        val wantedTeam = teamToPlayerIndex(team)
-        return playersList.stream().filter { it.team == wantedTeam }.findFirst().orElse(null)
+    private fun getSomeCar(playersList: List<CarData>, team: Team): CarData? {
+        return playersList.stream().filter { it.team == team }.findFirst().orElse(null)
     }
 
-    private fun getMatchInfo(gameInfo: GameData.GameInfo): MatchInfo {
+    private fun getMatchInfo(gameInfo: GameInfo): MatchInfo {
         return MatchInfo(
                 matchEnded = gameInfo.isMatchEnded,
                 overTime = gameInfo.isOvertime,
                 roundActive = gameInfo.isRoundActive,
-                timeRemaining = Duration.ofSeconds(gameInfo.gameTimeRemaining.toDouble())
+                timeRemaining = Duration.ofSeconds(gameInfo.gameTimeRemaining().toDouble())
         )
     }
 
-    private fun convert(playerInfo: GameData.PlayerInfo, index: Int, spinTracker: SpinTracker, elapsedSeconds: Double, frameCount: Long): CarData {
-        val orientation = convert(playerInfo.rotation.pitch.toDouble(), playerInfo.rotation.yaw.toDouble(), playerInfo.rotation.roll.toDouble())
+    private fun convert(playerInfo: PlayerInfo, index: Int, spinTracker: SpinTracker, elapsedSeconds: Double, frameCount: Long): CarData {
+        val orientation = convert(
+                playerInfo.physics().rotation().pitch().toDouble(),
+                playerInfo.physics().rotation().yaw().toDouble(),
+                playerInfo.physics().rotation().roll().toDouble())
 
         spinTracker.readInput(orientation, index, elapsedSeconds)
 
         return CarData(
-                position = convert(playerInfo.location),
-                velocity = convert(playerInfo.velocity),
+                position = convertVector(playerInfo.physics().location()),
+                velocity = convertVector(playerInfo.physics().velocity()),
                 orientation = orientation,
                 spin = spinTracker.getSpin(index),
-                boost = playerInfo.boost.toDouble(),
+                boost = playerInfo.boost().toDouble(),
                 isSupersonic = playerInfo.isSupersonic,
-                hasWheelContact = !playerInfo.isMidair,
-                team = Companion.teamFromInt(playerInfo.team),
+                hasWheelContact = playerInfo.hasWheelContact(),
+                team = Companion.teamFromInt(playerInfo.team()),
                 playerIndex = index,
                 time = time,
                 frameCount = frameCount,
                 isDemolished = playerInfo.isDemolished,
-                name = playerInfo.name
+                name = playerInfo.name()
         )
     }
 
@@ -170,11 +166,6 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
         return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector =  Vector3(roofX, roofY, roofZ))
     }
 
-    private fun convert(location: GameData.Vector3): Vector3 {
-        // Invert the X value so that the axes make more sense.
-        return Vector3(-location.x / PACKET_DISTANCE_TO_CLASSIC, location.y / PACKET_DISTANCE_TO_CLASSIC, location.z / PACKET_DISTANCE_TO_CLASSIC)
-    }
-
     companion object {
 
         private const val PACKET_DISTANCE_TO_CLASSIC = 50.0
@@ -188,6 +179,11 @@ class AgentInput(request: GameData.GameTickPacket, val playerIndex: Int, chronom
 
         fun teamFromInt(team: Int): Team {
             return if (team == 0) Team.BLUE else Team.ORANGE
+        }
+
+        fun convertVector(location: rlbot.flat.Vector3): Vector3 {
+            // Invert the X value so that the axes make more sense.
+            return Vector3(-location.x() / PACKET_DISTANCE_TO_CLASSIC, location.y() / PACKET_DISTANCE_TO_CLASSIC, location.z() / PACKET_DISTANCE_TO_CLASSIC)
         }
     }
 }

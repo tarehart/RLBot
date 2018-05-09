@@ -99,13 +99,13 @@ object SteerUtil {
         return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, noBoosting)
     }
 
-    fun steerTowardGroundPosition(carData: CarData, boostData: BoostData, position: Vector2): AgentOutput {
+    fun steerTowardGroundPositionGreedily(carData: CarData, position: Vector2): AgentOutput {
 
         if (ArenaModel.isCarOnWall(carData)) {
             return steerTowardPositionAcrossSeam(carData, position.toVector3())
         }
 
-        val adjustedPosition = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, boostData, position)).orElse(position)
+        val adjustedPosition = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, position)).orElse(position)
 
         val correctionAngle = getCorrectionAngleRad(carData, adjustedPosition)
         val myPositionFlat = carData.position.flatten()
@@ -224,7 +224,7 @@ object SteerUtil {
         return null
     }
 
-    fun getThereOnTime(car: CarData, groundPositionAndTime: SpaceTime, boostData: BoostData? = null): AgentOutput {
+    fun getThereOnTime(car: CarData, groundPositionAndTime: SpaceTime, greedy: Boolean = false): AgentOutput {
 
         var timeToIntercept = Duration.between(car.time, groundPositionAndTime.time)
         if (timeToIntercept.millis < 0) {
@@ -241,12 +241,10 @@ object SteerUtil {
         val averageSpeedNeeded = distanceToIntercept / timeToIntercept.seconds
         val currentSpeed = ManeuverMath.forwardSpeed(car)
 
-        boostData?.let {
-            if (distanceToIntercept > 40 && car.boost < 75) {
-                waypoint = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(car, it, waypoint)).orElse(waypoint)
-            }
-        }
 
+        if (greedy && distanceToIntercept > 40 && car.boost < 75) {
+            waypoint = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(car, waypoint)).orElse(waypoint)
+        }
 
         val agentOutput = SteerUtil.steerTowardGroundPosition(car, waypoint)
         if (distanceRatio > 1.1) {

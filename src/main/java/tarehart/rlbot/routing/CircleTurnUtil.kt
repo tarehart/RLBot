@@ -175,7 +175,7 @@ object CircleTurnUtil {
         val turnDuration = getTurnDuration(circle, tangentPoint, targetPosition, clockwise, expectedSpeed)
 
         val momentToStartTurning = strikePoint.gameTime.minus(turnDuration)
-        val immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning), input.boostData)
+        val immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning), true)
         if (currentSpeed > expectedSpeed && toTangent.magnitude() < 20) {
             immediateSteer.withThrottle(-1.0)  // TODO: This is probably out of place, we have more subtle ways of doing this now
         }

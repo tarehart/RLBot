@@ -71,8 +71,8 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
 
         val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
         if (latestIntercept == null || disruptionMeter.isDisrupted(latestIntercept.ballSlice)) {
-            if (input.latestBallTouch.isPresent) {
-                val latestTouch = input.latestBallTouch.get()
+            if (input.latestBallTouch != null) {
+                val latestTouch = input.latestBallTouch
                 if (latestTouch.playerIndex == car.playerIndex && Duration.between(latestTouch.time, car.time).seconds < 0.5) {
                     // We successfully hit the ball. Let's go for a double touch by resetting the disruption meter.
                     latestIntercept ?.let {

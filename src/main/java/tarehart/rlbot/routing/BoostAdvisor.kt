@@ -1,40 +1,73 @@
 package tarehart.rlbot.routing
 
+import rlbot.cpp.RLBotDll
+import rlbot.flat.FieldInfo
+import rlbot.flat.GameTickPacket
+import tarehart.rlbot.AgentInput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BoostData
 import tarehart.rlbot.input.BoostPad
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.time.GameTime
 import java.util.*
 
 object BoostAdvisor {
 
-    private const val MIDFIELD_BOOST_WIDTH = 71.5f
-    private const val CORNER_BOOST_WIDTH = 61.5f
-    private const val CORNER_BOOST_DEPTH = 82f
-
     private const val TURN_LIMIT = Math.PI / 4
 
-    private val boostLocations = Arrays.asList(
-            Vector3(MIDFIELD_BOOST_WIDTH.toDouble(), 0.0, 0.0),
-            Vector3((-MIDFIELD_BOOST_WIDTH).toDouble(), 0.0, 0.0),
-            Vector3((-CORNER_BOOST_WIDTH).toDouble(), (-CORNER_BOOST_DEPTH).toDouble(), 0.0),
-            Vector3((-CORNER_BOOST_WIDTH).toDouble(), CORNER_BOOST_DEPTH.toDouble(), 0.0),
-            Vector3(CORNER_BOOST_WIDTH.toDouble(), (-CORNER_BOOST_DEPTH).toDouble(), 0.0),
-            Vector3(CORNER_BOOST_WIDTH.toDouble(), CORNER_BOOST_DEPTH.toDouble(), 0.0)
-    )
+    private val orderedBoosts = ArrayList<BoostPad>()
 
-    fun getBoostWaypoint(car: CarData, boostData: BoostData, waypoint: Vector2) : Vector2? {
+
+    private val fullBoosts = ArrayList<BoostPad>()
+    private val smallBoosts = ArrayList<BoostPad>()
+
+    val boostData = BoostData(fullBoosts, smallBoosts)
+
+    private fun loadFieldInfo(fieldInfo: FieldInfo) {
+
+        orderedBoosts.clear()
+        fullBoosts.clear()
+        smallBoosts.clear()
+
+        for (i in 0 until fieldInfo.boostPadsLength()) {
+            val pad = fieldInfo.boostPads(i)
+            val spawn = BoostPad(AgentInput.convertVector(pad.location()), pad.isFullBoost)
+            orderedBoosts.add(spawn)
+            if (spawn.isFullBoost) {
+                fullBoosts.add(spawn)
+            } else {
+                smallBoosts.add(spawn)
+            }
+        }
+    }
+
+    fun loadGameTickPacket(packet: GameTickPacket, currentTime: GameTime) {
+
+        if (packet.boostPadStatesLength() > orderedBoosts.size) {
+            loadFieldInfo(RLBotDll.getFieldInfo())
+        }
+
+        for (i in 0 until packet.boostPadStatesLength()) {
+            val boost = packet.boostPadStates(i)
+            val existingPad = orderedBoosts[i] // existingPad is also referenced from the fullBoosts and smallBoosts lists
+            existingPad.isActive = boost.isActive
+
+            // TODO: is the boost timer really expressed in milliseconds?
+            existingPad.activeTime = if (boost.isActive) currentTime else currentTime + Duration.ofMillis(boost.timer().toLong())
+        }
+    }
+
+    fun getBoostWaypoint(car: CarData, waypoint: Vector2) : Vector2? {
 
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
-        val closestBoost = getClosestBoost(car, distancePlot, boostData, waypoint)
+        val closestBoost = getClosestBoost(car, distancePlot, waypoint)
         return closestBoost?.location?.flatten()
     }
 
-    private fun getClosestBoost(car: CarData, distancePlot: DistancePlot, boostData: BoostData, waypoint: Vector2) : BoostPad? {
+    private fun getClosestBoost(car: CarData, distancePlot: DistancePlot, waypoint: Vector2) : BoostPad? {
         val closeFullBoosts = boostData.fullBoosts.sortedBy { it.location.flatten().distance(car.position.flatten()) }.subList(0, 2)
         val closeSmallBoosts = boostData.smallBoosts.sortedBy { it.location.flatten().distance(car.position.flatten()) }.subList(0, 5)
 
@@ -64,18 +97,8 @@ object BoostAdvisor {
         val realDuration = distancePlot.getMotionAfterDistance(distance)
                 ?.time?.plusSeconds(orientSeconds) ?: Duration.ofSeconds(100.0)
 
-        val greedBonus = if (boostPad.boostValue > 50) Duration.ofSeconds(1.0) else Duration.ofMillis(0)
+        val greedBonus = if (boostPad.isFullBoost) Duration.ofSeconds(1.0) else Duration.ofMillis(0)
 
         return realDuration - greedBonus
     }
-
-    fun getFullBoostLocation(location: Vector3): Vector3? {
-        for (boostLoc in boostLocations) {
-            if (boostLoc.distance(location) < 2) {
-                return boostLoc
-            }
-        }
-        return null
-    }
-
 }
