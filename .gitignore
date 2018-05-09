@@ -108,6 +108,7 @@ ENV/
 
 # Intellij IDEA build output
 /out
+/agents/java_demo/out
 
 .gradle/
 
@@ -115,4 +116,4 @@ ENV/
 /pyvjoy
 
 # Gradle
-/.gradle
+.gradle
