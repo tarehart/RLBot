@@ -128,9 +128,9 @@ class ArenaDisplay : JPanel() {
     }
 
     private fun drawBoosts(g: Graphics2D) {
-        BoostAdvisor.boostData.fullBoosts.forEach { (location, isActive) ->
-            if (isActive) {
-                drawBoost(location, g)
+        BoostAdvisor.boostData.fullBoosts.forEach {
+            if (it.isActive) {
+                drawBoost(it.location, g)
             }
         }
     }
