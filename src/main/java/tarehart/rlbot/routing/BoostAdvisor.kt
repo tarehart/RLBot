@@ -1,6 +1,6 @@
 package tarehart.rlbot.routing
 
-import rlbot.cpp.RLBotDll
+import rlbot.cppinterop.RLBotDll
 import rlbot.flat.FieldInfo
 import rlbot.flat.GameTickPacket
 import tarehart.rlbot.AgentInput

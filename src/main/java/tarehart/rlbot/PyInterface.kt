@@ -1,8 +1,8 @@
 package tarehart.rlbot
 
-import rlbot.FlatBot
-import rlbot.manager.FlatBotManager
-import rlbot.py.PythonInterface
+import rlbot.Bot
+import rlbot.manager.BotManager
+import rlbot.pyinterop.DefaultPythonInterface
 import tarehart.rlbot.bots.AdversityBot
 import tarehart.rlbot.bots.AirBudBot
 import tarehart.rlbot.bots.JumpingBeanBot
@@ -12,26 +12,9 @@ import tarehart.rlbot.ui.StatusSummary
 /**
  * The public methods of this class will be called directly from the python component of the RLBot framework.
  */
-class PyInterface(private val botManager: FlatBotManager, private val statusSummary: StatusSummary) : PythonInterface {
+class PyInterface(private val botManager: BotManager, private val statusSummary: StatusSummary) : DefaultPythonInterface(botManager) {
 
-
-    fun ensureStarted() {
-        botManager.ensureStarted()
-    }
-
-    fun shutdown() {
-        botManager.shutDown()
-    }
-
-    fun ensureBotRegistered(index: Int, botType: String, team: Int) {
-        botManager.ensureBotRegistered(index, { initBot(index, botType, team) })
-    }
-
-    fun retireBot(index: Int) {
-        botManager.retireBot(index)
-    }
-
-    fun initBot(index: Int, botType: String, team: Int): FlatBot {
+    override fun initBot(index: Int, botType: String, team: Int): Bot {
         val newBot: tarehart.rlbot.bots.BaseBot
         val teamEnum = AgentInput.teamFromInt(team)
 

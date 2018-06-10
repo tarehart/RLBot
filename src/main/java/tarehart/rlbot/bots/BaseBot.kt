@@ -1,6 +1,6 @@
 package tarehart.rlbot.bots
 
-import rlbot.FlatBot
+import rlbot.Bot
 import rlbot.flat.GameTickPacket
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
@@ -19,7 +19,7 @@ import java.time.Instant
 import java.util.*
 import javax.swing.JFrame
 
-abstract class BaseBot(private val team: Team, private val playerIndex: Int) : FlatBot {
+abstract class BaseBot(private val team: Team, private val playerIndex: Int) : Bot {
     internal var currentPlan: Plan? = null
     private var previousPlan: Plan? = null
     internal var currentZonePlan: ZonePlan? = null
