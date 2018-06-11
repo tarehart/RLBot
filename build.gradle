@@ -84,7 +84,7 @@ task pipInstallRequirements {
     doLast {
         if (checkPipUpgradeSafety.isSafe) {
             exec {
-                commandLine "python", "-m", "pip", "install", "-r", "requirements.txt", "--upgrade"
+                commandLine "python", "-m", "pip", "install", "-r", "./src/main/python/requirements.txt", "--upgrade"
             }
         } else {
             println 'Skipping upgrade attempt because files are in use.'
