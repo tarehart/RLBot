@@ -14,6 +14,8 @@ import java.awt.*
 import java.awt.geom.*
 import java.util.*
 import javax.swing.JPanel
+import java.awt.geom.AffineTransform
+
 
 class ArenaDisplay : JPanel() {
     private var realBallColor = NEUTRAL_BALL_COLOR
@@ -28,7 +30,7 @@ class ArenaDisplay : JPanel() {
         this.input = input
         myCar = input.myCarData
         ball = input.ballPosition
-        realBallColor = input.latestBallTouch?.let{
+        realBallColor = input.latestBallTouch?.let {
             if (it.team === Team.BLUE) BLUE_BALL_COLOR else ORANGE_BALL_COLOR
         } ?: NEUTRAL_BALL_COLOR
     }
@@ -80,7 +82,7 @@ class ArenaDisplay : JPanel() {
             Optional.ofNullable(situation.currentPlan).ifPresent { currentPlan -> drawPlan(currentPlan, graphics2D) }
         }
 
-        if(teamPlan != null) {
+        if (teamPlan != null) {
             drawTeamPlanInfo(teamPlan, graphics2D)
         }
 
@@ -152,24 +154,28 @@ class ArenaDisplay : JPanel() {
     }
 
     private fun drawShotDefenseZones(situation: TacticalSituation, g: Graphics2D) {
-        val car = myCar?: return
+        val car = myCar ?: return
         if (situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) {
             g.color = Color(255, 0, 0, 79)
             val myGoalCenter = GoalUtil.getOwnGoal(car.team).center.flatten()
-            val shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, myGoalCenter)
-            g.draw(shotDefenseZone.awtArea)
+            ball?.let {
+                val shotDefenseZone = ZoneUtil.getShotDefenseZone(it, myGoalCenter)
+                g.draw(shotDefenseZone.awtArea)
+            }
         }
 
         if (situation.shotOnGoalAvailable) {
             g.color = Color(0, 255, 0, 79)
             val enemyGoalCenter = GoalUtil.getEnemyGoal(car.team).center.flatten()
-            val shotDefenseZone = ZoneUtil.getShotDefenseZone(ball, enemyGoalCenter)
-            g.draw(shotDefenseZone.awtArea)
+            ball?.let {
+                val shotDefenseZone = ZoneUtil.getShotDefenseZone(it, enemyGoalCenter)
+                g.draw(shotDefenseZone.awtArea)
+            }
         }
     }
 
     private fun drawDefensiveReachZones(situation: TacticalSituation, g: Graphics2D) {
-        val car = myCar?: return
+        val car = myCar ?: return
 
         val myGoalCenter = GoalUtil.getOwnGoal(car.team).center
         val myCarIsInNet = Math.signum(car.position.y) == Math.signum(myGoalCenter.y) && Math.abs(car.position.y) > Math.abs(myGoalCenter.y)
@@ -195,19 +201,48 @@ class ArenaDisplay : JPanel() {
     }
 
     private fun drawTeamPlanInfo(teamPlan: TeamPlan, g: Graphics2D) {
-        val car = myCar?: return
+        val car = myCar ?: return
 
         teamPlan.teamIntents.forEach {
-            val line = Line2D.Double(car.position.x, car.position.y, it.car.position.x, it.car.position.y)
-            g.stroke = BasicStroke(.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0f, floatArrayOf(2f), 0f)
+            //draw the label of what team based plan they might be doing
+            //transform.setToRotation(Math.PI / 4.0)
+            g.scale(0.25, -0.25)
             g.color = TEAM_INTENT_COLOR
-            g.draw(line)
+            val text = it.action.toString() + if (it.hasPossession) " *" else ""
+            g.drawString(text, 4 * (it.car.position.x.toFloat() + 2), 4 * (-it.car.position.y.toFloat() + 2))
+            g.scale(4.0, -4.0)
+
+            //draw a line between cars if they are potentially going to pass
+            if (it.action == TeamAction.PASSING) {
+                //filter to see if there is someone maybe waiting for a pass
+                teamPlan.teamIntents.filter { ti -> ti.action == TeamAction.RECEIVING_PASS }.forEach { recipient ->
+                    if (recipient.car.team == it.car.team) {
+                        val line = Line2D.Double(it.car.position.x, it.car.position.y,
+                                recipient.car.position.x, recipient.car.position.y)
+                        g.stroke = BasicStroke(.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
+                                0f, floatArrayOf(2f), 0f)
+                        g.color = TEAM_INTENT_COLOR
+                        g.draw(line)
+                    }
+                }
+            }
         }
     }
 
     companion object {
 
-        private val areas = arrayOf(clipToField(ZoneDefinitions.BLUE), clipToField(ZoneDefinitions.MID), clipToField(ZoneDefinitions.ORANGE), clipToField(ZoneDefinitions.BOTTOM), clipToField(ZoneDefinitions.TOP), clipToField(ZoneDefinitions.BOTTOMCORNER), clipToField(ZoneDefinitions.TOPCORNER), clipToField(ZoneDefinitions.BLUEBOX), clipToField(ZoneDefinitions.ORANGEBOX))
+        private val areas = arrayOf(
+                clipToField(ZoneDefinitions.BLUE),
+                clipToField(ZoneDefinitions.MID),
+                clipToField(ZoneDefinitions.ORANGE),
+                clipToField(ZoneDefinitions.BOTTOM),
+                clipToField(ZoneDefinitions.TOP),
+                clipToField(ZoneDefinitions.BOTTOMCORNER),
+                clipToField(ZoneDefinitions.TOPCORNER),
+                clipToField(ZoneDefinitions.BLUEBOX),
+                clipToField(ZoneDefinitions.ORANGEBOX),
+                clipToField(ZoneDefinitions.BOTTOMSIDELINE),
+                clipToField(ZoneDefinitions.TOPSIDELINE))
         private val NEUTRAL_BALL_COLOR = Color(177, 177, 177)
         private val BLUE_BALL_COLOR = Color(77, 147, 177)
         private val ORANGE_BALL_COLOR = Color(226, 159, 63)

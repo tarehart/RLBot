@@ -17,7 +17,7 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
     val orangeCars: List<CarData>
     private val ourCar: CarData
 
-//    private val blueScore: Int
+    //    private val blueScore: Int
 //    private val orangeScore: Int
 //    private val blueDemo: Int
 //    private val orangeDemo: Int
@@ -70,11 +70,11 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
 //        orangeDemo = orangeCarInput?.scoreInfo?.demolitions ?: 0
 
 
-        blueCars = allCars.filter{ it.team == Team.BLUE }
-        orangeCars = allCars.filter{ it.team == Team.ORANGE }
+        blueCars = allCars.filter { it.team == Team.BLUE }
+        orangeCars = allCars.filter { it.team == Team.ORANGE }
 
         val ourTeam = getTeamRoster(this.team)
-        ourCar = ourTeam.first{ it.playerIndex == playerIndex }
+        ourCar = ourTeam.first { it.playerIndex == playerIndex }
 
         BoostAdvisor.loadGameTickPacket(request, time)
 
@@ -83,6 +83,16 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
 
     fun getTeamRoster(team: Team): List<CarData> {
         return if (team == Team.BLUE) blueCars else orangeCars
+    }
+
+    //returns every car in the current match
+    fun getAllCars(): List<CarData> {
+        return blueCars.union(orangeCars).toList()
+    }
+
+    //returns every car in the current match except the one provided
+    fun getAllOtherCars(indexFilter: Int): List<CarData> {
+        return getAllCars().filter { it.playerIndex != indexFilter }
     }
 
     private fun getLatestBallTouch(touch: Touch?, players: List<CarData>): BallTouch? {
@@ -163,7 +173,7 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
         val roofY = Math.cos(yaw) * Math.sin(roll) - Math.cos(roll) * Math.sin(pitch) * Math.sin(yaw)
         val roofZ = Math.cos(roll) * Math.cos(pitch)
 
-        return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector =  Vector3(roofX, roofY, roofZ))
+        return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector = Vector3(roofX, roofY, roofZ))
     }
 
     companion object {

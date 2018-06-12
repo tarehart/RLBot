@@ -90,6 +90,18 @@ public class ZoneDefinitions {
         new Vector2(82, 120),
         new Vector2(82, 53.5)
     });
+    public static final Polygon TOPSIDELINE = new Polygon(new Vector2[] {
+            new Vector2(-35, -102.1),
+            new Vector2(-82, -102.1),
+            new Vector2(-82, 102.1),
+            new Vector2(-35, 102.1)
+    });
+    public static final Polygon BOTTOMSIDELINE = new Polygon(new Vector2[] {
+            new Vector2(35, -102.1),
+            new Vector2(82, -102.1),
+            new Vector2(82, 102.1),
+            new Vector2(35, 102.1)
+    });
     public static final Polygon ORANGEBOX = new Polygon(new Vector2[] {
        new Vector2(50, 70),
        new Vector2(50, 120),

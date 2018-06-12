@@ -17,8 +17,10 @@ class Zone(mainZone: MainZone, subZone: SubZone) {
         NONE,
         TOP,
         BOTTOM,
-        TOPCORNER,
-        BOTTOMCORNER,
+        TOPCORNER, //covers the -x corners
+        BOTTOMCORNER, //covers the +x corners
+        TOPSIDELINE, //covers the -x sideline
+        BOTTOMSIDELINE, //covers the +x sideline
         ORANGEBOX,
         BLUEBOX
     }
@@ -28,11 +30,38 @@ class Zone(mainZone: MainZone, subZone: SubZone) {
     }
 
     companion object {
-        //functions with logic on simple zone and team values
+        //this is for functions with logic on simple zone and team values
         //functions that are more complex than this should go in the ZoneUtil class
-        fun isInOpponentCorner(zone: Zone, team: Team): Boolean {
-            return (team === Team.BLUE && zone.mainZone == MainZone.ORANGE || team === Team.ORANGE && zone.mainZone == MainZone.BLUE)
-                    && (zone.subZone == SubZone.BOTTOMCORNER || zone.subZone == SubZone.TOPCORNER)
+        fun isInOffensiveCorner(zone: Zone, team: Team): Boolean {
+            return isInOffensiveThird(zone, team) && (zone.subZone == SubZone.BOTTOMCORNER || zone.subZone == SubZone.TOPCORNER)
+        }
+
+        fun isInDefensiveCorner(zone: Zone, team: Team): Boolean {
+            return isInDefensiveThird(zone, team) && (zone.subZone == SubZone.BOTTOMCORNER || zone.subZone == SubZone.TOPCORNER)
+        }
+
+        fun isOnOffensiveSidelines(zone: Zone, team: Team): Boolean {
+            return isInOffensiveThird(zone, team) && (zone.subZone == SubZone.BOTTOMSIDELINE || zone.subZone == SubZone.TOPSIDELINE)
+        }
+
+        fun isOnDefensiveSidelines(zone: Zone, team: Team): Boolean {
+            return isInDefensiveThird(zone, team) && (zone.subZone == SubZone.BOTTOMSIDELINE || zone.subZone == SubZone.TOPSIDELINE)
+        }
+
+        fun isInOffensiveThird(zone: Zone, team: Team): Boolean {
+            return (team == Team.BLUE && zone.mainZone == MainZone.ORANGE) || (team == Team.ORANGE && zone.mainZone == MainZone.BLUE)
+        }
+
+        fun isInNeutralThird(zone: Zone, team: Team): Boolean {
+            return zone.mainZone == MainZone.MID
+        }
+
+        fun isInDefensiveThird(zone: Zone, team: Team): Boolean {
+            return (team == Team.BLUE && zone.mainZone == MainZone.BLUE) || (team == Team.ORANGE && zone.mainZone == MainZone.ORANGE)
+        }
+
+        fun isInCenterLane(zone: Zone, team: Team): Boolean {
+            return zone.subZone != SubZone.BOTTOMSIDELINE && zone.subZone != SubZone.TOPSIDELINE
         }
     }
 }

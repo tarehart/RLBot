@@ -73,9 +73,16 @@ class ZonePlan(input: AgentInput) {
                 return Zone.SubZone.ORANGEBOX
             if (flatPoint in ZoneDefinitions.BLUEBOX)
                 return Zone.SubZone.BLUEBOX
+            if (flatPoint in ZoneDefinitions.TOPSIDELINE)
+                return Zone.SubZone.TOPSIDELINE
+            if (flatPoint in ZoneDefinitions.BOTTOMSIDELINE)
+                return Zone.SubZone.BOTTOMSIDELINE
             if (flatPoint in ZoneDefinitions.TOP)
                 return Zone.SubZone.TOP
-            return if (flatPoint in ZoneDefinitions.BOTTOM) Zone.SubZone.BOTTOM else Zone.SubZone.NONE
+            if (flatPoint in ZoneDefinitions.BOTTOM)
+                return Zone.SubZone.BOTTOM
+            else
+                return Zone.SubZone.NONE
         }
 
         fun isAnalysisSane(ballZone: Zone, myZone: Zone, playerIndex: Int): Boolean {

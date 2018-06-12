@@ -15,11 +15,8 @@ class TeamPlan(input: AgentInput) {
 
     init {
         // Store data for later use and for telemetry output
-        input.getTeamRoster(input.team).forEach {
-            //make sure we skip ourselves
-            if(it.playerIndex != myCar.playerIndex){
-                teamIntents.add(TeamIntent(it, input))
-            }
+        input.getAllCars().forEach {
+            teamIntents.add(TeamIntent(it, input))
         }
     }
 }
