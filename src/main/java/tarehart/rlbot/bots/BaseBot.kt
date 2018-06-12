@@ -8,9 +8,7 @@ import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.input.SpinTracker
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.ZonePlan
-import tarehart.rlbot.planning.ZoneTelemetry
+import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
@@ -86,6 +84,8 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
             ballPath = Optional.of(ArenaModel.predictBallPath(input))
             val zonePlan = ZonePlan(input)
             ZoneTelemetry.set(zonePlan, input.playerIndex)
+            val teamPlan = TeamPlan(input)
+            TeamTelemetry.set(teamPlan, input.playerIndex)
 
             //        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
             //        if (input.ballVelocity.magnitudeSquared() > 0) {

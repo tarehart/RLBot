@@ -5,6 +5,7 @@ import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.Polygon
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.BoostAdvisor
@@ -48,6 +49,7 @@ class ArenaDisplay : JPanel() {
 
         // Retrieve situation telemetry
         val situation = myCar?.let { TacticsTelemetry[it.playerIndex] }
+        val teamPlan = myCar?.let { TeamTelemetry[it.playerIndex] }
 
         //Create a Graphics2D object from g
         val graphics2D = g as Graphics2D
@@ -76,6 +78,10 @@ class ArenaDisplay : JPanel() {
             drawShotDefenseZones(situation, graphics2D)
             drawDefensiveReachZones(situation, graphics2D)
             Optional.ofNullable(situation.currentPlan).ifPresent { currentPlan -> drawPlan(currentPlan, graphics2D) }
+        }
+
+        if(teamPlan != null) {
+            drawTeamPlanInfo(teamPlan, graphics2D)
         }
 
         // Draw the steering waypoint
@@ -188,6 +194,17 @@ class ArenaDisplay : JPanel() {
         }
     }
 
+    private fun drawTeamPlanInfo(teamPlan: TeamPlan, g: Graphics2D) {
+        val car = myCar?: return
+
+        teamPlan.teamIntents.forEach {
+            val line = Line2D.Double(car.position.x, car.position.y, it.car.position.x, it.car.position.y)
+            g.stroke = BasicStroke(.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0f, floatArrayOf(2f), 0f)
+            g.color = TEAM_INTENT_COLOR
+            g.draw(line)
+        }
+    }
+
     companion object {
 
         private val areas = arrayOf(clipToField(ZoneDefinitions.BLUE), clipToField(ZoneDefinitions.MID), clipToField(ZoneDefinitions.ORANGE), clipToField(ZoneDefinitions.BOTTOM), clipToField(ZoneDefinitions.TOP), clipToField(ZoneDefinitions.BOTTOMCORNER), clipToField(ZoneDefinitions.TOPCORNER), clipToField(ZoneDefinitions.BLUEBOX), clipToField(ZoneDefinitions.ORANGEBOX))
@@ -210,6 +227,7 @@ class ArenaDisplay : JPanel() {
         val BLUE_COLOR = Color(84, 164, 213)
         val ORANGE_COLOR = Color(247, 151, 66)
         val BOOST_COLOR = Color(255, 207, 64)
+        val TEAM_INTENT_COLOR = Color(41, 41, 41, 170)
 
         fun drawCar(positionFacing: PositionFacing, height: Double, g: Graphics2D) {
             // Determine size and rotation of car
