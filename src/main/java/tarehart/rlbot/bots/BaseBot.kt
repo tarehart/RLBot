@@ -55,7 +55,7 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
                 return AgentOutput()
             }
 
-            val translatedInput = AgentInput(request, playerIndex, chronometer, spinTracker, frameCount++)
+            val translatedInput = AgentInput(request, playerIndex, chronometer, spinTracker, frameCount++, this)
 
             return processInput(translatedInput)
         } catch (e: Exception) {
