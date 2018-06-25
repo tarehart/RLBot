@@ -4,6 +4,7 @@ import rlbot.flat.GameInfo
 import rlbot.flat.GameTickPacket
 import rlbot.flat.PlayerInfo
 import rlbot.flat.Touch
+import tarehart.rlbot.bots.BaseBot
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.*
 import tarehart.rlbot.math.vector.Vector3
@@ -11,13 +12,19 @@ import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
-class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chronometer, spinTracker: SpinTracker, private val frameCount: Long) {
+class AgentInput(
+        request: GameTickPacket,
+        val playerIndex: Int,
+        chronometer: Chronometer,
+        spinTracker: SpinTracker,
+        frameCount: Long,
+        val bot: BaseBot) {
 
     val blueCars: List<CarData>
     val orangeCars: List<CarData>
     private val ourCar: CarData
 
-//    private val blueScore: Int
+    //    private val blueScore: Int
 //    private val orangeScore: Int
 //    private val blueDemo: Int
 //    private val orangeDemo: Int
@@ -45,8 +52,8 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
         // However, we will invert this concept because the ode4j physics engine disagrees.
         this.ballSpin = Vector3(angVel.x().toDouble(), (-angVel.y()).toDouble(), (-angVel.z()).toDouble())
 
-        ballPosition = convertVector(ballPhysics.location())
-        ballVelocity = convertVector(ballPhysics.velocity())
+        ballPosition = Vector3.fromRlbot(ballPhysics.location())
+        ballVelocity = Vector3.fromRlbot(ballPhysics.velocity())
 
         chronometer.readInput(request.gameInfo().secondsElapsed().toDouble())
         time = chronometer.gameTime
@@ -70,11 +77,11 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
 //        orangeDemo = orangeCarInput?.scoreInfo?.demolitions ?: 0
 
 
-        blueCars = allCars.filter{ it.team == Team.BLUE }
-        orangeCars = allCars.filter{ it.team == Team.ORANGE }
+        blueCars = allCars.filter { it.team == Team.BLUE }
+        orangeCars = allCars.filter { it.team == Team.ORANGE }
 
         val ourTeam = getTeamRoster(this.team)
-        ourCar = ourTeam.first{ it.playerIndex == playerIndex }
+        ourCar = ourTeam.first { it.playerIndex == playerIndex }
 
         BoostAdvisor.loadGameTickPacket(request, time)
 
@@ -83,6 +90,16 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
 
     fun getTeamRoster(team: Team): List<CarData> {
         return if (team == Team.BLUE) blueCars else orangeCars
+    }
+
+    //returns every car in the current match
+    fun getAllCars(): List<CarData> {
+        return blueCars.union(orangeCars).toList()
+    }
+
+    //returns every car in the current match except the one provided
+    fun getAllOtherCars(indexFilter: Int): List<CarData> {
+        return getAllCars().filter { it.playerIndex != indexFilter }
     }
 
     private fun getLatestBallTouch(touch: Touch?, players: List<CarData>): BallTouch? {
@@ -103,8 +120,8 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
                         team = realToucher.team,
                         playerIndex = index,
                         time = touchTime,
-                        position = convertVector(latestTouch.location()),
-                        normal = convertVector(latestTouch.normal()))
+                        position = Vector3.fromRlbot(latestTouch.location()),
+                        normal = Vector3.fromRlbot(latestTouch.normal()))
 
                 return ballTouch
             }
@@ -134,8 +151,8 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
         spinTracker.readInput(orientation, index, elapsedSeconds)
 
         return CarData(
-                position = convertVector(playerInfo.physics().location()),
-                velocity = convertVector(playerInfo.physics().velocity()),
+                position = Vector3.fromRlbot(playerInfo.physics().location()),
+                velocity = Vector3.fromRlbot(playerInfo.physics().velocity()),
                 orientation = orientation,
                 spin = spinTracker.getSpin(index),
                 boost = playerInfo.boost().toDouble(),
@@ -163,12 +180,10 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
         val roofY = Math.cos(yaw) * Math.sin(roll) - Math.cos(roll) * Math.sin(pitch) * Math.sin(yaw)
         val roofZ = Math.cos(roll) * Math.cos(pitch)
 
-        return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector =  Vector3(roofX, roofY, roofZ))
+        return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector = Vector3(roofX, roofY, roofZ))
     }
 
     companion object {
-
-        private const val PACKET_DISTANCE_TO_CLASSIC = 50.0
 
         /**
          * This is strictly for backwards compatibility. It only works in a 1v1 game.
@@ -179,11 +194,6 @@ class AgentInput(request: GameTickPacket, val playerIndex: Int, chronometer: Chr
 
         fun teamFromInt(team: Int): Team {
             return if (team == 0) Team.BLUE else Team.ORANGE
-        }
-
-        fun convertVector(location: rlbot.flat.Vector3): Vector3 {
-            // Invert the X value so that the axes make more sense.
-            return Vector3(-location.x() / PACKET_DISTANCE_TO_CLASSIC, location.y() / PACKET_DISTANCE_TO_CLASSIC, location.z() / PACKET_DISTANCE_TO_CLASSIC)
         }
     }
 }

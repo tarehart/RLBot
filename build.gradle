@@ -5,11 +5,10 @@ apply plugin: 'application'
 
 repositories {
     jcenter()
-    maven { url 'https://jitpack.io' }
 }
 
 buildscript {
-    ext.kotlin_version = '1.2.31'
+    ext.kotlin_version = '1.2.41'
     repositories {
         jcenter()
     }
@@ -18,12 +17,11 @@ buildscript {
     }
 }
 
+def dllDirectory = 'build/dll'
+
 dependencies {
     // Fetch the framework jar file
-    compile 'org.rlbot.commons:framework:0.0.1'
-
-    // Fetch the framework zip file
-    compile 'org.rlbot.commons:framework:0.0.1:python@zip'
+    compile 'org.rlbot.commons:framework:0.0.8'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
@@ -31,8 +29,9 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
     compile 'com.google.guava:guava:23.4-jre'
 
-    // This picks up the dll since it's in this directory. Doesn't work if you specify the dll by name.
-    runtime files('build/framework/RLBotFramework/dll')
+    // This directory will be created and the interface dll copied into it at runtime.
+    // The end result is that the interface dll will be on the classpath.
+    runtime files(dllDirectory)
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
@@ -61,28 +60,44 @@ compileTestKotlin {
     }
 }
 
-def findFile(suffix) {
-    configurations.compile.filter { it.name.endsWith(suffix) }
+task checkPipUpgradeSafety {
+    doLast {
+        new ByteArrayOutputStream().withStream { os ->
+            def exitValue = exec {
+                commandLine "python", "-c", "from rlbot.utils import public_utils; print(public_utils.is_safe_to_upgrade());"
+                standardOutput = os
+                ignoreExitValue = true
+            }.exitValue
+
+            // If the exit value is nonzero, the command  probably failed because rlbot is not installed at all.
+            ext.isSafe = exitValue != 0 || os.toString().trim() == "True"
+        }
+    }
 }
 
-// Extracts the RLBot framework zip into a directory in ./build/framework so it can be used by the bot.
-task prepareFrameworkDirectory(type: Copy) {
-    from zipTree(findFile('python.zip').singleFile)
-    into 'build/framework'
-}
 
 // Uses pip (the python package manager) to install all the python packages needed for this bot, as defined
 // in requirements.txt.
-task pipInstallRequirements(type: Exec) {
-    commandLine "pip", "install", "-r", "build/framework/requirements.txt"
-    commandLine "pip", "install", "-r", "src/main/python/requirements.txt"
+task pipInstallRequirements {
+    dependsOn 'checkPipUpgradeSafety'
+
+    doLast {
+        if (checkPipUpgradeSafety.isSafe) {
+            exec {
+                commandLine "python", "-m", "pip", "install", "-r", "./src/main/python/requirements.txt", "--upgrade"
+            }
+        } else {
+            println 'Skipping upgrade attempt because files are in use.'
+        }
+    }
+}
+
+task createDllDirectory {
+    mkdir dllDirectory
 }
 
 // Installs or updates RLBot. Empty task for now. It still does stuff because it "dependsOn" tasks that do things.
-task updateRLBot
-updateRLBot.dependsOn pipInstallRequirements
-updateRLBot.dependsOn prepareFrameworkDirectory
-
-// Must prepare the framework directory before running pip because the requirements.txt file references another one
-// inside the framework directory.
-pipInstallRequirements.dependsOn prepareFrameworkDirectory
+task updateRLBot {
+    dependsOn 'pipInstallRequirements'
+    dependsOn 'createDllDirectory'
+}

@@ -1,6 +1,6 @@
 package tarehart.rlbot.routing
 
-import rlbot.cpp.RLBotDll
+import rlbot.cppinterop.RLBotDll
 import rlbot.flat.FieldInfo
 import rlbot.flat.GameTickPacket
 import tarehart.rlbot.AgentInput
@@ -9,6 +9,7 @@ import tarehart.rlbot.input.BoostData
 import tarehart.rlbot.input.BoostPad
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -34,8 +35,9 @@ object BoostAdvisor {
 
         for (i in 0 until fieldInfo.boostPadsLength()) {
             val pad = fieldInfo.boostPads(i)
-            val spawn = BoostPad(AgentInput.convertVector(pad.location()), pad.isFullBoost)
+            val spawn = BoostPad(Vector3.fromRlbot(pad.location()), pad.isFullBoost)
             orderedBoosts.add(spawn)
+            //println("orderBoosts[" + i + "] null?: " + (spawn == null))
             if (spawn.isFullBoost) {
                 fullBoosts.add(spawn)
             } else {
@@ -47,15 +49,22 @@ object BoostAdvisor {
     fun loadGameTickPacket(packet: GameTickPacket, currentTime: GameTime) {
 
         if (packet.boostPadStatesLength() > orderedBoosts.size) {
-            loadFieldInfo(RLBotDll.getFieldInfo())
+            synchronized (boostData) {
+                loadFieldInfo(RLBotDll.getFieldInfo())
+            }
         }
 
         for (i in 0 until packet.boostPadStatesLength()) {
             val boost = packet.boostPadStates(i)
-            val existingPad = orderedBoosts[i] // existingPad is also referenced from the fullBoosts and smallBoosts lists
-            existingPad.isActive = boost.isActive
+            try {
+                val existingPad = orderedBoosts[i] // existingPad is also referenced from the fullBoosts and smallBoosts lists
+                existingPad.isActive = boost.isActive
 
-            existingPad.activeTime = if (existingPad.isActive) currentTime else getBoostEta(boost.timer(), existingPad.isFullBoost, currentTime)
+                // TODO: is the boost timer really expressed in milliseconds?
+                existingPad.activeTime = if (boost.isActive) currentTime else getBoostEta(boost.timer(), existingPad.isFullBoost, currentTime)
+            } catch (e: IndexOutOfBoundsException) {
+                println("existingPad unexpectedly null. index: " + i + ", boostPadStatesLength(): " + packet.boostPadStatesLength())
+            }
         }
     }
 

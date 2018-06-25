@@ -86,10 +86,28 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         return this - plane.normal.scaledToMagnitude(distance)
     }
 
+    fun toRlbot(): rlbot.vector.Vector3 {
+        // Invert x because rlbot uses left-handed coordinates
+        return rlbot.vector.Vector3(
+                (-x * PACKET_DISTANCE_TO_CLASSIC).toFloat(),
+                (y * PACKET_DISTANCE_TO_CLASSIC).toFloat(),
+                (z * PACKET_DISTANCE_TO_CLASSIC).toFloat())
+    }
+
     override fun toString(): String {
         return ("(" + String.format("%.2f", x)
                 + ", " + String.format("%.2f", y)
                 + ", " + String.format("%.2f", z)
                 + ")")
+    }
+
+    companion object {
+
+        private const val PACKET_DISTANCE_TO_CLASSIC = 50.0
+
+        fun fromRlbot(v: rlbot.flat.Vector3): Vector3 {
+            // Invert the X value so that the axes make more sense.
+            return Vector3(-v.x() / PACKET_DISTANCE_TO_CLASSIC, v.y() / PACKET_DISTANCE_TO_CLASSIC, v.z() / PACKET_DISTANCE_TO_CLASSIC)
+        }
     }
 }

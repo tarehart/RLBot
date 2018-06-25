@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.intercept.AerialMath
@@ -15,7 +16,6 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.TapStep
 import tarehart.rlbot.steps.rotation.PitchToPlaneStep
 import tarehart.rlbot.steps.rotation.RollToPlaneStep
 import tarehart.rlbot.steps.rotation.YawToPlaneStep
@@ -23,9 +23,8 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.ui.ArenaDisplay
-
-import java.awt.*
-import java.util.Optional
+import java.awt.Color
+import java.awt.Graphics2D
 
 class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep() {
 
@@ -88,6 +87,11 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
             return AgentOutput().withBoost()
         }
 
+        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(0.0, 0.0, 2.0)).toRlbot())
+        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(2.0, 0.0, -2.0)).toRlbot())
+        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(-2.0, 0.0, -2.0)).toRlbot())
+
         intercept = latestIntercept.toSpaceTime()
         val carToIntercept = latestIntercept.space.minus(car.position)
         val millisTillIntercept = Duration.between(input.time, latestIntercept.time).millis
@@ -134,7 +138,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
 
         val leftRightCorrectionAngle = currentFlatVelocity.correctionAngle(flatToIntercept)
         val desiredFlatOrientation = VectorUtil
-                .rotateVector(currentFlatVelocity, leftRightCorrectionAngle + Math.signum(leftRightCorrectionAngle) * YAW_OVERCORRECT)
+                .rotateVector(currentFlatVelocity, leftRightCorrectionAngle * YAW_OVERCORRECT)
                 .normalized()
 
         val desiredNoseVector: Vector3
@@ -195,7 +199,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         private val DODGE_TIME = Duration.ofMillis(400)
         //private static final double DODGE_DISTANCE = 6;
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.4)
-        private val YAW_OVERCORRECT = .1
+        private val YAW_OVERCORRECT = 5.0
         private val NOSE_FINESSE_TIME = Duration.ofMillis(800)
 
         /**

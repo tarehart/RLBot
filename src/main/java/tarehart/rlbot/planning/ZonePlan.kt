@@ -19,8 +19,8 @@ class ZonePlan(input: AgentInput) {
     init {
         // Store data for later use and for telemetry output
 
-        ballZone = Zone(getMainZone(ballPosition), getSubZone(ballPosition))
-        myZone = Zone(getMainZone(myCar.position), getSubZone(myCar.position))
+        ballZone = getZone(ballPosition)
+        myZone = getZone(myCar.position)
 
         if (isAnalysisSane(ballZone, myZone, myCar.playerIndex)) {
 
@@ -46,43 +46,57 @@ class ZonePlan(input: AgentInput) {
         //TODO: Come up with a plan
     }
 
-    // The order of analysis of zones basically determines their priority
-    private fun getMainZone(point: Vector3): Zone.MainZone {
-        val flatPoint = point.flatten()
-        if (flatPoint in ZoneDefinitions.ORANGE)
-            return Zone.MainZone.ORANGE
-        if (flatPoint in  ZoneDefinitions.MID)
-            return Zone.MainZone.MID
-        return if (flatPoint in ZoneDefinitions.BLUE) Zone.MainZone.BLUE else Zone.MainZone.NONE
-    }
 
-    // The order of analysis of sub zones basically determines their priority
-    private fun getSubZone(point: Vector3): Zone.SubZone {
-        val flatPoint = point.flatten()
-        if (flatPoint in ZoneDefinitions.TOPCORNER)
-            return Zone.SubZone.TOPCORNER
-        if (flatPoint in ZoneDefinitions.BOTTOMCORNER)
-            return Zone.SubZone.BOTTOMCORNER
-        if (flatPoint in ZoneDefinitions.ORANGEBOX)
-            return Zone.SubZone.ORANGEBOX
-        if (flatPoint in ZoneDefinitions.BLUEBOX)
-            return Zone.SubZone.BLUEBOX
-        if (flatPoint in ZoneDefinitions.TOP)
-            return Zone.SubZone.TOP
-        return if (flatPoint in ZoneDefinitions.BOTTOM) Zone.SubZone.BOTTOM else Zone.SubZone.NONE
-    }
-
-    private fun isAnalysisSane(ballZone: Zone, myZone: Zone, playerIndex: Int): Boolean {
-        var sanityCheck = true
-        if (ballZone.mainZone == Zone.MainZone.NONE) {
-            BotLog.println("WTF where is the ball?", playerIndex)
-            sanityCheck = false
-        }
-        if (myZone.mainZone == Zone.MainZone.NONE) {
-            BotLog.println("WTF where am I?", playerIndex)
-            sanityCheck = false
+    companion object {
+        fun getZone(point: Vector3): Zone {
+            return Zone(getMainZone(point), getSubZone(point))
         }
 
-        return sanityCheck
+        // The order of analysis of zones basically determines their priority
+        fun getMainZone(point: Vector3): Zone.MainZone {
+            val flatPoint = point.flatten()
+            if (flatPoint in ZoneDefinitions.ORANGE)
+                return Zone.MainZone.ORANGE
+            if (flatPoint in ZoneDefinitions.MID)
+                return Zone.MainZone.MID
+            return if (flatPoint in ZoneDefinitions.BLUE) Zone.MainZone.BLUE else Zone.MainZone.NONE
+        }
+
+        // The order of analysis of sub zones basically determines their priority
+        fun getSubZone(point: Vector3): Zone.SubZone {
+            val flatPoint = point.flatten()
+            if (flatPoint in ZoneDefinitions.TOPCORNER)
+                return Zone.SubZone.TOPCORNER
+            if (flatPoint in ZoneDefinitions.BOTTOMCORNER)
+                return Zone.SubZone.BOTTOMCORNER
+            if (flatPoint in ZoneDefinitions.ORANGEBOX)
+                return Zone.SubZone.ORANGEBOX
+            if (flatPoint in ZoneDefinitions.BLUEBOX)
+                return Zone.SubZone.BLUEBOX
+            if (flatPoint in ZoneDefinitions.TOPSIDELINE)
+                return Zone.SubZone.TOPSIDELINE
+            if (flatPoint in ZoneDefinitions.BOTTOMSIDELINE)
+                return Zone.SubZone.BOTTOMSIDELINE
+            if (flatPoint in ZoneDefinitions.TOP)
+                return Zone.SubZone.TOP
+            if (flatPoint in ZoneDefinitions.BOTTOM)
+                return Zone.SubZone.BOTTOM
+            else
+                return Zone.SubZone.NONE
+        }
+
+        fun isAnalysisSane(ballZone: Zone, myZone: Zone, playerIndex: Int): Boolean {
+            var sanityCheck = true
+            if (ballZone.mainZone == Zone.MainZone.NONE) {
+                BotLog.println("WTF where is the ball?", playerIndex)
+                sanityCheck = false
+            }
+            if (myZone.mainZone == Zone.MainZone.NONE) {
+                BotLog.println("WTF where am I?", playerIndex)
+                sanityCheck = false
+            }
+
+            return sanityCheck
+        }
     }
 }

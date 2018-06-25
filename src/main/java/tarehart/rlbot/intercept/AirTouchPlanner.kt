@@ -10,7 +10,7 @@ import tarehart.rlbot.tuning.ManeuverMath
 
 object AirTouchPlanner {
 
-    private const val AERIAL_RISE_RATE = 10.0
+    private const val AERIAL_RISE_RATE = 5.0
     private const val SUPER_JUMP_RISE_RATE = 11.0
     const val BOOST_NEEDED_FOR_AERIAL = 20.0
     const val NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT

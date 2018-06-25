@@ -172,7 +172,7 @@ public class Readout {
 
     private String printCarZone(ZonePlan zp) {
         Zone zone = zp.getMyZone();
-        return zone.mainZone + " " + zone.subZone;
+        return zone.getMainZone() + " " + zone.getSubZone();
     }
 
     private void updateTacticsInfo(AgentInput input) {
