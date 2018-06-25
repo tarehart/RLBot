@@ -138,7 +138,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
 
         val leftRightCorrectionAngle = currentFlatVelocity.correctionAngle(flatToIntercept)
         val desiredFlatOrientation = VectorUtil
-                .rotateVector(currentFlatVelocity, leftRightCorrectionAngle + Math.signum(leftRightCorrectionAngle) * YAW_OVERCORRECT)
+                .rotateVector(currentFlatVelocity, leftRightCorrectionAngle * YAW_OVERCORRECT)
                 .normalized()
 
         val desiredNoseVector: Vector3
@@ -199,7 +199,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         private val DODGE_TIME = Duration.ofMillis(400)
         //private static final double DODGE_DISTANCE = 6;
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.4)
-        private val YAW_OVERCORRECT = .1
+        private val YAW_OVERCORRECT = 5.0
         private val NOSE_FINESSE_TIME = Duration.ofMillis(800)
 
         /**
