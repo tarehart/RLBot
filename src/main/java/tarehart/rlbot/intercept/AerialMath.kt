@@ -10,6 +10,7 @@ object AerialMath {
     val EFFECTIVE_AIR_BOOST_ACCELERATION = 18.0
     val JUMP_ASSIST_DURATION = .6
     val JUMP_ASSIST = 12
+    val TYPICAL_UPWARD_ACCEL = (EFFECTIVE_AIR_BOOST_ACCELERATION - ArenaModel.GRAVITY) * .5 // Assume a 30 degree upward angle
 
     fun getDesiredZComponentBasedOnAccel(targetHeight: Double, timeTillIntercept: Duration, timeSinceLaunch: Duration, car: CarData): Double {
 
@@ -56,6 +57,14 @@ object AerialMath {
         val verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical - ArenaModel.GRAVITY
 
         return phase2Height + phase2Velocity * tfly + .5 * verticalAcceleration * tfly * tfly
+    }
+
+    fun timeToAir(height: Double): Double {
+        val a = TYPICAL_UPWARD_ACCEL // Upward acceleration
+        val b = 10 // Initial upward velocity from jump
+        val c = -(height - AirTouchPlanner.CAR_BASE_HEIGHT)
+        val liftoffDelay = 0.5
+        return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a) + liftoffDelay
     }
 
 }

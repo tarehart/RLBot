@@ -11,7 +11,7 @@ import tarehart.rlbot.planning.TacticsTelemetry
 import java.awt.Graphics2D
 import java.util.*
 
-class EscapeTheGoalStep : Step {
+class EscapeTheGoalStep : StandardStep() {
 
     override val situation = "Escaping the goal"
 
@@ -31,13 +31,5 @@ class EscapeTheGoalStep : Step {
         val exit = nearestGoal.getNearestEntrance(desiredExit, 2.0)
 
         return SteerUtil.steerTowardGroundPosition(car, exit).withBoost(false)
-    }
-
-    override fun canInterrupt(): Boolean {
-        return true
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 }

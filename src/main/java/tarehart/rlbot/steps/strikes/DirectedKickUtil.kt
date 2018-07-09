@@ -11,7 +11,6 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.StrikePoint
 import tarehart.rlbot.time.Duration
@@ -99,22 +98,29 @@ object DirectedKickUtil {
         }
 
         val backoff = 5 + (ballAtIntercept.space.z - ArenaModel.BALL_RADIUS) * .05 * ManeuverMath.forwardSpeed(car) + intercept.spareTime.seconds * 5
-        val toIntercept = (intercept.space.flatten() - car.position.flatten()).normalized()
+        val toIntercept = intercept.space.flatten() - car.position.flatten()
+        val toInterceptNorm = toIntercept.normalized()
         val flatForce = plannedKickForce.flatten()
-        val toKickForce = toIntercept.correctionAngle(flatForce)
+        val toKickForce = toInterceptNorm.correctionAngle(flatForce)
         val ballPosition = ballAtIntercept.space.flatten()
+        val secondsTillIntercept = (intercept.time - car.time).seconds
+        val averageSpeedNeeded = toIntercept.magnitude() / secondsTillIntercept
 
         val launchPosition: Vector2
         val facing: Vector2
 
+        val strikeDuration = intercept.strikeProfile.strikeDuration
+
         when (intercept.strikeProfile.style) {
-            StrikeProfile.Style.RAM -> {
-                facing = VectorUtil.rotateVector(toIntercept, toKickForce * .5)
+            StrikeProfile.Style.CHIP -> {
+                facing = VectorUtil.rotateVector(toInterceptNorm, toKickForce * .5)
                 launchPosition = intercept.space.flatten()
             }
             StrikeProfile.Style.DIAGONAL_HIT -> {
-                facing = diagonalApproach(arrivalSpeed, flatForce, toKickForce > 0)
-                launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed)
+                facing = toInterceptNorm
+                val strikeTravel = intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed
+                launchPosition = intercept.space.flatten() - toInterceptNorm.scaledToMagnitude(strikeTravel) +
+                        VectorUtil.orthogonal(toInterceptNorm, { v -> v.dotProduct(flatForce) < 0 }).scaled(.7)
             }
             StrikeProfile.Style.SIDE_HIT -> {
                 facing = VectorUtil.rotateVector(flatForce, -Math.signum(toKickForce) * Math.PI / 2)
@@ -125,16 +131,18 @@ object DirectedKickUtil {
                 facing = flatForce.normalized()
                 launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed)
             }
-            else -> {
+            StrikeProfile.Style.JUMP_HIT -> {
                 facing = flatForce.normalized()
                 launchPosition = ballPosition - flatForce.scaledToMagnitude(intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed)
             }
+            StrikeProfile.Style.AERIAL -> {
+                val dummyForce = toInterceptNorm // Eventually we'll want to make this become flatforce when extreme angles are involved.
+                facing = dummyForce
+                launchPosition = ballPosition - dummyForce.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
+            }
         }
 
-        val strikeDuration = if (intercept.strikeProfile.style == StrikeProfile.Style.AERIAL)
-            Duration.ofSeconds(backoff / car.velocity.magnitude()) // TODO: duration should be built in
-        else
-            intercept.strikeProfile.strikeDuration
+
 
         val launchPad: StrikePoint
         if (ManeuverMath.hasBlownPast(car, launchPosition, facing)) {
@@ -173,7 +181,7 @@ object DirectedKickUtil {
     private val diagonalSpeedupComponent = 10 * Math.sin(Math.PI / 4)
 
     private fun diagonalApproach(arrivalSpeed: Double, forceDirection: Vector2, left: Boolean): Vector2 {
-        val angle = Math.asin(diagonalSpeedupComponent / arrivalSpeed)
+        val angle = Math.PI / 4
         return VectorUtil.rotateVector(forceDirection, angle * (if (left) -1.0 else 1.0))
     }
 

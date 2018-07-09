@@ -6,7 +6,7 @@ import tarehart.rlbot.AgentOutput
 import java.awt.*
 import java.util.Optional
 
-class WaitForActive : Step {
+class WaitForActive : StandardStep() {
 
     override val situation: String
         get() = "Idling"
@@ -15,13 +15,5 @@ class WaitForActive : Step {
         return if (input.matchInfo.roundActive) {
             null
         } else AgentOutput()
-    }
-
-    override fun canInterrupt(): Boolean {
-        return true
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 }

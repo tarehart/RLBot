@@ -6,12 +6,13 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.steps.StandardStep
 import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 
 import java.awt.*
 
-class DemolishEnemyStep : Step {
+class DemolishEnemyStep : StandardStep() {
 
     private var enemyHadWheelContact: Boolean = false
     private var hasDoubleJumped: Boolean = false
@@ -77,13 +78,5 @@ class DemolishEnemyStep : Step {
         }
 
         return SteerUtil.steerTowardGroundPositionGreedily(car, enemyCar.position.flatten())
-    }
-
-    override fun canInterrupt(): Boolean {
-        return true
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 }

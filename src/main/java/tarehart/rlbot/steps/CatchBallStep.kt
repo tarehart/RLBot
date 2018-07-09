@@ -14,7 +14,7 @@ import tarehart.rlbot.time.Duration
 import java.awt.*
 import java.util.Optional
 
-class CatchBallStep : Step {
+class CatchBallStep : StandardStep() {
     private lateinit var latestCatchLocation: SpaceTime
 
     override val situation: String
@@ -42,13 +42,5 @@ class CatchBallStep : Step {
         val target = catchLocation.space.plus(offset)
 
         return SteerUtil.getThereOnTime(car, SpaceTime(target, catchLocation.time), true)
-    }
-
-    override fun canInterrupt(): Boolean {
-        return true
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 }

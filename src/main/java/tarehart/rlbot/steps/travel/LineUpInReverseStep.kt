@@ -4,12 +4,13 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.steps.StandardStep
 import tarehart.rlbot.steps.Step
 
 import java.awt.*
 import java.util.Optional
 
-class LineUpInReverseStep(private val waypoint: Vector2) : Step {
+class LineUpInReverseStep(private val waypoint: Vector2) : StandardStep() {
     private var correctionDirection: Int? = null
 
     override val situation: String
@@ -34,10 +35,4 @@ class LineUpInReverseStep(private val waypoint: Vector2) : Step {
         } else AgentOutput().withThrottle(-1.0).withSteer(correctionDirection!!.toDouble())
 
     }
-
-    override fun canInterrupt(): Boolean {
-        return true
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {}
 }

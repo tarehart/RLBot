@@ -6,12 +6,13 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.TacticsTelemetry
+import tarehart.rlbot.steps.StandardStep
 import tarehart.rlbot.steps.Step
 
 import java.awt.*
 import java.util.Optional
 
-class DescendFromWallStep : Step {
+class DescendFromWallStep : StandardStep() {
 
     override val situation = "Descending wall."
 
@@ -30,9 +31,5 @@ class DescendFromWallStep : Step {
 
     override fun canInterrupt(): Boolean {
         return false
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 }

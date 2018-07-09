@@ -10,6 +10,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.time.GameTime
 
 object CircleTurnUtil {
 
@@ -158,6 +159,11 @@ object CircleTurnUtil {
         val flatPosition = car.position.flatten()
         val toTarget = targetPosition.minus(flatPosition)
 
+        val correctionAngle = toTarget.correctionAngle(targetFacing)
+        if (correctionAngle == 0.0) {
+            return planDirectRoute(flatPosition, car, strikePoint, distancePlot, toTarget)
+        }
+
         val clockwise = toTarget.correctionAngle(targetFacing) < 0
 
         val turnRadius = getTurnRadius(expectedSpeed)
@@ -207,6 +213,23 @@ object CircleTurnUtil {
                 duration = turnDuration,
                 circle = circle,
                 clockwise = clockwise))
+
+        return SteerPlan(immediateSteer, route)
+    }
+
+    private fun planDirectRoute(flatPosition: Vector2, car: CarData, strikePoint: StrikePoint, distancePlot: DistancePlot, toTarget: Vector2): SteerPlan {
+        val route = Route()
+        route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(AccelerationModel.getSteerPenaltySeconds(car, strikePoint.position.toVector3()))))
+
+        val accelerationTime = distancePlot.getTravelTime(toTarget.magnitude())
+
+        route.withPart(AccelerationRoutePart(flatPosition, strikePoint.position, accelerationTime!!))
+
+        val immediateSteer: AgentOutput = if (strikePoint.waitUntil != null) {
+            SteerUtil.getThereOnTime(car, SpaceTime(strikePoint.position.toVector3(), strikePoint.waitUntil))
+        } else {
+            SteerUtil.steerTowardGroundPosition(car, strikePoint.position)
+        }
 
         return SteerPlan(immediateSteer, route)
     }

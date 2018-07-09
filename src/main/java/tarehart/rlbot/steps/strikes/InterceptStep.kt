@@ -124,7 +124,6 @@ class InterceptStep @JvmOverloads constructor(
     }
 
     companion object {
-        val AERIAL_STRIKE_PROFILE = StrikeProfile(0.0, 0.0, 0.0, StrikeProfile.Style.AERIAL)
         val FLIP_HIT_STRIKE_PROFILE = StrikeProfile(0.0, 10.0, .4, StrikeProfile.Style.FLIP_HIT)
 
         fun getSoonestIntercept(
@@ -136,25 +135,25 @@ class InterceptStep @JvmOverloads constructor(
 
             val interceptOptions = ArrayList<Intercept>()
 
-            getAerialIntercept(carData, ballPath, interceptModifier, interceptPredicate)?.let { interceptOptions.add(it) }
+            getAerialIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { if (it.space.z >= AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) interceptOptions.add(it) }
             getJumpHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { interceptOptions.add(it) }
             getFlipHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { interceptOptions.add(it) }
 
             return interceptOptions.stream().sorted(Comparator.comparing<Intercept, GameTime>({ intercept -> intercept.time })).findFirst().orElse(null)
         }
 
-        private fun getAerialIntercept(carData: CarData, ballPath: BallPath, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
+        private fun getAerialIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
             if (carData.boost < AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL) return null
 
-            val distance = carData.position.flatten().distance(ballPath.startPoint.space.flatten())
-            val futureBall = ballPath.getMotionAt(carData.time.plusSeconds(distance * .02)) ?: return null
-            val averageNoseVector = futureBall.space.minus(carData.position).normaliseCopy()
+            //val distance = carData.position.flatten().distance(ballPath.startPoint.space.flatten())
+            //val futureBall = ballPath.getMotionAt(carData.time.plusSeconds(distance * .02)) ?: return null
+            //val averageNoseVector = futureBall.space.minus(carData.position).normaliseCopy()
 
-            val budgetAcceleration = AccelerationModel.simulateAirAcceleration(carData, Duration.ofSeconds(4.0), averageNoseVector.flatten().magnitude())
+            // val budgetAcceleration = AccelerationModel.simulateAirAcceleration(carData, Duration.ofSeconds(4.0), averageNoseVector.flatten().magnitude())
 
-            return InterceptCalculator.getFilteredInterceptOpportunity(carData, ballPath, budgetAcceleration, interceptModifier,
+            return InterceptCalculator.getFilteredInterceptOpportunity(carData, ballPath, fullAcceleration, interceptModifier,
                     { cd, st -> interceptPredicate.invoke(cd, st) && AirTouchPlanner.isVerticallyAccessible(cd, st) },
-                    { AERIAL_STRIKE_PROFILE })
+                    { height -> AirTouchPlanner.getAerialStrikeProfile(height) })
         }
 
         private fun getJumpHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {

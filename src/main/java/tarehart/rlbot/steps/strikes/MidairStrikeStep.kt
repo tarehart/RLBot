@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.strikes
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.bots.Team
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.SpaceTime
@@ -26,7 +27,8 @@ import tarehart.rlbot.ui.ArenaDisplay
 import java.awt.Color
 import java.awt.Graphics2D
 
-class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep() {
+class MidairStrikeStep(private val timeInAirAtStart: Duration,
+                       private val offsetFn: (Vector3?, Team) -> Vector3 = { intercept, team -> standardOffset(intercept, team) }) : NestedPlanStep() {
 
     private var confusionCount = 0
     private lateinit var lastMomentForDodge: GameTime
@@ -58,15 +60,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
 
         val ballPath = ArenaModel.predictBallPath(input)
         val car = input.myCarData
-        var offset = GoalUtil.getOwnGoal(car.team).center.scaledToMagnitude(3.0).minus(Vector3(0.0, 0.0, .6))
-
-        intercept?.let {
-            val goalToBall = it.space.minus(GoalUtil.getEnemyGoal(car.team).getNearestEntrance(it.space, 4.0))
-            offset = goalToBall.scaledToMagnitude(3.0)
-            if (goalToBall.magnitude() > 110) {
-                offset = Vector3(offset.x, offset.y, -.2)
-            }
-        }
+        val offset = offsetFn(intercept?.space, car.team)
 
         val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
         if (latestIntercept == null || disruptionMeter.isDisrupted(latestIntercept.ballSlice)) {
@@ -75,13 +69,17 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
                 if (latestTouch.playerIndex == car.playerIndex && Duration.between(latestTouch.time, car.time).seconds < 0.5) {
                     // We successfully hit the ball. Let's go for a double touch by resetting the disruption meter.
                     latestIntercept ?.let {
-                        disruptionMeter.reset(it.ballSlice)
+                        if (it.space.z > 5) { // Only go for double touch if ball will be high.
+                            disruptionMeter.reset(it.ballSlice)
+                            confusionCount = 0
+                        }
                     }
                 }
             }
+            BotLog.println(if (latestIntercept == null) "Missing intercept" else "Intercept disruption", car.playerIndex)
             confusionCount++
             if (confusionCount > 3) {
-                BotLog.println("Intercept has unacceptable disruption, quitting midair strike.", car.playerIndex)
+                BotLog.println("Too much confusion, quitting midair strike.", car.playerIndex)
                 return null
             }
             return AgentOutput().withBoost()
@@ -150,7 +148,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
             desiredNoseVector = offset.scaled(-1.0).normaliseCopy()
         } else {
             // Fly toward intercept
-            val extraHeight = if (offset.z > 0) 1.6 else 0.0
+            val extraHeight = if (offset.z >= 0) 2 * offset.z + 0.5 else 0.0
             val desiredZ = AerialMath.getDesiredZComponentBasedOnAccel(
                     latestIntercept.space.z + extraHeight,
                     Duration.between(car.time, latestIntercept.time),
@@ -199,7 +197,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         private val DODGE_TIME = Duration.ofMillis(400)
         //private static final double DODGE_DISTANCE = 6;
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.4)
-        private val YAW_OVERCORRECT = 5.0
+        private val YAW_OVERCORRECT = 3.0
         private val NOSE_FINESSE_TIME = Duration.ofMillis(800)
 
         /**
@@ -208,6 +206,20 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration) : NestedPlanStep(
         private fun convertToVector3WithPitch(flat: Vector2, zComponent: Double): Vector3 {
             val xyScaler = Math.sqrt((1 - zComponent * zComponent) / (flat.x * flat.x + flat.y * flat.y))
             return Vector3(flat.x * xyScaler, flat.y * xyScaler, zComponent)
+        }
+
+        private fun standardOffset(intercept: Vector3?, team:Team): Vector3 {
+            var offset = GoalUtil.getOwnGoal(team).center.scaledToMagnitude(3.0).minus(Vector3(0.0, 0.0, .6))
+
+            intercept?.let {
+                val goalToBall = it.minus(GoalUtil.getEnemyGoal(team).getNearestEntrance(it, 4.0))
+                offset = goalToBall.scaledToMagnitude(3.0)
+                if (goalToBall.magnitude() > 110) {
+                    offset = Vector3(offset.x, offset.y, -.2)
+                }
+            }
+
+            return offset
         }
     }
 }

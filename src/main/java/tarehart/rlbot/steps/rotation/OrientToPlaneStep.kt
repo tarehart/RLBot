@@ -5,12 +5,13 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.steps.StandardStep
 import tarehart.rlbot.steps.Step
 
 import java.awt.*
 
 
-abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vector3, protected var allowUpsideDown: Boolean) : Step {
+abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vector3, protected var allowUpsideDown: Boolean) : StandardStep() {
     protected lateinit var planeNormal: Vector3
     private var timeToDecelerate: Boolean = false
     private var originalCorrection: Double? = null
@@ -105,9 +106,5 @@ abstract class OrientToPlaneStep(private val planeNormalFn: (AgentInput) -> Vect
 
     override fun canInterrupt(): Boolean {
         return false
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 }

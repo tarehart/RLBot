@@ -87,7 +87,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
 
     fun getMotionAfterDuration(time: Duration, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
 
-        val totalSeconds = time.seconds
+        val totalSeconds = Math.max(time.seconds, 0.0)
         val secondsSpentAccelerating = totalSeconds
 
         if (strikeProfile.dodgeSeconds == 0.0 || strikeProfile.speedBoost == 0.0) {

@@ -13,8 +13,10 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.DirectedSideHitStep
+import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
+import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 
 class WhatASaveStep : NestedPlanStep() {
@@ -78,8 +80,6 @@ class WhatASaveStep : NestedPlanStep() {
         }
 
         return startPlan(FirstViableStepPlan(Plan.Posture.SAVE)
-                .withStep(DirectedSideHitStep(KickAwayFromOwnGoal()))
-                .withStep(InterceptStep(Vector3(0.0, 0.0, -1.0))),
-                input)
+                .withStep(FlexibleKickStep(KickAwayFromOwnGoal())), input)
     }
 }

@@ -1,6 +1,5 @@
 package tarehart.rlbot.planning
 
-import com.sun.org.apache.xpath.internal.operations.Bool
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.steps.Step
@@ -10,6 +9,7 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
     private var unstoppable: Boolean = false
     protected var steps = ArrayList<Step>()
     protected var currentStepIndex = 0
+    protected var canceled = false
 
     /**
      * You should make sure the plan is not complete before calling this.
@@ -70,6 +70,11 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
 
             output?.let { return it }
 
+            if (currentStep.getPlanGuidance() == PlanGuidance.CANCEL) {
+                canceled = true
+                return null
+            }
+
             nextStep()
         }
 
@@ -80,8 +85,8 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
         currentStepIndex++
     }
 
-    fun isComplete(): Boolean {
-        return currentStepIndex >= steps.size
+    open fun isComplete(): Boolean {
+        return canceled || currentStepIndex >= steps.size
     }
 
     companion object {

@@ -49,7 +49,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
     companion object {
         fun readyForFinalApproach(car: CarData, launchPad: StrikePoint) : Boolean {
             val durationTillLaunchpad = Duration.between(car.time, launchPad.expectedTime)
-            return durationTillLaunchpad.millis < 200 && car.position.flatten().distance(launchPad.position) < 3
+            return durationTillLaunchpad.millis < 500 && car.position.flatten().distance(launchPad.position) < 10
         }
     }
 }

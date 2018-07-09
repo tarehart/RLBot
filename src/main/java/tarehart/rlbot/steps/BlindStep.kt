@@ -2,13 +2,14 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.planning.PlanGuidance
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
 import java.awt.*
 import java.util.Optional
 
-class BlindStep(private val duration: Duration, private val output: AgentOutput) : Step {
+class BlindStep(private val duration: Duration, private val output: AgentOutput) : StandardStep() {
     private lateinit var scheduledEndTime: GameTime
 
     override val situation = "Muscle memory"

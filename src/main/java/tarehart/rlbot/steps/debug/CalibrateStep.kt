@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.debug
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.steps.StandardStep
 import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -11,7 +12,7 @@ import java.awt.*
 import java.time.LocalDateTime
 
 
-class CalibrateStep : Step {
+class CalibrateStep : StandardStep() {
     private lateinit var gameClockStart: GameTime
     private lateinit var wallClockStart: LocalDateTime
 
@@ -41,10 +42,6 @@ class CalibrateStep : Step {
 
     override fun canInterrupt(): Boolean {
         return false
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 
     companion object {

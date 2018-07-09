@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.planning.PlanGuidance
 
 import java.awt.*
 
@@ -17,6 +18,8 @@ interface Step {
     fun getOutput(input: AgentInput): AgentOutput?
 
     fun canInterrupt(): Boolean
+
+    fun getPlanGuidance(): PlanGuidance
 
     fun drawDebugInfo(graphics: Graphics2D)
 }

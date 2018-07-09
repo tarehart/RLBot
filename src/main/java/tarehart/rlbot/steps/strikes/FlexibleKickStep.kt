@@ -12,6 +12,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.PlanGuidance
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.TacticsTelemetry
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
@@ -37,6 +38,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private var recentCar: CarData? = null
     //private var earliestIntercept: GameTime? = null
     private val disruptionMeter = BallPathDisruptionMeter()
+    private var cancelPlan = false
 
     override fun doInitialComputation(input: AgentInput) {
         recentCar = input.myCarData
@@ -91,6 +93,9 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             verticallyAccessible && viableKick
         }
 
+        // TODO: This is way too pessimistic for aerials at the moment. Possibly the aerial strike profile is being too
+        // conservative about how long it takes to get up for a ball, since I hacked the aerial rise rate from
+        // 10 to 5 to make it take off faster. Probably need to undo that hack and find a better way.
         val precisionPlan = InterceptCalculator.getRouteAwareIntercept(
                 carData = car,
                 ballPath = ballPath,
@@ -122,6 +127,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         if (disruptionMeter.isDisrupted(precisionPlan.kickPlan.ballPath)) {
             BotLog.println("Ball path disrupted during flexible.", car.playerIndex)
+            cancelPlan = true
             return null
         }
 
@@ -134,6 +140,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         if (input.latestBallTouch?.position ?: Vector3() != originalTouch?.position ?: Vector3()) {
             // There has been a new ball touch.
             println("Ball has been touched, quitting flexible hit", input.playerIndex)
+            cancelPlan = true
             return null
         }
 
@@ -217,7 +224,10 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     }
 
     override fun getLocalSituation(): String {
-        return "Flexible hit - " + kickStrategy.javaClass.simpleName + recentPrecisionPlan?.kickPlan?.let { " - " + it.intercept.strikeProfile.style }
+        return "Flexible hit - " + kickStrategy.javaClass.simpleName +
+                recentPrecisionPlan?.kickPlan?.let {
+                    " - " + it.intercept.strikeProfile.style
+                }
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {
@@ -229,6 +239,10 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             it.steerPlan.drawDebugInfo(graphics, recentCar!!)
             it.kickPlan.drawDebugInfo(graphics)
         }
+    }
+
+    override fun getPlanGuidance(): PlanGuidance {
+        return if (cancelPlan) PlanGuidance.CANCEL else PlanGuidance.CONTINUE
     }
 
     companion object {

@@ -47,6 +47,11 @@ class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
                 return output
             }
 
+            if (currentStep.getPlanGuidance() == PlanGuidance.CANCEL) {
+                canceled = true
+                return null
+            }
+
             nextStep()
         }
 

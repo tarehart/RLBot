@@ -7,7 +7,7 @@ import tarehart.rlbot.time.GameTime
 import java.awt.*
 import java.util.Optional
 
-class TapStep(private val numFrames: Int, private val output: AgentOutput) : Step {
+class TapStep(private val numFrames: Int, private val output: AgentOutput) : StandardStep() {
     private var frameCount: Int = 0
     private var previousTime: GameTime? = null
 
@@ -27,9 +27,5 @@ class TapStep(private val numFrames: Int, private val output: AgentOutput) : Ste
 
     override fun canInterrupt(): Boolean {
         return false
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 }

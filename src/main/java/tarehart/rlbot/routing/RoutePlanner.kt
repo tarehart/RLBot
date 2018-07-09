@@ -55,10 +55,9 @@ object RoutePlanner{
 
     fun planRoute(car: CarData, distancePlot: DistancePlot, launchPad: StrikePoint): SteerPlan {
         val toPad = launchPad.position - car.position.flatten()
-        val approachError = Vector2.angle(toPad, launchPad.facing)
         val orientationError = Vector2.angle(car.orientation.noseVector.flatten(), launchPad.facing)
 
-        if (orientationError < Math.PI / 12 && (approachError < Math.PI / 12 || toPad.magnitude() < 5)) {
+        if (orientationError < Math.PI / 12 && toPad.magnitude() < 5) {
 
 //            if (ManeuverMath.hasBlownPast(car, launchPad.position, launchPad.facing)) {
 //

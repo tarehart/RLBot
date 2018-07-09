@@ -35,6 +35,16 @@ public class StatusSummary {
         topFrame.pack();
     }
 
+    public void removeBot(int index) {
+        for (int i = 0; i < playerPane.getComponentCount(); i++) {
+            StatusLineItem lineItem = (StatusLineItem) playerPane.getComponent(i);
+            if (lineItem.getPlayerIndex() == index) {
+                playerPane.remove(lineItem);
+                break;
+            }
+        }
+    }
+
     public JPanel getRootPanel() {
         return rootPanel;
     }

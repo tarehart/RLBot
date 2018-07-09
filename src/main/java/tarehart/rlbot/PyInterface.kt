@@ -31,4 +31,10 @@ class PyInterface(private val botManager: BotManager, private val statusSummary:
 
         return newBot
     }
+
+    override fun retireBot(index: Int) {
+        super.retireBot(index)
+
+        statusSummary.removeBot(index)
+    }
 }

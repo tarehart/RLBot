@@ -119,7 +119,6 @@ object InterceptCalculator {
 
         val myPosition = carData.position.flatten()
         var firstMomentInRange: GameTime? = null
-        var previousRangeDeficiency = 0.0
 
         for (i in 0 until ballPath.slices.size) {
             val slice = ballPath.slices[i]
@@ -144,30 +143,34 @@ object InterceptCalculator {
                 }
                 if (spatialPredicate.invoke(carData, spaceTime, strikeProfile)) {
 
-                    val tweenedSlice = getTweenedSlice(ballPath, slice, i, rangeDeficiency, previousRangeDeficiency)
                     val boostNeeded = boostNeededForAerial(spaceTime.space.z)
-                    val spareTime = if (tweenedSlice.time > firstMomentInRange) tweenedSlice.time - firstMomentInRange else Duration.ofMillis(0)
+                    val spareTime = if (slice.time > firstMomentInRange) slice.time - firstMomentInRange else Duration.ofMillis(0)
 
                     val intercept = Intercept(
-                            tweenedSlice.space + interceptModifier,
-                            tweenedSlice.time,
+                            slice.space + interceptModifier,
+                            slice.time,
                             boostNeeded,
                             strikeProfile,
                             acceleration,
                             spareTime,
-                            tweenedSlice,
+                            slice,
                             dts)
 
                     val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy) ?: return null
                     val steerPlan = RoutePlanner.planRoute(carData, kickPlan.distancePlot, kickPlan.launchPad)
 //                    val steerPlan = CircleTurnUtil.getPlanForCircleTurn(carData, kickPlan.distancePlot, kickPlan.launchPad)
                     steerPlan.route.withPart(StrikeRoutePart(kickPlan.launchPad.position, kickPlan.intercept.space, kickPlan.intercept.strikeProfile))
-                    if (steerPlan.route.duration <= Duration.between(carData.time, intercept.time)) {
+                    if (steerPlan.route.duration <= Duration.between(carData.time, intercept.time) ||
+                            // If it's an aerial, just go ahead. The route is currently not very good at judging how long
+                            // an aerial will take.
+                            strikeProfile.style == StrikeProfile.Style.AERIAL) {
                         return PrecisionPlan(kickPlan, steerPlan)
+                    } else {
+                        // It's not actually in range after we account for routing time
+                        firstMomentInRange = null
                     }
                 }
             }
-            previousRangeDeficiency = rangeDeficiency
         }
 
         // No slices in the ball slices were in range and satisfied the predicate
@@ -226,15 +229,15 @@ object InterceptCalculator {
             val averageNoseAngle = currentNoseAngle * currentAngleFactor + desiredNoseAngle * (1 - currentAngleFactor)
 
             val acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle))
+
+            // We're already in the air, so don't model any hang time.
             val strikeProfile =
                     if (duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 && averageNoseAngle < .5)
                         StrikeProfile(0.0, 10.0, .15, StrikeProfile.Style.AERIAL)
                     else
-                        InterceptStep.AERIAL_STRIKE_PROFILE
+                        StrikeProfile(0.0, 0.0, 0.0, StrikeProfile.Style.AERIAL)
 
-            val orientDuration = AccelerationModel.getOrientDuration(strikeProfile, carData, intercept.space)
-
-            val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time) - orientDuration, strikeProfile) ?: return null
+            val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
             if (dts.distance > interceptDistance) {

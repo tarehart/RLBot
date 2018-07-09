@@ -25,8 +25,8 @@ class KickAwayFromOwnGoal : KickStrategy {
         val toLeftPost = GoalUtil.getOwnGoal(car.team).leftPost.minus(ballPosition).flatten()
         val toRightPost = GoalUtil.getOwnGoal(car.team).rightPost.minus(ballPosition).flatten()
 
-        val safeDirectionRight = VectorUtil.rotateVector(toRightPost, -Math.PI / 4)
-        val safeDirectionLeft = VectorUtil.rotateVector(toLeftPost, Math.PI / 4)
+        val safeDirectionRight = VectorUtil.rotateVector(toRightPost, -Math.PI / 8)
+        val safeDirectionLeft = VectorUtil.rotateVector(toLeftPost, Math.PI / 8)
 
         val rightToEasyCorrection = safeDirectionRight.correctionAngle(easyKickFlat, false)
         val rightToLeftCorrection = safeDirectionRight.correctionAngle(safeDirectionLeft, false)

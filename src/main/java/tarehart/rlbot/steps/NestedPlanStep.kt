@@ -3,6 +3,7 @@ package tarehart.rlbot.steps
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.PlanGuidance
 import java.awt.Graphics2D
 
 abstract class NestedPlanStep : Step {
@@ -62,6 +63,10 @@ abstract class NestedPlanStep : Step {
 
     override fun drawDebugInfo(graphics: Graphics2D) {
         Plan.activePlanKt(plan)?.currentStep?.drawDebugInfo(graphics)
+    }
+
+    override fun getPlanGuidance(): PlanGuidance {
+        return PlanGuidance.CONTINUE
     }
 
 }

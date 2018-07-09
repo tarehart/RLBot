@@ -2,7 +2,6 @@ package tarehart.rlbot.intercept
 
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.time.Duration
 
 data class StrikeProfile @JvmOverloads constructor(
@@ -19,15 +18,15 @@ data class StrikeProfile @JvmOverloads constructor(
          */
         val dodgeSeconds: Double = 0.0,
 
-        val style: Style = Style.RAM) {
+        val style: Style = Style.CHIP) {
 
     val strikeDuration: Duration
         get() = Duration.ofSeconds(hangTime + dodgeSeconds)
 
     val verticallyAccessible: (CarData, SpaceTime) -> Boolean
         get() {
-            if (style == Style.RAM) {
-                return { _, st -> st.space.z < ArenaModel.BALL_RADIUS + .3 }
+            if (style == Style.CHIP) {
+                return { _, st -> st.space.z <= AirTouchPlanner.MAX_CHIP_HIT }
             }
             if (style == Style.FLIP_HIT) {
                 return { _, st -> AirTouchPlanner.isFlipHitAccessible(st.space.z) }
@@ -41,7 +40,7 @@ data class StrikeProfile @JvmOverloads constructor(
     val isForward: Boolean = style != Style.SIDE_HIT && style != Style.DIAGONAL_HIT
 
     enum class Style {
-        RAM,
+        CHIP,
         FLIP_HIT,
         SIDE_HIT,
         DIAGONAL_HIT,

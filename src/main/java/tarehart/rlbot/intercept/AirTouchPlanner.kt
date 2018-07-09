@@ -3,21 +3,24 @@ package tarehart.rlbot.intercept
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.strikes.InterceptStep
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
 object AirTouchPlanner {
 
-    private const val AERIAL_RISE_RATE = 5.0
+    const val AERIAL_RISE_RATE = 9.0
     private const val SUPER_JUMP_RISE_RATE = 11.0
     const val BOOST_NEEDED_FOR_AERIAL = 20.0
     const val NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT
     private const val MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD
     const val NEEDS_JUMP_HIT_THRESHOLD = 3.2
-    private const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
+    const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
     private const val MAX_FLIP_HIT = NEEDS_JUMP_HIT_THRESHOLD
+    const val MAX_CHIP_HIT = 2.0
 
 
     fun checkAerialReadiness(car: CarData, intercept: Intercept): AerialChecklist {
@@ -118,33 +121,33 @@ object AirTouchPlanner {
     }
 
     fun getDiagonalJumpHitStrikeProfile(height: Double): StrikeProfile {
-        // If we have time to tilt back, the nose will be higher and we can cheat a little.
-        val requiredHeight = height * .7
-        val jumpTime = ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8)
-        return StrikeProfile(jumpTime, 10.0, .15, StrikeProfile.Style.DIAGONAL_HIT)
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
+        return StrikeProfile(jumpTime, 10.0, .3, StrikeProfile.Style.DIAGONAL_HIT)
     }
 
     fun getSideHitStrikeProfile(height: Double): StrikeProfile {
-        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height).orElse(.8)
-        return StrikeProfile(jumpTime, 10.0, .15, StrikeProfile.Style.SIDE_HIT)
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
+        return StrikeProfile(jumpTime, 10.0, .3, StrikeProfile.Style.SIDE_HIT)
     }
 
     fun getStraightOnStrikeProfile(height: Double): StrikeProfile {
+
+        if (isChipAccessible(height)) {
+            return StrikeProfile(style = StrikeProfile.Style.CHIP)
+        }
+
         if (isFlipHitAccessible(height)) {
             return InterceptStep.FLIP_HIT_STRIKE_PROFILE
         }
         if (height < MAX_JUMP_HIT) {
             return getJumpHitStrikeProfile(height)
         }
-        if (height > 10) {
-            return InterceptStep.AERIAL_STRIKE_PROFILE
-        }
-        return StrikeProfile(0.0, 10.0, .25, StrikeProfile.Style.AERIAL)
+        return getAerialStrikeProfile(height)
     }
 
     fun getStrikeProfile(height: Double, approachAngle: Double): StrikeProfile {
 
-        if (approachAngle < Math.PI / 8) {
+        if (approachAngle < Math.PI / 16) {
             return getStraightOnStrikeProfile(height)
         }
 
@@ -154,7 +157,17 @@ object AirTouchPlanner {
             }
             return getSideHitStrikeProfile(height)
         }
-        return InterceptStep.AERIAL_STRIKE_PROFILE
+        return getAerialStrikeProfile(height)
+    }
+
+    fun getAerialStrikeProfile(height: Double): StrikeProfile {
+        val hangTime = AerialMath.timeToAir(height)
+        val canDodge = hangTime < MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE.seconds
+        return StrikeProfile(hangTime, if (canDodge) 10.0 else 0.0, if(canDodge) .25 else 0.0, StrikeProfile.Style.AERIAL)
+    }
+
+    fun isChipAccessible(height: Double): Boolean {
+        return height <= MAX_CHIP_HIT
     }
 
     fun isFlipHitAccessible(height: Double): Boolean {
@@ -162,7 +175,7 @@ object AirTouchPlanner {
     }
 
     private fun getAerialLaunchCountdown(height: Double, secondsTillIntercept: Double): Double {
-        val expectedAerialSeconds = (height - CAR_BASE_HEIGHT) / AERIAL_RISE_RATE
+        val expectedAerialSeconds = AerialMath.timeToAir(height)
         return secondsTillIntercept - expectedAerialSeconds
     }
 

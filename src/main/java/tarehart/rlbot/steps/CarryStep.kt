@@ -9,6 +9,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.PlanGuidance
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
 
@@ -19,7 +20,7 @@ import tarehart.rlbot.tuning.BotLog.println
 /**
  * I don't think this was ever tested.
  */
-class CarryStep : Step {
+class CarryStep : StandardStep() {
 
     override val situation: String
         get() = "Carrying"
@@ -59,14 +60,6 @@ class CarryStep : Step {
         val hurryUp = input.time.plusSeconds(leadSeconds)
 
         return SteerUtil.getThereOnTime(input.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
-    }
-
-    override fun canInterrupt(): Boolean {
-        return true
-    }
-
-    override fun drawDebugInfo(graphics: Graphics2D) {
-        // Draw nothing.
     }
 
     companion object {
