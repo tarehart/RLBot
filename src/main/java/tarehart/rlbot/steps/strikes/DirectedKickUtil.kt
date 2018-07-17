@@ -117,8 +117,14 @@ object DirectedKickUtil {
                 launchPosition = intercept.space.flatten()
             }
             StrikeProfile.Style.DIAGONAL_HIT -> {
-                facing = toInterceptNorm
+
+                val easyAngle = toInterceptNorm
                 val strikeTravel = intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed
+
+
+
+
+                facing = toInterceptNorm
                 launchPosition = intercept.space.flatten() - toInterceptNorm.scaledToMagnitude(strikeTravel) +
                         VectorUtil.orthogonal(toInterceptNorm, { v -> v.dotProduct(flatForce) < 0 }).scaled(.7)
             }

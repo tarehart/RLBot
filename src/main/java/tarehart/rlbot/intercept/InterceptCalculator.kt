@@ -156,14 +156,18 @@ object InterceptCalculator {
                             slice,
                             dts)
 
-                    val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy) ?: return null
+                    val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy)
+                            ?: return null // Also consider continuing the loop instead.
                     val steerPlan = RoutePlanner.planRoute(carData, kickPlan.distancePlot, kickPlan.launchPad)
 //                    val steerPlan = CircleTurnUtil.getPlanForCircleTurn(carData, kickPlan.distancePlot, kickPlan.launchPad)
                     steerPlan.route.withPart(StrikeRoutePart(kickPlan.launchPad.position, kickPlan.intercept.space, kickPlan.intercept.strikeProfile))
-                    if (steerPlan.route.duration <= Duration.between(carData.time, intercept.time) ||
-                            // If it's an aerial, just go ahead. The route is currently not very good at judging how long
+
+                    val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration;
+
+                    if (postRouteTime.seconds > 0 ||
+                            // If it's an aerial, give some leeway. The route is currently not very good at judging how long
                             // an aerial will take.
-                            strikeProfile.style == StrikeProfile.Style.AERIAL) {
+                            strikeProfile.style == StrikeProfile.Style.AERIAL && postRouteTime.seconds > -1.0) {
                         return PrecisionPlan(kickPlan, steerPlan)
                     } else {
                         // It's not actually in range after we account for routing time
