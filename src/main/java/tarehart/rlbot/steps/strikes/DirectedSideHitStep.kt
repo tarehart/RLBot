@@ -14,7 +14,7 @@ import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.routing.SteerPlan
-import tarehart.rlbot.routing.StrikePoint
+import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -127,7 +127,7 @@ class DirectedSideHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         }
 
         val steerTarget = orthogonalPoint.minus(facingForSideFlip.scaled(backoff))
-        val strikePoint = StrikePoint(steerTarget, facingForSideFlip, kickPlan.intercept.time.minus(strikeTime.get()))
+        val strikePoint = StrictPreKickWaypoint(steerTarget, facingForSideFlip, kickPlan.intercept.time.minus(strikeTime.get()))
 
         val toOrthogonal = orthogonalPoint.minus(car.position.flatten())
 

@@ -2,13 +2,20 @@ package tarehart.rlbot.intercept
 
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.*
+import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.routing.*
-import tarehart.rlbot.steps.strikes.*
+import tarehart.rlbot.routing.CircleTurnUtil
+import tarehart.rlbot.routing.PositionFacing
+import tarehart.rlbot.routing.PrecisionPlan
+import tarehart.rlbot.routing.StrikeRoutePart
+import tarehart.rlbot.steps.strikes.DirectedKickUtil
+import tarehart.rlbot.steps.strikes.KickStrategy
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
@@ -158,7 +165,7 @@ object InterceptCalculator {
 
                     val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy)
                             ?: return null // Also consider continuing the loop instead.
-                    val steerPlan = RoutePlanner.planRoute(carData, kickPlan.distancePlot, kickPlan.launchPad)
+                    val steerPlan = kickPlan.launchPad.planRoute(carData, kickPlan.distancePlot)
 //                    val steerPlan = CircleTurnUtil.getPlanForCircleTurn(carData, kickPlan.distancePlot, kickPlan.launchPad)
                     steerPlan.route.withPart(StrikeRoutePart(kickPlan.launchPad.position, kickPlan.intercept.space, kickPlan.intercept.strikeProfile))
 
@@ -179,11 +186,6 @@ object InterceptCalculator {
 
         // No slices in the ball slices were in range and satisfied the predicate
         return null
-    }
-
-    private fun measureApproachToLaunchPadCorrection(car: CarData, kickPlan: DirectedKickPlan): Double {
-        val carToLaunchPad = kickPlan.launchPad.position.minus(car.position.flatten())
-        return carToLaunchPad.correctionAngle(kickPlan.launchPad.facing)
     }
 
     private fun boostNeededForAerial(height: Double) : Double {

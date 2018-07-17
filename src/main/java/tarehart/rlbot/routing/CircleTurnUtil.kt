@@ -9,8 +9,8 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
 
 object CircleTurnUtil {
 
@@ -22,7 +22,7 @@ object CircleTurnUtil {
     private val TURN_RADIUS_B = .16
     private val TURN_RADIUS_C = 7.0
 
-    private fun planWithinCircle(car: CarData, strikePoint: StrikePoint, currentSpeed: Double): SteerPlan {
+    private fun planWithinCircle(car: CarData, strikePoint: StrictPreKickWaypoint, currentSpeed: Double): SteerPlan {
 
         val targetPosition = strikePoint.position
         val targetFacing = strikePoint.facing
@@ -108,7 +108,7 @@ object CircleTurnUtil {
     }
 
     fun getPlanForCircleTurn(
-            car:CarData, distancePlot: DistancePlot, strikePoint: StrikePoint): SteerPlan {
+            car:CarData, distancePlot: DistancePlot, strikePoint: StrictPreKickWaypoint): SteerPlan {
 
         val targetPosition = strikePoint.position
         val distance = car.position.flatten().distance(targetPosition)
@@ -148,7 +148,7 @@ object CircleTurnUtil {
 
     private fun circleWaypoint(
             car: CarData,
-            strikePoint: StrikePoint,
+            strikePoint: StrictPreKickWaypoint,
             currentSpeed: Double,
             expectedSpeed: Double,
             distancePlot: DistancePlot): SteerPlan {
@@ -217,7 +217,7 @@ object CircleTurnUtil {
         return SteerPlan(immediateSteer, route)
     }
 
-    private fun planDirectRoute(flatPosition: Vector2, car: CarData, strikePoint: StrikePoint, distancePlot: DistancePlot, toTarget: Vector2): SteerPlan {
+    private fun planDirectRoute(flatPosition: Vector2, car: CarData, strikePoint: StrictPreKickWaypoint, distancePlot: DistancePlot, toTarget: Vector2): SteerPlan {
         val route = Route()
         route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(AccelerationModel.getSteerPenaltySeconds(car, strikePoint.position.toVector3()))))
 

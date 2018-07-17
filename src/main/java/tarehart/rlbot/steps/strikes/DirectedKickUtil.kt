@@ -12,7 +12,8 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.routing.PositionFacing
-import tarehart.rlbot.routing.StrikePoint
+import tarehart.rlbot.routing.waypoint.PreKickWaypoint
+import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
@@ -150,10 +151,10 @@ object DirectedKickUtil {
 
 
 
-        val launchPad: StrikePoint
+        val launchPad: PreKickWaypoint
         if (ManeuverMath.hasBlownPast(car, launchPosition, facing)) {
             val currentPositionFacing = PositionFacing(car)
-            launchPad = StrikePoint(
+            launchPad = StrictPreKickWaypoint(
                     position = currentPositionFacing.position,
                     facing = currentPositionFacing.facing,
                     expectedTime = car.time
@@ -161,7 +162,7 @@ object DirectedKickUtil {
         } else {
             // Time is chosen with a bias toward hurrying
             val launchPadMoment = intercept.time - strikeDuration
-            launchPad = StrikePoint(
+            launchPad = StrictPreKickWaypoint(
                     position = launchPosition,
                     facing = facing,
                     expectedTime = launchPadMoment,

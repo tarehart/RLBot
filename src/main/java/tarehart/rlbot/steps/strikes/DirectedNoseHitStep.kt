@@ -10,17 +10,20 @@ import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.planning.*
-import tarehart.rlbot.routing.*
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.routing.AccelerationRoutePart
+import tarehart.rlbot.routing.CircleTurnUtil
+import tarehart.rlbot.routing.Route
+import tarehart.rlbot.routing.SteerPlan
+import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
-
-import java.awt.*
-import java.util.Optional
-
 import tarehart.rlbot.tuning.BotLog.println
+import java.awt.Color
+import java.awt.Graphics2D
 
 class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
     private lateinit var originalIntercept: BallSlice
@@ -66,6 +69,10 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
 
         if (kickPlan == null) {
             BotLog.println("Quitting nose hit due to failed kick plan.", car.playerIndex)
+            return null
+        }
+
+        if (kickPlan.launchPad !is StrictPreKickWaypoint) {
             return null
         }
 
@@ -148,7 +155,7 @@ class DirectedNoseHitStep(private val kickStrategy: KickStrategy) : NestedPlanSt
         // Line up for a nose hit
         val fullSpeed = kickPlan.intercept.spareTime.seconds < .2 && kickPlan.intercept.space.z < 2
         val launchPad = if (fullSpeed)
-            StrikePoint(kickPlan.launchPad.position, kickPlan.launchPad.facing, GameTime(0))
+            StrictPreKickWaypoint(kickPlan.launchPad.position, kickPlan.launchPad.facing, GameTime(0))
         else
             kickPlan.launchPad
 

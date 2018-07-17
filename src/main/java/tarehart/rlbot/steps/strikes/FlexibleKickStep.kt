@@ -244,17 +244,4 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     override fun getPlanGuidance(): PlanGuidance {
         return if (cancelPlan) PlanGuidance.CANCEL else PlanGuidance.CONTINUE
     }
-
-    companion object {
-        const val MAX_NOSE_HIT_ANGLE = Math.PI / 18
-
-        /**
-         * First you drive from where you are zero to the launchpad.
-         * Then you have to
-         */
-        private fun measureApproachToLaunchPadCorrection(car: CarData, kickPlan: DirectedKickPlan): Double {
-            val carToLaunchPad = kickPlan.launchPad.position.minus(car.position.flatten())
-            return carToLaunchPad.correctionAngle(kickPlan.launchPad.facing)
-        }
-    }
 }
