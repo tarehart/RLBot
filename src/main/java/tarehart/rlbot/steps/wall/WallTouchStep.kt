@@ -135,7 +135,10 @@ class WallTouchStep : NestedPlanStep() {
 
         fun hasWallTouchOpportunity(input: AgentInput, ballPath: BallPath): Boolean {
 
-            val nearWallOption = ballPath.findSlice { ballPosition: BallSlice -> isBallOnWall(ballPosition) }
+            val nearWallOption = ballPath.findSlice { ballPosition: BallSlice ->
+                Math.abs(ballPosition.space.y) < ArenaModel.BACK_WALL * .9 &&  // Don't go for wall touches on the back walls
+                        isBallOnWall(ballPosition) }
+
             if (nearWallOption != null) {
                 val time = nearWallOption.time
                 if (Duration.between(input.time, time).seconds > 3) {

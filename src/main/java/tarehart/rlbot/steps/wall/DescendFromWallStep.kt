@@ -19,11 +19,12 @@ class DescendFromWallStep : StandardStep() {
     override fun getOutput(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
+        val ballShadow = Vector3(input.ballPosition.x, input.ballPosition.y, 0.0)
         if (ArenaModel.isCarOnWall(car)) {
             val ballShadow = Vector3(input.ballPosition.x, input.ballPosition.y, 0.0)
             return SteerUtil.steerTowardWallPosition(car, ballShadow)
         } else if (ArenaModel.isNearFloorEdge(car.position)) {
-            return SteerUtil.steerTowardPositionAcrossSeam(car, input.ballPosition)
+            return SteerUtil.steerTowardPositionAcrossSeam(car, ballShadow)
         }
 
         return null

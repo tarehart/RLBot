@@ -31,11 +31,6 @@ class ChallengeStep: NestedPlanStep() {
         return !threatExists(tacticalSituation)
     }
 
-    private fun threatExists(tacticalSituation: TacticalSituation): Boolean {
-        return tacticalSituation.ballAdvantage.seconds < 1.0 &&
-                tacticalSituation.enemyOffensiveApproachError?.let { it < Math.PI / 3 } == true
-    }
-
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
@@ -99,6 +94,13 @@ class ChallengeStep: NestedPlanStep() {
             val crossSize = 2
             graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
             graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
+        }
+    }
+
+    companion object {
+        fun threatExists(tacticalSituation: TacticalSituation): Boolean {
+            return tacticalSituation.ballAdvantage.seconds < 1.0 &&
+                    tacticalSituation.enemyOffensiveApproachError?.let { it < Math.PI / 2 } == true
         }
     }
 }

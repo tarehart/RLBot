@@ -70,10 +70,9 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         val situation = TacticsTelemetry[car.playerIndex] ?: return null
 
-//        if (situation.ballAdvantage < Duration.ofSeconds(-0.2)) {
-//            // TODO: be a little more optimistic about the opponent screwing up in certain situations
-//            return null // We need to go for a challenge, so abort this.
-//        }
+        if (situation.ballAdvantage.seconds < -0.3) {
+            return null // We need to go for a challenge, so abort this.
+        }
 
         //val ballAtIntercept = recentPrecisionPlan?.kickPlan?.intercept?.ballSlice?.space ?: situation.expectedContact?.ballSlice?.space ?: input.ballPosition
         //val kickDirection = kickStrategy.getKickDirection(input.myCarData, ballAtIntercept) ?: return null

@@ -209,13 +209,19 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         }
 
         private fun standardOffset(intercept: Vector3?, team:Team): Vector3 {
-            var offset = GoalUtil.getOwnGoal(team).center.scaledToMagnitude(3.0).minus(Vector3(0.0, 0.0, .6))
+            val ownGoal = GoalUtil.getOwnGoal(team).center
+            var offset = ownGoal.scaledToMagnitude(2.0).minus(Vector3(0.0, 0.0, .3))
 
             intercept?.let {
-                val goalToBall = it.minus(GoalUtil.getEnemyGoal(team).getNearestEntrance(it, 4.0))
-                offset = goalToBall.scaledToMagnitude(3.0)
-                if (goalToBall.magnitude() > 110) {
-                    offset = Vector3(offset.x, offset.y, -.2)
+                
+                val offensive = Math.abs(ownGoal.y - intercept.y) > ArenaModel.BACK_WALL * .7
+
+                if (offensive) {
+                    val goalToBall = it.minus(GoalUtil.getEnemyGoal(team).getNearestEntrance(it, 4.0))
+                    offset = goalToBall.scaledToMagnitude(3.0)
+                    if (goalToBall.magnitude() > 110) {
+                        offset = Vector3(offset.x, offset.y, -.2)
+                    }
                 }
             }
 

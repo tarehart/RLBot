@@ -64,7 +64,11 @@ object DirectedKickUtil {
         //, distancePlot: DistancePlot, interceptModifier: Vector3, kickStrategy: KickStrategy, ballPath: BallPath
 
         val ballAtIntercept = intercept.ballSlice
-        val arrivalSpeed = intercept.accelSlice.speed
+        val secondsTillIntercept = (intercept.time - car.time).seconds
+        val flatPosition = car.position.flatten()
+        val toIntercept = intercept.space.flatten() - flatPosition
+        val averageSpeedNeeded = toIntercept.magnitude() / secondsTillIntercept
+        val arrivalSpeed = if (intercept.spareTime.millis > 0) averageSpeedNeeded else intercept.accelSlice.speed
         val impactSpeed: Double
         val interceptModifier = intercept.space - intercept.ballSlice.space
 
@@ -104,16 +108,12 @@ object DirectedKickUtil {
                     desiredBallVelocity.z)
         }
 
-        val backoff = 5 + (ballAtIntercept.space.z - ArenaModel.BALL_RADIUS) * .05 * ManeuverMath.forwardSpeed(car) + intercept.spareTime.seconds * 5
-        val flatPosition = car.position.flatten()
-        val toIntercept = intercept.space.flatten() - flatPosition
         val toInterceptNorm = toIntercept.normalized()
         val flatForce = plannedKickForce.flatten()
         val toKickForce = toInterceptNorm.correctionAngle(flatForce)
         val estimatedApproachToKickForce = estimatedApproach.correctionAngle(flatForce) // TODO: Use this in more situations
         val ballPosition = ballAtIntercept.space.flatten()
-        val secondsTillIntercept = (intercept.time - car.time).seconds
-        val averageSpeedNeeded = toIntercept.magnitude() / secondsTillIntercept
+
 
         val launchPosition: Vector2
         val facing: Vector2

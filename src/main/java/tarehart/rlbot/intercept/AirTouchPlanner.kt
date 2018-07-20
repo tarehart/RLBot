@@ -21,6 +21,7 @@ object AirTouchPlanner {
     const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
     private const val MAX_FLIP_HIT = NEEDS_JUMP_HIT_THRESHOLD
     const val MAX_CHIP_HIT = 2.0
+    const val LATENCY = 0.02
 
 
     fun checkAerialReadiness(car: CarData, intercept: Intercept): AerialChecklist {
@@ -64,7 +65,7 @@ object AirTouchPlanner {
         checklist.linedUp = true // TODO: calculate this properly
         val strikeProfile = intercept.strikeProfile
         val jumpHitTime = strikeProfile.strikeDuration.seconds
-        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < jumpHitTime
+        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < jumpHitTime + LATENCY
         return checklist
     }
 

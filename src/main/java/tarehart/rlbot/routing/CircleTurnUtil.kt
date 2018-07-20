@@ -114,7 +114,7 @@ object CircleTurnUtil {
         val distance = car.position.flatten().distance(targetPosition)
         val maxSpeed = distancePlot.getMotionAfterDistance(distance)?.speed ?: AccelerationModel.SUPERSONIC_SPEED
         val idealSpeed = getIdealCircleSpeed(PositionFacing(car.position.flatten(), car.orientation.noseVector.flatten()), strikePoint.positionFacing)
-        val currentSpeed = car.velocity.magnitude()
+        val currentSpeed = car.velocity.flatten().magnitude()
 
         return circleWaypoint(car, strikePoint, currentSpeed, Math.min(maxSpeed, idealSpeed), distancePlot)
     }
@@ -204,9 +204,9 @@ object CircleTurnUtil {
         val route = Route()
         route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(AccelerationModel.getSteerPenaltySeconds(car, tangentPoint.toVector3()))))
 
-        val accelerationTime = distancePlot.getTravelTime(distanceToTangent)
+        val accelerationTime = distancePlot.getTravelTime(distanceToTangent) ?: distancePlot.getEndPoint().time
         val arrivalParts = RoutePlanner.arriveWithSpeed(flatPosition, tangentPoint, expectedSpeed, distancePlot) ?:
-            listOf(AccelerationRoutePart(flatPosition, tangentPoint, accelerationTime!!))
+            listOf(AccelerationRoutePart(flatPosition, tangentPoint, accelerationTime))
 
         arrivalParts.forEach { route.withPart(it) }
         route.withPart(CircleRoutePart(

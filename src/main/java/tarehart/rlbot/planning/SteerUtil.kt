@@ -163,8 +163,8 @@ object SteerUtil {
         val turnSharpness = difference * 6 / Math.PI + difference * speed * .1
         //turnSharpness = (1 - DEAD_ZONE) * turnSharpness + Math.signum(turnSharpness) * DEAD_ZONE;
 
-        val shouldBrake = distance < 25 && difference > Math.PI / 4 && speed > 25
-        val shouldSlide = shouldBrake || difference > Math.PI / 2
+        val shouldBrake = distance < 25 && difference > Math.PI / 4 && speed > 25 || speed > 20 && difference > Math.PI / 2
+        val shouldSlide = speed < 30 && distance < 10 && difference > Math.PI / 3 || speed < 30 && difference > 3 * Math.PI / 4
         val shouldBoost = !noBoosting && !shouldBrake && difference < Math.PI / 6 && !isSupersonic
 
         return AgentOutput()
@@ -210,7 +210,7 @@ object SteerUtil {
 
 
         val distanceToIntercept = toTarget.magnitude()
-        if (distanceToIntercept > distanceCovered + 10) {
+        if (distanceToIntercept > distanceCovered + 15) {
 
             val facing = car.orientation.noseVector.flatten()
             val facingCorrection = facing.correctionAngle(toTarget)

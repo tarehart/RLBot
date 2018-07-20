@@ -47,6 +47,13 @@ class TacticsAdvisor {
         }
 
         if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+
+            if (situation.ballAdvantage.seconds < 0 && ChallengeStep.threatExists(situation) &&
+                    situation.expectedEnemyContact?.time?.isBefore(situation.scoredOnThreat.time) == true) {
+                println("Need to save, but also need to challenge first!", input.playerIndex)
+                return Plan(Plan.Posture.SAVE).withStep(ChallengeStep())
+            }
+
             println("Canceling current plan. Need to go for save!", input.playerIndex)
             return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
         }
@@ -63,7 +70,23 @@ class TacticsAdvisor {
         }
 
         if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
+
+            if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(situation)) {
+                println("Need to clear, but also need to challenge first!", input.playerIndex)
+                return Plan(Plan.Posture.CLEAR).withStep(ChallengeStep())
+            }
+
             println("Canceling current plan. Going for clear!", input.playerIndex)
+
+            situation.expectedContact?.let {
+                val carToIntercept = it.space - car.position
+                val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
+
+                if (Math.abs(carApproachVsBallApproach) > Math.PI / 2) {
+                    return Plan(Plan.Posture.CLEAR).withStep(InterceptStep(Vector3(0.0, Math.signum(GoalUtil.getOwnGoal(car.team).center.y) * 1.5, 0.0)))
+                }
+            }
+
             return FirstViableStepPlan(Plan.Posture.CLEAR)
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
                     .withStep(EscapeTheGoalStep())

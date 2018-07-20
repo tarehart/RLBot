@@ -80,6 +80,7 @@ class WhatASaveStep : NestedPlanStep() {
         }
 
         return startPlan(FirstViableStepPlan(Plan.Posture.SAVE)
-                .withStep(FlexibleKickStep(KickAwayFromOwnGoal())), input)
+                .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+                .withStep(GetOnDefenseStep()), input)
     }
 }

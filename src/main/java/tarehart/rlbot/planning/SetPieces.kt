@@ -15,9 +15,9 @@ object SetPieces {
 
         return Plan()
                 .unstoppable()
-                .withStep(BlindStep(Duration.ofSeconds(.09),
+                .withStep(BlindStep(Duration.ofSeconds(.15),
                         AgentOutput()
-                                .withPitch(-1.0)
+                                .withPitch(-0.3)
                                 .withJump(true)
                                 .withThrottle(1.0)))
                 .withStep(BlindStep(Duration.ofSeconds(.02),
@@ -162,11 +162,12 @@ object SetPieces {
                 .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
                         .withThrottle(1.0)
                 ))
-                .withStep(BlindStep(Duration.ofMillis(500), AgentOutput()
+                .withStep(BlindStep(Duration.ofMillis(100), AgentOutput()
                         .withJump(true)
                         .withThrottle(1.0)
                         .withPitch(-1.0)
                         .withYaw((if (flipLeft) -1 else 1).toDouble())))
+                .withStep(BlindStep(Duration.ofMillis(700), AgentOutput()))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
 
