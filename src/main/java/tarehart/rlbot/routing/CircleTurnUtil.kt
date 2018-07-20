@@ -141,6 +141,8 @@ object CircleTurnUtil {
         // the approach angle is a pretty good approximation when we are far away.
 
         // This summation leads to a weighted average of the two vectors depending on distance.
+
+        // TODO: make sure this still makes sense in a route-aware planning context
         val toTarget = target - currentFacing.position
         val estimatedEntryAngle = currentFacing.facing + toTarget.scaled(0.05)
         return estimatedEntryAngle.normalized()

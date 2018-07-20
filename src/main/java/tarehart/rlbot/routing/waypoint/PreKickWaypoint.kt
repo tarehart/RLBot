@@ -7,6 +7,6 @@ import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.time.GameTime
 
-abstract class PreKickWaypoint(val position: Vector2) {
+abstract class PreKickWaypoint(val position: Vector2, val expectedTime: GameTime, val waitUntil: GameTime? = null) {
     abstract fun planRoute(car: CarData, distancePlot: DistancePlot): SteerPlan
 }

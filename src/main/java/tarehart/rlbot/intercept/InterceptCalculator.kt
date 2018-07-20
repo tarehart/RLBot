@@ -163,7 +163,7 @@ object InterceptCalculator {
                             slice,
                             dts)
 
-                    val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy)
+                    val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy, estimatedApproach)
                             ?: return null // Also consider continuing the loop instead.
                     val steerPlan = kickPlan.launchPad.planRoute(carData, kickPlan.distancePlot)
 //                    val steerPlan = CircleTurnUtil.getPlanForCircleTurn(carData, kickPlan.distancePlot, kickPlan.launchPad)

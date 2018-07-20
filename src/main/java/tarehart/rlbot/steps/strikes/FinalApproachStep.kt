@@ -46,8 +46,8 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
     companion object {
         fun readyForFinalApproach(car: CarData, launchPad: PreKickWaypoint) : Boolean {
-            val appropriateTime = if (launchPad is StrictPreKickWaypoint) Duration.between(car.time, launchPad.expectedTime).millis < 500 else true
-            return appropriateTime && car.position.flatten().distance(launchPad.position) < 10
+            val appropriateTime = Duration.between(car.time, launchPad.expectedTime).millis < 100
+            return appropriateTime && car.position.flatten().distance(launchPad.position) < 5
         }
     }
 }

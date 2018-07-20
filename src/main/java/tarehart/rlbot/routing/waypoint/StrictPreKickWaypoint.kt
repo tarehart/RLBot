@@ -9,7 +9,9 @@ import tarehart.rlbot.routing.*
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
 
-class StrictPreKickWaypoint(position: Vector2, facing: Vector2, val expectedTime: GameTime, val waitUntil: GameTime? = null) : PreKickWaypoint(position) {
+class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: GameTime, waitUntil: GameTime? = null) :
+        PreKickWaypoint(position, expectedTime, waitUntil) {
+
     val facing: Vector2 = facing.normalized()
     val positionFacing = PositionFacing(position, facing)
 
