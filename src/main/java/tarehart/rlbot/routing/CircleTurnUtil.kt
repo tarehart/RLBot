@@ -64,13 +64,17 @@ object CircleTurnUtil {
         }
 
         val turnDuration = getTurnDuration(idealCircle, flatPosition, targetPosition, clockwise, idealSpeed)
-        return SteerPlan(output, Route()
+
+        // TODO: sometimes this turn duration gets really big at the end of a circle turn that seems to be going fine.
+        val route = Route()
                 .withPart(CircleRoutePart(
                         start = flatPosition,
                         end = targetPosition,
                         duration = turnDuration,
                         circle = idealCircle,
-                        clockwise = clockwise)))
+                        clockwise = clockwise))
+
+        return SteerPlan(output, route)
     }
 
     private fun getTurnDuration(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean, speed: Double): Duration {

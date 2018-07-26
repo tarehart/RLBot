@@ -33,11 +33,8 @@ object AccelerationModel {
         return travelTime?.plusSeconds(penaltySeconds)
     }
 
-    fun getOrientDuration(strikeProfile: StrikeProfile, carData: CarData, space: Vector3): Duration {
-        return if (strikeProfile.isForward)
-            Duration.ofSeconds(getSteerPenaltySeconds(carData, space))
-        else
-            Duration.ofMillis(0)
+    fun getOrientDuration(carData: CarData, space: Vector3): Duration {
+        return Duration.ofSeconds(getSteerPenaltySeconds(carData, space))
     }
 
     fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {

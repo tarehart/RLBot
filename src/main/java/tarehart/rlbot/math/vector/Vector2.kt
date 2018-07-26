@@ -1,5 +1,8 @@
 package tarehart.rlbot.math.vector
 
+import tarehart.rlbot.math.Clamper
+import tarehart.rlbot.math.VectorUtil
+
 data class Vector2(val x: Double, val y: Double) {
 
     val isZero: Boolean
@@ -92,6 +95,15 @@ data class Vector2(val x: Double, val y: Double) {
         }
 
         return idealRad - currentRad
+    }
+
+    fun rotateTowards(ideal: Vector2, angleTolerance: Double): Vector2 {
+        val correctionAngle = correctionAngle(ideal)
+        if (Math.abs(correctionAngle) < angleTolerance) {
+            return this
+        }
+        val tolerantCorrection = Clamper.clamp(correctionAngle, -angleTolerance, angleTolerance)
+        return VectorUtil.rotateVector(this, tolerantCorrection)
     }
 
     override fun toString(): String {

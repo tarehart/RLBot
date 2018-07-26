@@ -84,7 +84,7 @@ object AirTouchPlanner {
         checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 30
         checklist.closeEnough = secondsTillIntercept < 4
 
-        checklist.upright = car.orientation.roofVector.dotProduct(Vector3(0.0, 0.0, 1.0)) > .99
+        checklist.upright = car.orientation.roofVector.dotProduct(Vector3(0.0, 0.0, 1.0)) > .85
         checklist.onTheGround = car.hasWheelContact
     }
 

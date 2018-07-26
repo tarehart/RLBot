@@ -6,7 +6,6 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
@@ -46,8 +45,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
     companion object {
         fun readyForFinalApproach(car: CarData, launchPad: PreKickWaypoint) : Boolean {
-            val appropriateTime = Duration.between(car.time, launchPad.expectedTime).millis < 100
-            return appropriateTime && car.position.flatten().distance(launchPad.position) < 5
+            return launchPad.isPlausibleFinalApproach(car)
         }
     }
 }

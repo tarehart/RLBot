@@ -52,7 +52,8 @@ class ChallengeStep: NestedPlanStep() {
             return null // We can probably go for a shot now.
         }
 
-        val enemyContact = tacticalSituation.expectedEnemyContact ?: return null
+        val enemyContact = tacticalSituation.expectedEnemyContact ?:
+            return null
 
         if (enemyContact.space.z > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) {
             return null

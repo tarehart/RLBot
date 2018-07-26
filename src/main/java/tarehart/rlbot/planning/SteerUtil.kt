@@ -54,7 +54,7 @@ object SteerUtil {
         val plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), boostBudget, carData.position.distance(spaceTime.space))
 
         val strikeProfile = StrikeProfile()
-        val orientDuration = AccelerationModel.getOrientDuration(strikeProfile, carData, spaceTime.space)
+        val orientDuration = AccelerationModel.getOrientDuration(carData, spaceTime.space)
         val dts = plot.getMotionAfterDuration(
                 Duration.between(carData.time, spaceTime.time) - orientDuration,
                 strikeProfile)

@@ -72,7 +72,7 @@ object InterceptCalculator {
             val slice = ballPath.slices[i]
             val spaceTime = SpaceTime(slice.space.plus(interceptModifier), slice.time)
             val strikeProfile = strikeProfileFn.invoke(spaceTime.space.z)
-            val orientDuration = AccelerationModel.getOrientDuration(strikeProfile, carData, spaceTime.space)
+            val orientDuration = if (strikeProfile.isForward) AccelerationModel.getOrientDuration(carData, spaceTime.space) else Duration.ofMillis(0)
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - orientDuration, strikeProfile) ?: return null
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space, planeNormal)
@@ -139,7 +139,10 @@ object InterceptCalculator {
                     PositionFacing(myPosition, carData.orientation.noseVector.flatten()), interceptFlat)
 
             val strikeProfile = strikeProfileFn.invoke(spaceTime.space.z, Vector2.angle(estimatedApproach, kickDirection.flatten()))
-            val orientDuration = AccelerationModel.getOrientDuration(strikeProfile, carData, spaceTime.space)
+
+            // If it's a forward strike, it's safe to factor in orient duration now, which is good for efficiency.
+            // Otherwise, defer until we have a route because angled strikes are tricky.
+            val orientDuration = if (strikeProfile.isForward) AccelerationModel.getOrientDuration(carData, spaceTime.space) else Duration.ofMillis(0)
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - orientDuration, strikeProfile) ?: return null
 
             val interceptDistance = toIntercept.magnitude()
@@ -171,7 +174,7 @@ object InterceptCalculator {
 
                     val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration;
 
-                    if (postRouteTime.seconds > 0 ||
+                    if (postRouteTime.seconds >= 0 ||
                             // If it's an aerial, give some leeway. The route is currently not very good at judging how long
                             // an aerial will take.
                             strikeProfile.style == StrikeProfile.Style.AERIAL && postRouteTime.seconds > -1.0) {
