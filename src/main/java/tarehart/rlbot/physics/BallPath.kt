@@ -1,5 +1,6 @@
 package tarehart.rlbot.physics
 
+import rlbot.flat.BallPrediction
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
@@ -9,7 +10,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.util.*
 
-class BallPath(start: BallSlice) {
+class BallPath() {
 
     val slices = ArrayList<BallSlice>()
 
@@ -19,8 +20,21 @@ class BallPath(start: BallSlice) {
     val endpoint: BallSlice
         get() = this.slices[this.slices.size - 1]
 
-    init {
-        this.slices.add(start)
+    constructor(prediction: BallPrediction): this() {
+        for (i in 0 until prediction.slicesLength()) {
+            val slice = prediction.slices(i)
+            val physics = slice.physics()
+
+            slices.add(BallSlice(
+                    Vector3.fromRlbot(physics.location()),
+                    GameTime.fromGameSeconds(slice.gameSeconds().toDouble()),
+                    Vector3.fromRlbot(physics.velocity()),
+                    Vector3.fromRlbot(physics.angularVelocity())))
+        }
+    }
+
+    constructor(startingSlice: BallSlice): this() {
+        slices.add(startingSlice)
     }
 
     fun addSlice(spaceTime: BallSlice) {
@@ -170,9 +184,6 @@ class BallPath(start: BallSlice) {
     }
 
     fun startingFrom(earliestIntercept: GameTime): BallPath? {
-        val otherPath = BallPath(startPoint)
-        otherPath.slices.clear()
-        otherPath.slices.addAll(slices.dropWhile { slice -> slice.time < earliestIntercept })
-        return otherPath
+        throw RuntimeException("startingFrom is deprecated.")
     }
 }

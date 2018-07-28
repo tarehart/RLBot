@@ -1,6 +1,8 @@
 package tarehart.rlbot.math.vector
 
+import com.google.flatbuffers.FlatBufferBuilder
 import tarehart.rlbot.math.Plane
+import java.util.*
 
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
 
@@ -103,7 +105,7 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
 
     companion object {
 
-        private const val PACKET_DISTANCE_TO_CLASSIC = 50.0
+        const val PACKET_DISTANCE_TO_CLASSIC = 50.0
 
         fun fromRlbot(v: rlbot.flat.Vector3): Vector3 {
             // Invert the X value so that the axes make more sense.

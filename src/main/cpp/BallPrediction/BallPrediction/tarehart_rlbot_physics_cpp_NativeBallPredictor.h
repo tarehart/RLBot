@@ -12,8 +12,8 @@ extern "C" {
 	* Method:    predictPath
 	* Signature: (Ltarehart/rlbot/math/BallSlice;F)[Ltarehart/rlbot/math/BallSlice;
 	*/
-	JNIEXPORT jobjectArray JNICALL Java_tarehart_rlbot_physics_cpp_NativeBallPredictor_predictPath
-	(JNIEnv *, jobject, jobject, jfloat);
+	JNIEXPORT jbyteArray JNICALL Java_tarehart_rlbot_physics_cpp_NativeBallPredictor_predictPath
+	(JNIEnv *, jobject, jbyteArray, jfloat);
 
 #ifdef __cplusplus
 }

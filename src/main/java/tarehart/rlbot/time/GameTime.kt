@@ -14,6 +14,10 @@ data class GameTime(private val gameMillis: Long) : Comparable<GameTime> {
         return gameMillis
     }
 
+    fun toSeconds(): Float {
+        return gameMillis / 1000.0f
+    }
+
     operator fun plus(duration: Duration): GameTime {
         return GameTime(gameMillis + duration.millis)
     }

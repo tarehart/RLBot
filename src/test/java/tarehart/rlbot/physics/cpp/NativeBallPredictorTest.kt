@@ -19,9 +19,10 @@ class NativeBallPredictorTest {
                 Vector3(1.0, 2.0, 3.0),
                 Vector3(1.0, 2.0, 3.0))
 
-        val path = NativeBallPredictor.predictPath(startingSlice, 5f)
+        val path = BallPredictorHelper.predictPath(startingSlice, 5f)
 
         Assert.assertNotNull(path)
+        Assert.assertEquals(25, path.slices.size)
 
     }
 }
