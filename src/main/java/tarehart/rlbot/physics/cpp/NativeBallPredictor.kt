@@ -7,6 +7,7 @@ object NativeBallPredictor {
 
     init {
         System.loadLibrary("BallPrediction")
+        System.out.println("Ball prediction library loaded!")
     }
 
     external fun predictPath(startingSlice: BallSlice, minSeconds: Float): Array<BallSlice>

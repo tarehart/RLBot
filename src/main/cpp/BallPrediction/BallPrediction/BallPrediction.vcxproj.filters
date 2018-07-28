@@ -36,6 +36,9 @@
     <ClCompile Include="tarehart_rlbot_physics_cpp_NativeBallPredictor.h">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tarehart_rlbot_physics_cpp_NativeBallPredictor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chip\inc\Ball.h">
@@ -81,6 +84,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BallPrediction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

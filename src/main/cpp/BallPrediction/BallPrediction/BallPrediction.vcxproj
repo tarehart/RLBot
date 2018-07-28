@@ -156,6 +156,7 @@
     <ClCompile Include="chip\src\pitch.cpp" />
     <ClCompile Include="chip\src\primitives.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="tarehart_rlbot_physics_cpp_NativeBallPredictor.cpp" />
     <ClCompile Include="tarehart_rlbot_physics_cpp_NativeBallPredictor.h" />
     <ClCompile Include="PredictionService.cpp" />
   </ItemGroup>
@@ -173,6 +174,7 @@
     <ClInclude Include="chip\inc\timer.h" />
     <ClInclude Include="chip\inc\vec.h" />
     <ClInclude Include="flat\rlbot_generated.h" />
+    <ClInclude Include="handle.h" />
     <ClInclude Include="PredictionService.hpp" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
