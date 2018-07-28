@@ -50,7 +50,7 @@ class AgentInput(
         // Flip the x-axis, same as all our other vector handling.
         // According to the game, when the spin vector is pointed at you, the ball is spinning clockwise.
         // However, we will invert this concept because the ode4j physics engine disagrees.
-        this.ballSpin = Vector3(angVel.x().toDouble(), (-angVel.y()).toDouble(), (-angVel.z()).toDouble())
+        this.ballSpin = Vector3.fromRlbot(ballPhysics.angularVelocity())
 
         ballPosition = Vector3.fromRlbot(ballPhysics.location())
         ballVelocity = Vector3.fromRlbot(ballPhysics.velocity())

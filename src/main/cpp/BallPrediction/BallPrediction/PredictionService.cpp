@@ -15,6 +15,7 @@ std::list<BallSlice>* PredictionService::updatePrediction(BallSlice pBall)
 		}
 	}
 	else {
+		prediction.clear();
 		baseSlice = pBall;
 	}
 
