@@ -21,6 +21,7 @@ private:
 	bool currentPredictionStillValid(BallSlice currentBallPosition);
 	bool expectedBallPosition(float gameSeconds, BallSlice* outputSlice);
 	Ball ball;
+	void makePrediction(BallSlice ballSlice, std::list<BallSlice>* predictionOut);
 public:
 	PredictionService(float secondsToPredict, float stepInterval) : 
 		prediction(), 
@@ -31,5 +32,6 @@ public:
 	{ 
 	}
 	std::list<BallSlice>* updatePrediction(BallSlice slice);
+	void makeFreshPrediction(BallSlice ballSlice, std::list<BallSlice>* predictionOut);
 };
 

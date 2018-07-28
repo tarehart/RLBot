@@ -10,6 +10,7 @@ abstract class NestedPlanStep : Step {
 
     private var plan : Plan? = null
     protected var zombie : Boolean = false
+    protected var cancelPlan = false
 
     protected fun startPlan(p: Plan, input: AgentInput): AgentOutput? {
         plan = p
@@ -66,7 +67,7 @@ abstract class NestedPlanStep : Step {
     }
 
     override fun getPlanGuidance(): PlanGuidance {
-        return PlanGuidance.CONTINUE
+        return if (cancelPlan) PlanGuidance.CANCEL else PlanGuidance.CONTINUE
     }
 
 }

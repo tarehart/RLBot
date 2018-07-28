@@ -61,17 +61,19 @@ public class ArenaModel {
         backWallPlanes.add(new Plane(new Vector3(0, -1, 0), new Vector3(0, BACK_WALL, 0)));
     }
 
-    public static final Duration SIMULATION_DURATION = Duration.Companion.ofSeconds(6);
+    public static final Duration SIMULATION_DURATION = Duration.Companion.ofSeconds(5);
+
+    private static final ArenaModel mainModel = new ArenaModel();
 
     private static final LoadingCache<BallSlice, BallPath> pathCache = CacheBuilder.newBuilder()
-            .maximumSize(100)
+            .maximumSize(10)
             .build(new CacheLoader<BallSlice, BallPath>() {
                 @Override
                 public BallPath load(BallSlice key) throws Exception {
                     synchronized (lock) {
                         // Always use a new ArenaModel. There's a nasty bug
                         // where bounces stop working properly and I can't track it down.
-                        return new ArenaModel().simulateBall(key, SIMULATION_DURATION);
+                        return mainModel.simulateBall(key, SIMULATION_DURATION);
                     }
                 }
             });
@@ -103,8 +105,28 @@ public class ArenaModel {
         }
     }
 
+    private BallPath previousBallPath = null;
     public BallPath simulateBall(BallSlice start, Duration duration) {
-        return BallPredictorHelper.INSTANCE.predictPath(start, (float) duration.getSeconds());
+        final BallPath prevPath = previousBallPath;
+        final BallPath ballPath;
+        if (prevPath != null) {
+            final BallSlice prevPrediction = prevPath.getMotionAt(start.getTime());
+            if (prevPath.getEndpoint().getTime().minus(start.getTime()).getSeconds() > SIMULATION_DURATION.getSeconds() &&
+                    prevPrediction != null &&
+                    prevPrediction.getSpace().distance(start.getSpace()) < .3 &&
+                    prevPrediction.getSpace().flatten().distance(start.getSpace().flatten()) < .1 &&
+                    prevPrediction.getVelocity().distance(start.getVelocity()) < .3 &&
+                    prevPrediction.getVelocity().flatten().distance(start.getVelocity().flatten()) < .1) {
+
+                ballPath = prevPath; // Previous prediction is still legit, build on top of it.
+            } else {
+                ballPath = BallPredictorHelper.INSTANCE.predictPath(start, (float) duration.getSeconds());
+            }
+        } else {
+            ballPath = BallPredictorHelper.INSTANCE.predictPath(start, (float) duration.getSeconds());
+        }
+        previousBallPath = ballPath;
+        return ballPath;
     }
 
     public static boolean isCarNearWall(CarData car) {

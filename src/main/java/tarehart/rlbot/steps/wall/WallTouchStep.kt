@@ -67,6 +67,7 @@ class WallTouchStep : NestedPlanStep() {
             }
             if (confusion > 1) {
                 println("Failed to make the wall touch because the intercept changed", input.playerIndex)
+                cancelPlan = true
                 return null
             }
             return AgentOutput().withThrottle(1.0)

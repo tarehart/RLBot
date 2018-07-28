@@ -2,6 +2,32 @@
 #include <math.h>
 
 
+void PredictionService::makePrediction(BallSlice ballSlice, std::list<BallSlice>* predictionOut)
+{
+	ball.x = ballSlice.Location;
+	ball.v = ballSlice.Velocity;
+	ball.w = ballSlice.AngularVelocity;
+
+	float predictionSeconds = ballSlice.gameSeconds;
+	while (predictionOut->size() < expectedNumSlices) {
+		ball.step(stepInterval);
+		predictionSeconds += stepInterval;
+
+		BallSlice predicted;
+		predicted.Location = ball.x;
+		predicted.Velocity = ball.v;
+		predicted.AngularVelocity = ball.w;
+		predicted.gameSeconds = predictionSeconds;
+
+		predictionOut->push_back(predicted);
+	}
+}
+
+void PredictionService::makeFreshPrediction(BallSlice ballSlice, std::list<BallSlice>* predictionOut)
+{
+	makePrediction(ballSlice, predictionOut);
+}
+
 std::list<BallSlice>* PredictionService::updatePrediction(BallSlice pBall)
 {
 	BallSlice baseSlice;
@@ -19,23 +45,7 @@ std::list<BallSlice>* PredictionService::updatePrediction(BallSlice pBall)
 		baseSlice = pBall;
 	}
 
-	ball.x = baseSlice.Location;
-	ball.v = baseSlice.Velocity;
-	ball.w = baseSlice.AngularVelocity;
-
-	float predictionSeconds = baseSlice.gameSeconds;
-	while (prediction.size() < expectedNumSlices) {
-		ball.step(stepInterval);
-		predictionSeconds += stepInterval;
-
-		BallSlice predicted;
-		predicted.Location = ball.x;
-		predicted.Velocity = ball.v;
-		predicted.AngularVelocity = ball.w;
-		predicted.gameSeconds = predictionSeconds;
-
-		prediction.push_back(predicted);
-	}
+	makePrediction(baseSlice, &prediction);
 
 	return &prediction;
 }

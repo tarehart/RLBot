@@ -42,6 +42,6 @@ object BallPredictorHelper {
 
         val ballPrediction = BallPrediction.getRootAsBallPrediction(ByteBuffer.wrap(rawPath))
 
-        return BallPath(ballPrediction)
+        return BallPath(startingSlice, ballPrediction)
     }
 }

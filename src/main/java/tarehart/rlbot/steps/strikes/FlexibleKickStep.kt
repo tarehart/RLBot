@@ -38,7 +38,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private var recentCar: CarData? = null
     //private var earliestIntercept: GameTime? = null
     private val disruptionMeter = BallPathDisruptionMeter()
-    private var cancelPlan = false
 
     override fun doInitialComputation(input: AgentInput) {
         recentCar = input.myCarData
@@ -151,6 +150,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         if (badCirclePart != null) {
             BotLog.println("Bad circle part during flexible.", car.playerIndex)
+            cancelPlan = true
             return null
         }
 
@@ -238,9 +238,5 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             it.steerPlan.drawDebugInfo(graphics, recentCar!!)
             it.kickPlan.drawDebugInfo(graphics)
         }
-    }
-
-    override fun getPlanGuidance(): PlanGuidance {
-        return if (cancelPlan) PlanGuidance.CANCEL else PlanGuidance.CONTINUE
     }
 }

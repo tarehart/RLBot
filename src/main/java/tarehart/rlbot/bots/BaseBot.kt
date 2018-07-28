@@ -12,7 +12,7 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
-import tarehart.rlbot.ui.Readout
+import tarehart.rlbot.ui.PlainReadout
 import java.time.Instant
 import java.util.*
 import javax.swing.JFrame
@@ -21,7 +21,7 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
     internal var currentPlan: Plan? = null
     private var previousPlan: Plan? = null
     internal var currentZonePlan: ZonePlan? = null
-    private val readout: Readout = Readout()
+    private val readout: PlainReadout = PlainReadout()
     private var previousSituation: String? = null
     internal var previousZonePlan: ZonePlan? = null
 
