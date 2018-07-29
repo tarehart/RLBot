@@ -1,5 +1,6 @@
 package tarehart.rlbot.ui;
 
+import sun.awt.SunToolkit;
 import tarehart.rlbot.AgentInput;
 import tarehart.rlbot.input.CarData;
 import tarehart.rlbot.math.BallSlice;
@@ -61,6 +62,10 @@ public class PlainReadout {
     }
 
     public void update(AgentInput input, Plan.Posture posture, String situation, String log, BallPath ballPath) {
+
+        if (!SunToolkit.getContainingWindow(rootPanel).isVisible()) {
+            return;
+        }
 
         planPosture.setText(posture.name());
         situationText.setText(situation);

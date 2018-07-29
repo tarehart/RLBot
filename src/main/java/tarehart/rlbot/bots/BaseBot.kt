@@ -41,13 +41,9 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
 
     override fun processInput(request: GameTickPacket?): AgentOutput {
 
-        request ?: return AgentOutput()
+        val timeBefore = Instant.now()
 
-        val elapsedMillis = java.time.Duration.between(previousTime, Instant.now()).toMillis()
-        if (elapsedMillis > 20) {
-            BotLog.println("SLOW FRAME took $elapsedMillis ms!", playerIndex)
-        }
-        previousTime = Instant.now()
+        request ?: return AgentOutput()
 
         try {
             // Do nothing if we know nothing about our car
@@ -57,7 +53,14 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
 
             val translatedInput = AgentInput(request, playerIndex, chronometer, spinTracker, frameCount++, this)
 
-            return processInput(translatedInput)
+            val output = processInput(translatedInput)
+
+            val elapsedMillis = java.time.Duration.between(timeBefore, Instant.now()).toMillis()
+            if (elapsedMillis > 20) {
+                BotLog.println("SLOW FRAME took $elapsedMillis ms!", playerIndex)
+            }
+
+            return output
         } catch (e: Exception) {
             e.printStackTrace()
             return AgentOutput()

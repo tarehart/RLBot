@@ -19,7 +19,12 @@ buildscript {
 
 def dllDirectory = 'build/dll'
 def assetsDirectory = 'build/assets'
-applicationDefaultJvmArgs = ["-Djna.library.path=" + dllDirectory, "-Djava.library.path=" + dllDirectory]
+applicationDefaultJvmArgs = [
+        "-Djna.library.path=" + dllDirectory,
+        "-Djava.library.path=" + dllDirectory,
+        "-XX:+UseG1GC",
+        "-Xms256m"
+]
 
 //afterEvaluate {
 //    tasks.getByName('runIdea') {
