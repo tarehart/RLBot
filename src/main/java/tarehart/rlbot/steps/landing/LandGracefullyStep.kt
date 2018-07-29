@@ -32,10 +32,6 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         val car = input.myCarData
         if (ArenaModel.isCarOnWall(car) || car.hasWheelContact && ArenaModel.isNearFloorEdge(car.position)) {
 
-            if (WallTouchStep.hasWallTouchOpportunity(input, ArenaModel.predictBallPath(input))) {
-                return startPlan(Plan().withStep(WallTouchStep()), input)
-            }
-
             return startPlan(Plan().withStep(DescendFromWallStep()), input)
         }
 

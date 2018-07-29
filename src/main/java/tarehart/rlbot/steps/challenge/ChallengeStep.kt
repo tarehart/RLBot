@@ -68,7 +68,7 @@ class ChallengeStep: NestedPlanStep() {
 
         val defensiveNodeDistance = flatPosition.distance(defensiveNode)
 
-        if (defensiveNodeDistance < backoff + 15) {
+        if (defensiveNodeDistance < backoff + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
             startPlan(
                     Plan(Plan.Posture.DEFENSIVE)
                             .withStep(InterceptStep(enemyShotLine.scaledToMagnitude(1.5))),
@@ -76,7 +76,7 @@ class ChallengeStep: NestedPlanStep() {
         }
 
         SteerUtil.getSensibleFlip(car, defensiveNode)?.let {
-            if (car.boost < 1) { // Use more boost and less flipping during challenges.
+            if (car.boost < 1 && tacticalSituation.distanceBallIsBehindUs > 0) { // Use more boost and less flipping during challenges.
                 return startPlan(it, input)
             }
         }

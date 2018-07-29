@@ -168,7 +168,8 @@ object DirectedKickUtil {
     private fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, kickForce: Vector2, approachVsKickForceAngle:Double, carPosition: Vector2): PreKickWaypoint? {
         val strikeTravel = intercept.strikeProfile.dodgeSeconds * arrivalSpeed
 
-        val carPositionAtContact = intercept.ballSlice.space.flatten() - kickForce.scaledToMagnitude(2.5)
+        val carStrikeRadius = 3.0
+        val carPositionAtContact = intercept.ballSlice.space.flatten() - kickForce.scaledToMagnitude(carStrikeRadius)
 
         val speedupResult = getSpeedupResultForAngled(intercept.strikeProfile, arrivalSpeed)
 
@@ -193,19 +194,12 @@ object DirectedKickUtil {
      * When we are doing either a side dodge or a diagonal dodge, the car will speed up in the forward and horizontal directions.
      */
     private fun getSpeedupResultForAngled(strikeProfile: StrikeProfile, arrivalSpeed: Double): SpeedupResult {
-        val sidewaysMultiplier = if (strikeProfile.style == StrikeProfile.Style.DIAGONAL_HIT) .7 else 1.0
+        val sidewaysMultiplier = if (strikeProfile.style == StrikeProfile.Style.DIAGONAL_HIT) .5 else 1.0
         val sidewaysComponent = ManeuverMath.DODGE_SPEED * sidewaysMultiplier
 
         val forwardMultiplier = if (strikeProfile.style == StrikeProfile.Style.DIAGONAL_HIT) .7 else 0.0
         val forwardComponent = Math.min(arrivalSpeed + ManeuverMath.DODGE_SPEED * forwardMultiplier, AccelerationModel.SUPERSONIC_SPEED)
         return SpeedupResult(forwardComponent, sidewaysComponent)
-    }
-
-    private val diagonalSpeedupComponent = 10 * Math.sin(Math.PI / 4)
-
-    private fun diagonalApproach(arrivalSpeed: Double, forceDirection: Vector2, left: Boolean): Vector2 {
-        val angle = Math.PI / 4
-        return VectorUtil.rotateVector(forceDirection, angle * (if (left) -1.0 else 1.0))
     }
 
     fun dodgePosition(carPosition: Vector2, carAtContact: Vector2, dodgeDeflectionAngle: Double, dodgeTravel: Double): Vector2? {

@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.strikes
 
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.planning.Goal
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.TacticsAdvisor
 
@@ -22,8 +23,14 @@ class KickAtEnemyGoal : KickStrategy {
 
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
         val easyKickFlat = easyKick.flatten()
-        val toLeftCorner = GoalUtil.getEnemyGoal(car.team).getLeftPost(6.0).minus(ballPosition).flatten()
-        val toRightCorner = GoalUtil.getEnemyGoal(car.team).getRightPost(6.0).minus(ballPosition).flatten()
+
+        val padNearPost = Math.abs(ballPosition.x) > Goal.EXTENT
+        val leftIsNearPost = padNearPost && GoalUtil.getEnemyGoal(car.team).leftPost.distanceSquared(car.position) <
+                GoalUtil.getEnemyGoal(car.team).rightPost.distanceSquared(car.position)
+        val rightIsNearPost = padNearPost && !leftIsNearPost
+
+        val toLeftCorner = GoalUtil.getEnemyGoal(car.team).getLeftPost(if (leftIsNearPost) 10.0 else 6.0).minus(ballPosition).flatten()
+        val toRightCorner = GoalUtil.getEnemyGoal(car.team).getRightPost(if (rightIsNearPost) 10.0 else 6.0).minus(ballPosition).flatten()
 
         val rightCornerCorrection = easyKickFlat.correctionAngle(toRightCorner)
         val leftCornerCorrection = easyKickFlat.correctionAngle(toLeftCorner)

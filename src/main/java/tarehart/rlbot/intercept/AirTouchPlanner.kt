@@ -153,7 +153,7 @@ object AirTouchPlanner {
         }
 
         if (height < MAX_JUMP_HIT) {
-            if (approachAngle < Math.PI * 3 / 8) {
+            if (approachAngle < Math.PI / 4) {
                 return getDiagonalJumpHitStrikeProfile(height)
             }
             return getSideHitStrikeProfile(height)

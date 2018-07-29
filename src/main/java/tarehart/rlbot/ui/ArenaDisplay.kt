@@ -24,7 +24,7 @@ class ArenaDisplay : JPanel() {
     private var myCar: CarData? = null
     private var ball: Vector3? = null
     private var ballPrediction = Vector3()
-    private var expectedEnemyContact = Optional.empty<Vector3>()
+    private var expectedEnemyContact: Vector3? = null
 
     fun updateInput(input: AgentInput) {
         this.input = input
@@ -39,8 +39,8 @@ class ArenaDisplay : JPanel() {
         this.ballPrediction = ballPrediction
     }
 
-    fun updateExpectedEnemyContact(expectedEnemyContact: Optional<Intercept>) {
-        this.expectedEnemyContact = expectedEnemyContact.map { it.space }
+    fun updateExpectedEnemyContact(expectedEnemyContact: Intercept?) {
+        this.expectedEnemyContact = expectedEnemyContact?.space
     }
 
     override fun paintComponent(g: Graphics) {
@@ -106,7 +106,7 @@ class ArenaDisplay : JPanel() {
         // Draw the ball (and its prediction ghosts)
         drawBall(latestBall, graphics2D, realBallColor)
         drawBall(ballPrediction, graphics2D, Color.BLACK, true)
-        expectedEnemyContact.ifPresent { contact -> drawBall(contact, graphics2D, ENEMY_CONTACT_BALL_COLOR) }
+        expectedEnemyContact?.let { drawBall(it, graphics2D, ENEMY_CONTACT_BALL_COLOR) }
 
         // Draw the available full boost pads
         drawBoosts(graphics2D)

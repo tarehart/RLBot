@@ -67,21 +67,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             return null
         }
 
-        val situation = TacticsTelemetry[car.playerIndex] ?: return null
-
-        if (situation.ballAdvantage.seconds < -0.3) {
-            return null // We need to go for a challenge, so abort this.
-        }
-
-        //val ballAtIntercept = recentPrecisionPlan?.kickPlan?.intercept?.ballSlice?.space ?: situation.expectedContact?.ballSlice?.space ?: input.ballPosition
-        //val kickDirection = kickStrategy.getKickDirection(input.myCarData, ballAtIntercept) ?: return null
-
-        //val launchPadEstimate = recentPrecisionPlan?.kickPlan?.launchPad?.position ?: ballAtIntercept.flatten()
-        //val toLaunchPadEstimate = launchPadEstimate - car.position.flatten()
-
-        //val approachAngle = Vector2.angle(toLaunchPadEstimate, kickDirection.flatten())
-        //val kickPlan: DirectedKickPlan?
-
         val strikeProfileFn = { height:Double, approachAngle: Double -> AirTouchPlanner.getStrikeProfile(height, approachAngle) }
         val ballPath = ArenaModel.predictBallPath(input)
 
@@ -104,31 +89,12 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         recentPrecisionPlan = precisionPlan
 
-//        if (::interceptModifier.isInitialized) {
-//            kickPlan = DirectedKickUtil.planKick(
-//                    car,
-//                    ballPath,
-//                    kickStrategy,
-//                    interceptModifier,
-//                    strikeProfileFn,
-//                    earliestIntercept ?: input.time)
-//        } else {
-//            kickPlan = DirectedKickUtil.planKick(car, ballPath, kickStrategy, strikeProfileFn)
-//        }
-//
-//        if (kickPlan == null) {
-//            BotLog.println("Quitting flexible hit due to failed kick plan.", car.playerIndex)
-//            return null
-//        }
-//
-//        recentKickPlan = kickPlan
 
         if (disruptionMeter.isDisrupted(precisionPlan.kickPlan.ballPath)) {
             BotLog.println("Ball path disrupted during flexible.", car.playerIndex)
             cancelPlan = true
             return null
         }
-
 
         if (FinalApproachStep.readyForFinalApproach(car, precisionPlan.kickPlan.launchPad)) {
             return startPlan(Plan().withStep(FinalApproachStep(precisionPlan.kickPlan)), input)
@@ -150,7 +116,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         if (badCirclePart != null) {
             BotLog.println("Bad circle part during flexible.", car.playerIndex)
-            cancelPlan = true
             return null
         }
 

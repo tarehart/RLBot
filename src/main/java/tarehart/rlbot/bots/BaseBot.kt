@@ -47,7 +47,7 @@ abstract class BaseBot(private val team: Team, private val playerIndex: Int) : B
 
         try {
             // Do nothing if we know nothing about our car
-            if (request.playersLength() <= playerIndex) {
+            if (request.playersLength() <= playerIndex || request.ball() == null) {
                 return AgentOutput()
             }
 

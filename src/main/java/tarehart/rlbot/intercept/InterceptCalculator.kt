@@ -172,7 +172,7 @@ object InterceptCalculator {
 //                    val steerPlan = CircleTurnUtil.getPlanForCircleTurn(carData, kickPlan.distancePlot, kickPlan.launchPad)
                     steerPlan.route.withPart(StrikeRoutePart(kickPlan.launchPad.position, kickPlan.intercept.space, kickPlan.intercept.strikeProfile))
 
-                    val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration;
+                    val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration
 
                     if (postRouteTime.seconds >= 0 ||
                             // If it's an aerial, give some leeway. The route is currently not very good at judging how long

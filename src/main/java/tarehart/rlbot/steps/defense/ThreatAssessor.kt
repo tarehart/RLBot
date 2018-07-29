@@ -10,6 +10,7 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.Goal
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.intercept.Intercept
+import tarehart.rlbot.planning.CarWithIntercept
 import tarehart.rlbot.time.Duration
 
 import java.util.Optional
@@ -17,56 +18,29 @@ import java.util.Optional
 class ThreatAssessor {
 
 
-    fun measureThreat(input: AgentInput, enemyCarOption: Optional<CarData>): Double {
+    fun measureThreat(input: AgentInput, enemyCarOption: CarWithIntercept?): Double {
 
         val enemyPosture = measureEnemyPosture(input, enemyCarOption)
-        val enemyInitiative = measureEnemyInitiative(input, enemyCarOption)
-        val ballThreat = measureBallThreat(input) * .3
+        var ballThreat = measureBallThreat(input) * .3
+        if (ballThreat < 0) {
+            ballThreat *= .2
+        }
 
-        val enemyThreat = (if (enemyPosture > 0 && enemyInitiative > .2) 10 else 0).toDouble()
+        val enemyThreat = Math.max(0.0, enemyPosture)
 
         return enemyThreat + ballThreat
-
     }
 
-    private fun measureEnemyInitiative(input: AgentInput, enemyCarOption: Optional<CarData>): Double {
+    private fun measureEnemyPosture(input: AgentInput, enemyCar: CarWithIntercept?): Double {
 
-        if (!enemyCarOption.isPresent) {
+        if (enemyCar == null) {
             return 0.0
         }
-        val enemyCar = enemyCarOption.get()
-
-        val simDuration = Duration.ofSeconds(4.0)
-        val ballPath = ArenaModel.predictBallPath(input)
-
-        val myCar = input.myCarData
-
-        val myInterceptOption = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(myCar, ballPath, myCar.boost)
-        val enemyIntercept = InterceptCalculator.getInterceptOpportunityAssumingMaxAccel(enemyCar, ballPath, enemyCar.boost)
-
-        if (enemyIntercept == null) {
-            return 0.0
-        }
-
-        if (myInterceptOption == null) {
-            return 3.0
-        }
-
-        return Duration.between(myInterceptOption.time, enemyIntercept.time).seconds
-
-    }
-
-    private fun measureEnemyPosture(input: AgentInput, enemyCarOption: Optional<CarData>): Double {
-
-        if (!enemyCarOption.isPresent) {
-            return 0.0
-        }
-        val enemyCar = enemyCarOption.get()
 
         val myGoal = GoalUtil.getOwnGoal(input.team)
         val ballToGoal = myGoal.center.minus(input.ballPosition)
 
-        val carToBall = input.ballPosition.minus(enemyCar.position)
+        val carToBall = input.ballPosition.minus(enemyCar.car.position)
         val rightSideVector = VectorUtil.project(carToBall, ballToGoal)
 
         return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal))

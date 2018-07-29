@@ -85,7 +85,7 @@ object AccelerationModel {
                 boostRemaining -= BOOST_CONSUMED_PER_SECOND * TIME_STEP
                 distanceSoFar += ((currentSpeed + nextSpeed) / 2) * TIME_STEP
                 secondsSoFar += TIME_STEP
-                currentSpeed = nextSpeed;
+                currentSpeed = nextSpeed
                 plot.addSlice(DistanceTimeSpeed(distanceSoFar, Duration.ofSeconds(secondsSoFar), currentSpeed))
             }
         }

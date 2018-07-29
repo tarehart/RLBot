@@ -16,7 +16,7 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
 
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
         val tminus = Duration.between(car.time, expectedTime).millis
-        if (tminus > 300 || tminus < -50) return false
+        if (tminus > 200 || tminus < -50) return false
         val distance = car.position.flatten().distance(position)
         if (distance > 10) return false
 
@@ -41,8 +41,9 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
         val flatPosition = car.position.flatten()
         val toPad = this.position - flatPosition
         val orientationError = Vector2.angle(car.orientation.noseVector.flatten(), this.facing)
+        val approachError = Vector2.angle(toPad, this.facing)
 
-        if (orientationError < Math.PI / 12 && toPad.magnitude() < 5) {
+        if (orientationError < Math.PI / 12 && (toPad.magnitude() < 5 || approachError < Math.PI / 20)) {
 
 //            if (ManeuverMath.hasBlownPast(car, this.position, this.facing)) {
 //

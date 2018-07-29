@@ -18,6 +18,7 @@ import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep
+import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
@@ -29,6 +30,8 @@ import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
 
 class TacticsAdvisor {
+
+    private val threatAssessor = ThreatAssessor()
 
     fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
@@ -93,12 +96,23 @@ class TacticsAdvisor {
                     .withStep(GetOnDefenseStep())
         }
 
+        val totalThreat = threatAssessor.measureThreat(input, situation.enemyPlayerWithInitiative) - situation.ballAdvantage.seconds * 2
+
+        if (totalThreat > 3 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+            println("Canceling current plan due to threat level.", input.playerIndex)
+            return FirstViableStepPlan(Plan.Posture.DEFENSIVE)
+                    .withStep(ChallengeStep())
+                    .withStep(GetOnDefenseStep())
+                    .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+        }
+
         if (situation.shotOnGoalAvailable && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(FlexibleKickStep(WallPass()))
                     .withStep(CatchBallStep())
+                    .withStep(InterceptStep(Vector3()))
                     .withStep(GetOnOffenseStep())
                     .withStep(GetBoostStep())
         }

@@ -33,10 +33,14 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     }
 
     fun distance(other: Vector3): Double {
+        return Math.sqrt(distanceSquared(other))
+    }
+
+    fun distanceSquared(other: Vector3): Double {
         val xDiff = x - other.x
         val yDiff = y - other.y
         val zDiff = z - other.z
-        return Math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff)
+        return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff
     }
 
     fun magnitude(): Double {

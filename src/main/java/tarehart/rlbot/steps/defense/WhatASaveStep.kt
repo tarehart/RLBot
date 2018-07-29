@@ -58,20 +58,6 @@ class WhatASaveStep : NestedPlanStep() {
         val carToIntercept = threatPosition.minus(car.position)
         val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
 
-        val overHeadSlice = ballPath.findSlice { (space2) -> car.position.flatten().distance(space2.flatten()) < ArenaModel.BALL_RADIUS }
-
-        if (overHeadSlice != null && (goingForSuperJump || AirTouchPlanner.isVerticallyAccessible(car, overHeadSlice.toSpaceTime()))) {
-
-            goingForSuperJump = true
-
-            val overheadHeight = overHeadSlice.space.z
-            if (AirTouchPlanner.expectedSecondsForSuperJump(overheadHeight) >= Duration.between(input.time, overHeadSlice.time).seconds) {
-                return startPlan(SetPieces.jumpSuperHigh(overheadHeight), input)
-            } else {
-                return AgentOutput()
-            }
-        }
-
         if (Math.abs(carApproachVsBallApproach) > Math.PI / 5) {
             return startPlan(
                     Plan(Plan.Posture.SAVE).withStep(InterceptStep(Vector3(0.0, Math.signum(goal.center.y) * 1.5, 0.0))),

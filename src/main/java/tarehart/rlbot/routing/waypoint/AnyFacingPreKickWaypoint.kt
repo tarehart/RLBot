@@ -17,7 +17,7 @@ class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, waitUn
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
 
         val tminus = Duration.between(car.time, expectedTime).millis
-        if (tminus > 300 || tminus < -50) return false
+        if (tminus > 200 || tminus < -50) return false
         val distance = car.position.flatten().distance(position)
         if (distance > 10) return false
 

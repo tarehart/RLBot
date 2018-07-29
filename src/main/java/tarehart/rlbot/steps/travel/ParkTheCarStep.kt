@@ -48,7 +48,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
             val noseToTargetAngle = Vector2.angle(toTarget, car.orientation.noseVector.flatten())
             val angle: Double
-            if (backwards || toTarget.magnitude() < 22 &&
+            if (backwards || toTarget.magnitude() < 35 &&
                     noseToTargetAngle > 5 * Math.PI / 6 &&
                     reasonableToGoBackwards(car)) {
                 backwards = true

@@ -15,7 +15,7 @@ object ManeuverMath {
 
     const val MASH_JUMP_HEIGHT = 4.8 // This is absolute height, so subtract BASE_CAR_Z if you want relative height.
 
-    const val BRAKING_DECELERATION = 40.0 // TODO: This is a guess which needs refinement
+    const val BRAKING_DECELERATION = 30.0
 
     private const val TAP_JUMP_HEIGHT = 1.88 - BASE_CAR_Z
     private const val TAP_JUMP_APEX_TIME = 0.5
