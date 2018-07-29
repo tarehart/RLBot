@@ -9,8 +9,7 @@ import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
 import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
-import tarehart.rlbot.steps.strikes.DirectedNoseHitStep
-import tarehart.rlbot.steps.strikes.DirectedSideHitStep
+import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
 import tarehart.rlbot.tuning.BotLog
 
@@ -46,16 +45,10 @@ class AdversityBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     private fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
         val car = input.myCarData
 
-        val enemyGoalProximity = GoalUtil.getEnemyGoal(car.team).center.distance(input.ballPosition)
-
         val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(DemolishEnemyStep())
 
         if (situation.shotOnGoalAvailable && situation.teamPlayerWithInitiative.car == car) {
-            plan.withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
-            if (enemyGoalProximity < 50) {
-                plan.withStep(DirectedSideHitStep(KickAtEnemyGoal()))
-            }
-
+            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
         plan.withStep(GetBoostStep())

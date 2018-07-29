@@ -57,10 +57,7 @@ class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
         val enemyGoalProximity = GoalUtil.getEnemyGoal(car.team).center.distance(input.ballPosition)
         if (situation.shotOnGoalAvailable && enemyGoalProximity < 80 && situation.teamPlayerWithInitiative.car == car) {
-            plan.withStep(DirectedNoseHitStep(KickAtEnemyGoal()))
-            if (enemyGoalProximity < 50) {
-                plan.withStep(DirectedSideHitStep(KickAtEnemyGoal()))
-            }
+            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
         addGenericSteps(plan, input)
@@ -75,7 +72,7 @@ class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         if (input.ballPosition.z > 5) {
             plan.withStep(InterceptStep(Vector3()))
         } else {
-            plan.withStep(DirectedNoseHitStep(WallPass()))
+            plan.withStep(FlexibleKickStep(WallPass()))
         }
 
         plan.withStep(GetOnOffenseStep())
@@ -104,8 +101,7 @@ class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
             BotLog.println("Canceling current plan. Going for clear!", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.CLEAR)
-                    .withStep(DirectedNoseHitStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
-                    .withStep(DirectedSideHitStep(KickAwayFromOwnGoal()))
+                    .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
                     .withStep(EscapeTheGoalStep())
                     .withStep(GetOnDefenseStep())
         }

@@ -3,60 +3,21 @@ package tarehart.rlbot.steps.strikes
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikeProfile
-import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.Triangle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
-import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
 
 object DirectedKickUtil {
     private val BALL_VELOCITY_INFLUENCE = .2
-
-    fun planKick(car: CarData, ballPath: BallPath, kickStrategy: KickStrategy, strikeFn: (Double) -> StrikeProfile): DirectedKickPlan? {
-        val kickDirection = kickStrategy.getKickDirection(car, ballPath.startPoint.space) ?: return null
-        val interceptModifier = kickDirection.normaliseCopy().scaled(-2.0)
-        return planKick(car, ballPath, kickStrategy, interceptModifier, strikeFn, car.time)
-    }
-
-    fun planKick(
-            car: CarData,
-            ballPath: BallPath,
-            kickStrategy: KickStrategy,
-            interceptModifier: Vector3,
-            strikeFn: (Double) -> StrikeProfile,
-            earliestIntercept: GameTime): DirectedKickPlan? {
-
-        val overallPredicate = { cd: CarData, st: SpaceTime ->
-            val strikeProf = strikeFn.invoke(st.space.z)
-            val verticallyAccessible = strikeProf.verticallyAccessible.invoke(cd, st)
-            val viableKick = kickStrategy.looksViable(cd, st.space)
-            verticallyAccessible && viableKick
-        }
-
-        // Modify the ball path to drop the slices before the earliest allowed intercept.
-        // This is better than passing in a time-based predicate, because that results in "spare time" which is misleading.
-        val truncatedBallPath = ballPath.startingFrom(earliestIntercept) ?: return null
-        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost, 0.0)
-
-        val intercept = InterceptCalculator.getFilteredInterceptOpportunity(
-                car, truncatedBallPath, distancePlot, interceptModifier, overallPredicate, strikeFn) ?: return null
-
-        val estimatedApproach = CircleTurnUtil.estimateApproachVector(
-                PositionFacing(car.position.flatten(), car.orientation.noseVector.flatten()), intercept.space.flatten())
-        return planKickFromIntercept(intercept, ballPath, car, kickStrategy, estimatedApproach)
-    }
 
     fun planKickFromIntercept(intercept: Intercept, ballPath: BallPath, car: CarData, kickStrategy: KickStrategy, estimatedApproach: Vector2): DirectedKickPlan? {
 

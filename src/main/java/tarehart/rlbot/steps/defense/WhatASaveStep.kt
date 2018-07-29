@@ -4,19 +4,18 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.intercept.AirTouchPlanner
-import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
-import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.FirstViableStepPlan
+import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.strikes.DirectedSideHitStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
-import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 
 class WhatASaveStep : NestedPlanStep() {
