@@ -24,7 +24,7 @@ object StrikePlanner {
                 val groundDistance = car.position.flatten().distance(intercept.space.flatten())
                 val radiansForTilt = Math.atan2(height, groundDistance) + UPWARD_VELOCITY_MAINTENANCE_ANGLE
 
-                val tiltBackSeconds = radiansForTilt * .35
+                val tiltBackSeconds = radiansForTilt * .4
 
                 return if (Duration.between(car.time, intercept.time).seconds > 1.5 && intercept.space.z > 10) {
                     SetPieces.performDoubleJumpAerial(tiltBackSeconds * .8)

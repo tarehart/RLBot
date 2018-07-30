@@ -23,7 +23,7 @@ class ThreatAssessor {
         val enemyPosture = measureEnemyPosture(input, enemyCarOption)
         var ballThreat = measureBallThreat(input) * .3
         if (ballThreat < 0) {
-            ballThreat *= .2
+            ballThreat *= .5
         }
 
         val enemyThreat = Math.max(0.0, enemyPosture)
@@ -41,7 +41,7 @@ class ThreatAssessor {
         val ballToGoal = myGoal.center.minus(input.ballPosition)
 
         val carToBall = input.ballPosition.minus(enemyCar.car.position)
-        val rightSideVector = VectorUtil.project(carToBall, ballToGoal)
+        val rightSideVector = VectorUtil.project(carToBall.scaledToMagnitude(10.0), ballToGoal)
 
         return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal))
     }
@@ -60,7 +60,7 @@ class ThreatAssessor {
         val wrongSideVector = VectorUtil.project(carToBall, ballToGoal)
         val wrongSidedness = wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal))
 
-        return ballSpeedTowardGoal + wrongSidedness
+        return ballSpeedTowardGoal + wrongSidedness - ballToGoal.magnitude() * .3
     }
 
 }

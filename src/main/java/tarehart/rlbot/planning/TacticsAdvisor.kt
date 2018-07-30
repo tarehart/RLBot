@@ -39,8 +39,11 @@ class TacticsAdvisor {
         val zonePlan = ZoneTelemetry.get(input.playerIndex)
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative.car == car) {
-            return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
+            if (situation.teamPlayerWithInitiative.car == car) {
+                return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+            }
+            return Plan(Plan.Posture.KICKOFF).withStep(GetBoostStep())
         }
 
         if (Plan.Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&

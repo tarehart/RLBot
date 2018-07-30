@@ -4,6 +4,7 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.TacticsAdvisor
 import tarehart.rlbot.steps.strikes.FlexibleKickStep

@@ -5,10 +5,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.planning.FirstViableStepPlan
-import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.strikes.InterceptStep
@@ -52,6 +49,7 @@ class GoForKickoffStep : NestedPlanStep() {
             // Steer toward boost
             val ySide = Math.signum(car.position.y)
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
+            return SteerUtil.steerTowardGroundPosition(car, target)
         }
         return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(InterceptStep(Vector3())), input)
     }

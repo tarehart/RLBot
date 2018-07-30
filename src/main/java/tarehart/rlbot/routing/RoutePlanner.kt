@@ -35,15 +35,15 @@ object RoutePlanner{
     fun getDecelerationDistanceWhenTargetingSpeed(start: Vector2, end: Vector2, desiredSpeed:Double, distancePlot: DistancePlot): DistanceDuration {
 
         val distance = start.distance(end)
-        val maxAccelMotion = distancePlot.getMotionAfterDistance(distance) ?: return DistanceDuration(0.0, Duration.ofMillis(0))
+        // Assume we'll only accelerate half way.
+        val maxAccelMotion = distancePlot.getMotionAfterDistance(distance / 2) ?: return DistanceDuration(0.0, Duration.ofMillis(0))
 
         if (maxAccelMotion.speed <= desiredSpeed) {
             return DistanceDuration(0.0, Duration.ofMillis(0))
         }
 
-        val deceleration = ManeuverMath.BRAKING_DECELERATION
         val speedDiff = maxAccelMotion.speed - desiredSpeed
-        val secondsDecelerating = speedDiff / deceleration
+        val secondsDecelerating = speedDiff / ManeuverMath.BRAKING_DECELERATION
         val avgSpeed = (maxAccelMotion.speed + desiredSpeed) / 2
         return DistanceDuration(avgSpeed * secondsDecelerating, Duration.ofSeconds(secondsDecelerating))
     }

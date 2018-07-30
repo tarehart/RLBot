@@ -12,9 +12,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.PlanGuidance
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.TacticsTelemetry
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.routing.CircleRoutePart
 import tarehart.rlbot.routing.PrecisionPlan

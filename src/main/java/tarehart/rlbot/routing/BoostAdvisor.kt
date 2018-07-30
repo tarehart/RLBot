@@ -18,6 +18,7 @@ import java.util.*
 object BoostAdvisor {
 
     private const val TURN_LIMIT = Math.PI / 4
+    private const val FULL_BOOST_TURN_LIMIT = Math.PI / 2
 
     private val orderedBoosts = ArrayList<BoostPad>()
 
@@ -86,18 +87,20 @@ object BoostAdvisor {
 
 
         return (closeFullBoosts + closeSmallBoosts)
-                .filter { it.isActive && isEnRoute(car, it.location.flatten(), waypoint) }
+                .filter { it.isActive && isEnRoute(car, it, waypoint) }
                 .sortedBy { getGreedyTime(car, distancePlot, it) }
                 .firstOrNull()
     }
 
-    private fun isEnRoute(car: CarData, boostLocation: Vector2, waypoint: Vector2) : Boolean {
+    private fun isEnRoute(car: CarData, boostPad: BoostPad, waypoint: Vector2) : Boolean {
         val carPosition = car.position.flatten()
-        val carToBoost = boostLocation - carPosition
-        val boostToWaypoint = waypoint - boostLocation
+        val boostPosition = boostPad.location.flatten()
+        val carToBoost = boostPosition - carPosition
+        val boostToWaypoint = waypoint - boostPosition
         val detourAngle = Vector2.angle(carToBoost, boostToWaypoint)
         val initialSteerCorrection = Vector2.angle(car.orientation.noseVector.flatten(), carToBoost)
-        return detourAngle + initialSteerCorrection < TURN_LIMIT
+        val turnLimit = if (boostPad.isFullBoost) FULL_BOOST_TURN_LIMIT else TURN_LIMIT
+        return detourAngle + initialSteerCorrection < turnLimit
     }
 
     /**

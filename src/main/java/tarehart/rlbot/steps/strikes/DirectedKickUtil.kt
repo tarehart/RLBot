@@ -168,7 +168,7 @@ object DirectedKickUtil {
     private fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, kickForce: Vector2, approachVsKickForceAngle:Double, carPosition: Vector2): PreKickWaypoint? {
         val strikeTravel = intercept.strikeProfile.dodgeSeconds * arrivalSpeed
 
-        val carStrikeRadius = 3.0
+        val carStrikeRadius = 2.7
         val carPositionAtContact = intercept.ballSlice.space.flatten() - kickForce.scaledToMagnitude(carStrikeRadius)
 
         val speedupResult = getSpeedupResultForAngled(intercept.strikeProfile, arrivalSpeed)
