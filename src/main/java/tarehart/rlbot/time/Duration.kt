@@ -25,6 +25,11 @@ class Duration private constructor(val millis: Long) : Comparable<Duration> {
         return Duration.ofMillis(millis + other.millis)
     }
 
+    override fun toString(): String {
+        return "$millis ms"
+    }
+
+
     companion object {
 
         fun between(first: GameTime, later: GameTime): Duration {

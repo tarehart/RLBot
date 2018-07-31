@@ -210,7 +210,7 @@ object SteerUtil {
 
 
         val distanceToIntercept = toTarget.magnitude()
-        if (distanceToIntercept > distanceCovered + 15) {
+        if (distanceToIntercept > distanceCovered + 25) {
 
             val facing = car.orientation.noseVector.flatten()
             val facingCorrection = facing.correctionAngle(toTarget)
@@ -247,21 +247,12 @@ object SteerUtil {
         }
 
         val agentOutput = SteerUtil.steerTowardGroundPosition(car, waypoint)
-        if (distanceRatio > 1.1) {
-            agentOutput.withBoost(false)
-            if (currentSpeed > averageSpeedNeeded) {
-                // Slow down
-                agentOutput.withThrottle(Math.min(0.0, -distanceRatio + 1.5)).withBoost(false) // Hit the brakes, but keep steering!
-                if (car.orientation.noseVector.dotProduct(car.velocity) < 0) {
-                    // car is going backwards
-                    agentOutput.withThrottle(0.0).withSteer(0.0)
-                }
-            } else if (distanceRatio > 1.5) {
-                agentOutput.withThrottle(.5)
-            }
-        } else if (currentSpeed > averageSpeedNeeded) {
-            agentOutput.withBoost(false)
-            agentOutput.withThrottle(averageSpeedNeeded / currentSpeed)
+
+        if (distanceRatio > 2) {
+            agentOutput.withThrottle(-1.0).withBoost(false).withSteer(0.0)
+        } else {
+            agentOutput.withBoost(distanceRatio < 0.7 && averageSpeedNeeded > currentSpeed)
+            agentOutput.withThrottle(averageSpeedNeeded - currentSpeed)
         }
         return agentOutput
     }

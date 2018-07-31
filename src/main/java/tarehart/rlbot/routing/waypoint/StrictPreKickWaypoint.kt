@@ -24,7 +24,7 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
             // If we're really close, stop caring about whether the car is pointed at the waypoint,
             // and start caring about whether the car is close to the final expected orientation.
             // Don't be TOO strict because the car could be curving in.
-            return Math.abs(car.orientation.noseVector.flatten().correctionAngle(facing)) < Math.PI / 12
+            return Math.abs(car.orientation.noseVector.flatten().correctionAngle(facing)) < Math.PI / 8
         }
         val angleError = Math.abs(SteerUtil.getCorrectionAngleRad(car, position))
         val plausibleApproachAngle = angleError < Math.PI / 6 && tminus > 0
@@ -43,27 +43,26 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
         val orientationError = Vector2.angle(car.orientation.noseVector.flatten(), this.facing)
         val approachError = Vector2.angle(toPad, this.facing)
 
-        if (orientationError < Math.PI / 12 && (toPad.magnitude() < 5 || approachError < Math.PI / 20)) {
+        val blewPast = ManeuverMath.hasBlownPast(car, this.position, this.facing)
 
-//            if (ManeuverMath.hasBlownPast(car, this.position, this.facing)) {
-//
-//            }
+        if (orientationError < Math.PI / 12 && (toPad.magnitude() < 5 || approachError < Math.PI / 20 || blewPast)) {
 
-            val waypoint = if (ManeuverMath.hasBlownPast(car, this.position, this.facing)) {
+            val waypoint = if (blewPast) {
                 flatPosition + this.facing
             } else {
                 this.position
             }
 
-            val orientDuration = AccelerationModel.getOrientDuration(car, this.position.toVector3())
+            val orientDuration = AccelerationModel.getOrientDuration(car, waypoint.toVector3())
 
+            val duration = distancePlot.getMotionAfterDistance(toPad.magnitude())!!.time
             if (this.waitUntil != null) {
                 val route = Route()
                         .withPart(OrientRoutePart(flatPosition, orientDuration))
-                        .withPart(AccelerationRoutePart(flatPosition, waypoint, this.waitUntil - car.time))
+                        .withPart(AccelerationRoutePart(flatPosition, waypoint, duration))
                 return SteerPlan(SteerUtil.getThereOnTime(car, SpaceTime(waypoint.toVector3(), this.waitUntil)), route)
             }
-            val duration = distancePlot.getMotionAfterDistance(toPad.magnitude())!!.time
+
             val route = Route()
                     .withPart(OrientRoutePart(flatPosition, orientDuration))
                     .withPart(AccelerationRoutePart(flatPosition, waypoint, duration))

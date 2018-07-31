@@ -23,7 +23,7 @@ class ThreatAssessor {
         val enemyPosture = measureEnemyPosture(input, enemyCarOption)
         var ballThreat = measureBallThreat(input) * .3
         if (ballThreat < 0) {
-            ballThreat *= .5
+            ballThreat *= .3
         }
 
         val enemyThreat = Math.max(0.0, enemyPosture)

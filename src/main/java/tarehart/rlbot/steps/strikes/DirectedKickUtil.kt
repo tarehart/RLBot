@@ -28,40 +28,44 @@ object DirectedKickUtil {
         val flatPosition = car.position.flatten()
         val toIntercept = intercept.space.flatten() - flatPosition
         val averageSpeedNeeded = toIntercept.magnitude() / secondsTillIntercept
-        val arrivalSpeed = if (intercept.spareTime.millis > 0) averageSpeedNeeded else intercept.accelSlice.speed
+        val currentSpeed = car.velocity.flatten().magnitude()
+        val anticipatedSpeed = if (intercept.spareTime.millis > 0) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
+        val closenessRatio = Math.max(1.0, 1 / secondsTillIntercept)
+        val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * anticipatedSpeed
         val impactSpeed: Double
         val interceptModifier = intercept.space - intercept.ballSlice.space
 
-        val easyForce: Vector3
-        if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) {
-            impactSpeed = ManeuverMath.DODGE_SPEED
-            val carToIntercept = (intercept.space - car.position).flatten()
-            val (x, y) = VectorUtil.orthogonal(carToIntercept) { v -> v.dotProduct(interceptModifier.flatten()) < 0 }
-            easyForce = Vector3(x, y, 0.0).scaledToMagnitude(impactSpeed)
+
+
+        var kickDirection: Vector3
+        val easyKickAllowed: Boolean
+        var plannedKickForce = Vector3() // This empty vector will never be used, but the compiler hasn't noticed.
+        var desiredBallVelocity = Vector3()
+
+        impactSpeed = if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else arrivalSpeed
+
+        if (intercept.strikeProfile.isForward) {
+
+            val easyForce: Vector3 = (ballAtIntercept.space - car.position).scaledToMagnitude(impactSpeed)
+            val easyKick = bump(ballAtIntercept.velocity, easyForce)
+            kickDirection = kickStrategy.getKickDirection(car, ballAtIntercept.space, easyKick) ?: return null
+            easyKickAllowed = easyKick.x == kickDirection.x && easyKick.y == kickDirection.y
+            if (easyKickAllowed) {
+                // The kick strategy is fine with the easy kick.
+                plannedKickForce = easyForce
+                desiredBallVelocity = easyKick
+            }
         } else {
-            // TODO: do something special for diagonal
-            impactSpeed = arrivalSpeed
-            easyForce = (ballAtIntercept.space - car.position).scaledToMagnitude(impactSpeed)
+            easyKickAllowed = false
         }
 
-        val easyKick = bump(ballAtIntercept.velocity, easyForce)
-        val kickDirection = kickStrategy.getKickDirection(car, ballAtIntercept.space, easyKick) ?: return null
-
-        val plannedKickForce: Vector3
-        val desiredBallVelocity: Vector3
-
-        val easyKickAllowed = easyKick.x == kickDirection.x && easyKick.y == kickDirection.y;
-
-        if (easyKickAllowed) {
-            // The kick strategy is fine with the easy kick.
-            plannedKickForce = easyForce
-            desiredBallVelocity = easyKick
-        } else {
+        if (!easyKickAllowed) {
 
             // TODO: this is a rough approximation.
+            kickDirection = kickStrategy.getKickDirection(car, ballAtIntercept.space) ?: return null
             val orthogonal = VectorUtil.orthogonal(kickDirection.flatten())
             val transverseBallVelocity = VectorUtil.project(ballAtIntercept.velocity.flatten(), orthogonal)
-            desiredBallVelocity = kickDirection.normaliseCopy().scaled(impactSpeed + transverseBallVelocity.magnitude() * .7)
+            desiredBallVelocity = kickDirection.normaliseCopy().scaled(impactSpeed * 2)
             plannedKickForce = Vector3(
                     desiredBallVelocity.x - transverseBallVelocity.x * BALL_VELOCITY_INFLUENCE,
                     desiredBallVelocity.y - transverseBallVelocity.y * BALL_VELOCITY_INFLUENCE,
@@ -112,18 +116,24 @@ object DirectedKickUtil {
             }
             StrikeProfile.Style.FLIP_HIT -> {
                 facing = flatForce.normalized()
-                launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed)
+                val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, arrivalSpeed + intercept.strikeProfile.speedBoost)
+                val strikeTravel = intercept.strikeProfile.hangTime * arrivalSpeed + intercept.strikeProfile.dodgeSeconds * postDodgeSpeed
+                launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
                 launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
             }
             StrikeProfile.Style.JUMP_HIT -> {
                 facing = flatForce.normalized()
-                launchPosition = ballPosition - flatForce.scaledToMagnitude(intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed)
+                val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, arrivalSpeed + intercept.strikeProfile.speedBoost)
+                val strikeTravel = intercept.strikeProfile.hangTime * arrivalSpeed + intercept.strikeProfile.dodgeSeconds * postDodgeSpeed
+                launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
                 launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
             }
             StrikeProfile.Style.AERIAL -> {
 
-                facing = toInterceptNorm.rotateTowards(flatForce, Math.PI / 6)
-                launchPosition = ballPosition - facing.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
+                val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
+                val lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
+                launchPosition = intercept.space.flatten() - lazyLaunchToIntercept
+                facing = lazyLaunchToIntercept.normalized()
                 launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
             }
         }
@@ -145,23 +155,16 @@ object DirectedKickUtil {
 
     private fun getStandardWaypoint(car: CarData, launchPosition: Vector2, facing: Vector2, intercept: Intercept): PreKickWaypoint {
         val launchPad: PreKickWaypoint
-        if (ManeuverMath.hasBlownPast(car, launchPosition, facing)) {
-            val currentPositionFacing = PositionFacing(car)
-            launchPad = StrictPreKickWaypoint(
-                    position = currentPositionFacing.position,
-                    facing = currentPositionFacing.facing,
-                    expectedTime = car.time
-            )
-        } else {
-            // Time is chosen with a bias toward hurrying
-            val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
-            launchPad = StrictPreKickWaypoint(
-                    position = launchPosition,
-                    facing = facing,
-                    expectedTime = launchPadMoment,
-                    waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
-            )
-        }
+
+        // Time is chosen with a bias toward hurrying
+        val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
+        launchPad = StrictPreKickWaypoint(
+                position = launchPosition,
+                facing = facing,
+                expectedTime = launchPadMoment,
+                waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
+        )
+
         return launchPad
     }
 

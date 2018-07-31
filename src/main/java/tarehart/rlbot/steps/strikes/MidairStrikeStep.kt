@@ -85,10 +85,10 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return AgentOutput().withBoost()
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
-        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(0.0, 0.0, 2.0)).toRlbot())
-        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(2.0, 0.0, -2.0)).toRlbot())
-        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(-2.0, 0.0, -2.0)).toRlbot())
+//        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+//        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(0.0, 0.0, 2.0)).toRlbot())
+//        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(2.0, 0.0, -2.0)).toRlbot())
+//        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(-2.0, 0.0, -2.0)).toRlbot())
 
         intercept = latestIntercept.toSpaceTime()
         val carToIntercept = latestIntercept.space.minus(car.position)

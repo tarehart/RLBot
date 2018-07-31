@@ -123,7 +123,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
             val turnDir = turnDirection ?: BotMath.nonZeroSignum(facingCorrectionRadians)
             turnDirection = turnDir
 
-            shouldSlide = shouldSlide || Math.abs(facingCorrectionRadians) > Math.PI / 3 || distance < 4
+            shouldSlide = shouldSlide || Math.abs(facingCorrectionRadians) > Math.PI / 3
 
             val futureRadians = facingCorrectionRadians + car.spin.yawRate * .3
             val steerPolarity = if (backwards) 1 else -1

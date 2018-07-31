@@ -40,11 +40,9 @@ object AccelerationModel {
     fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {
         val toTarget = target.minus(carData.position)
         val correctionAngleRad = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toTarget, carData.orientation.roofVector)
-        val correctionErr = Math.abs(correctionAngleRad)
+        val correctionErr = Math.max(0.0, Math.abs(correctionAngleRad) - Math.PI / 6)
 
-        return if (correctionErr < Math.PI / 6) {
-            0.0
-        } else correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .005
+        return correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .005
     }
 
     @JvmOverloads

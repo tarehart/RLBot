@@ -9,10 +9,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.routing.CircleTurnUtil
-import tarehart.rlbot.routing.PositionFacing
-import tarehart.rlbot.routing.PrecisionPlan
-import tarehart.rlbot.routing.StrikeRoutePart
+import tarehart.rlbot.routing.*
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
@@ -180,8 +177,13 @@ object InterceptCalculator {
                             strikeProfile.style == StrikeProfile.Style.AERIAL && postRouteTime.seconds > -1.0) {
                         return PrecisionPlan(kickPlan, steerPlan)
                     } else {
-                        // It's not actually in range after we account for routing time
-                        firstMomentInRange = null
+                        // It's not actually in range after we account for circle routing time.
+                        // All other routes are appropriately accounted for by the distance plot and
+                        // spatial predicate, so circle routing is unique in its ability to walk back
+                        // the first moment in range.
+                        if (steerPlan.route.parts.any { p -> p is CircleRoutePart }) {
+                            firstMomentInRange = null
+                        }
                     }
                 }
             }

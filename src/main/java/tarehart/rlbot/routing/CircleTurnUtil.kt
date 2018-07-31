@@ -22,48 +22,30 @@ object CircleTurnUtil {
     private val TURN_RADIUS_B = .16
     private val TURN_RADIUS_C = 7.0
 
-    private fun planWithinCircle(car: CarData, strikePoint: StrictPreKickWaypoint, currentSpeed: Double): SteerPlan {
+    private fun planWithinCircle(car: CarData, strikePoint: StrictPreKickWaypoint, currentSpeed: Double, desiredSpeed: Double, circle: Circle): SteerPlan {
 
         val targetPosition = strikePoint.position
         val targetFacing = strikePoint.facing
-        val targetNose = targetPosition.plus(targetFacing)
-        val targetTail = targetPosition.minus(targetFacing)
+        //val targetNose = targetPosition.plus(targetFacing)
+        //val targetTail = targetPosition.minus(targetFacing)
 
         val flatPosition = car.position.flatten()
-        val idealCircle = Circle.getCircleFromPoints(targetTail, targetNose, flatPosition)
+        //val idealCircle = Circle.getCircleFromPoints(targetTail, targetNose, flatPosition)
 
-        val clockwise = Circle.isClockwise(idealCircle, targetPosition, targetFacing)
+        val clockwise = Circle.isClockwise(circle, targetPosition, targetFacing)
 
-        val idealSpeedOption = getSpeedForRadius(idealCircle.radius)
+        //val idealSpeedOption = getSpeedForRadius(idealCircle.radius)
 
-        val idealSpeed = idealSpeedOption ?: 10.0
-
-        val speedRatio = currentSpeed / idealSpeed // Ideally should be 1
+        //val idealSpeed = idealSpeedOption ?: 10.0
 
         val lookaheadRadians = Math.PI / 20
-        val centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(idealCircle.center), lookaheadRadians * if (clockwise) -1 else 1)
-        val steerTarget = idealCircle.center.plus(centerToSteerTarget)
+        val centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(circle.center).scaledToMagnitude(circle.radius), lookaheadRadians * if (clockwise) -1 else 1)
+        val steerTarget = circle.center.plus(centerToSteerTarget)
+        val timeAtTarget = car.time + getTurnDuration(circle, flatPosition, steerTarget, clockwise, desiredSpeed)
 
-        val output = SteerUtil.steerTowardGroundPosition(car, steerTarget).withBoost(false).withSlide(false).withThrottle(1.0)
+        val output = SteerUtil.getThereOnTime(car, SpaceTime(steerTarget.toVector3(), timeAtTarget)).withSlide(false)
 
-        if (speedRatio < 1) {
-            output.withBoost(currentSpeed >= AccelerationModel.MEDIUM_SPEED && speedRatio < .8 || speedRatio < .7)
-        } else {
-            val framesBetweenSlidePulses: Int
-            if (speedRatio > 2) {
-                framesBetweenSlidePulses = 3
-                output.withThrottle(0.0)
-            } else if (speedRatio > 1.5) {
-                framesBetweenSlidePulses = 6
-            } else if (speedRatio > 1.2) {
-                framesBetweenSlidePulses = 9
-            } else {
-                framesBetweenSlidePulses = 12
-            }
-            output.withSlide(car.frameCount % (framesBetweenSlidePulses + 1) == 0L)
-        }
-
-        val turnDuration = getTurnDuration(idealCircle, flatPosition, targetPosition, clockwise, idealSpeed)
+        val turnDuration = getTurnDuration(circle, flatPosition, targetPosition, clockwise, (currentSpeed + desiredSpeed) / 2)
 
         // TODO: sometimes this turn duration gets really big at the end of a circle turn that seems to be going fine.
         val route = Route()
@@ -71,14 +53,15 @@ object CircleTurnUtil {
                         start = flatPosition,
                         end = targetPosition,
                         duration = turnDuration,
-                        circle = idealCircle,
+                        circle = circle,
                         clockwise = clockwise))
 
         return SteerPlan(output, route)
     }
 
     private fun getTurnDuration(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean, speed: Double): Duration {
-        return Duration.ofSeconds(Math.abs(getSweepRadians(circle, start, end, clockwise)) * circle.radius / speed)
+        val sweepRadians = getSweepRadians(circle, start, end, clockwise)
+        return Duration.ofSeconds(Math.abs(sweepRadians) * circle.radius / speed)
     }
 
     fun getSweepRadians(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean): Double {
@@ -180,7 +163,7 @@ object CircleTurnUtil {
         val circle = Circle(center, turnRadius)
 
         val tangentPoints = circle.calculateTangentPoints(flatPosition) ?:
-            return planWithinCircle(car, strikePoint, currentSpeed)
+            return planWithinCircle(car, strikePoint, currentSpeed, expectedSpeed, circle)
 
         val toCenter = center.minus(flatPosition)
 

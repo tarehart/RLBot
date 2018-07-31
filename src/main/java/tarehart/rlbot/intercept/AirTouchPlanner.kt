@@ -109,9 +109,8 @@ object AirTouchPlanner {
         }
 
         val secondsTillIntercept = Duration.between(carData.time, intercept.time).seconds
-        val (travelDelay) = getJumpHitStrikeProfile(intercept.space.z)
-        val tMinus = secondsTillIntercept - travelDelay
-        return tMinus >= -0.1
+        val travelDelay = getJumpHitStrikeProfile(intercept.space.z).strikeDuration.seconds
+        return secondsTillIntercept >= travelDelay
     }
 
     fun getJumpHitStrikeProfile(height: Double): StrikeProfile {
@@ -123,12 +122,12 @@ object AirTouchPlanner {
 
     fun getDiagonalJumpHitStrikeProfile(height: Double): StrikeProfile {
         val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
-        return StrikeProfile(jumpTime, 10.0, .3, StrikeProfile.Style.DIAGONAL_HIT)
+        return StrikeProfile(jumpTime, 10.0, .2, StrikeProfile.Style.DIAGONAL_HIT)
     }
 
     fun getSideHitStrikeProfile(height: Double): StrikeProfile {
         val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
-        return StrikeProfile(jumpTime, 10.0, .3, StrikeProfile.Style.SIDE_HIT)
+        return StrikeProfile(jumpTime, 10.0, .2, StrikeProfile.Style.SIDE_HIT)
     }
 
     fun getStraightOnStrikeProfile(height: Double): StrikeProfile {

@@ -66,8 +66,7 @@ object ManeuverMath {
     }
 
     /**
-     * Does it look like the car successfully drove through a position-facing a moment ago, and is now on the wrong
-     * side of it?
+     * Does it look like the car is lined up, but on the wrong side of the launchpad?
      */
     fun hasBlownPast(car: CarData, position: Vector2, facing: Vector2): Boolean {
         val toPad = position - car.position.flatten()
@@ -82,7 +81,7 @@ object ManeuverMath {
             return false // haven't blown past yet, still looking good
         }
 
-        return forwardSpeed(car) > 0 && (toPad.magnitude() < 2 || approachError > Math.PI * 11 / 12)
+        return toPad.magnitude() < 2 || approachError > Math.PI * 11 / 12
     }
 
 }
