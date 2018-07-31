@@ -4,6 +4,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
+import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
@@ -127,7 +128,7 @@ object AirTouchPlanner {
 
     fun getSideHitStrikeProfile(height: Double): StrikeProfile {
         val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
-        return StrikeProfile(jumpTime, 10.0, .2, StrikeProfile.Style.SIDE_HIT)
+        return StrikeProfile(jumpTime, 10.0, .3, StrikeProfile.Style.SIDE_HIT)
     }
 
     fun getStraightOnStrikeProfile(height: Double): StrikeProfile {
@@ -145,19 +146,20 @@ object AirTouchPlanner {
         return getAerialStrikeProfile(height)
     }
 
-    fun getStrikeProfile(height: Double, approachAngle: Double): StrikeProfile {
+    fun getStrikeProfile(intercept: Vector3, approachAngle: Double, car: CarData): StrikeProfile {
 
         if (approachAngle < Math.PI / 16) {
-            return getStraightOnStrikeProfile(height)
+            return getStraightOnStrikeProfile(intercept.z)
         }
 
-        if (height < MAX_JUMP_HIT) {
-            if (approachAngle < Math.PI / 4) {
-                return getDiagonalJumpHitStrikeProfile(height)
+        if (intercept.z < MAX_JUMP_HIT) {
+            val isNearGoal = intercept.distance(GoalUtil.getNearestGoal(intercept).center) < 30
+            if (approachAngle > Math.PI / 4 && isNearGoal) {
+                return getSideHitStrikeProfile(intercept.z)
             }
-            return getSideHitStrikeProfile(height)
+            return getDiagonalJumpHitStrikeProfile(intercept.z)
         }
-        return getAerialStrikeProfile(height)
+        return getAerialStrikeProfile(intercept.z)
     }
 
     fun getAerialStrikeProfile(height: Double): StrikeProfile {

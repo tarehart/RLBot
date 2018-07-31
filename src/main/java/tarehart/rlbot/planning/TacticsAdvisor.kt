@@ -55,7 +55,8 @@ class TacticsAdvisor {
         if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
 
             if (situation.ballAdvantage.seconds < 0 && ChallengeStep.threatExists(situation) &&
-                    situation.expectedEnemyContact?.time?.isBefore(situation.scoredOnThreat.time) == true) {
+                    situation.expectedEnemyContact?.time?.isBefore(situation.scoredOnThreat.time) == true &&
+                    situation.distanceBallIsBehindUs < 0) {
                 println("Need to save, but also need to challenge first!", input.playerIndex)
                 return Plan(Plan.Posture.SAVE).withStep(ChallengeStep())
             }
@@ -115,7 +116,6 @@ class TacticsAdvisor {
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(FlexibleKickStep(WallPass()))
                     .withStep(CatchBallStep())
-                    .withStep(InterceptStep(Vector3()))
                     .withStep(GetOnOffenseStep())
                     .withStep(GetBoostStep())
         }

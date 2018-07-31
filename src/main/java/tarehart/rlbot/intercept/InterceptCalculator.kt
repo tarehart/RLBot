@@ -118,7 +118,7 @@ object InterceptCalculator {
             ballPath: BallPath,
             acceleration: DistancePlot,
             spatialPredicate: (CarData, SpaceTime, StrikeProfile) -> Boolean,
-            strikeProfileFn: (Double, Double) -> StrikeProfile,
+            strikeProfileFn: (Vector3, Double, CarData) -> StrikeProfile,
             kickStrategy: KickStrategy): PrecisionPlan? {
 
         val myPosition = carData.position.flatten()
@@ -135,7 +135,7 @@ object InterceptCalculator {
             val estimatedApproach = CircleTurnUtil.estimateApproachVector(
                     PositionFacing(myPosition, carData.orientation.noseVector.flatten()), interceptFlat)
 
-            val strikeProfile = strikeProfileFn.invoke(spaceTime.space.z, Vector2.angle(estimatedApproach, kickDirection.flatten()))
+            val strikeProfile = strikeProfileFn.invoke(spaceTime.space, Vector2.angle(estimatedApproach, kickDirection.flatten()), carData)
 
             // If it's a forward strike, it's safe to factor in orient duration now, which is good for efficiency.
             // Otherwise, defer until we have a route because angled strikes are tricky.
@@ -171,8 +171,8 @@ object InterceptCalculator {
 
                     val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration
 
-                    if (postRouteTime.seconds >= 0 ||
-                            // If it's an aerial, give some leeway. The route is currently not very good at judging how long
+                    if (postRouteTime.millis >= -30 ||
+                            // If it's an aerial, give some extra leeway. The route is currently not very good at judging how long
                             // an aerial will take.
                             strikeProfile.style == StrikeProfile.Style.AERIAL && postRouteTime.seconds > -1.0) {
                         return PrecisionPlan(kickPlan, steerPlan)

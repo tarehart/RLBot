@@ -65,7 +65,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             return null
         }
 
-        val strikeProfileFn = { height:Double, approachAngle: Double -> AirTouchPlanner.getStrikeProfile(height, approachAngle) }
+        val strikeProfileFn = { intercept:Vector3, approachAngle: Double, car: CarData -> AirTouchPlanner.getStrikeProfile(intercept, approachAngle, car) }
         val ballPath = ArenaModel.predictBallPath(input)
 
         val overallPredicate = { cd: CarData, st: SpaceTime, str: StrikeProfile ->
