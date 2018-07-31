@@ -60,12 +60,15 @@ class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
-        addGenericSteps(plan, input)
+        addGenericSteps(plan, input, situation)
         return plan
     }
 
-    private fun addGenericSteps(plan: Plan, input:AgentInput) {
-        plan.withStep(WallTouchStep())
+    private fun addGenericSteps(plan: Plan, input:AgentInput, situation: TacticalSituation) {
+
+        if (WallTouchStep.hasWallTouchOpportunity(input, situation.ballPath)) {
+            plan.withStep(WallTouchStep())
+        }
         if (input.myCarData.boost < 30) {
             plan.withStep(GetBoostStep())
         }

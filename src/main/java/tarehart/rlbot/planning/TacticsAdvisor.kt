@@ -246,7 +246,8 @@ class TacticsAdvisor {
                 waitToClear = getWaitToClear(zonePlan, input, enemyCar),
                 currentPlan = currentPlan,
                 enemyPlayerWithInitiative = enemyGoGetter,
-                teamPlayerWithInitiative = getCarWithInitiative(input.getTeamRoster(input.team), ballPath) ?: CarWithIntercept(input.myCarData, null)
+                teamPlayerWithInitiative = getCarWithInitiative(input.getTeamRoster(input.team), ballPath) ?: CarWithIntercept(input.myCarData, null),
+                ballPath = ballPath
         )
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
