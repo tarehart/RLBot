@@ -100,9 +100,9 @@ class TacticsAdvisor {
                     .withStep(GetOnDefenseStep())
         }
 
-        val totalThreat = threatAssessor.measureThreat(input, situation.enemyPlayerWithInitiative) - situation.ballAdvantage.seconds * 3
+        val totalThreat = threatAssessor.measureThreat(input, situation.enemyPlayerWithInitiative)
 
-        if (totalThreat > 3 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+        if (totalThreat > 3 &&  situation.ballAdvantage.seconds < 1 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan due to threat level.", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.DEFENSIVE)
                     .withStep(ChallengeStep())
