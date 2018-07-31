@@ -80,7 +80,7 @@ class TacticsAdvisor {
 
             if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(situation)) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
-                return Plan(Plan.Posture.CLEAR).withStep(ChallengeStep())
+                return FirstViableStepPlan(Plan.Posture.CLEAR).withStep(ChallengeStep()).withStep(GetOnDefenseStep(0.25))
             }
 
             println("Canceling current plan. Going for clear!", input.playerIndex)
@@ -100,7 +100,7 @@ class TacticsAdvisor {
                     .withStep(GetOnDefenseStep())
         }
 
-        val totalThreat = threatAssessor.measureThreat(input, situation.enemyPlayerWithInitiative) - situation.ballAdvantage.seconds * 2
+        val totalThreat = threatAssessor.measureThreat(input, situation.enemyPlayerWithInitiative) - situation.ballAdvantage.seconds * 3
 
         if (totalThreat > 3 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan due to threat level.", input.playerIndex)

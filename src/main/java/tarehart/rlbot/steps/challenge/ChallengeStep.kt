@@ -8,7 +8,9 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
+import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.tuning.BotLog.println
 import java.awt.BasicStroke
 import java.awt.Color
@@ -48,7 +50,7 @@ class ChallengeStep: NestedPlanStep() {
 
         val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return null
         val ballAdvantage = tacticalSituation.ballAdvantage
-        if (ballAdvantage.seconds > 2.0) {
+        if (ballAdvantage.seconds > 1.0) {
             return null // We can probably go for a shot now.
         }
 
@@ -62,11 +64,17 @@ class ChallengeStep: NestedPlanStep() {
         val enemyShotLine = GoalUtil.getOwnGoal(input.team).center - enemyContact.space
 
         val flatPosition = car.position.flatten()
-        val contactDistance = flatPosition.distance(enemyContact.space.flatten())
         val defensiveNode = enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(backoff)
         latestDefensiveNode = defensiveNode
 
         val defensiveNodeDistance = flatPosition.distance(defensiveNode)
+
+        if (tacticalSituation.distanceBallIsBehindUs > 0 && ballAdvantage.seconds > -.2) {
+            startPlan(
+                    Plan(Plan.Posture.DEFENSIVE)
+                            .withStep(FlexibleKickStep(KickAwayFromOwnGoal())),
+                    input)
+        }
 
         if (defensiveNodeDistance < backoff + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
             startPlan(
