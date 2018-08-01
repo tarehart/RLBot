@@ -1,9 +1,12 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.render.Renderer
 import tarehart.rlbot.intercept.Intercept
+import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.ui.ArenaDisplay
 import java.awt.BasicStroke
@@ -40,5 +43,12 @@ class DirectedKickPlan (
         val crossSize = 2
         graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
         graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
+    }
+
+    fun renderDebugInfo(renderer: Renderer) {
+        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, launchPad.position.toVector3()), 2.0, Color.WHITE)
+        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, launchPad.position.toVector3()), 1.0, Color.WHITE)
+
+        RenderUtil.drawImpact(renderer, intercept.space, plannedKickForce.scaled(0.1), Color(1.0f, 0.4f, 0.4f))
     }
 }

@@ -15,6 +15,7 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.rotation.PitchToPlaneStep
@@ -85,10 +86,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return AgentOutput().withBoost()
         }
 
-//        val renderer = BotLoopRenderer.forBotLoop(input.bot)
-//        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(0.0, 0.0, 2.0)).toRlbot())
-//        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(2.0, 0.0, -2.0)).toRlbot())
-//        renderer.drawLine3d(Color.ORANGE, latestIntercept.space.toRlbot(), latestIntercept.space.plus(Vector3(-2.0, 0.0, -2.0)).toRlbot())
+        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3.0), Color.CYAN)
+        RenderUtil.drawBallPath(renderer, ballPath, latestIntercept.time, Color.CYAN)
 
         intercept = latestIntercept.toSpaceTime()
         val carToIntercept = latestIntercept.space.minus(car.position)

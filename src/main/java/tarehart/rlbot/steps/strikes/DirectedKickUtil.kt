@@ -42,7 +42,7 @@ object DirectedKickUtil {
         var plannedKickForce = Vector3() // This empty vector will never be used, but the compiler hasn't noticed.
         var desiredBallVelocity = Vector3()
 
-        impactSpeed = if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else arrivalSpeed
+        impactSpeed = if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else Math.max(10.0, arrivalSpeed)
 
         if (intercept.strikeProfile.isForward) {
 

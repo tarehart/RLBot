@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -170,6 +171,9 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             return null
         }
 
+        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        precisionPlan.kickPlan.renderDebugInfo(renderer)
+        precisionPlan.steerPlan.route.renderDebugInfo(renderer)
 
         return getNavigation(input, precisionPlan.steerPlan)
     }

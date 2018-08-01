@@ -1,12 +1,15 @@
 package tarehart.rlbot.steps.challenge
 
+import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.intercept.AirTouchPlanner
+import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
@@ -88,6 +91,8 @@ class ChallengeStep: NestedPlanStep() {
                 return startPlan(it, input)
             }
         }
+
+        RenderUtil.drawSquare(BotLoopRenderer.forBotLoop(input.bot), Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.0, Color(0.8f, 0.0f, 0.8f))
 
         return SteerUtil.steerTowardGroundPositionGreedily(car, defensiveNode)
     }

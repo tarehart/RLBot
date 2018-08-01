@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -39,6 +40,10 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5.0), 0.0)
 
         val steerPlan = kickPlan.launchPad.planRoute(car, distancePlot)
+
+        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        kickPlan.renderDebugInfo(renderer)
+        steerPlan.route.renderDebugInfo(renderer)
 
         return steerPlan.immediateSteer
     }

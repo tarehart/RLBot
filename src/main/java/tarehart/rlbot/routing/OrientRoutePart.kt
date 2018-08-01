@@ -1,5 +1,6 @@
 package tarehart.rlbot.routing
 
+import rlbot.render.Renderer
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.time.Duration
@@ -16,7 +17,6 @@ import java.awt.geom.Line2D
 class OrientRoutePart(
         override val start: Vector2,
         override val duration: Duration) : RoutePart {
-
     override val end: Vector2
         get() = start
 
@@ -26,6 +26,9 @@ class OrientRoutePart(
 
         graphics.color = Color(125, 50, 50)
         graphics.draw(Circle(start, 1.0).toShape())
+    }
+
+    override fun renderDebugInfo(renderer: Renderer) {
     }
 
 }

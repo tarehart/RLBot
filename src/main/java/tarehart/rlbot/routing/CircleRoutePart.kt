@@ -1,5 +1,6 @@
 package tarehart.rlbot.routing
 
+import rlbot.render.Renderer
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.time.Duration
@@ -13,7 +14,6 @@ class CircleRoutePart(
         override val duration: Duration,
         val circle: Circle,
         val clockwise: Boolean) : RoutePart {
-
     override val waypoint: Vector2
         get() = start
 
@@ -31,6 +31,10 @@ class CircleRoutePart(
             val arc = Arc2D.Double(circle.toShape().bounds2D, startDegrees, sweepDegrees, Arc2D.OPEN)
             graphics.draw(arc)
         }
+    }
+
+    override fun renderDebugInfo(renderer: Renderer) {
+
     }
 
 }

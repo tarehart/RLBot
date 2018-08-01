@@ -1,7 +1,12 @@
 package tarehart.rlbot.routing
 
+import rlbot.render.Renderer
+import tarehart.rlbot.math.Plane
+import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import java.awt.Color
 import java.awt.Graphics2D
 
 /**
@@ -21,6 +26,10 @@ class Route {
 
     fun drawDebugInfo(graphics: Graphics2D) {
         parts.forEach { it.drawDebugInfo(graphics) }
+    }
+
+    fun renderDebugInfo(renderer: Renderer) {
+        parts.forEach { it.renderDebugInfo(renderer)}
     }
 
 }
