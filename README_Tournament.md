@@ -3,11 +3,12 @@ you've just extracted a zip file submitted to a tournament. If that's not your s
 instead.
 
 1. Install Java 8.
-2. Run `pip install grpcio` on the command line (one time setup).
-3. Copy the included `.py` and `.cfg` file(s) to your RLBot directory, as you would do with a plain python bot.
-4. Modify rlbot.cfg and set up the match as you normally would.
-3. Before (or after) running `python runner.py`, double click on the `ReliefBot.bat` file included in
-the bin directory. 
+2. Run `pip install py4j` on the command line (one time setup).
+3. Run the framework as normal, and point to one of the bot cfg files in this directory.
+4. Double click on the `ReliefBot.bat` file included in the bin directory.
+Can be done before or after running the framework.
+5. To give ReliefBot the best performance, please do not open the tactical
+overlay during important matches.
 
 
 You only need to run a single instance of `ReliefBot.bat`, and it can handle all the bots in this zip
@@ -18,5 +19,6 @@ Advanced:
 
 - It's fine to close and restart `ReliefBot.bat` while runner.py is active.
 - You can also run the `.bat` on the command line to see stack traces for debugging purposes.
-- If there is a port conflict, you can create a file called `reliefbot-port.txt` with a single number in it to override the port used. 
-You must put a copy of it in the lib folder, and also in the RLBot folder where you put the .py files.
+- If there is a port conflict, you can create a file called `reliefbot-port.txt`
+in the bin folder with a single number in it to override the port used.
+You must also modify the port.cfg located in this directory.

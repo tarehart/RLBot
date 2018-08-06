@@ -1,90 +1,85 @@
 apply plugin: 'idea'
 apply plugin: 'kotlin'
 apply plugin: 'application'
-apply plugin: 'maven'
 
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 buildscript {
-    ext.kotlin_version = '1.2.20'
+    ext.kotlin_version = '1.2.51'
     repositories {
-        mavenCentral()
+        jcenter()
     }
     dependencies {
-        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.3"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
-apply plugin: 'com.google.protobuf'
+def dllDirectory = 'build/dll'
+def assetsDirectory = 'build/assets'
+applicationDefaultJvmArgs = [
+        "-Djna.library.path=" + dllDirectory,
+        "-Djava.library.path=" + dllDirectory,
+        "-XX:+UseG1GC",
+        "-Xms256m"
+]
 
-def grpcVersion = '1.7.0'
+//afterEvaluate {
+//    tasks.getByName('runIdea') {
+//        systemProperty 'java.library.path' dllDirectory
+//        jvmArgs('-Djava.library.path=' + dllDirectory)
+//    }
+//}
+
+run {
+    systemProperty 'java.library.path', dllDirectory
+}
+
+test {
+    systemProperty 'java.library.path', dllDirectory
+}
 
 dependencies {
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
-    compile group: 'net.sf.py4j', name: 'py4j', version: '0.10.6'
-    compile group: 'org.ode4j', name: 'core', version: '0.3.1'
+    // Fetch the framework jar file
+    compile 'org.rlbot.commons:framework:0.0.9'
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
     compile 'com.google.guava:guava:23.4-jre'
-    compile "io.grpc:grpc-netty:${grpcVersion}"
-    compile "io.grpc:grpc-protobuf:${grpcVersion}"
-    compile "io.grpc:grpc-stub:${grpcVersion}"
+    compile 'no.tornado:tornadofx:1.7.16'
+
+    // This directory will be created and the interface dll copied into it at runtime.
+    // The end result is that the interface dll will be on the classpath.
+    runtime files(dllDirectory)
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
-
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
-
-sourceSets {
-    main {
-        proto.srcDirs = ['grpcsupport/protobuf']
-        java.srcDirs = ['java/src', 'build/generated/source/proto/main/grpc', 'build/generated/source/proto/main/java']
-    }
-    test {
-        java.srcDirs = ['java/tst']
-        resources.srcDirs = ['java/resources/tst']
-    }
-}
-
-idea {
-    module {
-        generatedSourceDirs += file('build/generated/source/proto/main/grpc')
-        generatedSourceDirs += file('build/generated/source/proto/main/java')
-    }
-}
-
-mainClassName = 'tarehart.rlbot.GrpcServerKt'
+mainClassName = 'tarehart.rlbot.ReliefBotMainKt'
 
 // You can run gradew distZip to generate a zip file suitable for tournament submissions
-applicationDistribution.from("$projectDir") {
-    into 'README'
-    include 'README_Tournament.md', 'relief_bot.py', 'relief_bot.cfg', 'adversity_bot.cfg', 'air_bud.cfg'
-}
+distZip {
+    dependsOn 'copyBallPredictionDll'
 
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.4.0"
-    }
-    plugins {
-        grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+    into ('README') {
+        from 'README_Tournament.md'
+        from fileTree('src/main/python') {
+            exclude '__pycache__'
         }
     }
-    generateProtoTasks {
-        all()*.plugins {
-            grpc {}
-        }
+
+    into (project.name + '/bin/' + dllDirectory) {
+        from dllDirectory + '/BallPrediction.dll'
+    }
+
+    into (project.name + '/bin/' + assetsDirectory) {
+        from assetsDirectory + '/pitch.dat'
     }
 }
-
-compileKotlin.dependsOn ':generateProto'
-tasks.idea.dependsOn ':generateProto'
 
 compileKotlin {
     kotlinOptions {
@@ -97,3 +92,65 @@ compileTestKotlin {
     }
 }
 
+task checkPipUpgradeSafety {
+    doLast {
+        new ByteArrayOutputStream().withStream { os ->
+            def exitValue = exec {
+                commandLine "python", "-c", "from rlbot.utils import public_utils; print(public_utils.is_safe_to_upgrade());"
+                standardOutput = os
+                ignoreExitValue = true
+            }.exitValue
+
+            // If the exit value is nonzero, the command  probably failed because rlbot is not installed at all.
+            ext.isSafe = exitValue != 0 || os.toString().trim() == "True"
+        }
+    }
+}
+
+
+// Uses pip (the python package manager) to install all the python packages needed for this bot, as defined
+// in requirements.txt.
+task pipInstallRequirements {
+    dependsOn 'checkPipUpgradeSafety'
+
+    doLast {
+        if (checkPipUpgradeSafety.isSafe) {
+            exec {
+                commandLine "python", "-m", "pip", "install", "-r", "./src/main/python/requirements.txt", "--upgrade"
+            }
+        } else {
+            println 'Skipping upgrade attempt because files are in use.'
+        }
+    }
+}
+
+task createAssetsDirectory {
+    mkdir assetsDirectory
+}
+
+task createDllDirectory {
+    mkdir dllDirectory
+}
+
+// Installs or updates RLBot. Empty task for now. It still does stuff because it "dependsOn" tasks that do things.
+task updateRLBot {
+    dependsOn 'pipInstallRequirements'
+    dependsOn 'createDllDirectory'
+    dependsOn 'createAssetsDirectory'
+}
+
+task copyBallPredictionDll(type: Copy) {
+    dependsOn 'createDllDirectory'
+
+    from('src/main/cpp/BallPrediction/x64/Debug/BallPrediction.dll')
+    into dllDirectory
+    inputs.sourceFiles.stopExecutionIfEmpty()
+}
+
+task copyAssets(type: Copy) {
+    dependsOn 'createAssetsDirectory'
+
+    from('src/main/assets/pitch.dat')
+    into assetsDirectory
+    inputs.sourceFiles.stopExecutionIfEmpty()
+}
