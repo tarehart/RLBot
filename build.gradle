@@ -63,7 +63,6 @@ mainClassName = 'tarehart.rlbot.ReliefBotMainKt'
 
 // You can run gradew distZip to generate a zip file suitable for tournament submissions
 distZip {
-    dependsOn 'copyBallPredictionDll'
 
     into ('README') {
         from 'README_Tournament.md'
