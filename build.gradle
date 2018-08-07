@@ -144,7 +144,6 @@ task copyBallPredictionDll(type: Copy) {
 
     from('src/main/cpp/BallPrediction/x64/Debug/BallPrediction.dll')
     into dllDirectory
-    inputs.sourceFiles.stopExecutionIfEmpty()
 }
 
 task copyAssets(type: Copy) {
