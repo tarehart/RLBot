@@ -6,6 +6,12 @@ ReliefBot uses a framework called RLBot.
 - Website: http://www.rlbot.org
 - Framework: https://github.com/RLBot/RLBot
 
+#### Good Information
+ - Start with the [Setup guide](https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29). When you're done, there are [more wikis](https://github.com/RLBot/RLBot/wiki) with additional information.
+ - We have a [Discord server](https://discord.gg/zbaAKPt) (the heart of the community, please join!)
+ - [We also have a subreddit.](https://www.reddit.com/r/RocketLeagueBots/)
+ - We are now on v4 of RLBot so be wary of outdated information.
+
 ## ReliefBot Development Environment Setup
 
 1. Make sure you've installed Python 3.6.5 or newer. Here's [Python 3.7 64 bit](https://www.python.org/ftp/python/3.7.0/python-3.7.0-amd64.exe). Some older versions like 3.6.0 will not work. During installation:
@@ -21,19 +27,15 @@ ReliefBot uses a framework called RLBot.
 There is also a C++ component, but I expect it to be so temporary that
 it's not worth documenting. If I was wrong, ask me.
 
-#### Good Information
- - Start with the [Setup guide](https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29). When you're done, there are [more wikis](https://github.com/RLBot/RLBot/wiki) with additional information.
- - We have a [Discord server](https://discord.gg/zbaAKPt) (the heart of the community, please join!)
- - [We also have a subreddit.](https://www.reddit.com/r/RocketLeagueBots/) 
- - We are now on v4 of RLBot so be wary of outdated information.
-
 
 ## Running ReliefBot
 
 1. Look in rlbot.cfg and modify as desired.
 1. Open Rocket League.
 1. Launch the java component of ReliefBot. You've got options:
-   - In IntelliJ, right click on `src/main/java/tarehart/rlbot/ReliefBotMain.kt` and choose Run or Debug
+   - In IntelliJ, right click on `src/main/java/tarehart/rlbot/ReliefBotMain.kt` and choose Run or Debug.
+   If you do this, you will need to update that run configuration to include the JVM args
+   defined in build.gradle, e.g. java.library.path.
    - Or, on the command line, run `gradlew.bat run`
 1. On the command line, run `python runner.py`
 
