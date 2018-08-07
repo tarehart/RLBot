@@ -27,7 +27,9 @@ it's not worth documenting. If I was wrong, ask me.
 1. Look in rlbot.cfg and modify as desired.
 2. Open Rocket League.
 3. Launch the java component of ReliefBot. You've got options:
-   - In IntelliJ, right click on `src/main/java/tarehart/rlbot/ReliefBotMain.kt` and choose Run or Debug
+   - In IntelliJ, right click on `src/main/java/tarehart/rlbot/ReliefBotMain.kt` and choose Run or Debug.
+   If you do this, you will need to update that run configuration to include the JVM args
+   defined in build.gradle, e.g. java.library.path.
    - Or, on the command line, run `gradlew.bat run`
 4. On the command line, run `python runner.py`
 

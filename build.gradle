@@ -26,13 +26,6 @@ applicationDefaultJvmArgs = [
         "-Xms256m"
 ]
 
-//afterEvaluate {
-//    tasks.getByName('runIdea') {
-//        systemProperty 'java.library.path' dllDirectory
-//        jvmArgs('-Djava.library.path=' + dllDirectory)
-//    }
-//}
-
 run {
     systemProperty 'java.library.path', dllDirectory
 }
