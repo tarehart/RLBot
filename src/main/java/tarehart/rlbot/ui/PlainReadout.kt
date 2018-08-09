@@ -1,6 +1,5 @@
 package tarehart.rlbot.ui
 
-import sun.awt.SunToolkit
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.vector.Vector3
@@ -58,7 +57,7 @@ class PlainReadout {
 
         var log = log
         
-        if (!SunToolkit.getContainingWindow(rootPanel).isVisible) {
+        if (!rootPanel.isShowing) {
             return
         }
 

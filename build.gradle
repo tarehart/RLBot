@@ -18,6 +18,7 @@ buildscript {
 }
 
 def dllDirectory = 'build/dll'
+def intermediateDllDirectory = 'dll'
 def assetsDirectory = 'build/assets'
 applicationDefaultJvmArgs = [
         "-Djna.library.path=" + dllDirectory,
@@ -66,7 +67,7 @@ distZip {
     }
 
     into (project.name + '/bin/' + dllDirectory) {
-        from dllDirectory + '/BallPrediction.dll'
+        from intermediateDllDirectory + '/BallPrediction.dll'
     }
 
     into (project.name + '/bin/' + assetsDirectory) {
@@ -132,10 +133,15 @@ task updateRLBot {
     dependsOn 'createAssetsDirectory'
 }
 
+task copyBallPredictionToIntermediate(type: Copy) {
+    from('src/main/cpp/BallPrediction/x64/Debug/BallPrediction.dll')
+    into intermediateDllDirectory
+}
+
 task copyBallPredictionDll(type: Copy) {
     dependsOn 'createDllDirectory'
 
-    from('src/main/cpp/BallPrediction/x64/Debug/BallPrediction.dll')
+    from(intermediateDllDirectory + '/BallPrediction.dll')
     into dllDirectory
 }
 
@@ -148,3 +154,4 @@ task copyAssets(type: Copy) {
 }
 
 run.dependsOn copyAssets
+run.dependsOn copyBallPredictionDll
