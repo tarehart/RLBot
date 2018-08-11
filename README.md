@@ -1,16 +1,7 @@
 # ReliefBot
 
-## Initial RLBot Setup
-
-ReliefBot uses a framework called RLBot.
-- Website: http://www.rlbot.org
-- Framework: https://github.com/RLBot/RLBot
-
-#### Good Information
- - Start with the [Setup guide](https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29). When you're done, there are [more wikis](https://github.com/RLBot/RLBot/wiki) with additional information.
- - We have a [Discord server](https://discord.gg/zbaAKPt) (the heart of the community, please join!)
- - [We also have a subreddit.](https://www.reddit.com/r/RocketLeagueBots/)
- - We are now on v4 of RLBot so be wary of outdated information.
+This is a custom Rocket League bot designed to work offline only.
+For more context, see http://www.rlbot.org/
 
 ## Environment Setup
 
@@ -25,15 +16,16 @@ ReliefBot uses a framework called RLBot.
 
 1. Look in rlbot.cfg and modify as desired.
 1. Open Rocket League.
-1. Launch the java component of ReliefBot. You've got options:
-   - On the command line, run `gradlew.bat run`
-   - Or, if you've set up IntelliJ, right click on `src/main/java/tarehart/rlbot/ReliefBotMain.kt` and choose Run or Debug.
-   If you do this, you will need to update that run configuration to include the JVM args
-   defined in build.gradle, e.g. java.library.path.
-1. On the command line, run `python runner.py`
+1. On the command line, run `gradlew.bat run` to start ReliefBots' brain.
+The console output may show a percentage less than 100%, but once a little
+java window pops up, it's ready to go.
+1. On the command line, run `python runner.py`. This should start up a game.
 
 For more advanced ways to use rlbot.cfg, see https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29
 
+If you have trouble with these instructions, see if you can at least get
+https://github.com/RLBot/RLBotJavaExample working. Same general concept,
+but more thorough instructions (including video tutorial).
 
 ## ReliefBot Development Environment Setup
 
@@ -41,6 +33,13 @@ For more advanced ways to use rlbot.cfg, see https://github.com/RLBot/RLBot/wiki
 1. Navigate to this directory on the command line
 1. Run `gradlew.bat idea`
 1. Open IntelliJ and open this folder as a project
+
+You now have the option of running ReliefBot directly from IntelliJ. Different options:
+- In the gradle tool view, right click on the 'run' task and choose Run or Debug.
+- OR, right click on `src/main/java/tarehart/rlbot/ReliefBotMain.kt` and choose Run or Debug.
+   If you do this, you will need to update that run configuration to include the JVM args
+   defined in build.gradle, e.g. java.library.path.
+
 
 There is also a C++ component, but I expect it to be so temporary that
 it's not worth documenting. If I was wrong, ask me.
