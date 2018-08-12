@@ -3,6 +3,7 @@ package tarehart.rlbot
 import rlbot.manager.BotManager
 import rlbot.pyinterop.PythonServer
 import tarehart.rlbot.ui.StatusSummary
+import java.awt.Dimension
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
@@ -56,6 +57,7 @@ private fun showStatusSummary(port: Int) {
     statusSummary.setPort(port)
 
     val frame = JFrame("ReliefBot")
+    frame.minimumSize = Dimension(400, 60)
     frame.contentPane = statusSummary.rootPanel
     frame.defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
     frame.pack()

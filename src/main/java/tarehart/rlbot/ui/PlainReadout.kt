@@ -241,6 +241,7 @@ class PlainReadout {
         rootPanel.add(situationPanel, BorderLayout.NORTH)
 
         arenaDisplay.background = Color(0xFCFCFC)
+        arenaDisplay.preferredSize = Dimension(500, 500)
         rootPanel.add(arenaDisplay, BorderLayout.CENTER)
         val diagnostics = JPanel()
         diagnostics.layout = BoxLayout(diagnostics, BoxLayout.Y_AXIS)
