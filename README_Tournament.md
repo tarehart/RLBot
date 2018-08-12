@@ -2,12 +2,14 @@ These instructions are intended for a tournament organizer. In theory, you're re
 you've just extracted a zip file submitted to a tournament. If that's not your situation, go look at README.md
 instead.
 
-1. Install Java 8.
-2. Run `pip install py4j` on the command line (one time setup).
-3. Run the framework as normal, and point to one of the bot cfg files in this directory.
-4. Double click on the `ReliefBot.bat` file included in the bin directory.
+1. Make sure you've installed Java 8 or newer. Here's the [Java 10 JRE](http://www.oracle.com/technetwork/java/javase/downloads/jre10-downloads-4417026.html).
+1. Make sure you've [set the JAVA_HOME environment variable](https://javatutorial.net/set-java-home-windows-10).
+1. Run `pip install py4j` on the command line (one time setup).
+1. Run the framework as normal, and point to one of the bot cfg files in this directory.
+For an example of running the framework, see the [setup video](https://www.youtube.com/watch?v=UjsQFNN0nSA).
+1. Double click on the `ReliefBot.bat` file included in the bin directory.
 Can be done before or after running the framework.
-5. To give ReliefBot the best performance, please do not open the tactical
+1. To give ReliefBot the best performance, please do not open the tactical
 overlay during important matches.
 
 
