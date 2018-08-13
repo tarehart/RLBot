@@ -16,10 +16,10 @@ For more context, see http://www.rlbot.org/
 
 1. Look in rlbot.cfg and modify as desired.
 1. Open Rocket League.
-1. On the command line, run `run-bot.bat` to start ReliefBots' brain.
+1. On the command line, run `run-bot.bat` to start ReliefBots' brain. **Leave it running!**
 The console output may show a percentage less than 100%, but once a little
 java window pops up, it's ready to go.
-1. On the command line, run `run-framework.bat`. This should start up a game.
+1. On another command line, run `run-framework.bat`. This should start up a game.
 
 For more advanced ways to use rlbot.cfg, see https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29
 
