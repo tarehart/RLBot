@@ -30,21 +30,10 @@ inline uint32_t unpack32_lsb(uint32_t ab, uint32_t shift = 16) {
   return (ab & mask);
 }
 
-inline uint32_t clz_plain(uint32_t x)
-{
-	if (!x) return 32;
-	uint32_t n = 0;
-	if (x <= 0x0000ffff) n += 16, x <<= 16;
-	if (x <= 0x00ffffff) n += 8, x <<= 8;
-	if (x <= 0x0fffffff) n += 4, x <<= 4;
-	if (x <= 0x3fffffff) n += 2, x <<= 2;
-	if (x <= 0x7fffffff) n++;
-	return n;
-}
-
 inline uint32_t clz(uint32_t n) {
-  //return uint32_t(__lzcnt(n));
-	return clz_plain(n);
+	unsigned long index;
+	unsigned char isNonzero = _BitScanReverse(&index, n);
+	return uint32_t(isNonzero ? 31 - index : 32);
 }
 
 inline uint32_t clz(uint64_t n) {
