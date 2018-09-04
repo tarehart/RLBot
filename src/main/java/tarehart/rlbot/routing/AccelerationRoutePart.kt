@@ -29,6 +29,9 @@ class AccelerationRoutePart(
     override fun renderDebugInfo(renderer: Renderer) {
 
         val toStart = start.toVector3() - end.toVector3()
+        if (toStart.isZero) {
+            return
+        }
         val toStartNormal = toStart.normaliseCopy()
         val raisedEnd = Vector3(end.x, end.y, 2.0)
         val distance = toStart.magnitude()

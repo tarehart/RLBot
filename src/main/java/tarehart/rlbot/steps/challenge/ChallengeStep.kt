@@ -92,7 +92,9 @@ class ChallengeStep: NestedPlanStep() {
             }
         }
 
-        RenderUtil.drawSquare(BotLoopRenderer.forBotLoop(input.bot), Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.0, Color(0.8f, 0.0f, 0.8f))
+        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.0, Color(0.8f, 0.0f, 0.8f))
+        RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.5, Color(0.8f, 0.0f, 0.8f))
 
         return SteerUtil.steerTowardGroundPositionGreedily(car, defensiveNode)
     }

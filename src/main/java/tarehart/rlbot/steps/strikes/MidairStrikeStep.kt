@@ -88,7 +88,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         val renderer = BotLoopRenderer.forBotLoop(input.bot)
         RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3.0), Color.CYAN)
-        RenderUtil.drawBallPath(renderer, ballPath, latestIntercept.time, Color.CYAN)
+        RenderUtil.drawBallPath(renderer, ballPath, latestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
 
         intercept = latestIntercept.toSpaceTime()
         val carToIntercept = latestIntercept.space.minus(car.position)
