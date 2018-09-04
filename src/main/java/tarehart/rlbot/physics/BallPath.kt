@@ -20,8 +20,7 @@ class BallPath() {
     val endpoint: BallSlice
         get() = this.slices[this.slices.size - 1]
 
-    constructor(startingSlice: BallSlice, prediction: BallPrediction): this() {
-        slices.add(startingSlice)
+    constructor(prediction: BallPrediction): this() {
         for (i in 0 until prediction.slicesLength()) {
             val slice = prediction.slices(i)
             val physics = slice.physics()

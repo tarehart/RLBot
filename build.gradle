@@ -4,6 +4,7 @@ apply plugin: 'application'
 
 
 repositories {
+    mavenLocal()
     jcenter()
 }
 
@@ -18,7 +19,7 @@ buildscript {
 }
 
 def dllDirectory = 'build/dll'
-def assetsDirectory = 'build/assets'
+
 applicationDefaultJvmArgs = [
         "-Djna.library.path=" + dllDirectory,
         "-Djava.library.path=" + dllDirectory,
@@ -36,7 +37,7 @@ test {
 
 dependencies {
     // Fetch the framework jar file
-    compile 'org.rlbot.commons:framework:0.0.9'
+    compile 'org.rlbot.commons:framework:1.+'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
@@ -55,22 +56,11 @@ mainClassName = 'tarehart.rlbot.ReliefBotMainKt'
 
 // You can run gradew distZip to generate a zip file suitable for tournament submissions
 distZip {
-
-    dependsOn 'copyAssets'
-
     into ('README') {
         from 'README_Tournament.md'
         from fileTree('src/main/python') {
             exclude '__pycache__'
         }
-    }
-
-    into (project.name + '/bin/' + dllDirectory) {
-        from dllDirectory + '/BallPrediction.dll'
-    }
-
-    into (project.name + '/bin/' + assetsDirectory) {
-        from assetsDirectory + '/pitch.dat'
     }
 }
 
@@ -117,10 +107,6 @@ task pipInstallRequirements {
     }
 }
 
-task createAssetsDirectory {
-    mkdir assetsDirectory
-}
-
 task createDllDirectory {
     mkdir dllDirectory
 }
@@ -129,22 +115,4 @@ task createDllDirectory {
 task updateRLBot {
     dependsOn 'pipInstallRequirements'
     dependsOn 'createDllDirectory'
-    dependsOn 'createAssetsDirectory'
 }
-
-task copyBallPredictionDll(type: Copy) {
-    dependsOn 'createDllDirectory'
-
-    from('src/main/cpp/BallPrediction/x64/Debug/BallPrediction.dll')
-    into dllDirectory
-}
-
-task copyAssets(type: Copy) {
-    dependsOn 'createAssetsDirectory'
-
-    from('src/main/assets/pitch.dat')
-    into assetsDirectory
-    inputs.sourceFiles.stopExecutionIfEmpty()
-}
-
-run.dependsOn copyAssets
