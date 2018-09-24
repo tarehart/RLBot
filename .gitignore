@@ -118,8 +118,4 @@ ENV/
 # Gradle
 .gradle
 
-# Un-ignore the ball prediction dll so people aren't forced to build c++ stuff
-# TODO: get rid of this once the framework has ball prediction support
-!/build/dll
-/build/dll/*
-!/build/dll/BallPrediction.dll
+classes/
