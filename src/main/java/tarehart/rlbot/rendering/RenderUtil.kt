@@ -1,6 +1,5 @@
 package tarehart.rlbot.rendering
 
-import rlbot.manager.BotLoopRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane

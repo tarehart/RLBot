@@ -1,26 +1,31 @@
 package tarehart.rlbot.steps.demolition
 
+import rlbot.cppinterop.RLBotDll
+import rlbot.manager.BotLoopRenderer
+import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.rendering.RenderUtil
+import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.StandardStep
-import tarehart.rlbot.steps.Step
+import tarehart.rlbot.steps.rotation.YawToPlaneStep
 import tarehart.rlbot.time.Duration
+import java.awt.Color
 
-import java.awt.*
-
-class DemolishEnemyStep : StandardStep() {
-
+class DemolishEnemyStep : NestedPlanStep() {
     private var enemyHadWheelContact: Boolean = false
-    private var hasDoubleJumped: Boolean = false
+    private var canDodge: Boolean = true
     private var enemyIndex: Int? = null
 
-    override val situation = "Demolishing enemy"
+    private val JUMP_THRESHOLD = 0.8
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
         val oppositeTeam = input.getTeamRoster(input.team.opposite())
@@ -49,26 +54,56 @@ class DemolishEnemyStep : StandardStep() {
             //            BotLog.println("Whoops", car.playerIndex);
             //        }
 
-            val steering = SteerUtil.steerTowardGroundPosition(car, it.space)
+            var steering = SteerUtil.steerTowardGroundPosition(car, it.space)
 
             val secondsTillContact = Duration.between(car.time, it.time).seconds
 
             val heightAtIntercept = it.space.z
             val needsDoubleJump = heightAtIntercept > 5
 
-            val heightDifference = heightAtIntercept - car.position.z
-            if (secondsTillContact < .8 && !enemyCar.hasWheelContact && (enemyHadWheelContact || heightDifference > 1)) {
+            val toIntercept = it.space - car.position
 
-                if (needsDoubleJump && !hasDoubleJumped && !car.hasWheelContact) {
-                    // Let go of A for a moment
-                    hasDoubleJumped = true
+            val renderer = BotLoopRenderer.forBotLoop(input.bot)
+            RenderUtil.drawSphere(renderer, it.space, 1.0, Color.RED)
+
+
+
+            val heightDifference = toIntercept.z
+
+            if (secondsTillContact > JUMP_THRESHOLD) {
+                val beneathImpact = it.space.flatten().toVector3()
+                renderer.drawLine3d(Color.ORANGE, it.space.toRlbot(), beneathImpact.toRlbot())
+                val towardJump = beneathImpact + toIntercept.scaledToMagnitude(-car.velocity.magnitude() * JUMP_THRESHOLD)
+                renderer.drawLine3d(Color.ORANGE, beneathImpact.toRlbot(), towardJump.toRlbot())
+
+            } else if (!enemyCar.hasWheelContact) {
+
+                steering = AgentOutput().withBoost()
+
+                if (needsDoubleJump && canDodge && !car.hasWheelContact) {
+
+                    canDodge = false
+                    return startPlan(Plan().unstoppable()
+                            .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost()))
+                            .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost().withJump())), input)
                 } else {
-                    steering.withJump()
-                }
 
+                    val steerCorrection = car.velocity.flatten().correctionAngle(toIntercept.flatten())
+                    if (Math.abs(steerCorrection) > Math.PI / 20) {
+                        return startPlan(Plan().unstoppable()
+                                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost()))
+                                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
+                                        .withBoost()
+                                        .withRoll(-Math.signum(steerCorrection))
+                                        .withJump())), input)
+                    }
 
-                if (!car.hasWheelContact) {
-                    steering.withSteer(0.0) // Avoid dodging accidentally.
+                    val rightVector = VectorUtil.rotateVector(toIntercept.flatten(), -Math.PI / 2).toVector3()
+                    val yawAmount = YawToPlaneStep({ rightVector }).getOutput(input)?.yaw ?: 0.0
+                    steering.withYaw(yawAmount * 0.1)
+
+                    val myPositionAtImpact = CarPredictor.predictCarMotion(car, it.time - car.time).lastSlice.space
+                    steering.withJump(myPositionAtImpact.z < it.space.z)
                 }
             }
 
@@ -78,5 +113,9 @@ class DemolishEnemyStep : StandardStep() {
         }
 
         return SteerUtil.steerTowardGroundPositionGreedily(car, enemyCar.position.flatten())
+    }
+
+    override fun getLocalSituation(): String {
+        return "Demolishing enemy"
     }
 }

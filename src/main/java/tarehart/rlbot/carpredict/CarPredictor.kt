@@ -8,7 +8,7 @@ import tarehart.rlbot.tuning.ManeuverMath
 
 object CarPredictor {
 
-    private val TIME_STEP = 0.1
+    private val TIME_STEP = 0.02
 
     fun predictCarMotion(car: CarData, duration: Duration): CarPath {
 

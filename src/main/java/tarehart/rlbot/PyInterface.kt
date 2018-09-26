@@ -3,10 +3,7 @@ package tarehart.rlbot
 import rlbot.Bot
 import rlbot.manager.BotManager
 import rlbot.pyinterop.DefaultPythonInterface
-import tarehart.rlbot.bots.AdversityBot
-import tarehart.rlbot.bots.AirBudBot
-import tarehart.rlbot.bots.JumpingBeanBot
-import tarehart.rlbot.bots.ReliefBot
+import tarehart.rlbot.bots.*
 import tarehart.rlbot.ui.StatusSummary
 
 /**
@@ -24,6 +21,8 @@ class PyInterface(private val botManager: BotManager, private val statusSummary:
             newBot = AdversityBot(teamEnum, index)
         } else if (botType.startsWith("Air Bud")) {
             newBot = AirBudBot(teamEnum, index)
+        } else if (botType.startsWith("TargetBot")) {
+            newBot = TargetBot(teamEnum, index)
         } else {
             newBot = ReliefBot(teamEnum, index)
         }

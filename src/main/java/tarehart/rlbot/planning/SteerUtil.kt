@@ -105,7 +105,9 @@ object SteerUtil {
             return steerTowardPositionAcrossSeam(carData, position.toVector3())
         }
 
-        val adjustedPosition = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, position)).orElse(position)
+        val adjustedPosition =
+                if (carData.boost > 99.0) position // This keeps us from swerving all around during unlimited boost games
+                else Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, position)).orElse(position)
 
         val correctionAngle = getCorrectionAngleRad(carData, adjustedPosition)
         val myPositionFlat = carData.position.flatten()
