@@ -6,6 +6,8 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.state.ResetLoop
 import tarehart.rlbot.steps.state.StateVector
 import tarehart.rlbot.time.Duration
@@ -43,10 +45,15 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
             if (distance < 50) {
                 //currentPlan = SetPieces.jumpSideFlip(false, Duration.ofSeconds(0.2), false)
-                currentPlan = SetPieces.frontFlip()
+                //currentPlan = SetPieces.frontFlip()
+                currentPlan = Plan().unstoppable()
+                        .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withJump()))
+                        .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()))
+                        .withStep(BlindStep(Duration.ofMillis(500), AgentOutput().withJump()))
+                        .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
             }
 
-            return AgentOutput().withThrottle(1.0).withBoost()
+            // return AgentOutput().withThrottle(1.0).withBoost()
         }
 
         return currentPlan?.getOutput(input) ?: AgentOutput()

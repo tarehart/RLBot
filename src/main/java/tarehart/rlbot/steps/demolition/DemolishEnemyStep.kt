@@ -1,33 +1,36 @@
 package tarehart.rlbot.steps.demolition
 
-import rlbot.cppinterop.RLBotDll
 import rlbot.manager.BotLoopRenderer
-import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
 import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.StandardStep
 import tarehart.rlbot.steps.rotation.YawToPlaneStep
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.time.GameTime
 import java.awt.Color
 
 class DemolishEnemyStep : NestedPlanStep() {
     private var enemyHadWheelContact: Boolean = false
     private var canDodge: Boolean = true
     private var enemyIndex: Int? = null
+    private var momentJumped: GameTime? = null
 
     private val JUMP_THRESHOLD = 0.8
 
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
+        if (car.hasWheelContact && !canDodge) {
+            return null // We already attempted a midair dodge, and now we've hit the ground. Give up.
+        }
         val oppositeTeam = input.getTeamRoster(input.team.opposite())
         val enemyCar = enemyIndex?.let { enemyInd -> oppositeTeam.first { it.playerIndex == enemyInd } } ?:
                 oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) }
@@ -80,7 +83,12 @@ class DemolishEnemyStep : NestedPlanStep() {
 
                 steering = AgentOutput().withBoost()
 
-                if (needsDoubleJump && canDodge && !car.hasWheelContact) {
+                if (needsDoubleJump && canDodge && !car.hasWheelContact && momentJumped != null) {
+
+                    val timeSinceJump = Duration.between(momentJumped!!, car.time)
+                    if (timeSinceJump < Duration.ofMillis(200)) {
+                        return AgentOutput().withJump()
+                    }
 
                     canDodge = false
                     return startPlan(Plan().unstoppable()
@@ -98,12 +106,20 @@ class DemolishEnemyStep : NestedPlanStep() {
                                         .withJump())), input)
                     }
 
-                    val rightVector = VectorUtil.rotateVector(toIntercept.flatten(), -Math.PI / 2).toVector3()
-                    val yawAmount = YawToPlaneStep({ rightVector }).getOutput(input)?.yaw ?: 0.0
-                    steering.withYaw(yawAmount * 0.1)
+//                    if (!canDodge) {
+//                        val rightVector = VectorUtil.rotateVector(toIntercept.flatten(), -Math.PI / 2).toVector3()
+//                        val yawAmount = YawToPlaneStep({ rightVector }).getOutput(input)?.yaw ?: 0.0
+//                        steering.withYaw(yawAmount * 0.1)
+//                    }
 
-                    val myPositionAtImpact = CarPredictor.predictCarMotion(car, it.time - car.time).lastSlice.space
-                    steering.withJump(myPositionAtImpact.z < it.space.z)
+
+//
+//                    val myPositionAtImpact = CarPredictor.predictCarMotion(car, it.time - car.time).lastSlice.space
+//                    steering.withJump(myPositionAtImpact.z < it.space.z)
+                    if (momentJumped == null) {
+                        momentJumped = car.time
+                    }
+                    steering.withJump()
                 }
             }
 
