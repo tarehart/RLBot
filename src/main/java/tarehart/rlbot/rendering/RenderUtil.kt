@@ -1,16 +1,17 @@
 package tarehart.rlbot.rendering
 
-import rlbot.manager.BotLoopRenderer
 import rlbot.render.Renderer
+import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.time.GameTime
 import java.awt.Color
-import java.util.*
 
 
 object RenderUtil {
+    val STANDARD_BALL_PATH_COLOR: Color = Color.YELLOW
+
     fun drawSquare(renderer: Renderer, plane: Plane, extent: Double, color: Color) {
 
         val crosser = if (plane.normal.x == 0.0 && plane.normal.y == 0.0) Vector3(1.0, 0.0, 0.0) else Vector3.UP
@@ -49,15 +50,47 @@ object RenderUtil {
         renderer.drawLine3d(color, p4.toRlbot(),tipPosition.toRlbot())
     }
 
-    fun drawBallPath(renderer: BotLoopRenderer, ballPath: BallPath, endTime: GameTime, color: Color) {
+    fun drawBallPath(renderer: Renderer, ballPath: BallPath, endTime: GameTime, color: Color) {
         var prevSlice = ballPath.startPoint
-        var slice = ballPath.startPoint
-        var i = 5
-        while (slice.time < endTime && i < ballPath.slices.size) {
-            renderer.drawLine3d(color, prevSlice.space.toRlbot(), slice.space.toRlbot())
-            i += 5
-            prevSlice = slice
+        var slice: BallSlice
+        var i = 1
+        while (prevSlice.time < endTime && i < ballPath.slices.size) {
             slice = ballPath.slices[i]
+
+            renderer.drawLine3d(color, prevSlice.space.toRlbot(), slice.space.toRlbot())
+            i += 1
+            prevSlice = slice
         }
     }
+
+    fun drawPath(renderer: Renderer, points: List<Vector3>, color: Color) {
+        if (points.size < 2) {
+            return
+        }
+
+        for (i in 1 until points.size) {
+            renderer.drawLine3d(color, points[i-1].toRlbot(), points[i].toRlbot())
+        }
+    }
+
+    fun drawSphere(renderer: Renderer, position: Vector3, radius: Double, color: Color) {
+        val x = Vector3(radius, 0.0, 0.0)
+        val y = Vector3(0.0, radius, 0.0)
+        val z = Vector3(0.0, 0.0, radius)
+
+        val diag = Vector3(1.0, 1.0, 1.0).scaledToMagnitude(radius).x
+        val d1 = Vector3(diag, diag, diag)
+        val d2 = Vector3(-diag, diag, diag)
+        val d3 = Vector3(-diag, -diag, diag)
+        val d4 = Vector3(-diag, diag, -diag)
+
+        renderer.drawLine3d(color, (position - x).toRlbot(), (position + x).toRlbot())
+        renderer.drawLine3d(color, (position - y).toRlbot(), (position + y).toRlbot())
+        renderer.drawLine3d(color, (position - z).toRlbot(), (position + z).toRlbot())
+        renderer.drawLine3d(color, (position - d1).toRlbot(), (position + d1).toRlbot())
+        renderer.drawLine3d(color, (position - d2).toRlbot(), (position + d2).toRlbot())
+        renderer.drawLine3d(color, (position - d3).toRlbot(), (position + d3).toRlbot())
+        renderer.drawLine3d(color, (position - d4).toRlbot(), (position + d4).toRlbot())
+    }
+
 }

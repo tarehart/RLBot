@@ -62,6 +62,12 @@ object VectorUtil {
         return Vector2(vec.y, -vec.x)
     }
 
+    fun orthogonal(vec: Vector2, left: Boolean): Vector2 {
+        // Start: (0, 1)
+        // Left would be: (-1, 0)
+        return if (left) Vector2(-vec.y, vec.x) else Vector2(vec.y, -vec.x)
+    }
+
     /**
      * There are two possible orthogonal vectors. We will use the isCorrectDirection function to determine
      * which should be returned. isCorrectDirection takes in a candidate orthogonal vector and returns

@@ -17,7 +17,7 @@ import java.time.Instant
 import java.util.*
 import javax.swing.JFrame
 
-abstract class BaseBot(private val team: Team, private val playerIndex: Int) : Bot {
+abstract class BaseBot(private val team: Team, protected val playerIndex: Int) : Bot {
     internal var currentPlan: Plan? = null
     private var previousPlan: Plan? = null
     internal var currentZonePlan: ZonePlan? = null

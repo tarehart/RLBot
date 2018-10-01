@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -12,6 +13,7 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -72,6 +74,13 @@ class InterceptStep @JvmOverloads constructor(
                 println("Ball has been touched, quitting intercept", input.playerIndex)
                 return null
             }
+        }
+
+        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        RenderUtil.drawSphere(renderer, soonestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
+        RenderUtil.drawBallPath(renderer, ballPath, soonestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
+        if (!interceptModifier.isZero) {
+            RenderUtil.drawImpact(renderer, soonestIntercept.space, interceptModifier.scaled(-1.0), Color.CYAN)
         }
 
 

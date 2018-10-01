@@ -21,7 +21,7 @@ import kotlin.streams.asStream
 class ArenaModel {
 
     private var previousBallPath: BallPath? = null
-    fun simulateBall(start: BallSlice, duration: Duration): BallPath {
+    fun simulateBall(start: BallSlice): BallPath {
         val prevPath = previousBallPath
         val ballPath: BallPath
         if (prevPath != null) {
@@ -35,10 +35,10 @@ class ArenaModel {
 
                 ballPath = prevPath // Previous prediction is still legit, build on top of it.
             } else {
-                ballPath = BallPredictorHelper.predictPath(start, duration.seconds.toFloat())
+                ballPath = BallPredictorHelper.predictPath()
             }
         } else {
-            ballPath = BallPredictorHelper.predictPath(start, duration.seconds.toFloat())
+            ballPath = BallPredictorHelper.predictPath()
         }
         previousBallPath = ballPath
         return ballPath
@@ -94,7 +94,7 @@ class ArenaModel {
                         synchronized(lock) {
                             // Always use a new ArenaModel. There's a nasty bug
                             // where bounces stop working properly and I can't track it down.
-                            return mainModel.simulateBall(key, SIMULATION_DURATION)
+                            return mainModel.simulateBall(key)
                         }
                     }
                 })

@@ -15,7 +15,7 @@ class TeamPlan(input: AgentInput) {
 
     init {
         // Store data for later use and for telemetry output
-        input.getAllCars().forEach {
+        input.allCars.forEach {
             teamIntents.add(TeamIntent(it, input))
         }
     }

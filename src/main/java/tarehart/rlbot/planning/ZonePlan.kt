@@ -88,7 +88,7 @@ class ZonePlan(input: AgentInput) {
         fun isAnalysisSane(ballZone: Zone, myZone: Zone, playerIndex: Int): Boolean {
             var sanityCheck = true
             if (ballZone.mainZone == Zone.MainZone.NONE) {
-                BotLog.println("WTF where is the ball?", playerIndex)
+                //BotLog.println("WTF where is the ball?", playerIndex)
                 sanityCheck = false
             }
             if (myZone.mainZone == Zone.MainZone.NONE) {

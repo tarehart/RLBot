@@ -20,6 +20,7 @@ class AgentInput(
         frameCount: Long,
         val bot: BaseBot) {
 
+    val allCars: List<CarData>
     val blueCars: List<CarData>
     val orangeCars: List<CarData>
     private val ourCar: CarData
@@ -59,7 +60,7 @@ class AgentInput(
         time = chronometer.gameTime
         val elapsedSeconds = chronometer.timeDiff.seconds
 
-        val allCars = ArrayList<CarData>(request.playersLength())
+        allCars = ArrayList(request.playersLength())
         for (i in 0 until request.playersLength()) {
             allCars.add(convert(request.players(i), i, spinTracker, elapsedSeconds, frameCount))
         }
@@ -92,14 +93,9 @@ class AgentInput(
         return if (team == Team.BLUE) blueCars else orangeCars
     }
 
-    //returns every car in the current match
-    fun getAllCars(): List<CarData> {
-        return blueCars.union(orangeCars).toList()
-    }
-
     //returns every car in the current match except the one provided
     fun getAllOtherCars(indexFilter: Int): List<CarData> {
-        return getAllCars().filter { it.playerIndex != indexFilter }
+        return allCars.filter { it.playerIndex != indexFilter }
     }
 
     private fun getLatestBallTouch(touch: Touch?, players: List<CarData>): BallTouch? {
