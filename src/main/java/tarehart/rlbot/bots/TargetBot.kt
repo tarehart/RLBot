@@ -18,7 +18,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             GameState()
                     .withBallState(BallState().withPhysics(PhysicsState().withLocation(StateVector(5000F, null, null))))
                     .withCarState(0, CarState().withPhysics(PhysicsState()
-                            .withLocation(StateVector(0F, -40F, 0F))
+                            .withLocation(StateVector(0F, -50F, 0F))
                             .withVelocity(StateVector(0F, 10F, 0F))
                             .withAngularVelocity(StateVector(0F, 0F, 0F))
                             .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
@@ -29,7 +29,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                             .withAngularVelocity(StateVector(0F, 0F, 0F))
                             .withRotation(DesiredRotation(0F, -Math.PI.toFloat() / 2, 0F))
                     )),
-            Duration.ofSeconds(3.0))
+            Duration.ofSeconds(4.0))
 
     override fun getOutput(input: AgentInput): AgentOutput {
 
@@ -44,16 +44,16 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             val distance = input.myCarData.position.distance(enemy.position)
 
             if (distance < 50) {
-                //currentPlan = SetPieces.jumpSideFlip(false, Duration.ofSeconds(0.2), false)
+               currentPlan = SetPieces.jumpSideFlip(false, Duration.ofSeconds(0.2), false)
                 //currentPlan = SetPieces.frontFlip()
-                currentPlan = Plan().unstoppable()
-                        .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withJump()))
-                        .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()))
-                        .withStep(BlindStep(Duration.ofMillis(500), AgentOutput().withJump()))
-                        .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+//                currentPlan = Plan().unstoppable()
+//                        .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withJump()))
+//                        .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()))
+//                        .withStep(BlindStep(Duration.ofMillis(500), AgentOutput().withJump()))
+//                        .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
             }
 
-            // return AgentOutput().withThrottle(1.0).withBoost()
+            return AgentOutput().withThrottle(1.0).withBoost()
         }
 
         return currentPlan?.getOutput(input) ?: AgentOutput()

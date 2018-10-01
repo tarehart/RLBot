@@ -63,6 +63,16 @@ object RenderUtil {
         }
     }
 
+    fun drawPath(renderer: Renderer, points: List<Vector3>, color: Color) {
+        if (points.size < 2) {
+            return
+        }
+
+        for (i in 1 until points.size) {
+            renderer.drawLine3d(color, points[i-1].toRlbot(), points[i].toRlbot())
+        }
+    }
+
     fun drawSphere(renderer: Renderer, position: Vector3, radius: Double, color: Color) {
         val x = Vector3(radius, 0.0, 0.0)
         val y = Vector3(0.0, radius, 0.0)
