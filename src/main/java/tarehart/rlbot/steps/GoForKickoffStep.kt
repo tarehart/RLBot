@@ -20,7 +20,7 @@ class GoForKickoffStep : NestedPlanStep() {
     }
 
     private var kickoffType: KickoffType? = null
-    private var counterAttack = Math.random() < .3
+    private var counterAttack = false // Math.random() < .3
     private lateinit var startTime: GameTime
 
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
