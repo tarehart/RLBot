@@ -4,12 +4,14 @@ import rlbot.Bot
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.GameTickPacket
 import tarehart.rlbot.AgentOutput
+import java.io.IOException
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedDeque
 
 
 class PyAdapterManager {
 
-    private val recentPackets = LinkedList<GameTickPacket>()
+    private val recentPackets = ConcurrentLinkedDeque<GameTickPacket>()
     private var initialized = false
     private var shutdown = false
 
@@ -18,11 +20,14 @@ class PyAdapterManager {
             initialized = true
             Thread(Runnable {
                 while (!shutdown) {
-                    val packet = RLBotDll.getFlatbufferPacket()
-                    val secondsElapsed = packet.gameInfo().secondsElapsed()
-                    System.out.println(secondsElapsed)
-                    if (recentPackets.isEmpty() || recentPackets.first().gameInfo().secondsElapsed() < secondsElapsed) {
-                        recentPackets.addFirst(packet)
+                    try {
+                        val packet = RLBotDll.getFlatbufferPacket()
+                        val secondsElapsed = packet.gameInfo().secondsElapsed()
+                        if (recentPackets.isEmpty() || recentPackets.peekFirst().gameInfo().secondsElapsed() < secondsElapsed) {
+                            recentPackets.addFirst(packet)
+                        }
+                    } catch (e: IOException) {
+                        e.printStackTrace()
                     }
                     while (recentPackets.size > 3) {
                         recentPackets.removeLast()
@@ -37,8 +42,10 @@ class PyAdapterManager {
     val pyAdapterBots = HashMap<Int, Bot>()
 
     fun registerPyAdapter(index: Int, botSupplier: (Int) -> Bot) {
-        ensureInitialized()
-        pyAdapterBots.computeIfAbsent(index, botSupplier)
+        synchronized(pyAdapterBots) {
+            ensureInitialized()
+            pyAdapterBots.computeIfAbsent(index, botSupplier)
+        }
     }
 
     fun isCorrectPacket(packet: GameTickPacket, secondsElapsed: Float): Boolean {
@@ -47,10 +54,8 @@ class PyAdapterManager {
 
     fun getOutput(index: Int, secondsElapsed: Float): AgentOutput? {
 
-
-        if (recentPackets.isEmpty() || recentPackets.first().gameInfo().secondsElapsed() < secondsElapsed) {
+        if (recentPackets.isEmpty() || recentPackets.peekFirst().gameInfo().secondsElapsed() < secondsElapsed) {
             val freshPacket = RLBotDll.getFlatbufferPacket()
-            System.out.println("" + freshPacket.gameInfo().secondsElapsed() + " fresh")
             recentPackets.addFirst(freshPacket)
         }
 

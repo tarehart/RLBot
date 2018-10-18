@@ -1,11 +1,13 @@
 package tarehart.rlbot
 
 import rlbot.Bot
+import rlbot.cppinterop.RLBotDll
 import rlbot.manager.BotManager
 import rlbot.manager.PyAdapterManager
 import rlbot.pyinterop.DefaultPythonInterface
 import tarehart.rlbot.bots.*
 import tarehart.rlbot.ui.StatusSummary
+import java.io.IOException
 
 /**
  * The public methods of this class will be called directly from the python component of the RLBot framework.
@@ -13,6 +15,8 @@ import tarehart.rlbot.ui.StatusSummary
 class PyInterface(private val botManager: BotManager, private val statusSummary: StatusSummary) : DefaultPythonInterface(botManager) {
 
     override fun initBot(index: Int, botType: String, team: Int): Bot {
+        botManager.ensureStarted()
+
         val newBot: tarehart.rlbot.bots.BaseBot
         val teamEnum = AgentInput.teamFromInt(team)
 
@@ -41,6 +45,14 @@ class PyInterface(private val botManager: BotManager, private val statusSummary:
     override fun shutdown() {
         super.shutdown()
         pyAdapterManager.shutdown()
+    }
+
+    override fun ensureStarted(interfaceDllPath: String) {
+        try {
+            RLBotDll.initialize(interfaceDllPath)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
 
