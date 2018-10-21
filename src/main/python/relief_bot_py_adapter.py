@@ -50,7 +50,7 @@ class ReliefBotPy(BaseAgent):
             # This is useful for re-engaging the java server if it gets restarted during development.
             try:
                 self.init_py4j_stuff()
-                self.javaInterface.ensureStarted(game_interface.get_dll_location())
+                self.javaInterface.ensureDllInitialized(game_interface.get_dll_location())
                 self.javaInterface.registerPyAdapter(self.index, self.name, self.team)
                 initialized = True
             except Exception as e:

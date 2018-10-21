@@ -7,6 +7,7 @@ import tarehart.rlbot.carpredict.CarPath
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.input.CarSpin
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
 import java.util.*
@@ -33,7 +34,7 @@ class CarPathHelper {
                 carSlice.space,
                 carSlice.velocity,
                 carSlice.orientation,
-                CarSpin(0.0, 0.0, 0.0),
+                CarSpin(0.0, 0.0, 0.0, Vector3()),
                 100.0,
                 false,
                 Team.BLUE,

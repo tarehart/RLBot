@@ -3,6 +3,8 @@ package tarehart.rlbot.steps.landing
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.Mat3
+import tarehart.rlbot.math.OrientationSolver
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -35,7 +37,13 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
             return startPlan(Plan().withStep(DescendFromWallStep()), input)
         }
 
-        return startPlan(planRotation(input.myCarData, facingFn), input)
+        //return startPlan(planRotation(input.myCarData, facingFn), input)
+
+        if (car.hasWheelContact) {
+            return null
+        }
+
+        return OrientationSolver.step(input.myCarData, Mat3.lookingTo(facingFn.invoke(input).toVector3()), 1.0 / 60).withThrottle(1.0)
     }
 
     override fun canAbortPlanInternally(): Boolean {

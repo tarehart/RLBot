@@ -27,7 +27,8 @@ object DirectedKickUtil {
         val secondsTillIntercept = (intercept.time - car.time).seconds
         val flatPosition = car.position.flatten()
         val toIntercept = intercept.space.flatten() - flatPosition
-        val averageSpeedNeeded = toIntercept.magnitude() / secondsTillIntercept
+        val distanceToIntercept = toIntercept.magnitude()
+        val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
         val currentSpeed = car.velocity.flatten().magnitude()
         val anticipatedSpeed = if (intercept.spareTime.millis > 0) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
         val closenessRatio = Math.max(1.0, 1 / secondsTillIntercept)
@@ -131,10 +132,21 @@ object DirectedKickUtil {
             StrikeProfile.Style.AERIAL -> {
 
                 val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
-                val lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
+                var lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
+                val lazyLaunchDistance = lazyLaunchToIntercept.magnitude()
+                if (lazyLaunchDistance > distanceToIntercept) {
+                    lazyLaunchToIntercept = lazyLaunchToIntercept.scaled(distanceToIntercept / lazyLaunchDistance)
+                }
                 launchPosition = intercept.space.flatten() - lazyLaunchToIntercept
                 facing = lazyLaunchToIntercept.normalized()
-                launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
+                val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
+                val momentOrNow = if (launchPadMoment.isBefore(car.time)) car.time else launchPadMoment
+                launchPad = StrictPreKickWaypoint(
+                        position = launchPosition,
+                        facing = facing,
+                        expectedTime = momentOrNow,
+                        waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null
+                )
             }
         }
 

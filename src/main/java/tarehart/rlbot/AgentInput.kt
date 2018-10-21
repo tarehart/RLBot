@@ -146,11 +146,17 @@ class AgentInput(
 
         spinTracker.readInput(orientation, index, elapsedSeconds)
 
+        val flatAngularVel = playerInfo.physics().angularVelocity()
+        val angularVel = Vector3(flatAngularVel.x().toDouble(), flatAngularVel.y().toDouble(), flatAngularVel.z().toDouble())
+
+        val spinOld = spinTracker.getSpin(index, angularVel)
+        val spinNew = CarSpin(angularVel, orientation.matrix)
+
         return CarData(
                 position = Vector3.fromRlbot(playerInfo.physics().location()),
                 velocity = Vector3.fromRlbot(playerInfo.physics().velocity()),
                 orientation = orientation,
-                spin = spinTracker.getSpin(index),
+                spin = spinNew,
                 boost = playerInfo.boost().toDouble(),
                 isSupersonic = playerInfo.isSupersonic,
                 hasWheelContact = playerInfo.hasWheelContact(),

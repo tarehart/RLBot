@@ -1,12 +1,13 @@
 package tarehart.rlbot.input
 
 import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.vector.Spin
 import tarehart.rlbot.math.vector.Vector3
 
 class SpinTracker {
 
     private val previousOrientations = HashMap<Int, CarOrientation>()
-    private val spins = HashMap<Int, CarSpin>()
+    private val spins = HashMap<Int, Spin>()
 
     fun readInput(orientation: CarOrientation, index: Int, secondsElapsed: Double) {
         if (secondsElapsed > 0) {
@@ -19,7 +20,7 @@ class SpinTracker {
         }
     }
 
-    private fun getCarSpin(prevData: CarOrientation, currData: CarOrientation, secondsElapsed: Double): CarSpin {
+    private fun getCarSpin(prevData: CarOrientation, currData: CarOrientation, secondsElapsed: Double): Spin {
 
         val rateConversion = 1 / secondsElapsed
 
@@ -27,7 +28,7 @@ class SpinTracker {
         val yawAmount = getRotationAmount(currData.noseVector, prevData.rightVector)
         val rollAmount = getRotationAmount(currData.roofVector, prevData.rightVector)
 
-        return CarSpin(pitchAmount * rateConversion, yawAmount * rateConversion, rollAmount * rateConversion)
+        return Spin(pitchAmount * rateConversion, yawAmount * rateConversion, rollAmount * rateConversion)
     }
 
     private fun getRotationAmount(currentMoving: Vector3, previousOrthogonal: Vector3): Double {
@@ -35,7 +36,7 @@ class SpinTracker {
         return Math.asin(projection.magnitude() * Math.signum(projection.dotProduct(previousOrthogonal)))
     }
 
-    fun getSpin(index: Int): CarSpin {
-        return spins[index] ?: CarSpin(0.0, 0.0, 0.0)
+    fun getSpin(index: Int, angularVel: Vector3): CarSpin {
+        return spins[index]?.let { CarSpin(it, angularVel) } ?: CarSpin(0.0, 0.0, 0.0, angularVel)
     }
 }

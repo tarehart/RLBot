@@ -15,8 +15,6 @@ import java.io.IOException
 class PyInterface(private val botManager: BotManager, private val statusSummary: StatusSummary) : DefaultPythonInterface(botManager) {
 
     override fun initBot(index: Int, botType: String, team: Int): Bot {
-        botManager.ensureStarted()
-
         val newBot: tarehart.rlbot.bots.BaseBot
         val teamEnum = AgentInput.teamFromInt(team)
 
@@ -47,7 +45,7 @@ class PyInterface(private val botManager: BotManager, private val statusSummary:
         pyAdapterManager.shutdown()
     }
 
-    override fun ensureStarted(interfaceDllPath: String) {
+    fun ensureDllInitialized(interfaceDllPath: String) {
         try {
             RLBotDll.initialize(interfaceDllPath)
         } catch (e: IOException) {

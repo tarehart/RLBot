@@ -1,8 +1,6 @@
 package tarehart.rlbot.math.vector
 
-import com.google.flatbuffers.FlatBufferBuilder
 import tarehart.rlbot.math.Plane
-import java.util.*
 
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
 
@@ -15,6 +13,23 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
 
     operator fun minus(other: Vector3): Vector3 {
         return Vector3(x - other.x, y - other.y, z - other.z)
+    }
+
+    operator fun div(value: Double): Vector3 {
+        return Vector3(x / value, y / value, z / value)
+    }
+
+    operator fun times(value: Double): Vector3 {
+        return Vector3(x * value, y * value, z * value)
+    }
+
+    operator fun get(index: Int): Double {
+        return when(index) {
+            0 -> x
+            1 -> y
+            2 -> z
+            else -> throw IndexOutOfBoundsException(String.format("Index %s is out of bounds for a Vector3!", index))
+        }
     }
 
     fun scaled(scale: Double): Vector3 {
@@ -110,7 +125,7 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     companion object {
 
         const val PACKET_DISTANCE_TO_CLASSIC = 50.0
-        val UP = Vector3(0.0, 0.0, 1.0);
+        val UP = Vector3(0.0, 0.0, 1.0)
 
         fun fromRlbot(v: rlbot.flat.Vector3): Vector3 {
             // Invert the X value so that the axes make more sense.
