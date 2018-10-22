@@ -1,11 +1,14 @@
 package tarehart.rlbot.steps.strikes
 
+import javafx.geometry.Orientation
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.InterceptCalculator
+import tarehart.rlbot.math.Mat3
+import tarehart.rlbot.math.OrientationSolver
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
@@ -157,27 +160,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, desiredZ)
         }
 
-
-        val pitchPlaneNormal = car.orientation.rightVector.crossProduct(desiredNoseVector)
-        val yawPlaneNormal = VectorUtil.rotateVector(desiredFlatOrientation, -Math.PI / 2).toVector3().normaliseCopy()
-
-        val pitchOutput = PitchToPlaneStep(pitchPlaneNormal).getOutput(input)
-        val yawOutput = YawToPlaneStep({yawPlaneNormal}, false).getOutput(input)
-        val rollOutput = RollToPlaneStep(Vector3(0.0, 0.0, 1.0), false).getOutput(input)
-
-        return mergeOrientationOutputs(pitchOutput, yawOutput, rollOutput)
+        return OrientationSolver.step(car, Mat3.lookingTo(desiredNoseVector), 1/60.0)
                 .withBoost(finesseMode || desiredNoseVector.dotProduct(car.orientation.noseVector) > .5)
                 .withJump()
-    }
-
-
-    private fun mergeOrientationOutputs(pitchOutput: AgentOutput?, yawOutput: AgentOutput?, rollOutput: AgentOutput?): AgentOutput {
-        val output = AgentOutput()
-        pitchOutput?.let { output.withPitch(it.pitch) }
-        yawOutput?.let { output.withYaw(it.yaw) }
-        rollOutput?.let { output.withRoll(it.roll) }
-
-        return output
     }
 
     override fun canInterrupt(): Boolean {
@@ -213,7 +198,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             var offset = ownGoal.scaledToMagnitude(2.0).minus(Vector3(0.0, 0.0, .3))
 
             intercept?.let {
-                
+
                 val offensive = Math.abs(ownGoal.y - intercept.y) > ArenaModel.BACK_WALL * .7
 
                 if (offensive) {

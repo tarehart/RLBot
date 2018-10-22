@@ -124,10 +124,6 @@ class AgentInput(
         return null
     }
 
-    private fun getSomeCar(playersList: List<CarData>, team: Team): CarData? {
-        return playersList.stream().filter { it.team == team }.findFirst().orElse(null)
-    }
-
     private fun getMatchInfo(gameInfo: GameInfo): MatchInfo {
         return MatchInfo(
                 matchEnded = gameInfo.isMatchEnded,
@@ -138,16 +134,15 @@ class AgentInput(
     }
 
     private fun convert(playerInfo: PlayerInfo, index: Int, frameCount: Long): CarData {
-        val orientation = euler_rotation(
+        val orientation = convert(
                 playerInfo.physics().rotation().pitch().toDouble(),
                 playerInfo.physics().rotation().yaw().toDouble(),
                 playerInfo.physics().rotation().roll().toDouble())
 
         val flatAngularVel = playerInfo.physics().angularVelocity()
 
-        // Multiply x by -1 to achieve a right handed coordinate system
+        // Multiply y and z by -1 to achieve a right handed coordinate system
         val angularVel = Vector3(flatAngularVel.x().toDouble(), -flatAngularVel.y().toDouble(), -flatAngularVel.z().toDouble())
-        //val angularVel = Vector3.fromRlbot(flatAngularVel)
 
         val spinNew = CarSpin(angularVel, orientation.matrix)
 
@@ -168,23 +163,7 @@ class AgentInput(
         )
     }
 
-    /**
-     * All params are in radians.
-     */
     private fun convert(pitch: Double, yaw: Double, roll: Double): CarOrientation {
-
-        val noseX = -1.0 * Math.cos(pitch) * Math.cos(yaw)
-        val noseY = Math.cos(pitch) * Math.sin(yaw)
-        val noseZ = Math.sin(pitch)
-
-        val roofX = Math.cos(roll) * Math.sin(pitch) * Math.cos(yaw) + Math.sin(roll) * Math.sin(yaw)
-        val roofY = Math.cos(yaw) * Math.sin(roll) - Math.cos(roll) * Math.sin(pitch) * Math.sin(yaw)
-        val roofZ = Math.cos(roll) * Math.cos(pitch)
-
-        return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector = Vector3(roofX, roofY, roofZ))
-    }
-
-    private fun euler_rotation(pitch: Double, yaw: Double, roll: Double): CarOrientation {
 
         val CP = cos(pitch)
         val SP = sin(pitch)

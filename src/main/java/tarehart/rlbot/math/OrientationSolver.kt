@@ -56,35 +56,15 @@ object OrientationSolver {
         return alpha
     }
 
-    fun aerialInputs(initialSpin: Vector3, targetSpin: Vector3, initialOrientation: Mat3, dt: Double): Spin {
-
-        // net torque in world coordinates
-        val netTorqueWorld = (targetSpin - initialSpin) / dt
-
-        val netTorqueLocal = initialOrientation.transpose().dot(netTorqueWorld)
-
-        val initialSpinLocal = initialOrientation.transpose().dot(initialSpin)
-
-        val rhs = Vector3(
-                netTorqueLocal.x - ROLL_DRAG * initialSpinLocal.x,
-                netTorqueLocal.y - PITCH_DRAG * initialSpinLocal.y,
-                netTorqueLocal.z - YAW_DRAG * initialSpinLocal.z)
-
-        return Spin(
-                rhs.y / (PITCH_TORQUE + Math.signum(rhs.y) * initialSpinLocal.y * PITCH_DRAG),
-                rhs.z / (YAW_TORQUE + Math.signum(rhs.z) * initialSpinLocal.z * YAW_DRAG),
-                rhs.x / ROLL_TORQUE)
-    }
-
-    fun aerialSpin(initialSpin: Vector3, targetSpin: Vector3, initialOrientation: Mat3, dt: Double): Vector3 {
+    fun aerialSpin(initialSpin: Vector3, targetSpin: Vector3, initialOrientation: Mat3, dt: Double): Spin {
         // car's moment of inertia (spherical symmetry)
 
 
-        // aerial control torque coefficients. -400 means that when you try to spin around the x axis,
-        // which means rolling because the x axis comes out the front of the car, you will have -400 torque
-        // available to you. Negative because... TODO
+        // aerial control torque coefficients. 400 means that when you try to spin around the x axis,
+        // which means rolling because the x axis comes out the front of the car, you will have 400 torque
+        // available to you.
         // roll, pitch, yaw
-        val torque = Vector3(-400.0, -130.0, 95.0)
+        val torque = Vector3(400.0, 130.0, 95.0)
 
         // aerial damping torque coefficients
         val damping = Vector3(-50.0, -30.0, -20.0)
@@ -98,10 +78,10 @@ object OrientationSolver {
 
         expectedDamping[0] = 0.0
 
-        return Vector3(
+        return Spin(Vector3(
                 solvePiecewiseLinear(possibleAccel[0], expectedDamping[0], toTarget[0]),
                 solvePiecewiseLinear(possibleAccel[1], expectedDamping[1], toTarget[1]),
-                solvePiecewiseLinear(possibleAccel[2], expectedDamping[2], toTarget[2]))
+                solvePiecewiseLinear(possibleAccel[2], expectedDamping[2], toTarget[2])))
 
     }
 
@@ -211,9 +191,9 @@ object OrientationSolver {
         val spin = aerialSpin(angularVel, desiredNextAngularVel, car.orientation.matrix, dt)
 
         return AgentOutput()
-                .withRoll(-spin.x)
-                .withPitch(spin.y)
-                .withYaw(-spin.z)
+                .withPitch(spin.pitchRate)
+                .withYaw(spin.yawRate)
+                .withRoll(spin.rollRate)
     }
 
     fun errorCorrect(geoWorldComponent: Double, angularVelComponent:Double, angularAccelComponent:Double): Double {
