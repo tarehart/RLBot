@@ -2,6 +2,7 @@ package tarehart.rlbot.math
 
 import org.ejml.simple.SimpleMatrix
 import tarehart.rlbot.math.vector.Vector3
+import kotlin.math.abs
 
 
 class Mat3(private val matrix: SimpleMatrix) {
@@ -39,17 +40,14 @@ class Mat3(private val matrix: SimpleMatrix) {
 
         fun lookingTo(direction: Vector3, up: Vector3 = Vector3.UP): Mat3 {
             val forward = direction.normaliseCopy()
-            val upward = forward.crossProduct(up.crossProduct(forward)).normaliseCopy()
-            val leftward = up.crossProduct(forward).normaliseCopy()
+            val safeUp = if (abs(direction.z) == 1.0) Vector3(x = 1.0) else up
+            val upward = forward.crossProduct(safeUp.crossProduct(forward)).normaliseCopy()
+            val leftward = safeUp.crossProduct(forward).normaliseCopy()
 
             return Mat3(arrayOf(
                     doubleArrayOf(forward.x, leftward.x, upward.x),
                     doubleArrayOf(forward.y, leftward.y, upward.y),
                     doubleArrayOf(forward.z, leftward.z, upward.z)))
-        }
-
-        fun dot(vec: Vector3, mat: Mat3): Vector3 {
-            return toVec(toMatrix(vec).mult(mat.matrix))
         }
     }
 }

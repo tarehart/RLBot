@@ -5,7 +5,6 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BotMath
-import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
@@ -13,7 +12,7 @@ import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.RoutePlanner
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.rotation.YawToPlaneStep
+import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.BasicStroke
@@ -134,7 +133,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
                 return startPlan(Plan(Plan.Posture.NEUTRAL)
                         .withStep(BlindStep(Duration.ofSeconds(0.01), AgentOutput().withJump()))
-                        .withStep(YawToPlaneStep({ VectorUtil.orthogonal(latestTarget.facing).toVector3() })), input)
+                        .withStep(LandGracefullyStep { latestTarget.facing }), input)
             } else {
 
                 if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {

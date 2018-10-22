@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps.strikes
 
-import javafx.geometry.Orientation
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
@@ -21,9 +20,6 @@ import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.rotation.PitchToPlaneStep
-import tarehart.rlbot.steps.rotation.RollToPlaneStep
-import tarehart.rlbot.steps.rotation.YawToPlaneStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
