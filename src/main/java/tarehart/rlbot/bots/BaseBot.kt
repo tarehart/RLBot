@@ -5,7 +5,6 @@ import rlbot.flat.GameTickPacket
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.Chronometer
-import tarehart.rlbot.input.SpinTracker
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
@@ -26,7 +25,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     internal var previousZonePlan: ZonePlan? = null
 
     private val chronometer = Chronometer()
-    private val spinTracker = SpinTracker()
     private var frameCount: Long = 0
     private var previousTime = Instant.now()
 
@@ -51,7 +49,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
                 return AgentOutput()
             }
 
-            val translatedInput = AgentInput(request, playerIndex, chronometer, spinTracker, frameCount++, this)
+            val translatedInput = AgentInput(request, playerIndex, chronometer, frameCount++, this)
 
             val output = processInput(translatedInput)
 

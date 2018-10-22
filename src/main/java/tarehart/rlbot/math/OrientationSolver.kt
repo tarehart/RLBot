@@ -2,9 +2,11 @@ package tarehart.rlbot.math
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.Clamper.clamp
 import tarehart.rlbot.math.vector.Spin
 import tarehart.rlbot.math.vector.Vector3
 import kotlin.math.abs
+import kotlin.math.acos
 import kotlin.math.sin
 
 
@@ -19,6 +21,8 @@ object OrientationSolver {
     val ROLL_DRAG =  -4.47166302201591
     val PITCH_DRAG = -2.798194258050845
     val YAW_DRAG = -1.886491900437232
+
+    val MOMENT_OF_INERTIA = 10.5
 
     /**
      * I don't understand the point of this yet:
@@ -38,10 +42,10 @@ object OrientationSolver {
         return delta - 0.5 * Math.signum(v) * v * v / ALPHA_MAX
     }
 
-    fun controller(delta: Double, v: Double, dt: Double): Double {
-        val ri = r(delta, v)
+    fun getNecessaryAccel(relativeRadians: Double, currentAngularVel: Double, dt: Double): Double {
+        val ri = r(relativeRadians, currentAngularVel)
         val alpha = Math.signum(ri) * ALPHA_MAX
-        val rf = r(delta - v * dt, v + alpha * dt)
+        val rf = r(relativeRadians - currentAngularVel * dt, currentAngularVel + alpha * dt)
 
         // use a single step of secant method to improve
         // the acceleration when residual changes sign
@@ -72,48 +76,75 @@ object OrientationSolver {
                 rhs.x / ROLL_TORQUE)
     }
 
-    fun aerialSpin(initialSpin: Vector3, targetSpin: Vector3, initialOrientation: Mat3, dt: Double): Spin {
+    fun aerialSpin(initialSpin: Vector3, targetSpin: Vector3, initialOrientation: Mat3, dt: Double): Vector3 {
         // car's moment of inertia (spherical symmetry)
-        val J = 10.5
 
-        // aerial control torque coefficients
-        val T = Vector3(-400.0, -130.0, 95.0)
+
+        // aerial control torque coefficients. -400 means that when you try to spin around the x axis,
+        // which means rolling because the x axis comes out the front of the car, you will have -400 torque
+        // available to you. Negative because... TODO
+        // roll, pitch, yaw
+        val torque = Vector3(-400.0, -130.0, 95.0)
 
         // aerial damping torque coefficients
-        val H = Vector3(-50.0, -30.0, -20.0)
+        val damping = Vector3(-50.0, -30.0, -20.0)
 
         val initialLocal = initialOrientation.transpose().dot(initialSpin)
         val targetLocal = initialOrientation.transpose().dot(targetSpin)
 
-        val a = (0..2).map { T[it] * dt / J }
-        val b = (0..2).map { -initialLocal[it] * H[it] * dt / J }.toMutableList()
-        val c = (0..2).map { targetLocal[it] - (1 + H[it] * dt / J) * initialLocal[it] }
+        val possibleAccel = (0..2).map { torque[it] * dt / MOMENT_OF_INERTIA }
+        val expectedDamping = (0..2).map { -initialLocal[it] * damping[it] * dt / MOMENT_OF_INERTIA }.toMutableList()
+        val toTarget = (0..2).map { targetLocal[it] - (1 + damping[it] * dt / MOMENT_OF_INERTIA) * initialLocal[it] }
 
-        b[0] = 0.0
+        expectedDamping[0] = 0.0
 
-        return Spin(Vector3(
-                solvePiecewiseLinear(a[0], b[0], c[0]),
-                solvePiecewiseLinear(a[1], b[1], c[1]),
-                solvePiecewiseLinear(a[2], b[2], c[2])))
+        return Vector3(
+                solvePiecewiseLinear(possibleAccel[0], expectedDamping[0], toTarget[0]),
+                solvePiecewiseLinear(possibleAccel[1], expectedDamping[1], toTarget[1]),
+                solvePiecewiseLinear(possibleAccel[2], expectedDamping[2], toTarget[2]))
 
     }
 
-    private fun solvePiecewiseLinear(a: Double, b: Double, c: Double): Double {
-        val xp = if (abs(a + b) > 10e-6) c / (a + b) else -1.0
-        val xm = if (abs(a - b) > 10e-6) c / (a - b) else 1.0
+    /**
+     * We're trying to decide the magnitude to apply to one of our controls, e.g. pitch.
+     * We want to achieve a particular change in the angular velocity.
+     *
+     * This function takes into account the concept that it's easier to decrease that velocity
+     * if you get assisted by damping torque, as opposed to fighting it. Damping torque is weird, btw.
+     *
+     * Solves a piecewise linear (PWL) equation of the form
+     *  a x + b | x | + (or - ?) c == 0
+     *  https://www.wolframalpha.com/input/?i=a*x+%2B+b*abs(x)+%2B+c+%3D+0
+     *
+     * for -1 <= x <= 1. If no solution exists, this returns
+     * the x value that gets closest
+     *
+     * Taken from
+     * https://github.com/samuelpmish/RLUtilities/blob/d8360844e07afa32bff9b3c039022eb67cb82b33/RLUtilities/Maneuvers.py#L122
+     */
+    fun solvePiecewiseLinear(accelConstant: Double, dampingConstant: Double, desiredChange: Double): Double {
+        val decelDivisor = accelConstant + dampingConstant
+        val accelDivisor = accelConstant - dampingConstant
 
-        if (xm <= 0 && 0 <= xp) {
-            return if (abs(xp) < abs(xm)) {
-                Clamper.clamp(xp, 0.0, 1.0)
+        val deceleratingMagnitude = if (abs(decelDivisor) > 10e-6) desiredChange / decelDivisor else -1.0
+        val acceleratingMagnitude = if (abs(accelDivisor) > 10e-6) desiredChange / accelDivisor else 1.0
+
+        if (acceleratingMagnitude <= 0 && deceleratingMagnitude >= 0) {
+            // This means our angular velocity will change in the right direction regardless of how
+            // we try to control the car. Go with the easier magnitude. TODO: when does this happen?
+            return if (abs(deceleratingMagnitude) < abs(acceleratingMagnitude)) {
+                clamp(deceleratingMagnitude, 0.0, 1.0)
             } else {
-                Clamper.clamp(xm, -1.0, 0.0)
+                clamp(acceleratingMagnitude, -1.0, 0.0)
             }
         } else {
-            if (0 <= xp) {
-                return Clamper.clamp(xp, 0.0, 1.0)
+            // In this case, we actually have the power to move the car in the wrong direction.
+            // Choose the right direction
+            if (deceleratingMagnitude >= 0) {
+                return clamp(deceleratingMagnitude, 0.0, 1.0)
             }
-            if (xm <= 0) {
-                return Clamper.clamp(xm, -1.0, 0.0)
+            if (acceleratingMagnitude <= 0) {
+                return clamp(acceleratingMagnitude, -1.0, 0.0)
             }
         }
 
@@ -161,12 +192,12 @@ object OrientationSolver {
 
         val geodesicWorld = car.orientation.matrix.dot(geodesicLocal)
 
-        val angularVel = car.spin.angularVel
+        val angularVel = car.spin.angularVelGlobal
 
         val angularAccel = Vector3(
-                controller(geodesicWorld.x, angularVel.x, dt),
-                controller(geodesicWorld.y, angularVel.y, dt),
-                controller(geodesicWorld.z, angularVel.z, dt))
+                getNecessaryAccel(geodesicWorld.x, angularVel.x, dt),
+                getNecessaryAccel(geodesicWorld.y, angularVel.y, dt),
+                getNecessaryAccel(geodesicWorld.z, angularVel.z, dt))
 
 
         val angularAccelCorrected = Vector3(
@@ -175,14 +206,14 @@ object OrientationSolver {
                 errorCorrect(geodesicWorld.z, angularVel.z, angularAccel.z)
         )
 
-        val desiredAngularVel = angularVel + angularAccelCorrected * dt
+        val desiredNextAngularVel = angularVel + angularAccelCorrected * dt
 
-        val spin = aerialSpin(angularVel, desiredAngularVel, car.orientation.matrix, dt)
+        val spin = aerialSpin(angularVel, desiredNextAngularVel, car.orientation.matrix, dt)
 
         return AgentOutput()
-                .withPitch(spin.pitchRate)
-                .withYaw(spin.yawRate)
-                .withRoll(spin.rollRate)
+                .withRoll(-spin.x)
+                .withPitch(spin.y)
+                .withYaw(-spin.z)
     }
 
     fun errorCorrect(geoWorldComponent: Double, angularVelComponent:Double, angularAccelComponent:Double): Double {
@@ -211,7 +242,7 @@ object OrientationSolver {
         }
      */
     private fun rotationToAxis(rotation: Mat3): Vector3 {
-        val theta = Math.acos(Clamper.clamp(0.5 * (rotation.trace() - 1), -1.0, 1.0))
+        val theta = acos(clamp(0.5 * (rotation.trace() - 1), -1.0, 1.0))
 
         val scale = if (abs(theta) < 0.00001) {
             0.5 + theta * theta / 12.0

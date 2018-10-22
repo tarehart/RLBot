@@ -38,7 +38,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                         .withLocation(StateVector(0F, -50F, 30F))
                         .withVelocity(StateVector(0F, 0F, 0F))
                         .withAngularVelocity(StateVector(0F, 0F, 0F))
-                        .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, randomRotation()))
+                        .withRotation(DesiredRotation(randomRotation(), randomRotation(), randomRotation()))
                 )) },
             Duration.ofSeconds(4.0))
 

@@ -12,9 +12,11 @@ class AgentOutput : rlbot.ControllerState {
     var pitch: Double = 0.0
         private set
 
+    // -1 to yaw left, 1 to yaw right
     var yaw: Double = 0.0
         private set
 
+    // -1 to roll left, 1 to roll right
     var roll: Double = 0.0
         private set
 

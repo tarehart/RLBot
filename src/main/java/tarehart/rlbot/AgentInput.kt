@@ -11,12 +11,13 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import java.lang.Math.cos
+import java.lang.Math.sin
 
 class AgentInput(
         request: GameTickPacket,
         val playerIndex: Int,
         chronometer: Chronometer,
-        spinTracker: SpinTracker,
         frameCount: Long,
         val bot: BaseBot) {
 
@@ -46,7 +47,6 @@ class AgentInput(
         this.matchInfo = getMatchInfo(request.gameInfo())
 
         val ballPhysics = request.ball().physics()
-        val angVel = ballPhysics.angularVelocity()
 
         // Flip the x-axis, same as all our other vector handling.
         // According to the game, when the spin vector is pointed at you, the ball is spinning clockwise.
@@ -58,11 +58,10 @@ class AgentInput(
 
         chronometer.readInput(request.gameInfo().secondsElapsed().toDouble())
         time = chronometer.gameTime
-        val elapsedSeconds = chronometer.timeDiff.seconds
 
         allCars = ArrayList(request.playersLength())
         for (i in 0 until request.playersLength()) {
-            allCars.add(convert(request.players(i), i, spinTracker, elapsedSeconds, frameCount))
+            allCars.add(convert(request.players(i), i, frameCount))
         }
 
         val self = allCars[playerIndex]
@@ -138,18 +137,18 @@ class AgentInput(
         )
     }
 
-    private fun convert(playerInfo: PlayerInfo, index: Int, spinTracker: SpinTracker, elapsedSeconds: Double, frameCount: Long): CarData {
-        val orientation = convert(
+    private fun convert(playerInfo: PlayerInfo, index: Int, frameCount: Long): CarData {
+        val orientation = euler_rotation(
                 playerInfo.physics().rotation().pitch().toDouble(),
                 playerInfo.physics().rotation().yaw().toDouble(),
                 playerInfo.physics().rotation().roll().toDouble())
 
-        spinTracker.readInput(orientation, index, elapsedSeconds)
-
         val flatAngularVel = playerInfo.physics().angularVelocity()
-        val angularVel = Vector3(flatAngularVel.x().toDouble(), flatAngularVel.y().toDouble(), flatAngularVel.z().toDouble())
 
-        val spinOld = spinTracker.getSpin(index, angularVel)
+        // Multiply x by -1 to achieve a right handed coordinate system
+        val angularVel = Vector3(flatAngularVel.x().toDouble(), -flatAngularVel.y().toDouble(), -flatAngularVel.z().toDouble())
+        //val angularVel = Vector3.fromRlbot(flatAngularVel)
+
         val spinNew = CarSpin(angularVel, orientation.matrix)
 
         return CarData(
@@ -160,7 +159,7 @@ class AgentInput(
                 boost = playerInfo.boost().toDouble(),
                 isSupersonic = playerInfo.isSupersonic,
                 hasWheelContact = playerInfo.hasWheelContact(),
-                team = Companion.teamFromInt(playerInfo.team()),
+                team = teamFromInt(playerInfo.team()),
                 playerIndex = index,
                 time = time,
                 frameCount = frameCount,
@@ -181,6 +180,26 @@ class AgentInput(
         val roofX = Math.cos(roll) * Math.sin(pitch) * Math.cos(yaw) + Math.sin(roll) * Math.sin(yaw)
         val roofY = Math.cos(yaw) * Math.sin(roll) - Math.cos(roll) * Math.sin(pitch) * Math.sin(yaw)
         val roofZ = Math.cos(roll) * Math.cos(pitch)
+
+        return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector = Vector3(roofX, roofY, roofZ))
+    }
+
+    private fun euler_rotation(pitch: Double, yaw: Double, roll: Double): CarOrientation {
+
+        val CP = cos(pitch)
+        val SP = sin(pitch)
+        val CY = cos(yaw)
+        val SY = sin(yaw)
+        val CR = cos(roll)
+        val SR = sin(roll)
+
+        val noseX = CP * CY * -1 // Multiply by -1 here to achieve a right handed coordinate system
+        val noseY = CP * SY
+        val noseZ = SP
+
+        val roofX = (-CR * CY * SP - SR * SY) * -1 // Multiply by -1 here to achieve a right handed coordinate system
+        val roofY = -CR * SY * SP + SR * CY
+        val roofZ = CP * CR
 
         return CarOrientation(noseVector = Vector3(noseX, noseY, noseZ), roofVector = Vector3(roofX, roofY, roofZ))
     }

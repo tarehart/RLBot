@@ -41,25 +41,23 @@ class OrientationSolverTest {
         val agentOutput = OrientationSolver.step(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
 
         val epsilon = 0.0001
-        Assert.assertTrue(agentOutput.roll > 0.2) // Doesn't go full force because we need to slow down soon
+        Assert.assertTrue(agentOutput.roll < 0) // Doesn't go full force because we need to slow down soon
         Assert.assertEquals(0.0, agentOutput.pitch, epsilon)
         Assert.assertEquals(0.0, agentOutput.yaw, epsilon)
 
     }
 
     @Test
-    fun step_shouldPitchUpFully_whenCarPointingWayDown() {
+    fun step_shouldYawLeft_whenCarYawedRight() {
 
-        val tilt = Math.PI / 3
-
-        val orientation = CarOrientation(Vector3(cos(tilt), 0.0, -sin(tilt)), Vector3(sin(tilt), 0.0, cos(tilt)))
+        val orientation = CarOrientation(Vector3(0.0, -1.0, 0.0), Vector3.UP)
         val car = makeCarData(orientation)
 
         val agentOutput = OrientationSolver.step(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
 
         val epsilon = 0.0001
-        Assert.assertEquals(1.0, agentOutput.pitch, epsilon)
-        Assert.assertEquals(0.0, agentOutput.yaw, epsilon)
+        Assert.assertTrue(agentOutput.yaw < 0)
+        Assert.assertEquals(0.0, agentOutput.pitch, epsilon)
         Assert.assertEquals(0.0, agentOutput.roll, epsilon)
 
     }
