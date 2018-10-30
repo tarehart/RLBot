@@ -134,7 +134,7 @@ object DirectedKickUtil {
                 val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
                 var lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
                 val lazyLaunchDistance = lazyLaunchToIntercept.magnitude()
-                if (lazyLaunchDistance > distanceToIntercept) {
+                if (lazyLaunchDistance > distanceToIntercept && distanceToIntercept / lazyLaunchDistance > 0.8) {
                     lazyLaunchToIntercept = lazyLaunchToIntercept.scaled(distanceToIntercept / lazyLaunchDistance)
                 }
                 launchPosition = intercept.space.flatten() - lazyLaunchToIntercept

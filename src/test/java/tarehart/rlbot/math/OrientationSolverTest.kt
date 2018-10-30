@@ -21,7 +21,7 @@ class OrientationSolverTest {
         val orientation = CarOrientation(Vector3(cos(tilt), 0.0, -sin(tilt)), Vector3(sin(tilt), 0.0, cos(tilt)))
         val car = makeCarData(orientation)
 
-        val agentOutput = OrientationSolver.step(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
+        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
 
         val epsilon = 0.0001
         Assert.assertTrue(agentOutput.pitch > 0.5) // Doesn't go full force because we need to slow down soon
@@ -38,7 +38,7 @@ class OrientationSolverTest {
         val orientation = CarOrientation(Vector3(1.0, 0.0, 0.0), Vector3(0.0, -sin(tilt), cos(tilt)))
         val car = makeCarData(orientation)
 
-        val agentOutput = OrientationSolver.step(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
+        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
 
         val epsilon = 0.0001
         Assert.assertTrue(agentOutput.roll < 0) // Doesn't go full force because we need to slow down soon
@@ -53,7 +53,7 @@ class OrientationSolverTest {
         val orientation = CarOrientation(Vector3(0.0, -1.0, 0.0), Vector3.UP)
         val car = makeCarData(orientation)
 
-        val agentOutput = OrientationSolver.step(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
+        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
 
         val epsilon = 0.0001
         Assert.assertTrue(agentOutput.yaw < 0)

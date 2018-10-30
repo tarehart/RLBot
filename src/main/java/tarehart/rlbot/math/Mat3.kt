@@ -29,7 +29,17 @@ class Mat3(private val matrix: SimpleMatrix) {
         return matrix.get(row, col)
     }
 
+    operator fun plus(mat: Mat3): Mat3 {
+        return Mat3(matrix.plus(mat.matrix))
+    }
+
+    operator fun times(value: Double): Mat3 {
+        return Mat3(matrix.scale(value))
+    }
+
     companion object {
+        val IDENTITY = Mat3(SimpleMatrix.identity(3))
+
         private fun toMatrix(vec: Vector3): SimpleMatrix {
             return SimpleMatrix(arrayOf(doubleArrayOf(vec.x), doubleArrayOf(vec.y), doubleArrayOf(vec.z)))
         }

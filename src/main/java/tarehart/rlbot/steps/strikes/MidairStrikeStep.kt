@@ -30,11 +30,10 @@ import java.awt.Graphics2D
 class MidairStrikeStep(private val timeInAirAtStart: Duration,
                        private val offsetFn: (Vector3?, Team) -> Vector3 = { intercept, team -> standardOffset(intercept, team) }) : NestedPlanStep() {
 
-    private var confusionCount = 0
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
     private var intercept: SpaceTime? = null
-    private val disruptionMeter = InterceptDisruptionMeter(distanceThreshold = 30.0)
+    private var finesseMode = false
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
@@ -63,26 +62,22 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         val offset = offsetFn(intercept?.space, car.team)
 
         val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
-        if (latestIntercept == null || disruptionMeter.isDisrupted(latestIntercept.ballSlice)) {
-            if (input.latestBallTouch != null) {
-                val latestTouch = input.latestBallTouch
-                if (latestTouch.playerIndex == car.playerIndex && Duration.between(latestTouch.time, car.time).seconds < 0.5) {
-                    // We successfully hit the ball. Let's go for a double touch by resetting the disruption meter.
-                    latestIntercept ?.let {
-                        if (it.space.z > 5) { // Only go for double touch if ball will be high.
-                            disruptionMeter.reset(it.ballSlice)
-                            confusionCount = 0
-                        }
-                    }
-                }
+        if (latestIntercept == null) {
+            if (!car.hasWheelContact && car.position.z > 1) {
+                // Orient toward the ball and hope for an aerial intercept to resume
+                return OrientationSolver
+                        .orientCar(input.myCarData, Mat3.lookingTo(input.ballPosition - car.position), 1.0 / 60)
+                        .withThrottle(1.0)
             }
-            BotLog.println(if (latestIntercept == null) "Missing intercept" else "Intercept disruption", car.playerIndex)
-            confusionCount++
-            if (confusionCount > 3) {
-                BotLog.println("Too much confusion, quitting midair strike.", car.playerIndex)
-                return null
+            return null
+        }
+
+        if (input.latestBallTouch != null) {
+            val latestTouch = input.latestBallTouch
+            if (latestTouch.playerIndex == car.playerIndex && Duration.between(latestTouch.time, car.time).seconds < 0.5) {
+                // We successfully hit the ball. Let's go for a double touch by resetting stuff
+                finesseMode = false
             }
-            return AgentOutput().withBoost()
         }
 
         val renderer = BotLoopRenderer.forBotLoop(input.bot)
@@ -140,14 +135,16 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         val desiredNoseVector: Vector3
 
-        val finesseMode = millisTillIntercept < NOSE_FINESSE_TIME.millis && latestIntercept.time.isAfter(lastMomentForDodge) && heightError > 0 && offset.z > 0
+        finesseMode = finesseMode || millisTillIntercept < NOSE_FINESSE_TIME.millis &&
+                latestIntercept.time.isAfter(lastMomentForDodge) &&
+                Math.abs(leftRightCorrectionAngle) < 0.02
 
         if (finesseMode) {
             // Nose into the ball
             desiredNoseVector = offset.scaled(-1.0).normaliseCopy()
         } else {
             // Fly toward intercept
-            val extraHeight = if (offset.z >= 0) 2 * offset.z + 0.5 else 0.0
+            val extraHeight = if (offset.z >= 0 && heightError < 4) offset.z + 0.7 else 0.0
             val desiredZ = AerialMath.getDesiredZComponentBasedOnAccel(
                     latestIntercept.space.z + extraHeight,
                     Duration.between(car.time, latestIntercept.time),
@@ -156,8 +153,15 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, desiredZ)
         }
 
-        return OrientationSolver.step(car, Mat3.lookingTo(desiredNoseVector), 1/60.0)
-                .withBoost(finesseMode || desiredNoseVector.dotProduct(car.orientation.noseVector) > .5)
+        val up = if (car.orientation.roofVector.z > 0.8)
+            Vector3.UP
+        else
+            car.orientation.roofVector
+
+
+
+        return OrientationSolver.orientCar(car, Mat3.lookingTo(desiredNoseVector, up), 1/60.0)
+                .withBoost(desiredNoseVector.dotProduct(car.orientation.noseVector) > .5)
                 .withJump()
     }
 
@@ -199,7 +203,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
                 if (offensive) {
                     val goalToBall = it.minus(GoalUtil.getEnemyGoal(team).getNearestEntrance(it, 4.0))
-                    offset = goalToBall.scaledToMagnitude(3.0)
+                    offset = goalToBall.scaledToMagnitude(3.4)
                     if (goalToBall.magnitude() > 110) {
                         offset = Vector3(offset.x, offset.y, -.2)
                     }

@@ -36,7 +36,7 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
             return null
         }
 
-        return OrientationSolver.step(input.myCarData, Mat3.lookingTo(facingFn.invoke(input).toVector3()), 1.0 / 60).withThrottle(1.0)
+        return OrientationSolver.orientCar(input.myCarData, Mat3.lookingTo(facingFn.invoke(input).toVector3()), 1.0 / 60).withThrottle(1.0)
     }
 
     override fun canAbortPlanInternally(): Boolean {
