@@ -109,10 +109,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             }
         }
 
-        val leftRightDivergence = Math.sin(Vector2.angle(car.velocity.flatten(), carToIntercept.flatten())) * carToIntercept.magnitude()
         val secondsSoFar = Duration.between(beginningOfStep, input.time).seconds
 
-        if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 2 && leftRightDivergence > 20) {
+        if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 && Vector2.angle(car.velocity.flatten(), carToIntercept.flatten()) > Math.PI / 6) {
             BotLog.println("Failed aerial on bad angle", input.playerIndex)
             return null
         }

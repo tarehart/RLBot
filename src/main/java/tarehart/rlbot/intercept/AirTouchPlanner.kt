@@ -123,7 +123,7 @@ object AirTouchPlanner {
 
     fun getDiagonalJumpHitStrikeProfile(height: Double): StrikeProfile {
         val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS + CAR_BASE_HEIGHT).orElse(.8)
-        return StrikeProfile(jumpTime, 10.0, .2, StrikeProfile.Style.DIAGONAL_HIT)
+        return StrikeProfile(jumpTime + 0.04, 10.0, .2, StrikeProfile.Style.DIAGONAL_HIT)
     }
 
     fun getSideHitStrikeProfile(height: Double): StrikeProfile {

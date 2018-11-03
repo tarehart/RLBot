@@ -157,9 +157,9 @@ object SetPieces {
 
         return Plan()
                 .unstoppable()
-                .withStep(BlindStep(Duration.ofMillis(50 + jumpTime.millis), AgentOutput()
+                .withStep(BlindStep(Duration.ofMillis(Math.max(20, jumpTime.millis)), AgentOutput()
                         .withJump(true)))
-                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
+                .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
                         .withThrottle(1.0)
                 ))
                 .withStep(BlindStep(Duration.ofMillis(100), AgentOutput()

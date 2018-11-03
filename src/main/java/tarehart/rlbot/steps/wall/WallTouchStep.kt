@@ -19,6 +19,7 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 
 import java.awt.*
@@ -87,7 +88,8 @@ class WallTouchStep : NestedPlanStep() {
             // midair strike immediately before ball contact is unpleasant.
             return startPlan(
                     Plan(Plan.Posture.NEUTRAL)
-                            .withStep(BlindStep(Duration.ofSeconds(.6), AgentOutput().withThrottle(1.0).withJump())),
+                            .withStep(BlindStep(Duration.ofSeconds(.1), AgentOutput().withThrottle(1.0).withJump()))
+                            .withStep(MidairStrikeStep(Duration.ofMillis(0))),
                     input)
         }
 
@@ -118,7 +120,7 @@ class WallTouchStep : NestedPlanStep() {
         private fun readyToJump(input: AgentInput, carPositionAtContact: SpaceTime): Boolean {
 
             val car = input.myCarData
-            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .2 || !ArenaModel.isCarOnWall(car)) {
+            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .3 || !ArenaModel.isCarOnWall(car)) {
                 return false // Really close to wall, no need to jump. Just chip it.
             }
             val toPosition = carPositionAtContact.space.minus(car.position)
