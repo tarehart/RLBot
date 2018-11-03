@@ -2,6 +2,7 @@ package tarehart.rlbot.math
 
 import org.junit.Assert
 import org.junit.Test
+import rlbot.render.NamedRenderer
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.input.CarOrientation
@@ -76,7 +77,8 @@ class OrientationSolverTest {
                 frameCount = 0,
                 hasWheelContact = false,
                 isDemolished = false,
-                name = "testCar")
+                name = "testCar",
+                renderer = NamedRenderer("test"))
         return car
     }
 }

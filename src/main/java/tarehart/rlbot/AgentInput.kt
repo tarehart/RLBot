@@ -4,6 +4,8 @@ import rlbot.flat.GameInfo
 import rlbot.flat.GameTickPacket
 import rlbot.flat.PlayerInfo
 import rlbot.flat.Touch
+import rlbot.manager.BotLoopRenderer
+import rlbot.render.Renderer
 import tarehart.rlbot.bots.BaseBot
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.*
@@ -59,9 +61,11 @@ class AgentInput(
         chronometer.readInput(request.gameInfo().secondsElapsed().toDouble())
         time = chronometer.gameTime
 
+        val renderer = BotLoopRenderer.forBotLoop(bot)
+
         allCars = ArrayList(request.playersLength())
         for (i in 0 until request.playersLength()) {
-            allCars.add(convert(request.players(i), i, frameCount))
+            allCars.add(convert(request.players(i), i, frameCount, renderer))
         }
 
         val self = allCars[playerIndex]
@@ -133,7 +137,7 @@ class AgentInput(
         )
     }
 
-    private fun convert(playerInfo: PlayerInfo, index: Int, frameCount: Long): CarData {
+    private fun convert(playerInfo: PlayerInfo, index: Int, frameCount: Long, renderer: Renderer): CarData {
         val orientation = convert(
                 playerInfo.physics().rotation().pitch().toDouble(),
                 playerInfo.physics().rotation().yaw().toDouble(),
@@ -159,7 +163,8 @@ class AgentInput(
                 time = time,
                 frameCount = frameCount,
                 isDemolished = playerInfo.isDemolished,
-                name = playerInfo.name()
+                name = playerInfo.name(),
+                renderer = renderer
         )
     }
 

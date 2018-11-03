@@ -22,7 +22,7 @@ object AirTouchPlanner {
     const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
     private const val MAX_FLIP_HIT = NEEDS_JUMP_HIT_THRESHOLD
     const val MAX_CHIP_HIT = 2.0
-    const val LATENCY = 0.02
+    val LATENCY_DURATION = Duration.ofMillis(25)
 
 
     fun checkAerialReadiness(car: CarData, intercept: Intercept): AerialChecklist {
@@ -44,7 +44,7 @@ object AirTouchPlanner {
         checkLaunchReadiness(checklist, car, intercept)
         val strikeProfile = intercept.strikeProfile
         val jumpHitTime = strikeProfile.strikeDuration.seconds
-        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < jumpHitTime
+        checklist.timeForIgnition = Duration.between(car.time + LATENCY_DURATION, intercept.time).seconds < jumpHitTime
         return checklist
     }
 
@@ -55,7 +55,7 @@ object AirTouchPlanner {
         checklist.linedUp = true // TODO: calculate this properly
         val strikeProfile = intercept.strikeProfile
         val jumpHitTime = strikeProfile.strikeDuration.seconds
-        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < jumpHitTime
+        checklist.timeForIgnition = Duration.between(car.time + LATENCY_DURATION, intercept.time).seconds < jumpHitTime
         return checklist
     }
 
@@ -66,14 +66,14 @@ object AirTouchPlanner {
         checklist.linedUp = true // TODO: calculate this properly
         val strikeProfile = intercept.strikeProfile
         val jumpHitTime = strikeProfile.strikeDuration.seconds
-        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds < jumpHitTime + LATENCY
+        checklist.timeForIgnition = Duration.between(car.time + LATENCY_DURATION, intercept.time).seconds < jumpHitTime
         return checklist
     }
 
     fun checkFlipHitReadiness(car: CarData, intercept: Intercept): LaunchChecklist {
         val checklist = LaunchChecklist()
         checkLaunchReadiness(checklist, car, intercept)
-        checklist.timeForIgnition = Duration.between(car.time, intercept.time).seconds <= intercept.strikeProfile.strikeDuration.seconds
+        checklist.timeForIgnition = Duration.between(car.time + LATENCY_DURATION, intercept.time).seconds <= intercept.strikeProfile.strikeDuration.seconds
         return checklist
     }
 
@@ -122,12 +122,12 @@ object AirTouchPlanner {
     }
 
     fun getDiagonalJumpHitStrikeProfile(height: Double): StrikeProfile {
-        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS + CAR_BASE_HEIGHT).orElse(.8)
         return StrikeProfile(jumpTime, 10.0, .2, StrikeProfile.Style.DIAGONAL_HIT)
     }
 
     fun getSideHitStrikeProfile(height: Double): StrikeProfile {
-        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS + CAR_BASE_HEIGHT).orElse(.8)
         return StrikeProfile(jumpTime, 10.0, .3, StrikeProfile.Style.SIDE_HIT)
     }
 

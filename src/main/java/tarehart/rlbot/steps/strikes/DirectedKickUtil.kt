@@ -1,5 +1,7 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.manager.BotLoopRenderer
+import rlbot.render.Renderer
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
@@ -9,12 +11,12 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
+import java.awt.Color
 
 object DirectedKickUtil {
     private val BALL_VELOCITY_INFLUENCE = .2
@@ -94,7 +96,7 @@ object DirectedKickUtil {
             }
             StrikeProfile.Style.DIAGONAL_HIT -> {
 
-                val angled = getAngledWaypoint(intercept, arrivalSpeed, flatForce, estimatedApproachToKickForce, flatPosition)
+                val angled = getAngledWaypoint(intercept, arrivalSpeed, flatForce, estimatedApproachToKickForce, flatPosition, car.renderer)
                 if (angled == null) {
                     BotLog.println("Failed to calculate diagonal waypoint", car.playerIndex)
                     return null
@@ -180,22 +182,44 @@ object DirectedKickUtil {
         return launchPad
     }
 
-    private fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, kickForce: Vector2, approachVsKickForceAngle:Double, carPosition: Vector2): PreKickWaypoint? {
+    private fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, kickForce: Vector2,
+                                  approachVsKickForceAngle:Double, carPosition: Vector2, renderer: Renderer): PreKickWaypoint? {
         val strikeTravel = intercept.strikeProfile.dodgeSeconds * arrivalSpeed
 
         val carStrikeRadius = 2.7
         val carPositionAtContact = intercept.ballSlice.space.flatten() - kickForce.scaledToMagnitude(carStrikeRadius)
 
-        val speedupResult = getSpeedupResultForAngled(intercept.strikeProfile, arrivalSpeed)
+        val speedupResult = intercept.strikeProfile.getSpeedupResult(arrivalSpeed)
 
-        val deflectionAngle = Math.atan2(speedupResult.sidewaysMagnitude, speedupResult.forwardMagnitude) * Math.signum(approachVsKickForceAngle)
+        val deflectionAngle = Math.atan2(speedupResult.sidewaysMagnitude, speedupResult.forwardMagnitude + arrivalSpeed) * Math.signum(approachVsKickForceAngle)
 
         val dodgePosition = dodgePosition(carPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
 
-        val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.hangTime * arrivalSpeed)
+        renderer.drawLine3d(Color.ORANGE, dodgePosition.toVector3().toRlbot(), carPositionAtContact.toVector3().toRlbot())
+        renderer.drawLine3d(Color.YELLOW, carPosition.toVector3().toRlbot(), dodgePosition.toVector3().toRlbot())
+        renderer.drawLine3d(Color.CYAN, carPosition.toVector3().toRlbot(), carPositionAtContact.toVector3().toRlbot())
 
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
+
+        if (Math.abs(approachVsKickForceAngle - deflectionAngle) > Math.PI / 4) {
+            // We will need to curve into this.
+
+            val desiredApproachAngle = Math.signum(approachVsKickForceAngle) * Math.PI / 4 + deflectionAngle
+            val desiredApproachDirection = VectorUtil.rotateVector(kickForce, -desiredApproachAngle)
+            val dodgePositionToHop = desiredApproachDirection.scaledToMagnitude(-intercept.strikeProfile.hangTime * arrivalSpeed)
+
+            return StrictPreKickWaypoint(
+                    position = dodgePosition + dodgePositionToHop,
+                    facing = desiredApproachDirection.normalized(),
+                    expectedTime = launchPadMoment,
+                    waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
+            )
+        }
+
+        val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.hangTime * arrivalSpeed)
+
+
         return AnyFacingPreKickWaypoint(
                 position = dodgePosition + dodgePositionToHop,
                 expectedTime = launchPadMoment,
@@ -203,23 +227,7 @@ object DirectedKickUtil {
         )
     }
 
-    data class SpeedupResult(val forwardMagnitude: Double, val sidewaysMagnitude: Double)
-
-    /**
-     * When we are doing either a side dodge or a diagonal dodge, the car will speed up in the forward and horizontal directions.
-     */
-    private fun getSpeedupResultForAngled(strikeProfile: StrikeProfile, arrivalSpeed: Double): SpeedupResult {
-        val sidewaysMultiplier = if (strikeProfile.style == StrikeProfile.Style.DIAGONAL_HIT) .5 else 1.0
-        val sidewaysComponent = ManeuverMath.DODGE_SPEED * sidewaysMultiplier
-
-        val forwardMultiplier = if (strikeProfile.style == StrikeProfile.Style.DIAGONAL_HIT) .7 else 0.0
-        val forwardComponent = Math.min(arrivalSpeed + ManeuverMath.DODGE_SPEED * forwardMultiplier, AccelerationModel.SUPERSONIC_SPEED)
-        return SpeedupResult(forwardComponent, sidewaysComponent)
-    }
-
-    fun dodgePosition(carPosition: Vector2, carAtContact: Vector2, dodgeDeflectionAngle: Double, dodgeTravel: Double): Vector2? {
-
-        // TODO: add the straight travel that happens during the hop up
+    private fun dodgePosition(carPosition: Vector2, carAtContact: Vector2, dodgeDeflectionAngle: Double, dodgeTravel: Double): Vector2? {
 
         val toContact = carAtContact - carPosition
         val triangle = Triangle.sideSideAngle(toContact.magnitude(), dodgeTravel, Math.PI - Math.abs(dodgeDeflectionAngle)) ?: return null

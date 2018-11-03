@@ -2,8 +2,10 @@ package tarehart.rlbot.routing
 
 import rlbot.render.Renderer
 import tarehart.rlbot.math.Circle
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.time.Duration
+import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Arc2D
 
@@ -34,7 +36,19 @@ class CircleRoutePart(
     }
 
     override fun renderDebugInfo(renderer: Renderer) {
+        if (start.distance(end) > .01) {
 
+            val centerToStart = start - circle.center
+
+            var cursor = centerToStart
+            var radians = 0.0
+
+            while (radians < Math.abs(sweepRadians)) {
+                radians += 0.3
+                val nextCursor = VectorUtil.rotateVector(cursor, 0.1 * Math.signum(sweepRadians))
+                renderer.drawLine3d(Color.MAGENTA, (circle.center + cursor).toVector3().toRlbot(), (circle.center + nextCursor).toVector3().toRlbot())
+            }
+        }
     }
 
 }

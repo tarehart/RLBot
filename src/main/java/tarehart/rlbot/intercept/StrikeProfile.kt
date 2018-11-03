@@ -1,10 +1,13 @@
 package tarehart.rlbot.intercept
 
+import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.ManeuverMath
 
-data class StrikeProfile @JvmOverloads constructor(
+data class StrikeProfile(
         /**
          * The amount of time between strike initiation and any dodge.
          */
@@ -38,6 +41,29 @@ data class StrikeProfile @JvmOverloads constructor(
         }
 
     val isForward: Boolean = style != Style.SIDE_HIT && style != Style.DIAGONAL_HIT
+
+    data class SpeedupResult(val forwardMagnitude: Double, val sidewaysMagnitude: Double)
+
+    /**
+     * When we are doing either a side dodge or a diagonal dodge, the car will speed up in the forward and horizontal directions.
+     */
+    fun getSpeedupResult(arrivalSpeed: Double): SpeedupResult {
+
+        // https://youtu.be/pX950bhGhJE?t=370
+        val sidewaysImpulseMagnitude = ManeuverMath.DODGE_SPEED * (1 + 0.9 *  arrivalSpeed / AccelerationModel.SUPERSONIC_SPEED)
+
+        val sidewaysComponent = if (isForward) 0.0 else sidewaysImpulseMagnitude
+        val forwardComponent = if (style == Style.SIDE_HIT) 0.0 else ManeuverMath.DODGE_SPEED
+
+        val tentativeFinalSpeed = Vector2(arrivalSpeed + forwardComponent, sidewaysComponent)
+        val finalSpeed = tentativeFinalSpeed.magnitude()
+        if (finalSpeed > AccelerationModel.SUPERSONIC_SPEED) {
+            val scaledSpeed = tentativeFinalSpeed.scaledToMagnitude(AccelerationModel.SUPERSONIC_SPEED)
+            return SpeedupResult(scaledSpeed.x - arrivalSpeed, scaledSpeed.y)
+        }
+
+        return SpeedupResult(forwardComponent, sidewaysComponent)
+    }
 
     enum class Style {
         CHIP,

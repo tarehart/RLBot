@@ -1,6 +1,7 @@
 package tarehart.rlbot.tuning
 
 import com.google.gson.Gson
+import rlbot.render.NamedRenderer
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarPath
@@ -43,7 +44,8 @@ class CarPathHelper {
                 0,
                 true,
                 false,
-                "")
+                "",
+                NamedRenderer("test"))
     }
 
 }

@@ -2,6 +2,7 @@ package tarehart.rlbot.bots
 
 import rlbot.Bot
 import rlbot.flat.GameTickPacket
+import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.Chronometer
@@ -12,6 +13,8 @@ import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.ui.PlainReadout
+import java.awt.Color
+import java.awt.Point
 import java.time.Instant
 import java.util.*
 import javax.swing.JFrame
@@ -27,6 +30,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     private val chronometer = Chronometer()
     private var frameCount: Long = 0
     private var previousTime = Instant.now()
+    private val planRenderer = NamedRenderer("baseBotPlanRenderer$playerIndex")
 
     val debugWindow: JFrame
         get() {
@@ -108,6 +112,9 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         val posture = currentPlan?.posture ?: Plan.Posture.NEUTRAL
         val situation = currentPlan?.situation ?: ""
         if (situation != previousSituation) {
+            planRenderer.startPacket()
+            planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3), 1, 1)
+            planRenderer.finishAndSend()
             println("[Sitch] " + situation, input.playerIndex)
         }
         previousSituation = situation

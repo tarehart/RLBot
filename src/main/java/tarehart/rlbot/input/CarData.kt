@@ -1,5 +1,6 @@
 package tarehart.rlbot.input
 
+import rlbot.render.Renderer
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.GameTime
@@ -17,5 +18,6 @@ class CarData (
         val frameCount: Long,
         val hasWheelContact: Boolean,
         val isDemolished: Boolean,
-        val name: String
+        val name: String,
+        val renderer: Renderer
 )
