@@ -24,7 +24,7 @@ import java.awt.Graphics2D
 import java.awt.geom.Line2D
 import java.util.*
 
-class InterceptStep @JvmOverloads constructor(
+class InterceptStep(
         private val interceptModifier: Vector3,
         private val interceptPredicate: (CarData, SpaceTime) -> Boolean = { _, _ -> true }
 ) : NestedPlanStep() {
@@ -148,7 +148,7 @@ class InterceptStep @JvmOverloads constructor(
             getJumpHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { interceptOptions.add(it) }
             getFlipHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { interceptOptions.add(it) }
 
-            return interceptOptions.stream().sorted(Comparator.comparing<Intercept, GameTime>({ intercept -> intercept.time })).findFirst().orElse(null)
+            return interceptOptions.asSequence().sortedBy { intercept -> intercept.time }.firstOrNull()
         }
 
         private fun getAerialIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {

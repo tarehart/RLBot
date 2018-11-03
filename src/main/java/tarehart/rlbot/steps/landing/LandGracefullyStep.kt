@@ -25,12 +25,6 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
-        if (ArenaModel.isCarOnWall(car) || car.hasWheelContact && ArenaModel.isNearFloorEdge(car.position)) {
-
-            return startPlan(Plan().withStep(DescendFromWallStep()), input)
-        }
-
-        //return startPlan(planRotation(input.myCarData, facingFn), input)
 
         if (car.hasWheelContact) {
             return null

@@ -90,9 +90,8 @@ object DirectedKickUtil {
 
         when (intercept.strikeProfile.style) {
             StrikeProfile.Style.CHIP -> {
-                facing = VectorUtil.rotateVector(toInterceptNorm, toKickForce * .5)
-                launchPosition = intercept.space.flatten()
-                launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
+                launchPosition = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(3.2)
+                launchPad = getStandardWaypoint(car, launchPosition, toInterceptNorm, intercept)
             }
             StrikeProfile.Style.DIAGONAL_HIT -> {
 
@@ -193,6 +192,9 @@ object DirectedKickUtil {
 
         val deflectionAngle = Math.atan2(speedupResult.sidewaysMagnitude, speedupResult.forwardMagnitude + arrivalSpeed) * Math.signum(approachVsKickForceAngle)
 
+        if (Math.abs(approachVsKickForceAngle - deflectionAngle) > Math.PI / 4) {
+            return null
+        }
         val dodgePosition = dodgePosition(carPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
 
         renderer.drawLine3d(Color.ORANGE, dodgePosition.toVector3().toRlbot(), carPositionAtContact.toVector3().toRlbot())
@@ -202,23 +204,7 @@ object DirectedKickUtil {
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
 
-        if (Math.abs(approachVsKickForceAngle - deflectionAngle) > Math.PI / 4) {
-            // We will need to curve into this.
-
-            val desiredApproachAngle = Math.signum(approachVsKickForceAngle) * Math.PI / 4 + deflectionAngle
-            val desiredApproachDirection = VectorUtil.rotateVector(kickForce, -desiredApproachAngle)
-            val dodgePositionToHop = desiredApproachDirection.scaledToMagnitude(-intercept.strikeProfile.hangTime * arrivalSpeed)
-
-            return StrictPreKickWaypoint(
-                    position = dodgePosition + dodgePositionToHop,
-                    facing = desiredApproachDirection.normalized(),
-                    expectedTime = launchPadMoment,
-                    waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
-            )
-        }
-
         val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.hangTime * arrivalSpeed)
-
 
         return AnyFacingPreKickWaypoint(
                 position = dodgePosition + dodgePositionToHop,

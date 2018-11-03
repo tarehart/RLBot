@@ -26,7 +26,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
     private var backwards: Boolean = false
     private var turnDirection: Int? = null
     private var target: PositionFacing? = null
-    private var shouldSlide = false
+    private var shouldHop = false
 
     override fun getLocalSituation(): String {
         return "Parking the car"
@@ -65,7 +65,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     return null // We're already good
                 }
 
-                phase = SLIDE_SPIN
+                phase = HOP
             }
 
 
@@ -89,7 +89,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
             val slideDistance = speed * 1.2 // Speed times seconds spent during hop.
 
             if (distance < slideDistance) {
-                phase = SLIDE_SPIN
+                phase = HOP
             } else {
 
                 if (backwards) {
@@ -116,22 +116,23 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         }
 
 
-        if (phase == SLIDE_SPIN) {
+        if (phase == HOP) {
 
 
             val turnDir = turnDirection ?: BotMath.nonZeroSignum(facingCorrectionRadians)
             turnDirection = turnDir
 
-            shouldSlide = shouldSlide || Math.abs(facingCorrectionRadians) > Math.PI / 3
+            shouldHop = shouldHop || Math.abs(facingCorrectionRadians) > Math.PI / 3
 
             val futureRadians = facingCorrectionRadians + car.spin.yawRate * .3
             val steerPolarity = if (backwards) 1 else -1
 
-            if (shouldSlide) {
+            if (shouldHop) {
 
                 phase++
 
                 return startPlan(Plan(Plan.Posture.NEUTRAL)
+                        .unstoppable()
                         .withStep(BlindStep(Duration.ofSeconds(0.01), AgentOutput().withJump()))
                         .withStep(LandGracefullyStep { latestTarget.facing }), input)
             } else {
@@ -167,6 +168,6 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
         private val AIM_AT_TARGET = 0
         private val TRAVEL = 1
-        private val SLIDE_SPIN = 2
+        private val HOP = 2
     }
 }

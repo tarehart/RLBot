@@ -146,15 +146,19 @@ object AirTouchPlanner {
         return getAerialStrikeProfile(height)
     }
 
-    fun getStrikeProfile(intercept: Vector3, approachAngle: Double, car: CarData): StrikeProfile {
+    fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, car: CarData): StrikeProfile {
 
-        if (approachAngle < Math.PI / 16) {
+        if (approachAngleMagnitude < Math.PI / 16) {
             return getStraightOnStrikeProfile(intercept.z)
+        }
+
+        if (approachAngleMagnitude < Math.PI / 8 && intercept.z < MAX_CHIP_HIT) {
+            return StrikeProfile(style = StrikeProfile.Style.CHIP)
         }
 
         if (intercept.z < MAX_JUMP_HIT) {
             val isNearGoal = intercept.distance(GoalUtil.getNearestGoal(intercept).center) < 30
-            if (approachAngle > Math.PI / 4 && isNearGoal) {
+            if (approachAngleMagnitude > Math.PI / 4 && isNearGoal) {
                 return getSideHitStrikeProfile(intercept.z)
             }
             return getDiagonalJumpHitStrikeProfile(intercept.z)

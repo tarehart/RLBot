@@ -1,9 +1,10 @@
 package tarehart.rlbot.steps.defense
 
+import rlbot.cppinterop.RLBotDll
+import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.intercept.AirTouchPlanner
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
@@ -11,7 +12,6 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
@@ -25,20 +25,18 @@ class WhatASaveStep : NestedPlanStep() {
     }
 
     private var whichPost: Double? = null
-    private var goingForSuperJump: Boolean = false
-
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
-        val ballPath = ArenaModel.predictBallPath(input)
-        val goal = GoalUtil.getOwnGoal(input.team)
-        return GoalUtil.predictGoalEvent(goal, ballPath) == null
-    }
 
     override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
 
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)
         val goal = GoalUtil.getOwnGoal(input.team)
-        val currentThreat = GoalUtil.predictGoalEvent(goal, ballPath) ?: return null
+        val currentThreat = GoalUtil.predictGoalEvent(goal, ballPath)
+
+        if (currentThreat == null) {
+            RLBotDll.sendQuickChat(input.playerIndex, false, QuickChatSelection.Compliments_WhatASave)
+            return null
+        }
 
         if (whichPost == null) {
 

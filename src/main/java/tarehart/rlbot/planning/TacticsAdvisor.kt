@@ -1,5 +1,7 @@
 package tarehart.rlbot.planning
 
+import rlbot.cppinterop.RLBotDll
+import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -54,6 +56,7 @@ class TacticsAdvisor {
 
         if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
 
+            RLBotDll.sendQuickChat(car.playerIndex, false, QuickChatSelection.Reactions_Noooo)
             if (situation.ballAdvantage.seconds < 0 && ChallengeStep.threatExists(situation) &&
                     situation.expectedEnemyContact?.time?.isBefore(situation.scoredOnThreat.time) == true &&
                     situation.distanceBallIsBehindUs < 0) {

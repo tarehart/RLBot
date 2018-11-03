@@ -177,13 +177,9 @@ object InterceptCalculator {
                             strikeProfile.style == StrikeProfile.Style.AERIAL && postRouteTime.seconds > -1.0) {
                         return PrecisionPlan(kickPlan, steerPlan)
                     } else {
-                        // It's not actually in range after we account for circle routing time.
-                        // All other routes are appropriately accounted for by the distance plot and
-                        // spatial predicate, so circle routing is unique in its ability to walk back
-                        // the first moment in range.
-                        if (steerPlan.route.parts.any { p -> p is CircleRoutePart }) {
-                            firstMomentInRange = null
-                        }
+                        // It's not actually in range after we account for routing time.
+                        // Walk back the first moment in range.
+                        firstMomentInRange = null
                     }
                 }
             }
