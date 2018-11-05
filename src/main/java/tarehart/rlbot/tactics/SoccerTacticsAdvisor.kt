@@ -37,6 +37,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
     private val threatAssessor = ThreatAssessor()
 
+    override fun suitableGameModes(): Set<GameMode> {
+        return setOf(GameMode.SOCCER)
+    }
+
     override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
         val car = input.myCarData

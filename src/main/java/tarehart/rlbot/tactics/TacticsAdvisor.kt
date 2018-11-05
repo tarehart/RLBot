@@ -9,6 +9,7 @@ import tarehart.rlbot.planning.Plan
 
 interface TacticsAdvisor {
 
+    fun suitableGameModes(): Set<GameMode>
 
     fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan?
 

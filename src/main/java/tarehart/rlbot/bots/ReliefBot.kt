@@ -16,11 +16,16 @@ class ReliefBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
         val gameMode = GameModeSniffer.getGameMode()
 
-        if (tacticsAdvisor == null) {
+        if (tacticsAdvisor == null || !tacticsAdvisor!!.suitableGameModes().contains(gameMode)) {
             if (gameMode == GameMode.SOCCER) {
                 tacticsAdvisor = SoccerTacticsAdvisor()
+                println("Game Mode: Soccar")
             } else if (gameMode == GameMode.DROPSHOT) {
+                println("Game Mode: Dropshot")
                 tacticsAdvisor = DropshotTacticsAdvisor()
+            } else if (gameMode == GameMode.HOOPS) {
+                println("Game Mode: Hoops")
+                tacticsAdvisor = HoopsTacticsAdvisor()
             }
         }
 

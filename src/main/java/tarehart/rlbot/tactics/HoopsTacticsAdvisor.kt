@@ -27,17 +27,18 @@ import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.WallTouchStep
+import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
 
-class DropshotTacticsAdvisor: TacticsAdvisor {
+class HoopsTacticsAdvisor: TacticsAdvisor {
 
     private val threatAssessor = ThreatAssessor()
 
     override fun suitableGameModes(): Set<GameMode> {
-        return setOf(GameMode.DROPSHOT)
+        return setOf(GameMode.HOOPS)
     }
 
     override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
@@ -151,7 +152,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
 
         return if (zonePlan != null
                 && (myBallDistance > enemyBallDistance // Enemy is closer
-                || myDistanceToGoal > ballDistanceToGoal) // Wrong side of the ball
+                        || myDistanceToGoal > ballDistanceToGoal) // Wrong side of the ball
 
                 && (zonePlan.ballZone.subZone == Zone.SubZone.TOPCORNER || zonePlan.ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
 
