@@ -14,12 +14,15 @@ import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.WallTouchStep
+import tarehart.rlbot.tactics.SoccerTacticsAdvisor
+import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
 class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
-    private val tacticsAdvisor: TacticsAdvisor = TacticsAdvisor()
+    private val tacticsAdvisor: TacticsAdvisor = SoccerTacticsAdvisor()
 
     override fun getOutput(input: AgentInput): AgentOutput {
 

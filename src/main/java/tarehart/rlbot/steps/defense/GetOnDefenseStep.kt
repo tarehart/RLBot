@@ -7,6 +7,7 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 

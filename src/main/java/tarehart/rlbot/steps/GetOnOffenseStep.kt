@@ -8,6 +8,8 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.travel.ParkTheCarStep
+import tarehart.rlbot.tactics.TacticsAdvisor
+import tarehart.rlbot.tactics.TacticsTelemetry
 
 import java.awt.*
 import java.awt.geom.Line2D

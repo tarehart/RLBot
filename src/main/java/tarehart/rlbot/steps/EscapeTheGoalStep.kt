@@ -7,9 +7,7 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.TacticsTelemetry
-import java.awt.Graphics2D
-import java.util.*
+import tarehart.rlbot.tactics.TacticsTelemetry
 
 class EscapeTheGoalStep : StandardStep() {
 

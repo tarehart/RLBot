@@ -3,7 +3,7 @@ package tarehart.rlbot.steps
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.TacticsTelemetry
+import tarehart.rlbot.tactics.TacticsTelemetry
 
 import tarehart.rlbot.tuning.BotLog.println
 

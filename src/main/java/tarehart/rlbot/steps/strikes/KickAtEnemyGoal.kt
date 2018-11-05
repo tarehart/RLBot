@@ -4,7 +4,8 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Goal
 import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.TacticsAdvisor
+import tarehart.rlbot.tactics.SoccerTacticsAdvisor
+import tarehart.rlbot.tactics.TacticsAdvisor
 
 class KickAtEnemyGoal : KickStrategy {
 
@@ -18,7 +19,7 @@ class KickAtEnemyGoal : KickStrategy {
     }
 
     override fun looksViable(car: CarData, ballPosition: Vector3): Boolean {
-        return TacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.team), ballPosition.flatten(), car.playerIndex)
+        return SoccerTacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.team), ballPosition.flatten(), car.playerIndex)
     }
 
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {

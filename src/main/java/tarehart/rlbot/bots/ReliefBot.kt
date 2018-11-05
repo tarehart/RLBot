@@ -1,28 +1,39 @@
 package tarehart.rlbot.bots
 
+import rlbot.cppinterop.RLBotDll
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.TacticsAdvisor
+import tarehart.rlbot.tactics.*
 
 class ReliefBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
-    private val tacticsAdvisor: TacticsAdvisor = TacticsAdvisor()
+    private var tacticsAdvisor: TacticsAdvisor? = null
 
     override fun getOutput(input: AgentInput): AgentOutput {
 
+        val gameMode = GameModeSniffer.getGameMode()
+
+        if (tacticsAdvisor == null) {
+            if (gameMode == GameMode.SOCCER) {
+                tacticsAdvisor = SoccerTacticsAdvisor()
+            } else if (gameMode == GameMode.DROPSHOT) {
+                tacticsAdvisor = DropshotTacticsAdvisor()
+            }
+        }
+
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)
-        val situation = tacticsAdvisor.assessSituation(input, ballPath, currentPlan)
+        val situation = tacticsAdvisor!!.assessSituation(input, ballPath, currentPlan)
 
-        tacticsAdvisor.findMoreUrgentPlan(input, situation, currentPlan)?.let {
+        tacticsAdvisor!!.findMoreUrgentPlan(input, situation, currentPlan)?.let {
             currentPlan = it
         }
 
         if (Plan.activePlanKt(currentPlan) == null) {
-            currentPlan = tacticsAdvisor.makeFreshPlan(input, situation)
+            currentPlan = tacticsAdvisor!!.makeFreshPlan(input, situation)
             //currentPlan = Plan().withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 

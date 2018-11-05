@@ -5,11 +5,12 @@ import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.Polygon
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.routing.PositionFacing
+import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.tactics.TacticsTelemetry
 import java.awt.*
 import java.awt.geom.*
 import java.util.*

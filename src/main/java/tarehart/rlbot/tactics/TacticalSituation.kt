@@ -1,8 +1,10 @@
-package tarehart.rlbot.planning
+package tarehart.rlbot.tactics
 
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.physics.BallPath
+import tarehart.rlbot.planning.CarWithIntercept
+import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.time.Duration
 
 class TacticalSituation(

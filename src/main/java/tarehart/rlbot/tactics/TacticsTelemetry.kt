@@ -1,7 +1,6 @@
-package tarehart.rlbot.planning
+package tarehart.rlbot.tactics
 
 import java.util.HashMap
-import java.util.Optional
 
 object TacticsTelemetry {
 

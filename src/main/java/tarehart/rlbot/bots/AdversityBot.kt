@@ -11,11 +11,14 @@ import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
+import tarehart.rlbot.tactics.SoccerTacticsAdvisor
+import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.tuning.BotLog
 
 class AdversityBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
-    private val tacticsAdvisor: TacticsAdvisor = TacticsAdvisor()
+    private val tacticsAdvisor: TacticsAdvisor = SoccerTacticsAdvisor()
 
     override fun getOutput(input: AgentInput): AgentOutput {
 

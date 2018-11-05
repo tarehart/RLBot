@@ -5,12 +5,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.TacticsTelemetry
 import tarehart.rlbot.steps.StandardStep
-import tarehart.rlbot.steps.Step
-
-import java.awt.*
-import java.util.Optional
 
 class DescendFromWallStep : StandardStep() {
 

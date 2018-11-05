@@ -3,7 +3,7 @@ package tarehart.rlbot.steps.debug
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.TacticsTelemetry
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep

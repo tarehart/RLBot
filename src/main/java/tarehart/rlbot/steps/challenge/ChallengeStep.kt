@@ -14,6 +14,8 @@ import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
+import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.tuning.BotLog.println
 import java.awt.BasicStroke
 import java.awt.Color

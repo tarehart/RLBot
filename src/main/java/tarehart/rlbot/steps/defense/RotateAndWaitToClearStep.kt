@@ -4,7 +4,7 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.TacticsTelemetry
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 

@@ -5,6 +5,8 @@ import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BallPrediction
@@ -56,7 +58,7 @@ class PlainReadout {
     fun update(input: AgentInput, posture: Plan.Posture, situation: String, log: String, ballPath: BallPath) {
 
         var log = log
-        
+
         if (!rootPanel.isShowing) {
             return
         }

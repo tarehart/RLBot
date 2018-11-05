@@ -1,4 +1,4 @@
-package tarehart.rlbot.planning
+package tarehart.rlbot.tactics
 
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
@@ -14,6 +14,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
+import tarehart.rlbot.planning.*
 import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
 import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
 import tarehart.rlbot.steps.*
@@ -26,16 +27,17 @@ import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.WallTouchStep
+import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
 
-class TacticsAdvisor {
+class SoccerTacticsAdvisor: TacticsAdvisor {
 
     private val threatAssessor = ThreatAssessor()
 
-    fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
         val car = input.myCarData
         val zonePlan = ZoneTelemetry.get(input.playerIndex)
@@ -115,7 +117,7 @@ class TacticsAdvisor {
 
         if (situation.shotOnGoalAvailable && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
-            return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
+            return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(FlexibleKickStep(WallPass()))
                     .withStep(CatchBallStep())
@@ -126,19 +128,20 @@ class TacticsAdvisor {
         return null
     }
 
-    fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+    override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
 
         if (situation.teamPlayerWithInitiative.car != input.myCarData) {
 
-            if (GoalUtil.getNearestGoal(situation.futureBallMotion?.space ?: input.ballPosition).team == input.team) {
+            if (GoalUtil.getNearestGoal(situation.futureBallMotion?.space
+                            ?: input.ballPosition).team == input.team) {
                 // Do something vaguely defensive
-                return Plan(Plan.Posture.NEUTRAL)
+                return Plan(NEUTRAL)
                         .withStep(GetBoostStep())
                         .withStep(GetOnDefenseStep())
 
             } else {
 
-                return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                return FirstViableStepPlan(NEUTRAL)
                         .withStep(GetBoostStep())
                         .withStep(GetOnOffenseStep())
                         .withStep(DemolishEnemyStep())
@@ -173,7 +176,7 @@ class TacticsAdvisor {
         } else {
             // Enemy is just gonna hit it for the sake of hitting it, presumably. Let's try to stay on offense if possible.
             // TODO: make sure we don't own-goal it with this
-            Plan(Plan.Posture.OFFENSIVE).withStep(GetOnOffenseStep())
+            Plan(OFFENSIVE).withStep(GetOnOffenseStep())
         }
 
     }
@@ -188,18 +191,18 @@ class TacticsAdvisor {
         }
 
         if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
-            return FirstViableStepPlan(Plan.Posture.OFFENSIVE).withStep(WallTouchStep()).withStep(FlexibleKickStep(WallPass()))
+            return FirstViableStepPlan(OFFENSIVE).withStep(WallTouchStep()).withStep(FlexibleKickStep(WallPass()))
         }
 
         if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
-            return FirstViableStepPlan(Plan.Posture.OFFENSIVE)
+            return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(FlexibleKickStep(WallPass()))
                     .withStep(GetOnOffenseStep())
         }
 
         SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
-            return Plan(Plan.Posture.OFFENSIVE).withStep(CatchBallStep())
+            return Plan(OFFENSIVE).withStep(CatchBallStep())
         }
 
         if (car.boost < 50) {
@@ -211,12 +214,12 @@ class TacticsAdvisor {
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
         }
 
-        return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+        return FirstViableStepPlan(NEUTRAL)
                 .withStep(FlexibleKickStep(WallPass()))
                 .withStep(DemolishEnemyStep())
     }
 
-    fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+    override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
         val enemyGoGetter = getCarWithInitiative(input.getTeamRoster(input.team.opposite()), ballPath)
         val enemyIntercept = enemyGoGetter?.intercept
@@ -249,7 +252,8 @@ class TacticsAdvisor {
                 waitToClear = getWaitToClear(zonePlan, input, enemyCar),
                 currentPlan = currentPlan,
                 enemyPlayerWithInitiative = enemyGoGetter,
-                teamPlayerWithInitiative = getCarWithInitiative(input.getTeamRoster(input.team), ballPath) ?: CarWithIntercept(input.myCarData, null),
+                teamPlayerWithInitiative = getCarWithInitiative(input.getTeamRoster(input.team), ballPath)
+                        ?: CarWithIntercept(input.myCarData, null),
                 ballPath = ballPath
         )
 
@@ -403,20 +407,6 @@ class TacticsAdvisor {
             val distancePlot = AccelerationModel.simulateAcceleration(car, PLAN_HORIZON, car.boost)
             return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, Vector3(), { _, _ -> true })
         }
-
-        fun getYAxisWrongSidedness(input: AgentInput): Double {
-            val (_, y) = GoalUtil.getOwnGoal(input.team).center
-            val playerToBallY = input.ballPosition.y - input.myCarData.position.y
-            return playerToBallY * Math.signum(y)
-        }
-
-        fun getYAxisWrongSidedness(car: CarData, ball: Vector3): Double {
-            val center = GoalUtil.getOwnGoal(car.team).center
-            val playerToBallY = ball.y - car.position.y
-            return playerToBallY * Math.signum(center.y)
-        }
-
-
 
         fun getCarWithInitiative(cars: List<CarData>, ballPath: BallPath): CarWithIntercept? {
 
