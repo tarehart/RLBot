@@ -74,7 +74,6 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
             println("Warning! Hoops State machine didn't reach a steady state.")
         }
 
-
         return situation
     }
 }

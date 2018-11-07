@@ -106,6 +106,8 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             if (input.matchInfo.roundActive) {
                 output = getOutput(input)
             } else {
+                // When the round is not active, some bots may wish to do work while still having no car control
+                roundInLimbo(input)
                 currentPlan = Plan(Plan.Posture.NEUTRAL).withStep(WaitForActive())
                 output = AgentOutput()
             }
@@ -127,5 +129,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     }
 
     protected abstract fun getOutput(input: AgentInput): AgentOutput
+
+    protected open fun roundInLimbo(input: AgentInput) { }
 
 }
