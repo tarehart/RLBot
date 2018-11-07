@@ -4,7 +4,9 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.ZonePlan
+import tarehart.rlbot.planning.ZoneTelemetry
 import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
@@ -31,16 +33,12 @@ class PlainReadout {
     private val ownGoalFutureProximity = JLabel()
     private val distanceBallIsBehindUs = JLabel()
     private val enemyOffensiveApproachError = JLabel()
-    private val distanceFromEnemyBackWall = JLabel()
-    private val distanceFromEnemyCorner = JLabel()
     private val needsDefensiveClear = JLabel()
     private val shotOnGoalAvailable = JLabel()
     private val expectedEnemyContact = JLabel()
     private val scoredOnThreat = JLabel()
     private val arenaDisplay = ArenaDisplay()
     private val goForKickoff = JLabel()
-    private val waitToClear = JLabel()
-    private val forceDefensivePosture = JLabel()
     private val omniText = JTextPane()
     private val logFilter = JTextField()
 
@@ -183,8 +181,6 @@ class PlainReadout {
             distanceBallIsBehindUs.text = String.format("%.2f", situation.distanceBallIsBehindUs)
             enemyOffensiveApproachError.text = Optional.ofNullable(situation.enemyOffensiveApproachError)
                     .map { e -> String.format("%.2f", e) }.orElse("")
-            distanceFromEnemyBackWall.text = String.format("%.2f", situation.distanceFromEnemyBackWall)
-            distanceFromEnemyCorner.text = String.format("%.2f", situation.distanceFromEnemyCorner)
             expectedEnemyContact.text = Optional.ofNullable<Intercept>(situation.expectedEnemyContact)
                     .map<String> { contact -> contact.space.toString() }.orElse("")
             scoredOnThreat.text = Optional.ofNullable(situation.scoredOnThreat)
@@ -201,14 +197,6 @@ class PlainReadout {
             goForKickoff.text = ""
             goForKickoff.background = if (situation.goForKickoff) Color.GREEN else Color.WHITE
             goForKickoff.isOpaque = situation.goForKickoff
-
-            waitToClear.text = ""
-            waitToClear.background = if (situation.waitToClear) Color.GREEN else Color.WHITE
-            waitToClear.isOpaque = situation.waitToClear
-
-            forceDefensivePosture.text = ""
-            forceDefensivePosture.background = if (situation.forceDefensivePosture) Color.GREEN else Color.WHITE
-            forceDefensivePosture.isOpaque = situation.forceDefensivePosture
         }
     }
 
@@ -313,11 +301,6 @@ class PlainReadout {
         panel5.add(label11)
         enemyOffensiveApproachError.text = "?"
         panel5.add(enemyOffensiveApproachError)
-        val label12 = JLabel()
-        label12.text = "distanceFromEnemyBackWall"
-        panel5.add(label12)
-        distanceFromEnemyBackWall.text = "?"
-        panel5.add(distanceFromEnemyBackWall)
         val label13 = JLabel()
         label13.text = "expectedEnemyContact"
         panel5.add(label13)
@@ -328,20 +311,6 @@ class PlainReadout {
         panel5.add(label14)
         scoredOnThreat.text = "?"
         panel5.add(scoredOnThreat)
-
-        val label15 = JLabel()
-        label15.text = "distanceFromEnemyCorner"
-        panel5.add(label15)
-        distanceFromEnemyCorner.text = "?"
-        panel5.add(distanceFromEnemyCorner)
-
-        panel5.add(JLabel("waitToClear"))
-        waitToClear.text = "?"
-        panel5.add(waitToClear)
-
-        panel5.add(JLabel("forceDefensivePosture"))
-        forceDefensivePosture.text = "?"
-        panel5.add(forceDefensivePosture)
 
         panel5.add(JLabel("shotOnGoalAvailable"))
         shotOnGoalAvailable.text = "?"

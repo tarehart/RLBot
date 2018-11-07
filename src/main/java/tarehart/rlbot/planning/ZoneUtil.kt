@@ -9,13 +9,13 @@ import tarehart.rlbot.math.vector.Vector3
 object ZoneUtil {
 
     // Checks to see if the y position order is: my car, opponent car, ball, my net
-    fun isEnemyOffensiveBreakaway(team: Team, myCar: CarData, opponentCar: CarData, ballPosition: Vector3): Boolean {
+    fun isEnemyOffensiveBreakaway(myCar: CarData, opponentCar: CarData, ballPosition: Vector3): Boolean {
 
         if (opponentCar.isDemolished) {
             return false
         }
 
-        return if (team === Team.BLUE) {
+        return if (myCar.team === Team.BLUE) {
             myCar.position.y > opponentCar.position.y && opponentCar.position.y > ballPosition.y
         } else {
             myCar.position.y < opponentCar.position.y && opponentCar.position.y < ballPosition.y

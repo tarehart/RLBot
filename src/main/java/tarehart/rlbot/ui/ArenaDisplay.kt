@@ -15,7 +15,6 @@ import java.awt.*
 import java.awt.geom.*
 import java.util.*
 import javax.swing.JPanel
-import java.awt.geom.AffineTransform
 
 
 class ArenaDisplay : JPanel() {
@@ -156,7 +155,7 @@ class ArenaDisplay : JPanel() {
 
     private fun drawShotDefenseZones(situation: TacticalSituation, g: Graphics2D) {
         val car = myCar ?: return
-        if (situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) {
+        if (situation.needsDefensiveClear) {
             g.color = Color(255, 0, 0, 79)
             val myGoalCenter = GoalUtil.getOwnGoal(car.team).center.flatten()
             ball?.let {
@@ -181,7 +180,7 @@ class ArenaDisplay : JPanel() {
         val myGoalCenter = GoalUtil.getOwnGoal(car.team).center
         val myCarIsInNet = Math.signum(car.position.y) == Math.signum(myGoalCenter.y) && Math.abs(car.position.y) > Math.abs(myGoalCenter.y)
 
-        if ((situation.needsDefensiveClear || situation.waitToClear || situation.forceDefensivePosture) && myCarIsInNet) {
+        if ((situation.needsDefensiveClear) && myCarIsInNet) {
             g.color = Color(0, 255, 0, 79)
             val shotDefenseZone = ZoneUtil.getDefensiveReach(car.position, myGoalCenter.flatten())
             g.draw(shotDefenseZone.awtArea)
