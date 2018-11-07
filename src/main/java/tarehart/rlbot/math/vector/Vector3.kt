@@ -1,6 +1,8 @@
 package tarehart.rlbot.math.vector
 
 import tarehart.rlbot.math.Plane
+import java.util.*
+import kotlin.math.abs
 
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
 
@@ -105,6 +107,16 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     fun shadowOntoPlane(plane: Plane): Vector3 {
         val distance = plane.distance(this)
         return this - plane.normal.scaledToMagnitude(distance)
+    }
+
+    fun abs(): Vector3 {
+        return Vector3(abs(x), abs(y), abs(z))
+    }
+
+    // TODO: I'm not sure I like this, I'm using it in HoopsZones and its an unclear and specific function.
+    fun withinTolerance(tolerance: Vector3): Boolean {
+        val absolute = abs()
+        return absolute.x <= tolerance.x && absolute.y <= tolerance.y && absolute.z <= tolerance.z
     }
 
     fun toRlbot(): rlbot.vector.Vector3 {
