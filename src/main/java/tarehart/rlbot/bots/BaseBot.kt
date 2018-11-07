@@ -5,10 +5,12 @@ import rlbot.flat.GameTickPacket
 import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
