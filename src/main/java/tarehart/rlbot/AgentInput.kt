@@ -1,9 +1,7 @@
 package tarehart.rlbot
 
-import rlbot.flat.GameInfo
-import rlbot.flat.GameTickPacket
-import rlbot.flat.PlayerInfo
-import rlbot.flat.Touch
+import rlbot.flat.*
+import rlbot.gamestate.BallState
 import rlbot.manager.BotLoopRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.bots.BaseBot
@@ -34,6 +32,7 @@ class AgentInput(
 //    private val orangeDemo: Int
     val ballPosition: Vector3
     val ballVelocity: Vector3
+    val dropshotState: DropShotBallInfo?
     val team: Team
     val ballSpin: Vector3
     var time: GameTime
@@ -57,6 +56,7 @@ class AgentInput(
 
         ballPosition = Vector3.fromRlbot(ballPhysics.location())
         ballVelocity = Vector3.fromRlbot(ballPhysics.velocity())
+        dropshotState = request.ball().dropShotInfo()
 
         chronometer.readInput(request.gameInfo().secondsElapsed().toDouble())
         time = chronometer.gameTime

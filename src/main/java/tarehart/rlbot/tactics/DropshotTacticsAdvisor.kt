@@ -6,7 +6,12 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.steps.ChaseBallStep
+import tarehart.rlbot.steps.CatchBallStep
+import tarehart.rlbot.steps.demolition.DemolishEnemyStep
+import tarehart.rlbot.steps.landing.LandGracefullyStep
+import tarehart.rlbot.steps.strikes.FlexibleKickStep
+import tarehart.rlbot.steps.strikes.InterceptStep
+import tarehart.rlbot.steps.strikes.KickToEnemyHalf
 
 class DropshotTacticsAdvisor: TacticsAdvisor {
 
@@ -15,11 +20,39 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
     }
 
     override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+
+        val car = input.myCarData
+
+        if (!car.hasWheelContact && Plan.Posture.LANDING.canInterrupt(currentPlan) && car.position.z > 5) {
+            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+        }
+
+        situation.ballPath.getLanding(input.time)?.let {
+
+            val isBallFriendly = input.latestBallTouch?.team == input.team
+            val willLandOnOwnSide = it.space.y * GoalUtil.getOwnGoal(input.team).center.y > 0
+
+            if (willLandOnOwnSide && !isBallFriendly && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+                // Need defense!
+                return Plan(Plan.Posture.SAVE)
+                        .withStep(InterceptStep(Vector3()))
+                        .withStep(CatchBallStep())
+            }
+
+            if (!willLandOnOwnSide && isBallFriendly && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
+                return Plan(Plan.Posture.OFFENSIVE)
+                        .withStep(DemolishEnemyStep())
+            }
+        }
+
         return null
     }
 
     override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
-        return Plan().withStep(ChaseBallStep())
+        return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                .withStep(FlexibleKickStep(KickToEnemyHalf()))
+                .withStep(CatchBallStep())
+                .withStep(InterceptStep(Vector3()))
     }
 
     override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
