@@ -76,6 +76,10 @@ object BoostAdvisor {
 
     fun getBoostWaypoint(car: CarData, waypoint: Vector2) : Vector2? {
 
+        if (BoostAdvisor.orderedBoosts.size < 5) {
+            return waypoint
+        }
+
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
         val closestBoost = getClosestBoost(car, distancePlot, waypoint)
         return closestBoost?.location?.flatten()

@@ -28,8 +28,8 @@ class KickToEnemyHalf : KickStrategy {
         val toLeftPost = Vector3(leftSign * ArenaModel.SIDE_WALL, 0.0, 0.0).minus(ballPosition).flatten()
         val toRightPost = Vector3(-leftSign * ArenaModel.SIDE_WALL, 0.0, 0.0).minus(ballPosition).flatten()
 
-        val safeDirectionRight = VectorUtil.rotateVector(toRightPost, -Math.PI / 8)
-        val safeDirectionLeft = VectorUtil.rotateVector(toLeftPost, Math.PI / 8)
+        val safeDirectionRight = VectorUtil.rotateVector(toRightPost, -Math.PI / 4)
+        val safeDirectionLeft = VectorUtil.rotateVector(toLeftPost, Math.PI / 4)
 
         val rightToEasyCorrection = safeDirectionRight.correctionAngle(easyKickFlat, false)
         val rightToLeftCorrection = safeDirectionRight.correctionAngle(safeDirectionLeft, false)

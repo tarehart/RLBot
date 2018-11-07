@@ -251,7 +251,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 enemyPlayerWithInitiative = enemyGoGetter,
                 teamPlayerWithInitiative = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team), ballPath)
                         ?: CarWithIntercept(input.myCarData, null),
-                ballPath = ballPath
+                ballPath = ballPath,
+                gameMode = GameMode.SOCCER
         )
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display

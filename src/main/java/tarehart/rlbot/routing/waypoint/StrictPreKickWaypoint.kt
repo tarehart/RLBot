@@ -4,6 +4,7 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.*
@@ -15,6 +16,7 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
         PreKickWaypoint(position, expectedTime, waitUntil) {
 
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
+        if (ArenaModel.isCarOnWall(car)) return false
         val tminus = Duration.between(car.time, expectedTime).millis
         if (tminus > 200 || tminus < -50) return false
         val distance = car.position.flatten().distance(position)

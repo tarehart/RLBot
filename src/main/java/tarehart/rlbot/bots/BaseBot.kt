@@ -12,6 +12,7 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.WaitForActive
+import tarehart.rlbot.tactics.*
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.ui.PlainReadout
@@ -33,6 +34,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     private var frameCount: Long = 0
     private var previousTime = Instant.now()
     private val planRenderer = NamedRenderer("baseBotPlanRenderer$playerIndex")
+    private var isGameModeInitialized = false
 
     val debugWindow: JFrame
         get() {
@@ -55,6 +57,11 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
                 return AgentOutput()
             }
 
+            if (!isGameModeInitialized) {
+                initializeGameMode()
+                isGameModeInitialized = true
+            }
+
             val translatedInput = AgentInput(request, playerIndex, chronometer, frameCount++, this)
 
             val output = processInput(translatedInput)
@@ -68,6 +75,16 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         } catch (e: Exception) {
             e.printStackTrace()
             return AgentOutput()
+        }
+    }
+
+    private fun initializeGameMode() {
+        val gameMode = GameModeSniffer.getGameMode()
+
+        if (gameMode == GameMode.SOCCER) {
+            ArenaModel.setSoccerWalls()
+        } else if (gameMode == GameMode.DROPSHOT) {
+            ArenaModel.setDropshotWalls()
         }
     }
 

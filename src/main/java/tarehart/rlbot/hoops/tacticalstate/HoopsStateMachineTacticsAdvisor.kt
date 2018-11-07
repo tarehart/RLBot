@@ -58,7 +58,8 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 enemyPlayerWithInitiative = enemyGoGetter,
                 teamPlayerWithInitiative = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team), ballPath)
                         ?: CarWithIntercept(input.myCarData, null),
-                ballPath = ballPath
+                ballPath = ballPath,
+                gameMode = GameMode.HOOPS
         )
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display

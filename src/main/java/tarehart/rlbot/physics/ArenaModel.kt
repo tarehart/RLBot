@@ -2,7 +2,7 @@ package tarehart.rlbot.physics
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.google.common.collect.Streams
+import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BallSlice
@@ -12,7 +12,10 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.cpp.BallPredictorHelper
 import tarehart.rlbot.planning.Goal
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
+import java.awt.Color
+import java.lang.Math.*
 import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.stream.Collectors
@@ -56,30 +59,60 @@ class ArenaModel {
         val CORNER_ANGLE_CENTER = Vector2(SIDE_WALL.toDouble(), BACK_WALL.toDouble()).minus(Vector2(CORNER_BEVEL, CORNER_BEVEL))
 
 
-        private val majorUnbrokenPlanes = ArrayList<Plane>()
-        private val backWallPlanes = ArrayList<Plane>()
+        private val arenaPlanes = ArrayList<Plane>()
 
         init {
+            setSoccerWalls()
+        }
+
+        fun setSoccerWalls() {
+
+            arenaPlanes.clear()
+
             // Floor
-            majorUnbrokenPlanes.add(Plane(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, 0.0)))
 
             // Side walls
-            majorUnbrokenPlanes.add(Plane(Vector3(1.0, 0.0, 0.0), Vector3((-SIDE_WALL).toDouble(), 0.0, 0.0)))
-            majorUnbrokenPlanes.add(Plane(Vector3(-1.0, 0.0, 0.0), Vector3(SIDE_WALL.toDouble(), 0.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(1.0, 0.0, 0.0), Vector3((-SIDE_WALL).toDouble(), 0.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(-1.0, 0.0, 0.0), Vector3(SIDE_WALL.toDouble(), 0.0, 0.0)))
 
             // Ceiling
-            majorUnbrokenPlanes.add(Plane(Vector3(0.0, 0.0, -1.0), Vector3(0.0, 0.0, CEILING.toDouble())))
+            arenaPlanes.add(Plane(Vector3(0.0, 0.0, -1.0), Vector3(0.0, 0.0, CEILING.toDouble())))
 
             // 45 angle corners
-            majorUnbrokenPlanes.add(Plane(Vector3(1.0, 1.0, 0.0), Vector3((-CORNER_ANGLE_CENTER.x).toFloat().toDouble(), (-CORNER_ANGLE_CENTER.y).toFloat().toDouble(), 0.0)))
-            majorUnbrokenPlanes.add(Plane(Vector3(-1.0, 1.0, 0.0), Vector3(CORNER_ANGLE_CENTER.x.toFloat().toDouble(), (-CORNER_ANGLE_CENTER.y).toFloat().toDouble(), 0.0)))
-            majorUnbrokenPlanes.add(Plane(Vector3(1.0, -1.0, 0.0), Vector3((-CORNER_ANGLE_CENTER.x).toFloat().toDouble(), CORNER_ANGLE_CENTER.y.toFloat().toDouble(), 0.0)))
-            majorUnbrokenPlanes.add(Plane(Vector3(-1.0, -1.0, 0.0), Vector3(CORNER_ANGLE_CENTER.x.toFloat().toDouble(), CORNER_ANGLE_CENTER.y.toFloat().toDouble(), 0.0)))
+            arenaPlanes.add(Plane(Vector3(1.0, 1.0, 0.0), Vector3(-CORNER_ANGLE_CENTER.x, -CORNER_ANGLE_CENTER.y, 0.0)))
+            arenaPlanes.add(Plane(Vector3(-1.0, 1.0, 0.0), Vector3(CORNER_ANGLE_CENTER.x, -CORNER_ANGLE_CENTER.y, 0.0)))
+            arenaPlanes.add(Plane(Vector3(1.0, -1.0, 0.0), Vector3(-CORNER_ANGLE_CENTER.x, CORNER_ANGLE_CENTER.y, 0.0)))
+            arenaPlanes.add(Plane(Vector3(-1.0, -1.0, 0.0), Vector3(CORNER_ANGLE_CENTER.x, CORNER_ANGLE_CENTER.y, 0.0)))
 
 
-            // Do the back wall major surfaces separately to avoid duplicate planes.
-            backWallPlanes.add(Plane(Vector3(0.0, 1.0, 0.0), Vector3(0.0, (-BACK_WALL).toDouble(), 0.0)))
-            backWallPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, BACK_WALL.toDouble(), 0.0)))
+            // Back walls
+            arenaPlanes.add(Plane(Vector3(0.0, 1.0, 0.0), Vector3(0.0, (-BACK_WALL).toDouble(), 0.0)))
+            arenaPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, BACK_WALL.toDouble(), 0.0)))
+        }
+
+        fun setDropshotWalls() {
+
+            arenaPlanes.clear()
+
+            // Floor
+            arenaPlanes.add(Plane(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, 0.0)))
+
+            // Ceiling
+            arenaPlanes.add(Plane(Vector3(0.0, 0.0, -1.0), Vector3(0.0, 0.0, 40.0)))
+
+            // Hexagonal side walls
+            val hexagonAngle = PI / 6
+            arenaPlanes.add(Plane(Vector3(cos(hexagonAngle), sin(hexagonAngle), 0.0), Vector3(-80.0, -45.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(cos(-hexagonAngle), sin(-hexagonAngle), 0.0), Vector3(-80.0, 45.0, 0.0)))
+
+            arenaPlanes.add(Plane(Vector3(-cos(hexagonAngle), -sin(hexagonAngle), 0.0), Vector3(80.0, 45.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(-cos(-hexagonAngle), -sin(-hexagonAngle), 0.0), Vector3(80.0, -45.0, 0.0)))
+
+
+            // Back walls
+            arenaPlanes.add(Plane(Vector3(0.0, 1.0, 0.0), Vector3(0.0, -92.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, 92.0, 0.0)))
         }
 
         val SIMULATION_DURATION = Duration.ofSeconds(5.0)
@@ -109,6 +142,16 @@ class ArenaModel {
             return isInBounds(location, BALL_RADIUS.toDouble())
         }
 
+        fun renderWalls(renderer: Renderer) {
+            arenaPlanes.forEach { p ->
+                run {
+                    RenderUtil.drawSquare(renderer, p, 5.0, Color.WHITE)
+                    RenderUtil.drawSquare(renderer, p, 10.0, Color.WHITE)
+                    RenderUtil.drawSquare(renderer, p, 12.0, Color.WHITE)
+                }
+            }
+        }
+
         private fun isInBounds(location: Vector3, buffer: Double): Boolean {
             return getDistanceFromWall(location) > buffer
         }
@@ -132,10 +175,10 @@ class ArenaModel {
         }
 
         fun getDistanceFromWall(position: Vector3): Double {
-            val sideWall = SIDE_WALL - Math.abs(position.x)
-            val backWall = BACK_WALL - Math.abs(position.y)
-            val diagonal = CORNER_ANGLE_CENTER.x + CORNER_ANGLE_CENTER.y - Math.abs(position.x) - Math.abs(position.y)
-            return Math.min(Math.min(sideWall, backWall), diagonal)
+
+            return arenaPlanes.asSequence()
+                    .filter { it.normal.z == 0.0 } // Exclude the floor and ceiling
+                    .map { it.distance(position) }.min() ?: 0.0
         }
 
         fun isCarOnWall(car: CarData): Boolean {
@@ -148,7 +191,7 @@ class ArenaModel {
 
         fun getNearestPlane(position: Vector3): Plane {
 
-            return Streams.concat(majorUnbrokenPlanes.stream(), backWallPlanes.stream()).min { p1, p2 ->
+            return arenaPlanes.stream().min { p1, p2 ->
                 val p1Distance = p1.distance(position)
                 val p2Distance = p2.distance(position)
                 if (p1Distance > p2Distance) 1 else -1
@@ -158,7 +201,7 @@ class ArenaModel {
         fun getBouncePlane(origin: Vector3, direction: Vector3): Plane {
             val longDirection = direction.scaledToMagnitude(500.0)
 
-            val intersectionDistances = (majorUnbrokenPlanes.asSequence() + backWallPlanes.asSequence()).asStream()
+            val intersectionDistances = arenaPlanes.asSequence().asStream()
                     .collect(Collectors.toMap<Plane, Plane, Double>({p -> p}, { p ->
                         VectorUtil.getPlaneIntersection(p, origin, longDirection)?.distance(origin) ?: Double.MAX_VALUE
                     }))

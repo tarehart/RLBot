@@ -4,7 +4,9 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
+import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.CatchBallStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
@@ -12,6 +14,10 @@ import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickToEnemyHalf
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
+import tarehart.rlbot.steps.wall.DescendFromWallStep
+import tarehart.rlbot.steps.wall.WallTouchStep
+import tarehart.rlbot.time.Duration
 
 class DropshotTacticsAdvisor: TacticsAdvisor {
 
@@ -39,7 +45,10 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                         .withStep(CatchBallStep())
             }
 
-            if (!willLandOnOwnSide && isBallFriendly && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
+            val isBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 50
+
+            if (!willLandOnOwnSide && isBallFriendly && isBouncy && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
+                    && situation.teamPlayerWithInitiative.car == input.myCarData) {
                 return Plan(Plan.Posture.OFFENSIVE)
                         .withStep(DemolishEnemyStep())
             }
@@ -49,6 +58,17 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
     }
 
     override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+
+        if (WallTouchStep.hasWallTouchOpportunity(input, situation.ballPath)) {
+            return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                    .withStep(WallTouchStep())
+                    .withStep(MidairStrikeStep(Duration.ofSeconds(0.3)))
+        }
+
+        if (ArenaModel.isCarNearWall(input.myCarData)) {
+            return Plan().withStep(DescendFromWallStep())
+        }
+
         return FirstViableStepPlan(Plan.Posture.NEUTRAL)
                 .withStep(FlexibleKickStep(KickToEnemyHalf()))
                 .withStep(CatchBallStep())
@@ -83,7 +103,8 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                 enemyPlayerWithInitiative = enemyGoGetter,
                 teamPlayerWithInitiative = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team), ballPath)
                         ?: CarWithIntercept(input.myCarData, null),
-                ballPath = ballPath
+                ballPath = ballPath,
+                gameMode = GameMode.DROPSHOT
         )
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
