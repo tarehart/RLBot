@@ -91,6 +91,32 @@ class ArenaModel {
             arenaPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, BACK_WALL.toDouble(), 0.0)))
         }
 
+        fun setHoopsWalls() {
+
+            arenaPlanes.clear()
+
+            // Floor
+            arenaPlanes.add(Plane(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, 0.0)))
+
+            // Side walls
+            arenaPlanes.add(Plane(Vector3(1.0, 0.0, 0.0), Vector3(-59.0, 0.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(-1.0, 0.0, 0.0), Vector3(59.0, 0.0, 0.0)))
+
+            // Ceiling
+            arenaPlanes.add(Plane(Vector3(0.0, 0.0, -1.0), Vector3(0.0, 0.0, 36.0)))
+
+            // 45 angle corners
+            arenaPlanes.add(Plane(Vector3(1.0, 1.0, 0.0), Vector3(-53.0, -62.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(-1.0, 1.0, 0.0), Vector3(53.0, -62.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(1.0, -1.0, 0.0), Vector3(-53.0, 62.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(-1.0, -1.0, 0.0), Vector3(53.0, 62.0, 0.0)))
+
+
+            // Back walls
+            arenaPlanes.add(Plane(Vector3(0.0, 1.0, 0.0), Vector3(0.0, -72.0, 0.0)))
+            arenaPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, 72.0, 0.0)))
+        }
+
         fun setDropshotWalls() {
 
             arenaPlanes.clear()

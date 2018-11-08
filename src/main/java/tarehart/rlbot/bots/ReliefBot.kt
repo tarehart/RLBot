@@ -20,11 +20,9 @@ class ReliefBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             if (gameMode == GameMode.SOCCER) {
                 tacticsAdvisor = SoccerTacticsAdvisor()
                 println("Game Mode: Soccar")
-                ArenaModel.setSoccerWalls()
             } else if (gameMode == GameMode.DROPSHOT) {
                 println("Game Mode: Dropshot")
                 tacticsAdvisor = DropshotTacticsAdvisor()
-                ArenaModel.setDropshotWalls()
             } else if (gameMode == GameMode.HOOPS) {
                 println("Game Mode: Hoops")
                 tacticsAdvisor = HoopsTacticsAdvisor()
@@ -36,8 +34,6 @@ class ReliefBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     override fun getOutput(input: AgentInput): AgentOutput {
 
         gameMode()
-
-        ArenaModel.renderWalls(BotLoopRenderer.forBotLoop(this))
 
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)
