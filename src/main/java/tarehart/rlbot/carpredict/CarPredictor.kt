@@ -12,7 +12,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import java.util.*
 
-class CarPredictor(private val carIndex: Int) {
+class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean = true) {
 
     private val TIME_STEP = 0.02
     private val SECONDS_SPENT_CIRCLING = 0.5
@@ -127,7 +127,7 @@ class CarPredictor(private val carIndex: Int) {
             }
             val space = currentSlice.space.plus(nextVel.scaled(TIME_STEP))
 
-            if (currentSlice.space.z > ManeuverMath.BASE_CAR_Z) {
+            if (currentSlice.space.z > ManeuverMath.BASE_CAR_Z || !respectFloor) {
                 nextVel = Vector3(nextVel.x, nextVel.y, nextVel.z - ArenaModel.GRAVITY * TIME_STEP)
             } else {
                 nextVel = Vector3(nextVel.x, nextVel.y, 0.0)

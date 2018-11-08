@@ -215,6 +215,10 @@ class ArenaModel {
             return Math.abs(position.x) > Goal.EXTENT && getDistanceFromWall(position) + position.z < 6
         }
 
+        fun getCollisonPlanes(): List<Plane> {
+            return arenaPlanes
+        }
+
         fun getNearestPlane(position: Vector3): Plane {
 
             return arenaPlanes.stream().min { p1, p2 ->

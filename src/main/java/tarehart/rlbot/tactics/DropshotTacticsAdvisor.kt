@@ -41,8 +41,8 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
             if (willLandOnOwnSide && !isBallFriendly && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
                 // Need defense!
                 return Plan(Plan.Posture.SAVE)
-                        .withStep(InterceptStep(Vector3()))
                         .withStep(CatchBallStep())
+                        .withStep(InterceptStep(Vector3()))
             }
 
             val isBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 50

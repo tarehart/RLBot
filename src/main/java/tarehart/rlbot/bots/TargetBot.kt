@@ -35,12 +35,12 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     private val orientationTestLoop = ResetLoop({
         GameState()
                 .withCarState(0, CarState().withPhysics(PhysicsState()
-                        .withLocation(StateVector(0F, -50F, 30F))
-                        .withVelocity(StateVector(0F, 0F, 0F))
+                        .withLocation(StateVector(35F, -50F, 30F))
+                        .withVelocity(StateVector(50F, 0F, 0F))
                         .withAngularVelocity(StateVector(0F, 0F, 0F))
                         .withRotation(DesiredRotation(randomRotation(), randomRotation(), randomRotation()))
                 )) },
-            Duration.ofSeconds(4.0))
+            Duration.ofSeconds(2.0))
 
     override fun getOutput(input: AgentInput): AgentOutput {
         return runOrientationTest(input)
