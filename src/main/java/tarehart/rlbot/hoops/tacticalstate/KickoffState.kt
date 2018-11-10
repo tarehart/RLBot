@@ -5,11 +5,17 @@ import rlbot.flat.QuickChatSelection
 import rlbot.render.NamedRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.hoops.HoopsZoneTeamless
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.time.Duration
 import java.awt.Color
+import kotlin.math.sin
 
 class KickoffState : TacticalState {
 
@@ -153,8 +159,10 @@ class KickoffState : TacticalState {
     }
 
     override fun newPlan(input: AgentInput, situation: TacticalSituation) : Plan {
-        if (!kickoffHasBegun) {
+        if (kickoffStyle == KickoffStyle.CENTER) {
+            val beyondHoopRim = HoopsZone.getTeamedZone(HoopsZoneTeamless.CENTER, input.team).center.flatten() + input.myCarData.orientation.noseVector.flatten().scaled(15.0)
             return Plan()
+            // return Plan(Plan.Posture.KICKOFF).withStep( SteerUtil.steerTowardGroundPosition(input.myCarData, beyondHoopRim)
         }
         return Plan()
     }

@@ -1,6 +1,8 @@
 package tarehart.rlbot.hoops
 import org.w3c.dom.html.HTMLOptGroupElement
+import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.vector.Vector3
+import java.lang.Exception
 
 enum class HoopsZoneTeamless {
     FORWARD_LEFT,
@@ -50,6 +52,17 @@ enum class HoopsZone(val center: Vector3, val toleranceSquared: Double = 0.25) {
                 }
             }
             return null
+        }
+
+        fun getTeamedZone(teamless: HoopsZoneTeamless, team: Team) : HoopsZone {
+            val blue = team == Team.BLUE
+            when (teamless) {
+                HoopsZoneTeamless.CENTER -> return if (blue) KICKOFF_BLUE_CENTER else KICKOFF_ORANGE_CENTER
+                HoopsZoneTeamless.FORWARD_LEFT -> return if (blue) KICKOFF_BLUE_FORWARD_LEFT else KICKOFF_ORANGE_FORWARD_LEFT
+                HoopsZoneTeamless.FORWARD_RIGHT -> return if (blue) KICKOFF_BLUE_FORWARD_RIGHT else KICKOFF_ORANGE_FORWARD_RIGHT
+                HoopsZoneTeamless.WIDE_LEFT -> return if (blue) KICKOFF_BLUE_WIDE_LEFT else KICKOFF_ORANGE_WIDE_LEFT
+                HoopsZoneTeamless.WIDE_RIGHT -> return if (blue) KICKOFF_BLUE_WIDE_RIGHT else KICKOFF_ORANGE_WIDE_RIGHT
+            }
         }
     }
 }
