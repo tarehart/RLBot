@@ -10,11 +10,21 @@ class ResetLoop(private val gameState: () -> GameState, private val duration: Du
 
     private var nextReset = GameTime(0)
 
-    fun check(input: AgentInput) {
+    /**
+     * @param input Current agent input, used for game time
+     * @return true if the game has been reset
+     */
+    fun check(input: AgentInput) : Boolean {
         if (input.time > nextReset) {
-            RLBotDll.setGameState(gameState.invoke().buildPacket())
-            nextReset = input.time + duration
+            reset(input)
+            return true
         }
+        return false
+    }
+
+    fun reset(input: AgentInput) {
+        RLBotDll.setGameState(gameState.invoke().buildPacket())
+        nextReset = input.time + duration
     }
 
 }
