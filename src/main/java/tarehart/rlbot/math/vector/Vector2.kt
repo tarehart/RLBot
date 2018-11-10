@@ -113,7 +113,11 @@ data class Vector2(val x: Double, val y: Double) {
     }
 
     fun toVector3(): Vector3 {
-        return Vector3(x, y, 0.0)
+        return withZ(0.0)
+    }
+
+    fun withZ(z: Double): Vector3 {
+        return Vector3(x, y, z)
     }
 
     companion object {

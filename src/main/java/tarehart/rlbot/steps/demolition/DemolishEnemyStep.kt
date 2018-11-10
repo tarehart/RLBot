@@ -127,7 +127,7 @@ class DemolishEnemyStep : NestedPlanStep() {
     private fun chase(input: AgentInput, enemyCar: CarData): DemolishTransition? {
         val car = input.myCarData
 
-        if (car.boost < 15 && !car.isSupersonic) {
+        if (!hasEnoughBoost(car)) {
             return null
         }
 
@@ -212,5 +212,11 @@ class DemolishEnemyStep : NestedPlanStep() {
 
     override fun getLocalSituation(): String {
         return "Demolishing enemy"
+    }
+
+    companion object {
+        fun hasEnoughBoost(car: CarData): Boolean {
+            return car.isSupersonic || car.boost > 15
+        }
     }
 }

@@ -19,6 +19,7 @@ import java.lang.Math.*
 import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 import kotlin.streams.asStream
 
 class ArenaModel {
@@ -60,6 +61,7 @@ class ArenaModel {
 
 
         private val arenaPlanes = ArrayList<Plane>()
+        val wallIntersectionPoints = ArrayList<Vector2>()
 
         init {
             setSoccerWalls()
@@ -89,6 +91,8 @@ class ArenaModel {
             // Back walls
             arenaPlanes.add(Plane(Vector3(0.0, 1.0, 0.0), Vector3(0.0, (-BACK_WALL).toDouble(), 0.0)))
             arenaPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, BACK_WALL.toDouble(), 0.0)))
+
+            updateWallIntersectionPoints()
         }
 
         fun setHoopsWalls() {
@@ -115,6 +119,8 @@ class ArenaModel {
             // Back walls
             arenaPlanes.add(Plane(Vector3(0.0, 1.0, 0.0), Vector3(0.0, -72.0, 0.0)))
             arenaPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, 72.0, 0.0)))
+
+            updateWallIntersectionPoints()
         }
 
         fun setDropshotWalls() {
@@ -139,6 +145,8 @@ class ArenaModel {
             // Back walls
             arenaPlanes.add(Plane(Vector3(0.0, 1.0, 0.0), Vector3(0.0, -92.0, 0.0)))
             arenaPlanes.add(Plane(Vector3(0.0, -1.0, 0.0), Vector3(0.0, 92.0, 0.0)))
+
+            updateWallIntersectionPoints()
         }
 
         val SIMULATION_DURATION = Duration.ofSeconds(5.0)
@@ -215,8 +223,31 @@ class ArenaModel {
             return Math.abs(position.x) > Goal.EXTENT && getDistanceFromWall(position) + position.z < 6
         }
 
-        fun getCollisonPlanes(): List<Plane> {
+        fun getCollisionPlanes(): List<Plane> {
             return arenaPlanes
+        }
+
+        fun getWallPlanes(): List<Plane> {
+            return getCollisionPlanes().filter { p -> p.normal.z == 0.0 }
+        }
+
+        private fun getWallIntersectionPoints(): List<Vector2> {
+            val orderedWalls = getWallPlanes().sortedBy { p -> Math.atan2(p.position.y, p.position.x) }
+            val points = ArrayList<Vector2>(orderedWalls.size)
+
+            for (i in 0 until orderedWalls.size - 1) {
+                val intersection = orderedWalls[i].intersect(orderedWalls[i + 1])
+                intersection?.let { points.add(it.position.flatten()) }
+            }
+
+            val lastIntersection = orderedWalls.first().intersect(orderedWalls.last())
+            lastIntersection?.let { points.add(it.position.flatten()) }
+            return points
+        }
+
+        private fun updateWallIntersectionPoints() {
+            wallIntersectionPoints.clear()
+            wallIntersectionPoints.addAll(getWallIntersectionPoints())
         }
 
         fun getNearestPlane(position: Vector3): Plane {

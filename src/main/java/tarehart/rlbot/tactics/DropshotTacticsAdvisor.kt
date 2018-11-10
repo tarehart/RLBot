@@ -11,10 +11,7 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.CatchBallStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
-import tarehart.rlbot.steps.strikes.FlexibleKickStep
-import tarehart.rlbot.steps.strikes.InterceptStep
-import tarehart.rlbot.steps.strikes.KickToEnemyHalf
-import tarehart.rlbot.steps.strikes.MidairStrikeStep
+import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.DescendFromWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
@@ -48,7 +45,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
             val isBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 50
 
             if (!willLandOnOwnSide && isBallFriendly && isBouncy && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
-                    && situation.teamPlayerWithInitiative.car == input.myCarData) {
+                    && situation.teamPlayerWithInitiative.car == input.myCarData && DemolishEnemyStep.hasEnoughBoost(car)) {
                 return Plan(Plan.Posture.OFFENSIVE)
                         .withStep(DemolishEnemyStep())
             }
@@ -76,6 +73,8 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
     }
 
     override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+
+        DropshotWallKick().getKickDirection(input.myCarData, input.ballPosition)
 
         val enemyGoGetter = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team.opposite()), ballPath)
         val enemyIntercept = enemyGoGetter?.intercept

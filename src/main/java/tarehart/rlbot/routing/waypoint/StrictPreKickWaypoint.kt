@@ -57,7 +57,7 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
 
             val orientDuration = AccelerationModel.getOrientDuration(car, waypoint.toVector3())
 
-            val duration = distancePlot.getMotionAfterDistance(toPad.magnitude())!!.time
+            val duration = distancePlot.getMotionAfterDistance(toPad.magnitude())?.time ?: distancePlot.getEndPoint().time
             if (this.waitUntil != null) {
                 val route = Route()
                         .withPart(OrientRoutePart(flatPosition, orientDuration))

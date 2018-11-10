@@ -1,18 +1,15 @@
 package tarehart.rlbot.bots
 
 import rlbot.gamestate.*
-import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
-import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.state.ResetLoop
 import tarehart.rlbot.steps.state.StateVector
-import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 
 class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
