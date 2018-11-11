@@ -20,6 +20,7 @@ import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.WhileConditionStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
+import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.time.Duration
 import java.awt.Color
@@ -86,7 +87,9 @@ class KickoffState : TacticalState {
                     if (zone.toString().contains("ORANGE")) {
                         kickoffRenderer!!.drawRectangle3d(Color.ORANGE, zone.center.toRlbot(), 10, 10, true)
                     } else {
-                        kickoffRenderer!!.drawRectangle3d(Color.BLUE, zone.center.toRlbot(), 10, 10, true)
+                        if (zone == HoopsZone.KICKOFF_BLUE_FORWARD_LEFT) {
+                            kickoffRenderer!!.drawRectangle3d(Color.BLUE, zone.center.toRlbot(), 10, 10, true)
+                        }
                     }
                 }
                 kickoffRenderer!!.finishAndSend()
@@ -213,6 +216,17 @@ class KickoffState : TacticalState {
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
                         .withStep(MidairStrikeStep(Duration.ofMillis(0)))
 
+            } else if (kickoffStyle == KickoffStyle.FORWARD_DEFEND) {
+                return Plan()
+                        .withStep(GetBoostStep())
+                        /*
+                        .withStep(ParkTheCarStep({
+                            it.ballPosition
+                        }))
+                        .withStep(WhileConditionStep(Predicate {
+                            it.ballVelocity.flatten().isZero
+                        }), )
+                        */
             }
         }
         return Plan().withStep(BlindStep(Duration.ofMillis(16), AgentOutput()))

@@ -84,6 +84,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                          .withVelocity(StateVector(0f, 0f, 0f))
                          .withAngularVelocity(StateVector(0f, 0f, 0f))
                          .withRotation(DesiredRotation(0f, 0f, 0f))))
+
                 .withCarState(0, CarState().withPhysics(
                         ({ zone : HoopsZone ->
                             PhysicsState()
@@ -91,9 +92,21 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                                     .withRotation(DesiredRotation(0F, (0.5F * Math.PI.toFloat() * if (zone.isBlueTeam) 1 else -1 ), 0F))
                                     .withVelocity(StateVector(0F, 0F, 0F))
                                     .withAngularVelocity(StateVector(0F, 0F, 0F))
-                        })( getRandomZone())
+                        })( HoopsZone.KICKOFF_BLUE_FORWARD_LEFT )
                 ).withBoostAmount(33.0F))
+
+                // Team member
                 .withCarState(1, CarState().withPhysics(
+                        ({ zone : HoopsZone ->
+                            PhysicsState()
+                                    .withLocation(StateVector(zone.center.x.toFloat(), zone.center.y.toFloat(), zone.center.z.toFloat()))
+                                    .withRotation(DesiredRotation(0F, (0.5F * Math.PI.toFloat() * if (zone.isBlueTeam) 1 else -1 ), 0F))
+                                    .withVelocity(StateVector(0F, 0F, 0F))
+                                    .withAngularVelocity(StateVector(0F, 0F, 0F))
+                        })( HoopsZone.KICKOFF_BLUE_FORWARD_RIGHT )
+                ).withBoostAmount(33.0F))
+
+                .withCarState(2, CarState().withPhysics(
                         PhysicsState()
                                 .withLocation(StateVector(-50F, 0F, 0F))
                 ))
