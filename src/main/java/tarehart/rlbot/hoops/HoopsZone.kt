@@ -1,8 +1,7 @@
 package tarehart.rlbot.hoops
-import org.w3c.dom.html.HTMLOptGroupElement
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.vector.Vector3
-import java.lang.Exception
+import java.util.*
 
 enum class HoopsZoneTeamless {
     FORWARD_LEFT,
@@ -10,7 +9,6 @@ enum class HoopsZoneTeamless {
     CENTER,
     WIDE_LEFT,
     WIDE_RIGHT;
-
 
     operator fun contains(zone: HoopsZone): Boolean {
         return this == HoopsZoneTeamless.FORWARD_LEFT && zone in arrayOf(HoopsZone.KICKOFF_BLUE_FORWARD_LEFT, HoopsZone.KICKOFF_ORANGE_FORWARD_LEFT)
@@ -21,20 +19,20 @@ enum class HoopsZoneTeamless {
     }
 }
 
-enum class HoopsZone(val center: Vector3, val toleranceSquared: Double = 0.25) {
+enum class HoopsZone(val center: Vector3, val toleranceSquared: Double = 0.25, val isBlueTeam: Boolean = true) {
 
     // These are in ordinal order of priority
     // Closest to the ball goes first, followed by the left most.
-    KICKOFF_BLUE_FORWARD_LEFT(Vector3(-5.12, -56.3, 0.0)),
-    KICKOFF_BLUE_FORWARD_RIGHT(Vector3(5.12, -56.3, 0.0)),
-    KICKOFF_BLUE_CENTER(Vector3(0.0, -64.0, 0.0)),
-    KICKOFF_BLUE_WIDE_LEFT(Vector3(-30.72, -61.43, 0.0)),
-    KICKOFF_BLUE_WIDE_RIGHT(Vector3(30.72, -61.43, 0.0)),
-    KICKOFF_ORANGE_FORWARD_LEFT(KICKOFF_BLUE_FORWARD_LEFT.center * -1.0),
-    KICKOFF_ORANGE_FORWARD_RIGHT(KICKOFF_BLUE_FORWARD_RIGHT.center * -1.0),
-    KICKOFF_ORANGE_CENTER(KICKOFF_BLUE_CENTER.center * -1.0),
-    KICKOFF_ORANGE_WIDE_LEFT(KICKOFF_BLUE_WIDE_LEFT.center * -1.0),
-    KICKOFF_ORANGE_WIDE_RIGHT(KICKOFF_BLUE_WIDE_RIGHT.center * -1.0);
+    KICKOFF_BLUE_FORWARD_LEFT(Vector3(-5.12, -56.3, 0.0), isBlueTeam = true),
+    KICKOFF_BLUE_FORWARD_RIGHT(Vector3(5.12, -56.3, 0.0), isBlueTeam = true),
+    KICKOFF_BLUE_CENTER(Vector3(0.0, -64.0, 0.0), isBlueTeam = true),
+    KICKOFF_BLUE_WIDE_LEFT(Vector3(-30.72, -61.43, 0.0), isBlueTeam = true),
+    KICKOFF_BLUE_WIDE_RIGHT(Vector3(30.72, -61.43, 0.0), isBlueTeam = true),
+    KICKOFF_ORANGE_FORWARD_LEFT(KICKOFF_BLUE_FORWARD_LEFT.center * -1.0, isBlueTeam = false),
+    KICKOFF_ORANGE_FORWARD_RIGHT(KICKOFF_BLUE_FORWARD_RIGHT.center * -1.0, isBlueTeam = false),
+    KICKOFF_ORANGE_CENTER(KICKOFF_BLUE_CENTER.center * -1.0, isBlueTeam = false),
+    KICKOFF_ORANGE_WIDE_LEFT(KICKOFF_BLUE_WIDE_LEFT.center * -1.0, isBlueTeam = false),
+    KICKOFF_ORANGE_WIDE_RIGHT(KICKOFF_BLUE_WIDE_RIGHT.center * -1.0, isBlueTeam = false);
     
     fun isInZone(position: Vector3): Boolean {
         return center.distanceSquared(position) <= toleranceSquared
@@ -63,6 +61,14 @@ enum class HoopsZone(val center: Vector3, val toleranceSquared: Double = 0.25) {
                 HoopsZoneTeamless.WIDE_LEFT -> return if (blue) KICKOFF_BLUE_WIDE_LEFT else KICKOFF_ORANGE_WIDE_LEFT
                 HoopsZoneTeamless.WIDE_RIGHT -> return if (blue) KICKOFF_BLUE_WIDE_RIGHT else KICKOFF_ORANGE_WIDE_RIGHT
             }
+        }
+
+        fun getZoneById(id: Int): HoopsZone {
+            return values()[id]
+        }
+
+        fun getRandomZone() : HoopsZone {
+            return getZoneById(Random().nextInt(10))
         }
     }
 }

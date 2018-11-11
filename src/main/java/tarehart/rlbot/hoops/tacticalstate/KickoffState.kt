@@ -10,11 +10,16 @@ import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.hoops.HoopsZoneTeamless
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.WhileConditionStep
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.time.Duration
 import java.awt.Color
+import java.util.function.Predicate
 import kotlin.math.sin
 
 class KickoffState : TacticalState {
@@ -159,10 +164,29 @@ class KickoffState : TacticalState {
     }
 
     override fun newPlan(input: AgentInput, situation: TacticalSituation) : Plan {
+        print("Kickoff Style")
+        println(kickoffStyle.toString())
         if (kickoffStyle == KickoffStyle.CENTER) {
-            val beyondHoopRim = HoopsZone.getTeamedZone(HoopsZoneTeamless.CENTER, input.team).center.flatten() + input.myCarData.orientation.noseVector.flatten().scaled(15.0)
-            return Plan()
-            // return Plan(Plan.Posture.KICKOFF).withStep( SteerUtil.steerTowardGroundPosition(input.myCarData, beyondHoopRim)
+            val beyondHoopRim = Vector2(
+                    HoopsZone.getTeamedZone(HoopsZoneTeamless.CENTER, input.team).center.x,
+                    HoopsZone.getTeamedZone(HoopsZoneTeamless.FORWARD_LEFT, input.team).center.y +
+                            HoopsZone.getTeamedZone(HoopsZoneTeamless.FORWARD_LEFT, input.team).center.y - HoopsZone.getTeamedZone(HoopsZoneTeamless.CENTER, input.team).center.y
+                    )
+
+            if (kickoffRenderer != null) {
+                kickoffRenderer?.startPacket()
+                kickoffRenderer!!.drawRectangle3d(Color.WHITE, beyondHoopRim.toVector3().toRlbot(), 10, 10, true)
+                kickoffRenderer?.finishAndSend()
+            }
+
+            return Plan(Plan.Posture.KICKOFF)
+                    .withStep( WhileConditionStep.until(Predicate { inp -> inp.myCarData.position.flatten().distance(beyondHoopRim) < 0.1 },
+                                SteerUtil.steerTowardGroundPosition(input.myCarData, beyondHoopRim).withThrottle(1.0).withBoost(true)
+                            ))
+                    .withStep( BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(-1.0).withBoost(true).withJump(true)))
+                    .withStep( BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(-1.0).withBoost(true).withJump(false)))
+                    .withStep( BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
+                    .withStep( MidairStrikeStep(Duration.ofMillis(0)))
         }
         return Plan()
     }

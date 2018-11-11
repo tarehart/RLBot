@@ -3,12 +3,16 @@ package tarehart.rlbot.bots
 import rlbot.gamestate.*
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.hoops.HoopsZone
+import tarehart.rlbot.hoops.HoopsZone.Companion.getRandomZone
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
+import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.state.ResetLoop
+import tarehart.rlbot.steps.state.SetStateStep
 import tarehart.rlbot.steps.state.StateVector
 import tarehart.rlbot.time.Duration
 
@@ -67,14 +71,54 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                                     .withLocation(classicStateVector(randomUniform(-1000f, 1000f), randomUniform(-4500f, -4000f) * csign, 25f))
                                     .withVelocity(classicStateVector(0F, 1000F * csign, 0F))
                                     .withAngularVelocity(classicStateVector(0F, 0F, 0F))
-                                    .withRotation(DesiredRotation(0F, 0.5f * Math.PI.toFloat() * csign /* * csign */, 0F))
+                                    .withRotation(DesiredRotation(0F, 0.5F * Math.PI.toFloat() * csign /* * csign */, 0F))
                         })(randomSign())
                 ))
                 },
             Duration.ofSeconds(5.0))
 
+    private val hoopKickoffLoop = ResetLoop({
+        GameState()
+                .withBallState(BallState().withPhysics(PhysicsState()
+                         .withLocation(StateVector(0f, 0f, 1.96779998f ))
+                         .withVelocity(StateVector(0f, 0f, 0f))
+                         .withAngularVelocity(StateVector(0f, 0f, 0f))
+                         .withRotation(DesiredRotation(0f, 0f, 0f))))
+                .withCarState(0, CarState().withPhysics(
+                        ({ zone : HoopsZone ->
+                            PhysicsState()
+                                    .withLocation(StateVector(zone.center.x.toFloat(), zone.center.y.toFloat(), zone.center.z.toFloat()))
+                                    .withRotation(DesiredRotation(0F, (0.5F * Math.PI.toFloat() * if (zone.isBlueTeam) 1 else -1 ), 0F))
+                                    .withVelocity(StateVector(0F, 0F, 0F))
+                                    .withAngularVelocity(StateVector(0F, 0F, 0F))
+                        })(getRandomZone())
+                ))
+                .withCarState(1, CarState().withPhysics(
+                        PhysicsState()
+                                .withLocation(StateVector(-50F, 0F, 0F))
+                ))
+    }, Duration.ofSeconds(10.0))
+
     override fun getOutput(input: AgentInput): AgentOutput {
-        return runAerialTest(input)
+        return runHoopsKickoffTest(input)
+    }
+
+    private fun runHoopsKickoffTest(input: AgentInput): AgentOutput {
+
+        if (hoopKickoffLoop.check(input)) {
+            currentPlan = Plan()
+                    .withStep(BlindStep(Duration.ofMillis(500), AgentOutput()))
+                    .withStep(SetStateStep(GameState().withBallState(BallState().withPhysics(PhysicsState().withVelocity(StateVector(0F, 0F, 20F))))))
+
+        }
+        currentPlan?.let {
+            if (it.isComplete()) {
+                currentPlan = null
+            } else {
+                it.getOutput(input)?.let { return it }
+            }
+        }
+        return AgentOutput()
     }
 
     var aerialTestCounter = 0

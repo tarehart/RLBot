@@ -19,8 +19,6 @@ class IdleState : TacticalState {
         if (input.ballPosition.flatten().isZero) {
             return KickoffState()
         }
-        val otherCarPosition = input.getTeamRoster(input.team.opposite())[0].position
-        println("" + otherCarPosition.x + ", " + otherCarPosition.y + ", " + otherCarPosition.z)
 
         idleRenderer.startPacket()
         RenderUtil.drawPath(idleRenderer, situation.ballPath.slices.map {
