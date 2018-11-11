@@ -3,8 +3,6 @@
 This is a custom Rocket League bot designed to work offline only.
 For more context, see http://www.rlbot.org/
 
-![](https://i.imgur.com/5N8B3pK.gif)
-
 This repository contains:
 - ReliefBot
 - AdversityBot
