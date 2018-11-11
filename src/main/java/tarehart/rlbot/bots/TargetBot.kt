@@ -91,13 +91,13 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                                     .withRotation(DesiredRotation(0F, (0.5F * Math.PI.toFloat() * if (zone.isBlueTeam) 1 else -1 ), 0F))
                                     .withVelocity(StateVector(0F, 0F, 0F))
                                     .withAngularVelocity(StateVector(0F, 0F, 0F))
-                        })(getRandomZone())
-                ))
+                        })( getRandomZone())
+                ).withBoostAmount(33.0F))
                 .withCarState(1, CarState().withPhysics(
                         PhysicsState()
                                 .withLocation(StateVector(-50F, 0F, 0F))
                 ))
-    }, Duration.ofSeconds(10.0))
+    }, Duration.ofSeconds(4.0))
 
     override fun getOutput(input: AgentInput): AgentOutput {
         return runHoopsKickoffTest(input)
@@ -107,7 +107,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
         if (hoopKickoffLoop.check(input)) {
             currentPlan = Plan()
-                    .withStep(BlindStep(Duration.ofMillis(500), AgentOutput()))
+                    .withStep(BlindStep(Duration.ofMillis(1000), AgentOutput()))
                     .withStep(SetStateStep(GameState().withBallState(BallState().withPhysics(PhysicsState().withVelocity(StateVector(0F, 0F, 20F))))))
 
         }

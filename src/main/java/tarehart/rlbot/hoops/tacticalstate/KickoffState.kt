@@ -8,11 +8,15 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.hoops.HoopsZoneTeamless
+import tarehart.rlbot.math.OrientationSolver
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.WhileConditionStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
@@ -57,6 +61,10 @@ class KickoffState : TacticalState {
     override fun muse(input: AgentInput, situation: TacticalSituation): TacticalState {
         if (!input.ballPosition.flatten().isZero) {
             return IdleState()
+        } else if (input.ballPosition.flatten().isZero && input.ballVelocity.isZero && kickoffHasBegun) {
+            println("Kickoff restarted")
+            // The kickoff has restarted
+            return KickoffState()
         }
 
         if (kickoffRenderer == null && !kickoffHasBegun) {
@@ -92,6 +100,8 @@ class KickoffState : TacticalState {
             } else if (kickoffStyle != KickoffStyle.INDETERMINATE){
                 RLBotDll.sendQuickChat(input.playerIndex, false, QuickChatSelection.Information_AllYours)
             }
+            print("Kickoff Style")
+            println(kickoffStyle.toString())
         }
 
         return this
@@ -160,34 +170,51 @@ class KickoffState : TacticalState {
     }
 
     override fun urgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?) : Plan?{
+        if(!kickoffHasBegun) {
+            return Plan()
+        }
         return null
     }
 
     override fun newPlan(input: AgentInput, situation: TacticalSituation) : Plan {
-        print("Kickoff Style")
-        println(kickoffStyle.toString())
-        if (kickoffStyle == KickoffStyle.CENTER) {
-            val beyondHoopRim = Vector2(
-                    HoopsZone.getTeamedZone(HoopsZoneTeamless.CENTER, input.team).center.x,
-                    HoopsZone.getTeamedZone(HoopsZoneTeamless.FORWARD_LEFT, input.team).center.y +
-                            HoopsZone.getTeamedZone(HoopsZoneTeamless.FORWARD_LEFT, input.team).center.y - HoopsZone.getTeamedZone(HoopsZoneTeamless.CENTER, input.team).center.y
-                    )
+        if (kickoffHasBegun) {
+            if (kickoffStyle == KickoffStyle.CENTER) {
+                return Plan(Plan.Posture.KICKOFF)
+                        .withStep(BlindStep(Duration.ofMillis(800), AgentOutput().withThrottle(1.0).withBoost(true)))
+                        .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(true)))
+                        .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(false)))
+                        .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
+                        .withStep(MidairStrikeStep(Duration.ofMillis(0), {
+                            vector3, team ->  Vector3(0.0, 0.0, -0.2)
+                        }))
+            } else if (kickoffStyle == KickoffStyle.FORWARD_STANDARD) {
+                return Plan(Plan.Posture.KICKOFF)
+                        .withStep(BlindStep(Duration.ofMillis(600), SteerUtil.steerTowardGroundPosition(input.myCarData, input.ballPosition).withBoost(false)))
+                        .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(false).withJump(true)))
+                        .withStep(BlindStep(Duration.ofMillis(20), AgentOutput().withThrottle(1.0).withPitch(0.5).withBoost(true).withJump(false)))
+                        .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
+                        .withStep(MidairStrikeStep(Duration.ofMillis(0)))
+            } else if (kickoffStyle == KickoffStyle.WIDE_KICKOFF) {
+                val closestSmallBoost = BoostAdvisor.boostData.smallBoosts.sortedBy { it.location.distance(input.myCarData.position) }.first()
+                val boostRenderer = NamedRenderer("kickoffTargetRenderer")
+                boostRenderer.startPacket()
+                boostRenderer.drawRectangle3d(Color.WHITE, closestSmallBoost.location.toRlbot(), 15, 15, true)
+                boostRenderer.finishAndSend()
+                return Plan()
+                        .withStep(WhileConditionStep(Predicate {
+                            closestSmallBoost.location.distance(it.myCarData.position) > 2.5
+                        }, {
+                            val guidance = (closestSmallBoost.location + it.ballPosition) / 2.0
+                            SteerUtil.steerTowardGroundPosition(it.myCarData, guidance)
+                        }))
+                        .withStep(BlindStep(Duration.ofMillis(20), SteerUtil.steerTowardGroundPosition(input.myCarData, input.ballPosition).withBoost(true)))
+                        .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(true)))
+                        .withStep(BlindStep(Duration.ofMillis(20), AgentOutput().withThrottle(1.0).withPitch(0.5).withBoost(true).withJump(false)))
+                        .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
+                        .withStep(MidairStrikeStep(Duration.ofMillis(0)))
 
-            if (kickoffRenderer != null) {
-                kickoffRenderer?.startPacket()
-                kickoffRenderer!!.drawRectangle3d(Color.WHITE, beyondHoopRim.toVector3().toRlbot(), 10, 10, true)
-                kickoffRenderer?.finishAndSend()
             }
-
-            return Plan(Plan.Posture.KICKOFF)
-                    .withStep( WhileConditionStep.until(Predicate { inp -> inp.myCarData.position.flatten().distance(beyondHoopRim) < 0.1 },
-                                SteerUtil.steerTowardGroundPosition(input.myCarData, beyondHoopRim).withThrottle(1.0).withBoost(true)
-                            ))
-                    .withStep( BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(-1.0).withBoost(true).withJump(true)))
-                    .withStep( BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(-1.0).withBoost(true).withJump(false)))
-                    .withStep( BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
-                    .withStep( MidairStrikeStep(Duration.ofMillis(0)))
         }
-        return Plan()
+        return Plan().withStep(BlindStep(Duration.ofMillis(16), AgentOutput()))
     }
 }
