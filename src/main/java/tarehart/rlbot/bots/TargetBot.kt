@@ -64,12 +64,13 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                 .withCarState(0, CarState().withPhysics(
                         ({ csign: Float ->
                             PhysicsState()
-                                    .withLocation(classicStateVector(randomUniform(-1000f, 1000f), randomUniform(-4500f, -4000f), 25f))
-                                    .withVelocity(classicStateVector(0F, 1000F, 0F))
+                                    .withLocation(classicStateVector(randomUniform(-1000f, 1000f), randomUniform(-4500f, -4000f) * csign, 25f))
+                                    .withVelocity(classicStateVector(0F, 1000F * csign, 0F))
                                     .withAngularVelocity(classicStateVector(0F, 0F, 0F))
-                                    .withRotation(DesiredRotation(0F, 1.5F * csign, 0F))
+                                    .withRotation(DesiredRotation(0F, 0.5f * Math.PI.toFloat() * csign /* * csign */, 0F))
                         })(randomSign())
-                )) },
+                ))
+                },
             Duration.ofSeconds(5.0))
 
     override fun getOutput(input: AgentInput): AgentOutput {
