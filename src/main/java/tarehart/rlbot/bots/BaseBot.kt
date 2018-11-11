@@ -138,7 +138,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         val situation = currentPlan?.situation ?: ""
         if (situation != previousSituation) {
             planRenderer.startPacket()
-            planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3), 1, 1)
+            planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3 + 15 * playerIndex), 1, 1)
             planRenderer.finishAndSend()
             println("[Sitch] " + situation, input.playerIndex)
         }

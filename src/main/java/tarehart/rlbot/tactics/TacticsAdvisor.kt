@@ -4,7 +4,6 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -53,18 +52,14 @@ interface TacticsAdvisor {
             }
         }
 
-        fun measureEnemyApproachError(input: AgentInput, enemyCar: CarData?, enemyContact: SpaceTime): Double {
+        fun measureApproachError(car: CarData, contact: Vector2): Double {
 
-            if (enemyCar == null) {
-                return 0.0
-            }
+            val goal = GoalUtil.getEnemyGoal(car.team)
+            val ballToGoal = goal.center.flatten().minus(contact)
 
-            val myGoal = GoalUtil.getOwnGoal(input.team)
-            val ballToGoal = myGoal.center.minus(enemyContact.space)
+            val carToBall = contact.minus(car.position.flatten())
 
-            val carToBall = enemyContact.space.minus(enemyCar.position)
-
-            return Vector2.angle(ballToGoal.flatten(), carToBall.flatten())
+            return Vector2.angle(ballToGoal, carToBall)
         }
 
 
@@ -77,16 +72,34 @@ interface TacticsAdvisor {
             return wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal))
         }
 
-        fun getCarWithInitiative(cars: List<CarData>, ballPath: BallPath): CarWithIntercept? {
+        fun getCarIntercepts(cars: List<CarData>, ballPath: BallPath): List<CarWithIntercept> {
 
             // TODO: this is pretty expensive. Consider optimizing
-            val goGetters = cars.map { CarWithIntercept(it, getSoonestIntercept(it, ballPath)) }
-            return goGetters.minBy { it.intercept?.time ?: GameTime(Long.MAX_VALUE) }
+            return cars.asSequence()
+                    .map { CarWithIntercept(it, getSoonestIntercept(it, ballPath))  }
+                    .sortedBy { it.intercept?.time?.toMillis() ?: Long.MAX_VALUE  }.toList()
         }
 
         fun getSoonestIntercept(car: CarData, ballPath: BallPath): Intercept? {
             val distancePlot = AccelerationModel.simulateAcceleration(car, PLAN_HORIZON, car.boost)
             return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, Vector3(), { _, _ -> true })
+        }
+
+        fun getCarWithBestShot(cars: List<CarWithIntercept>): CarWithIntercept {
+            return cars.asSequence()
+                    .sortedBy { scoreShotOpportunity(it) }
+                    .first()
+        }
+
+        /**
+         * Lower is better
+         */
+        private fun scoreShotOpportunity(carWithIntercept: CarWithIntercept): Double {
+            val intercept = carWithIntercept?.intercept ?: return Double.MAX_VALUE
+            val seconds = intercept.time.toSeconds()
+            val radianError = measureApproachError(carWithIntercept.car, intercept.space.flatten())
+
+            return seconds + radianError * 2
         }
     }
 

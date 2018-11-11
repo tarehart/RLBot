@@ -22,6 +22,7 @@ class TacticalSituation(
         val futureBallMotion: BallSlice? = null,
         val enemyPlayerWithInitiative: CarWithIntercept?,
         val teamPlayerWithInitiative: CarWithIntercept,
+        val teamPlayerWithBestShot: CarWithIntercept,
         val ballPath: BallPath,
         val gameMode: GameMode
 )

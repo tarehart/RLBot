@@ -6,7 +6,6 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.CarWithIntercept
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.steps.ChaseBallStep
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.tactics.TacticsAdvisor
@@ -30,7 +29,10 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
 
     override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
-        val enemyGoGetter = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team.opposite()), ballPath)
+        val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
+        val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)
+
+        val enemyGoGetter = enemyIntercepts.firstOrNull()
         val enemyIntercept = enemyGoGetter?.intercept
         val enemyCar = enemyGoGetter?.car
 
@@ -48,7 +50,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept?.time, enemyIntercept?.time),
                 ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).center, futureBallMotion.space),
                 distanceBallIsBehindUs = TacticsAdvisor.measureOutOfPosition(input),
-                enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureEnemyApproachError(input, enemyCar, it.toSpaceTime()) },
+                enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureApproachError(enemyCar!!, it.space.flatten()) },
                 futureBallMotion = futureBallMotion,
                 scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath),
                 needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath),
@@ -56,8 +58,8 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 goForKickoff = false, // getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,
                 enemyPlayerWithInitiative = enemyGoGetter,
-                teamPlayerWithInitiative = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team), ballPath)
-                        ?: CarWithIntercept(input.myCarData, null),
+                teamPlayerWithInitiative = teamIntercepts.first(),
+                teamPlayerWithBestShot = TacticsAdvisor.getCarWithBestShot(teamIntercepts),
                 ballPath = ballPath,
                 gameMode = GameMode.HOOPS
         )

@@ -3,15 +3,19 @@ package tarehart.rlbot.tactics
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.CatchBallStep
+import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
+import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.steps.wall.DescendFromWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
@@ -42,12 +46,17 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                         .withStep(InterceptStep(Vector3()))
             }
 
-            val isBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 50
+            val isBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 100
 
-            if (!willLandOnOwnSide && isBallFriendly && isBouncy && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
-                    && situation.teamPlayerWithInitiative.car == input.myCarData && DemolishEnemyStep.hasEnoughBoost(car)) {
-                return Plan(Plan.Posture.OFFENSIVE)
-                        .withStep(DemolishEnemyStep())
+            if (!willLandOnOwnSide && isBallFriendly && isBouncy && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
+                // The ball is about to score or do some damage. Get out of the way!
+
+                if (situation.teamPlayerWithInitiative.car == input.myCarData && DemolishEnemyStep.hasEnoughBoost(car)) {
+                    return Plan(Plan.Posture.OFFENSIVE)
+                            .withStep(DemolishEnemyStep())
+                }
+
+                return Plan(Plan.Posture.NEUTRAL).withStep(GetOnOffenseStep())
             }
         }
 
@@ -66,21 +75,39 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
             return Plan().withStep(DescendFromWallStep())
         }
 
-        return FirstViableStepPlan(Plan.Posture.NEUTRAL)
-                .withStep(FlexibleKickStep(KickToEnemyHalf()))
-                .withStep(CatchBallStep())
-                .withStep(InterceptStep(Vector3()))
+        if (situation.teamPlayerWithBestShot.car == input.myCarData) {
+            return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                    .withStep(FlexibleKickStep(KickToEnemyHalf()))
+                    .withStep(CatchBallStep())
+                    .withStep(InterceptStep(Vector3()))
+        }
+
+
+        val rotationPlan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
+        if (input.myCarData.boost > 50) {
+            rotationPlan.withStep(GetOnOffenseStep())
+        }
+        val ownSide = GoalUtil.getOwnGoal(input.team).center.scaledToMagnitude(50.0).flatten()
+        rotationPlan.withStep(ParkTheCarStep { inp ->
+            val facing = inp.ballPosition.flatten() - ownSide
+            PositionFacing(ownSide, if (facing.isZero) Vector2(1.0, 0.0) else facing)
+        })
+
+        return rotationPlan
     }
 
     override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
         DropshotWallKick().getKickDirection(input.myCarData, input.ballPosition)
 
-        val enemyGoGetter = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team.opposite()), ballPath)
+        val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
+        val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)
+
+        val enemyGoGetter = enemyIntercepts.firstOrNull()
         val enemyIntercept = enemyGoGetter?.intercept
         val enemyCar = enemyGoGetter?.car
 
-        val ourIntercept = TacticsAdvisor.getSoonestIntercept(input.myCarData, ballPath)
+        val ourIntercept = teamIntercepts.asSequence().filter { it.car == input.myCarData }.first().intercept
 
         val zonePlan = ZoneTelemetry[input.playerIndex]
 
@@ -92,7 +119,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                 ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept?.time, enemyIntercept?.time),
                 ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).center, futureBallMotion.space),
                 distanceBallIsBehindUs = TacticsAdvisor.measureOutOfPosition(input),
-                enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureEnemyApproachError(input, enemyCar, it.toSpaceTime()) },
+                enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureApproachError(enemyCar!!, it.space.flatten()) },
                 futureBallMotion = futureBallMotion,
                 scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath),
                 needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath),
@@ -100,8 +127,8 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                 goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,
                 enemyPlayerWithInitiative = enemyGoGetter,
-                teamPlayerWithInitiative = TacticsAdvisor.getCarWithInitiative(input.getTeamRoster(input.team), ballPath)
-                        ?: CarWithIntercept(input.myCarData, null),
+                teamPlayerWithInitiative = teamIntercepts.first(),
+                teamPlayerWithBestShot = TacticsAdvisor.getCarWithBestShot(teamIntercepts),
                 ballPath = ballPath,
                 gameMode = GameMode.DROPSHOT
         )
