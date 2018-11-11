@@ -79,14 +79,16 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     }
 
     private fun initializeGameMode() {
-        val gameMode = GameModeSniffer.getGameMode()
+        synchronized(lock) {
+            val gameMode = GameModeSniffer.getGameMode()
 
-        if (gameMode == GameMode.SOCCER) {
-            ArenaModel.setSoccerWalls()
-        } else if (gameMode == GameMode.DROPSHOT) {
-            ArenaModel.setDropshotWalls()
-        } else if (gameMode == GameMode.HOOPS) {
-            ArenaModel.setHoopsWalls()
+            if (gameMode == GameMode.SOCCER) {
+                ArenaModel.setSoccerWalls()
+            } else if (gameMode == GameMode.DROPSHOT) {
+                ArenaModel.setDropshotWalls()
+            } else if (gameMode == GameMode.HOOPS) {
+                ArenaModel.setHoopsWalls()
+            }
         }
     }
 
@@ -151,4 +153,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 
     protected open fun roundInLimbo(input: AgentInput) { }
 
+    companion object {
+        val lock = Object()
+    }
 }
