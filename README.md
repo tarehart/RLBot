@@ -3,7 +3,22 @@
 This is a custom Rocket League bot designed to work offline only.
 For more context, see http://www.rlbot.org/
 
-## Environment Setup
+![](https://i.imgur.com/5N8B3pK.gif)
+
+This repository contains:
+- ReliefBot
+- AdversityBot
+- Air Bud
+
+## Running ReliefBot
+
+If you want to play a local game with ReliefBot (or AdversityBot or Air Bud), follow this tutorial video: https://www.youtube.com/watch?v=VHOkWVYlfa0
+
+[![Watch the video](https://img.youtube.com/vi/VHOkWVYlfa0/maxresdefault.jpg)](https://youtu.be/VHOkWVYlfa0)
+
+## Modifying ReliefBot
+
+### Environment Setup
 
 1. Make sure you've installed Python 3.6.5 or newer. Here's [Python 3.7 64 bit](https://www.python.org/ftp/python/3.7.0/python-3.7.0-amd64.exe). Some older versions like 3.6.0 will not work. During installation:
    - Select "Add Python to PATH"
@@ -12,7 +27,7 @@ For more context, see http://www.rlbot.org/
 1. Make sure you've [set the JAVA_HOME environment variable](https://javatutorial.net/set-java-home-windows-10).
 
 
-## Running ReliefBot
+### Compiling and Running
 
 1. Look in rlbot.cfg and modify as desired.
 1. Open Rocket League.
@@ -27,7 +42,7 @@ If you have trouble with these instructions, see if you can at least get
 https://github.com/RLBot/RLBotJavaExample working. Same general concept,
 but more thorough instructions (including video tutorial).
 
-## ReliefBot Development Environment Setup
+### ReliefBot Development Environment Setup
 
 1. Install Intellij IDEA along with the Kotlin and Python plugins
 1. Navigate to this directory on the command line
@@ -45,7 +60,7 @@ There is also a C++ component, but I expect it to be so temporary that
 it's not worth documenting. If I was wrong, ask me.
 
 
-## Tournament Submissions
+### Tournament Submissions
 
 If you want to submit ReliefBot to a tournament, you can generate a nice zip file with `gradlew.bat distZip`.
 The zip will automatically contain a README which explains to the tournament organizer how to run ReliefBot.
