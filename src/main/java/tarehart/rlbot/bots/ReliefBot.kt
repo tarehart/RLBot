@@ -1,14 +1,10 @@
 package tarehart.rlbot.bots
 
-import rlbot.cppinterop.RLBotDll
-import rlbot.manager.BotLoopRenderer
-import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.steps.strikes.DropshotWallKick
 import tarehart.rlbot.tactics.*
 
 class ReliefBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
