@@ -189,14 +189,14 @@ class KickoffState : TacticalState {
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
                         .withStep(MidairStrikeStep(Duration.ofMillis(0), {
                             vector3, team ->  Vector3(0.0, 0.0, -0.2)
-                        }))
+                        }, hasJump = false))
             } else if (kickoffStyle == KickoffStyle.FORWARD_STANDARD) {
                 return Plan(Plan.Posture.KICKOFF)
                         .withStep(BlindStep(Duration.ofMillis(600), SteerUtil.steerTowardGroundPosition(input.myCarData, input.ballPosition).withBoost(false)))
                         .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(false).withJump(true)))
                         .withStep(BlindStep(Duration.ofMillis(20), AgentOutput().withThrottle(1.0).withPitch(0.5).withBoost(true).withJump(false)))
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
-                        .withStep(MidairStrikeStep(Duration.ofMillis(0)))
+                        .withStep(MidairStrikeStep(Duration.ofMillis(0), hasJump = false))
             } else if (kickoffStyle == KickoffStyle.WIDE_KICKOFF) {
                 val closestSmallBoost = BoostAdvisor.boostData.smallBoosts.sortedBy { it.location.distance(input.myCarData.position) }.first()
                 val boostRenderer = NamedRenderer("kickoffTargetRenderer")
@@ -214,7 +214,7 @@ class KickoffState : TacticalState {
                         .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(true)))
                         .withStep(BlindStep(Duration.ofMillis(20), AgentOutput().withThrottle(1.0).withPitch(0.5).withBoost(true).withJump(false)))
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
-                        .withStep(MidairStrikeStep(Duration.ofMillis(0)))
+                        .withStep(MidairStrikeStep(Duration.ofMillis(0), hasJump = false))
 
             } else if (kickoffStyle == KickoffStyle.FORWARD_DEFEND) {
                 return Plan()

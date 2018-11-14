@@ -73,6 +73,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         }
 
         return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                .withStep(FlexibleKickStep(DunkIntoHoop()))
                 .withStep(FlexibleKickStep(WallPass()))
                 .withStep(FlexibleKickStep(KickToEnemyHalf()))
                 .withStep(GetBoostStep())

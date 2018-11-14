@@ -51,6 +51,6 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
 
         private val GOAL_DISTANCE = 65.0
         val GOAL_HEIGHT = 7.0
-        val RADIUS = 14.0
+        val RADIUS = 16.0
     }
 }

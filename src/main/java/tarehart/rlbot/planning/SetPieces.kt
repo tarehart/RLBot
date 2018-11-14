@@ -95,7 +95,7 @@ object SetPieces {
                         .withBoost(true)
                         .withJump(true)
                 ))
-                .withStep(MidairStrikeStep(tiltBackDuration))
+                .withStep(MidairStrikeStep(tiltBackDuration, hasJump = false))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
 

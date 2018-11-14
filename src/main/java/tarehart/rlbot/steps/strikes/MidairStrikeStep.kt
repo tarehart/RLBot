@@ -32,12 +32,12 @@ import java.awt.Color
 import java.awt.Graphics2D
 
 class MidairStrikeStep(private val timeInAirAtStart: Duration,
-                       private val offsetFn: (Vector3?, Team) -> Vector3 = { intercept, team -> standardOffset(intercept, team) }) : NestedPlanStep() {
+                       private val offsetFn: (Vector3?, Team) -> Vector3 = { intercept, team -> standardOffset(intercept, team) },
+                       private val hasJump: Boolean = true) : NestedPlanStep() {
 
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
     private var intercept: SpaceTime? = null
-    private var finesseMode = false
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
@@ -76,14 +76,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return null
         }
 
-        if (input.latestBallTouch != null) {
-            val latestTouch = input.latestBallTouch
-            if (latestTouch.playerIndex == car.playerIndex && Duration.between(latestTouch.time, car.time).seconds < 0.5) {
-                // We successfully hit the ball. Let's go for a double touch by resetting stuff
-                finesseMode = false
-            }
-        }
-
         val renderer = BotLoopRenderer.forBotLoop(input.bot)
         RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3.0), Color.CYAN)
         RenderUtil.drawBallPath(renderer, ballPath, latestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
@@ -95,7 +87,8 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, latestIntercept.space)
 
-        if (input.time.isBefore(lastMomentForDodge) && distance < DODGE_TIME.seconds * car.velocity.magnitude() && latestIntercept.space.z - car.position.z < 1.5) {
+        if (hasJump && input.time.isBefore(lastMomentForDodge) && distance < DODGE_TIME.seconds * car.velocity.magnitude()
+                && latestIntercept.space.z - car.position.z < 1.5) {
             // Let's flip into the ball!
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
                 BotLog.println("Front flip strike", input.playerIndex)
@@ -138,30 +131,18 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         val desiredNoseVector: Vector3
 
-        finesseMode = finesseMode || millisTillIntercept < NOSE_FINESSE_TIME.millis &&
-                latestIntercept.time.isAfter(lastMomentForDodge) &&
-                Math.abs(leftRightCorrectionAngle) < 0.02
-
-        if (finesseMode) {
-            // Nose into the ball
-            desiredNoseVector = offset.scaled(-1.0).normaliseCopy()
-        } else {
-            // Fly toward intercept
-            val extraHeight = if (offset.z >= 0 && heightError < 4) offset.z + 0.7 else 0.0
-            val desiredZ = AerialMath.getDesiredZComponentBasedOnAccel(
-                    latestIntercept.space.z + extraHeight,
-                    Duration.between(car.time, latestIntercept.time),
-                    timeSinceLaunch,
-                    car)
-            desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, desiredZ)
-        }
+        // Fly toward intercept
+        val desiredZ = AerialMath.getDesiredZComponentBasedOnAccel(
+                latestIntercept.space.z,
+                Duration.between(car.time, latestIntercept.time),
+                timeSinceLaunch,
+                car)
+        desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, desiredZ)
 
         val up = if (car.orientation.roofVector.z > 0.8)
             Vector3.UP
         else
             car.orientation.roofVector
-
-
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(desiredNoseVector, up), 1/60.0)
                 .withBoost(desiredNoseVector.dotProduct(car.orientation.noseVector) > .5)
@@ -184,7 +165,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         private val SIDE_DODGE_THRESHOLD = Math.PI / 4
         private val DODGE_TIME = Duration.ofMillis(400)
         //private static final double DODGE_DISTANCE = 6;
-        val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.4)
+        val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
         private val YAW_OVERCORRECT = 3.0
         private val NOSE_FINESSE_TIME = Duration.ofMillis(800)
 
@@ -218,7 +199,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                         offset = Vector3(offset.x, offset.y, 0.5)
                     } else {
                         // Loft it
-                        offset = Vector3(offset.x, offset.y, -1.5)
+                        offset = Vector3(offset.x, offset.y, -0.7)
                     }
                 } else {
                     if (enemyGoal.center.y * intercept.y > 0 ) {
@@ -226,7 +207,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                         offset = Vector3(offset.x, offset.y, 0.5)
                     } else {
                         // Loft it
-                        offset = Vector3(offset.x, offset.y, -1.5)
+                        offset = Vector3(offset.x, offset.y, -0.7)
                     }
                 }
             }

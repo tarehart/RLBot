@@ -18,8 +18,7 @@ object AerialMath {
         val secondsTillIntercept = timeTillIntercept.seconds
         val averageVelNeeded = additionalHeight / secondsTillIntercept
         val initialVel = car.velocity.z
-        val extraUpwardVelForFinesse = 0.5
-        val finalVel = initialVel + (averageVelNeeded - initialVel) * 2 + extraUpwardVelForFinesse
+        val finalVel = initialVel + (averageVelNeeded - initialVel) * 2
         val averageAccel = (finalVel - initialVel) / secondsTillIntercept
 
         val secondsSinceLaunch = timeSinceLaunch.seconds
