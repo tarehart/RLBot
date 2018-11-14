@@ -68,15 +68,18 @@ object ZoneUtil {
     }
 
     fun getShotDefenseZone(ballPosition: Vector3, goalCenter: Vector2): Polygon {
-        return Polygon(arrayOf(ballPosition.flatten(), Vector2(goalCenter.x + Goal.EXTENT, goalCenter.y), Vector2(goalCenter.x - Goal.EXTENT, goalCenter.y)))
+        return Polygon(arrayOf(
+                ballPosition.flatten(),
+                Vector2(goalCenter.x + SoccerGoal.EXTENT, goalCenter.y),
+                Vector2(goalCenter.x - SoccerGoal.EXTENT, goalCenter.y)))
     }
 
     fun getDefensiveReach(defender: Vector3, goalCenter: Vector2): Polygon {
         val extendedDistance = 20.0
 
         val (x, y) = defender.flatten()
-        val topPost = Vector2(goalCenter.x + Goal.EXTENT, goalCenter.y)
-        val bottomPost = Vector2(goalCenter.x - Goal.EXTENT, goalCenter.y)
+        val topPost = Vector2(goalCenter.x + SoccerGoal.EXTENT, goalCenter.y)
+        val bottomPost = Vector2(goalCenter.x - SoccerGoal.EXTENT, goalCenter.y)
 
         val topSlope = (y - topPost.y) / (x - topPost.x)
         val bottomSlope = (y - bottomPost.y) / (x - bottomPost.x)

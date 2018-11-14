@@ -88,6 +88,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
                 ArenaModel.setDropshotWalls()
             } else if (gameMode == GameMode.HOOPS) {
                 ArenaModel.setHoopsWalls()
+                GoalUtil.setHoopsGoals()
             }
         }
     }

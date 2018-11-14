@@ -7,8 +7,8 @@ import tarehart.rlbot.physics.BallPath
 
 object GoalUtil {
 
-    private val BLUE_GOAL = Goal(true)
-    private val ORANGE_GOAL = Goal(false)
+    private var BLUE_GOAL: Goal = SoccerGoal(true)
+    private var ORANGE_GOAL: Goal = SoccerGoal(false)
 
     fun getOwnGoal(team: Team): Goal {
         return if (team == Team.BLUE) BLUE_GOAL else ORANGE_GOAL
@@ -18,11 +18,7 @@ object GoalUtil {
         return if (team == Team.BLUE) ORANGE_GOAL else BLUE_GOAL
     }
 
-    fun predictGoalEvent(goal: Goal, ballPath: BallPath): BallSlice? {
-        return ballPath.getPlaneBreak(ballPath.startPoint.time, goal.scorePlane, true)
-    }
-
-    fun ballLingersInBox(goal: Goal, ballPath: BallPath): Boolean {
+    fun ballLingersInBox(goal: SoccerGoal, ballPath: BallPath): Boolean {
         val firstSlice = ballPath.findSlice({ slice -> goal.isInBox(slice.space) })
         val secondSlice = firstSlice?.let { fs -> ballPath.getMotionAt(fs.time.plusSeconds(2.0)) }
         return secondSlice != null && goal.isInBox(secondSlice.space)
@@ -30,5 +26,10 @@ object GoalUtil {
 
     fun getNearestGoal(position: Vector3): Goal {
         return if (position.y > 0) ORANGE_GOAL else BLUE_GOAL
+    }
+
+    fun setHoopsGoals() {
+        BLUE_GOAL = HoopsGoal(true)
+        ORANGE_GOAL = HoopsGoal(false)
     }
 }

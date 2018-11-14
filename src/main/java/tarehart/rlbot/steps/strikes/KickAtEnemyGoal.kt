@@ -4,6 +4,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Goal
 import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.SoccerGoal
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
 import tarehart.rlbot.tactics.TacticsAdvisor
 
@@ -25,7 +26,7 @@ class KickAtEnemyGoal : KickStrategy {
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
         val easyKickFlat = easyKick.flatten()
 
-        val padNearPost = Math.abs(ballPosition.x) > Goal.EXTENT
+        val padNearPost = Math.abs(ballPosition.x) > SoccerGoal.EXTENT
         val leftIsNearPost = padNearPost && GoalUtil.getEnemyGoal(car.team).leftPost.distanceSquared(car.position) <
                 GoalUtil.getEnemyGoal(car.team).rightPost.distanceSquared(car.position)
         val rightIsNearPost = padNearPost && !leftIsNearPost

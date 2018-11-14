@@ -5,6 +5,8 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.tactics.GameMode
+import tarehart.rlbot.tactics.TacticsTelemetry
 
 class WallPass : KickStrategy {
 
@@ -48,11 +50,12 @@ class WallPass : KickStrategy {
             }
         }
 
-        if (Math.abs(enemyGoalCenter.y - ballPosition.y) < 20) {
+        if (TacticsTelemetry[car.playerIndex]?.gameMode == GameMode.SOCCER && Math.abs(enemyGoalCenter.y - ballPosition.y) < 20) {
             return null
         }
 
-        // kick it straight to the side wall
-        return Vector3(if (easyKick.x != 0.0) easyKick.x else 1.0, 0.0, 0.0).normaliseCopy()
+        // bounce it off the side wall at a slight angle.
+        return Vector2(if (easyKick.x != 0.0) easyKick.x else 1.0, 0.0)
+                .rotateTowards(enemyGoalCenter.flatten(), Math.PI / 6).toVector3()
     }
 }

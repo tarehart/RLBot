@@ -38,7 +38,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
     }
 
     companion object {
-        val CENTER_OFFSET = Goal.EXTENT * .5
+        val CENTER_OFFSET = SoccerGoal.EXTENT * .5
         val AWAY_FROM_GOAL = 3.0
         val DEFAULT_LIFESPAN = 1.0
 

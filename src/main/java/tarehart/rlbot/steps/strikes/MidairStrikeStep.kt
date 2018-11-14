@@ -14,12 +14,16 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.HoopsGoal
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.tactics.GameMode
+import tarehart.rlbot.tactics.GameModeSniffer
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
@@ -198,13 +202,31 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
             intercept?.let {
 
-                val offensive = Math.abs(ownGoal.y - intercept.y) > ArenaModel.BACK_WALL * .7
+                val enemyGoal = GoalUtil.getEnemyGoal(team)
+                val goalToBall = it.minus(enemyGoal.getNearestEntrance(it, 4.0))
 
-                if (offensive) {
-                    val goalToBall = it.minus(GoalUtil.getEnemyGoal(team).getNearestEntrance(it, 4.0))
-                    offset = goalToBall.scaledToMagnitude(3.4)
-                    if (goalToBall.magnitude() > 110) {
+                offset = goalToBall.scaledToMagnitude(3.4)
+
+                val gameMode = GameModeSniffer.getGameMode()
+                if (gameMode == GameMode.SOCCER) {
+                    if (Math.abs(ownGoal.y - intercept.y) > ArenaModel.BACK_WALL * .7 && goalToBall.magnitude() > 110) {
                         offset = Vector3(offset.x, offset.y, -.2)
+                    }
+                } else if (gameMode == GameMode.HOOPS) {
+                    if (enemyGoal.center.flatten().distance(intercept.flatten()) < HoopsGoal.RADIUS + intercept.z - HoopsGoal.GOAL_HEIGHT ) {
+                        // Dunk it!
+                        offset = Vector3(offset.x, offset.y, 0.5)
+                    } else {
+                        // Loft it
+                        offset = Vector3(offset.x, offset.y, -1.5)
+                    }
+                } else {
+                    if (enemyGoal.center.y * intercept.y > 0 ) {
+                        // Dunk it!
+                        offset = Vector3(offset.x, offset.y, 0.5)
+                    } else {
+                        // Loft it
+                        offset = Vector3(offset.x, offset.y, -1.5)
                     }
                 }
             }

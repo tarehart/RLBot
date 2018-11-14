@@ -98,7 +98,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
 
     override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
-        DropshotWallKick().getKickDirection(input.myCarData, input.ballPosition)
+        // DropshotWallKick().getKickDirection(input.myCarData, input.ballPosition)
 
         val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
         val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)
@@ -121,8 +121,8 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                 distanceBallIsBehindUs = TacticsAdvisor.measureOutOfPosition(input),
                 enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureApproachError(enemyCar!!, it.space.flatten()) },
                 futureBallMotion = futureBallMotion,
-                scoredOnThreat = GoalUtil.predictGoalEvent(GoalUtil.getOwnGoal(input.team), ballPath),
-                needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team), ballPath),
+                scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
+                needsDefensiveClear = ballPath.endpoint.space.y * GoalUtil.getOwnGoal(input.team).center.y > 0,
                 shotOnGoalAvailable = true,
                 goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,

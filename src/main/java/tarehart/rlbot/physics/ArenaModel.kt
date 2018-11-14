@@ -12,6 +12,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.cpp.BallPredictorHelper
 import tarehart.rlbot.planning.Goal
+import tarehart.rlbot.planning.SoccerGoal
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
 import java.awt.Color
@@ -220,7 +221,7 @@ class ArenaModel {
         }
 
         fun isNearFloorEdge(position: Vector3): Boolean {
-            return Math.abs(position.x) > Goal.EXTENT && getDistanceFromWall(position) + position.z < 6
+            return Math.abs(position.x) > SoccerGoal.EXTENT && getDistanceFromWall(position) + position.z < 6
         }
 
         fun getCollisionPlanes(): List<Plane> {

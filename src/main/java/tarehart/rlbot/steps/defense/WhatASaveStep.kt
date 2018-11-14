@@ -16,6 +16,7 @@ import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 
 class WhatASaveStep : NestedPlanStep() {
@@ -31,7 +32,7 @@ class WhatASaveStep : NestedPlanStep() {
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)
         val goal = GoalUtil.getOwnGoal(input.team)
-        val currentThreat = GoalUtil.predictGoalEvent(goal, ballPath)
+        val currentThreat = TacticsTelemetry[input.playerIndex]?.scoredOnThreat
 
         if (currentThreat == null) {
             RLBotDll.sendQuickChat(input.playerIndex, false, QuickChatSelection.Compliments_WhatASave)

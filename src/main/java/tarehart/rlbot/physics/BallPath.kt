@@ -148,7 +148,9 @@ class BallPath() {
         return null
     }
 
-    fun getPlaneBreak(searchStart: GameTime, plane: Plane, directionSensitive: Boolean): BallSlice? {
+    fun getPlaneBreak(searchStart: GameTime, plane: Plane, directionSensitive: Boolean,
+                      spacePredicate: (Vector3) -> Boolean = { true }): BallSlice? {
+
         for (i in 1 until this.slices.size) {
             val currSlice = this.slices[i]
 
@@ -164,11 +166,13 @@ class BallPath() {
             }
 
             getPlaneBreak(prevSlice.space, currSlice.space, plane)?.let {
-                val stepSeconds = Duration.between(prevSlice.time, currSlice.time).seconds
-                val tweenPoint = prevSlice.space.distance(it) / prevSlice.space.distance(currSlice.space)
-                val moment = prevSlice.time.plusSeconds(stepSeconds * tweenPoint)
-                val velocity = VectorUtil.weightedAverage(prevSlice.velocity, currSlice.velocity, 1 - tweenPoint)
-                return BallSlice(it, moment, velocity, currSlice.spin)
+                if (spacePredicate(it)) {
+                    val stepSeconds = Duration.between(prevSlice.time, currSlice.time).seconds
+                    val tweenPoint = prevSlice.space.distance(it) / prevSlice.space.distance(currSlice.space)
+                    val moment = prevSlice.time.plusSeconds(stepSeconds * tweenPoint)
+                    val velocity = VectorUtil.weightedAverage(prevSlice.velocity, currSlice.velocity, 1 - tweenPoint)
+                    return BallSlice(it, moment, velocity, currSlice.spin)
+                }
             }
         }
 
