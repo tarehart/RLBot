@@ -4,18 +4,13 @@ instead.
 
 1. Make sure you've installed Java 8 or newer. Here's the [Java 10 JRE](http://www.oracle.com/technetwork/java/javase/downloads/jre10-downloads-4417026.html).
 1. Make sure you've [set the JAVA_HOME environment variable](https://javatutorial.net/set-java-home-windows-10).
-1. Run `pip install py4j` on the command line (one time setup).
 1. Run the framework as normal, and point to one of the bot cfg files in this directory.
 For an example of running the framework, see the [setup video](https://www.youtube.com/watch?v=UjsQFNN0nSA).
-1. Double click on the `ReliefBot.bat` file included in the bin directory.
-Can be done before or after running the framework.
+1. ***IF*** you see the message `Can't auto-start java because no executable is configured. Please start java manually!`
+ then you will need to double click on the `ReliefBot.bat` file included in the bin directory.
+ Doing this once is enough to support all bots in this zip in the whole game.
 1. To give ReliefBot the best performance, please do not open the tactical
 overlay during important matches.
-
-
-You only need to run a single instance of `ReliefBot.bat`, and it can handle all the bots in this zip
-in the whole match, even on opposite teams.
-
 
 Advanced:
 
