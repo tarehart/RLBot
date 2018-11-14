@@ -75,7 +75,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
             return Plan().withStep(DescendFromWallStep())
         }
 
-        if (situation.teamPlayerWithBestShot.car == input.myCarData) {
+        if (situation.teamPlayerWithBestShot.car == input.myCarData || situation.needsDefensiveClear) {
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
                     .withStep(FlexibleKickStep(KickToEnemyHalf()))
                     .withStep(CatchBallStep())
@@ -122,7 +122,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                 enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureApproachError(enemyCar!!, it.space.flatten()) },
                 futureBallMotion = futureBallMotion,
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
-                needsDefensiveClear = ballPath.endpoint.space.y * GoalUtil.getOwnGoal(input.team).center.y > 0,
+                needsDefensiveClear = (ballPath.getMotionAt(input.time.plusSeconds(3.0)) ?: ballPath.endpoint).space.y * GoalUtil.getOwnGoal(input.team).center.y > 0,
                 shotOnGoalAvailable = true,
                 goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,
