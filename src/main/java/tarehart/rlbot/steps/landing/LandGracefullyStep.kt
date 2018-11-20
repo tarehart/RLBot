@@ -85,10 +85,15 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
     companion object {
         val NEEDS_LANDING_HEIGHT = .4
         val FACE_BALL = { inp: AgentInput -> faceBall(inp) }
+        val FACE_MOTION = { inp: AgentInput -> faceVelocity(inp) }
 
         private fun faceBall(input: AgentInput): Vector2 {
             val toBall = input.ballPosition.minus(input.myCarData.position).flatten()
             return toBall.normalized()
+        }
+
+        private fun faceVelocity(input: AgentInput): Vector2 {
+            return input.myCarData.velocity.flatten().normalized()
         }
     }
 }
