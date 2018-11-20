@@ -3,6 +3,8 @@ package tarehart.rlbot.math
 import org.ejml.simple.SimpleMatrix
 import tarehart.rlbot.math.vector.Vector3
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 class Mat3(private val matrix: SimpleMatrix) {
@@ -37,6 +39,45 @@ class Mat3(private val matrix: SimpleMatrix) {
         return Mat3(matrix.scale(value))
     }
 
+    operator fun times(matrix: Mat3): Mat3 {
+        return Mat3(this.matrix.mult(matrix.matrix))
+    }
+
+    fun forward(): Vector3 {
+        return Vector3(
+                this.matrix[0, 0],
+                this.matrix[1, 0],
+                this.matrix[2, 0]
+        )
+    }
+
+    fun left(): Vector3 {
+        return Vector3(
+                this.matrix[0, 1],
+                this.matrix[1, 1],
+                this.matrix[2, 1]
+        )
+    }
+
+    fun up(): Vector3 {
+        return Vector3(
+                this.matrix[0, 2],
+                this.matrix[1, 2],
+                this.matrix[2, 2]
+        )
+    }
+
+    /* XXX: Broken/untested
+    fun rotationToVector(): Vector3 {
+        // There are some cases where this will not work and I don't fully understand the eigenvalues.
+        return Vector3(
+                this.matrix[2, 1] - this.matrix[1, 2],
+                this.matrix[0, 2] - this.matrix[2, 0],
+                this.matrix[1, 0] - this.matrix[0, 1]
+        ).normaliseCopy()
+    }
+    */
+
     companion object {
         val IDENTITY = Mat3(SimpleMatrix.identity(3))
 
@@ -58,6 +99,18 @@ class Mat3(private val matrix: SimpleMatrix) {
                     doubleArrayOf(forward.x, leftward.x, upward.x),
                     doubleArrayOf(forward.y, leftward.y, upward.y),
                     doubleArrayOf(forward.z, leftward.z, upward.z)))
+        }
+
+        fun rotationMatrix(unitAxis: Vector3, rad: Double): Mat3 {
+            val cosTheta = cos(rad)
+            val sinTheta = sin(rad)
+            val n1CosTheta = 1.0 - cosTheta
+            val u = unitAxis
+            return Mat3(arrayOf(
+                    doubleArrayOf(cosTheta + u.x * u.x * n1CosTheta, u.x * u.y * n1CosTheta - u.z * sinTheta, u.x * u.y * n1CosTheta + u.y * sinTheta),
+                    doubleArrayOf(u.y * u.x * n1CosTheta + u.z * sinTheta, cosTheta + u.y * u.y * n1CosTheta, u.y * u.z * n1CosTheta - u.x * sinTheta),
+                    doubleArrayOf(u.z * u.x * n1CosTheta - u.y * sinTheta, u.z * u.y * n1CosTheta + u.x * sinTheta, cosTheta + u.z * u.z * n1CosTheta)
+            ))
         }
     }
 }
