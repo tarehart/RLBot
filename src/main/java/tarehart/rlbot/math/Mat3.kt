@@ -107,7 +107,7 @@ class Mat3(private val matrix: SimpleMatrix) {
             val n1CosTheta = 1.0 - cosTheta
             val u = unitAxis
             return Mat3(arrayOf(
-                    doubleArrayOf(cosTheta + u.x * u.x * n1CosTheta, u.x * u.y * n1CosTheta - u.z * sinTheta, u.x * u.y * n1CosTheta + u.y * sinTheta),
+                    doubleArrayOf(cosTheta + u.x * u.x * n1CosTheta, u.x * u.y * n1CosTheta - u.z * sinTheta, u.x * u.z * n1CosTheta + u.y * sinTheta),
                     doubleArrayOf(u.y * u.x * n1CosTheta + u.z * sinTheta, cosTheta + u.y * u.y * n1CosTheta, u.y * u.z * n1CosTheta - u.x * sinTheta),
                     doubleArrayOf(u.z * u.x * n1CosTheta - u.y * sinTheta, u.z * u.y * n1CosTheta + u.x * sinTheta, cosTheta + u.z * u.z * n1CosTheta)
             ))
