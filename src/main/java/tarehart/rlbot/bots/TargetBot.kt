@@ -1,5 +1,6 @@
 package tarehart.rlbot.bots
 
+import rlbot.cppinterop.RLBotDll
 import rlbot.gamestate.*
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
@@ -45,7 +46,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                         .withAngularVelocity(StateVector(0F, 0F, 0F))
                         .withRotation(DesiredRotation(randomRotation(), randomRotation(), randomRotation()))
                 )) },
-            Duration.ofSeconds(2.0))
+            Duration.ofSeconds(3.0))
 
     private fun randomSign() = if (Math.random() > 0.5) 1F else -1F
     private fun randomUniform(min: Float, max: Float) = (min + Math.random() * (max - min)).toFloat()
@@ -202,11 +203,18 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     private fun runOrientationTest(input: AgentInput): AgentOutput {
         val car = input.myCarData
 
-        println(input.time.toSeconds())
         orientationTestLoop.check(input)
 
+        /* RLBotDll.setGameState(
+                GameState().withCarState(0, CarState().withPhysics(
+                        PhysicsState()
+                                .withVelocity(StateVector(0f, 0f, 0f))
+                                .withLocation(StateVector(35F, -50F, 30F))
+                )).buildPacket()
+        ) */
+
         if (Plan.activePlanKt(currentPlan) == null) {
-            currentPlan = Plan().withStep(LandGracefullyStep(facingFn = LandGracefullyStep.FACE_BALL) )
+            currentPlan = Plan().withStep(LandGracefullyStep(facingFn = LandGracefullyStep.FACE_MOTION) )
         }
 
         currentPlan?.let {
