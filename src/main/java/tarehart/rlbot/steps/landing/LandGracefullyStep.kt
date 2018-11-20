@@ -45,11 +45,7 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         val renderer = BotLoopRenderer.forBotLoop(input.bot)
         carMotion.renderIn3d(renderer)
 
-        var orientation= Mat3.lookingTo(facingFn.invoke(input).toVector3())
 
-        orientation *= Mat3.rotationMatrix(orientation.left(), PI/6) // Pitch
-        // orientation *= Mat3.rotationMatrix(orientation.forward(), PI/6) // Roll
-        RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.WHITE)
 
         impact?.let {
             RenderUtil.drawSquare(renderer, Plane(it.direction, it.position), 5.0, Color.RED)
@@ -59,11 +55,33 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
                 return OrientationSolver.orientCar(input.myCarData, targetOrientation, 1.0 / 60).withThrottle(1.0)
             } else {
                 // It's not a wall!
-                val solution = OrientationSolver.orientCar(input.myCarData, orientation, 1.0 / 60).withThrottle(1.0).withSlide(true)
-                val ballAngle = input.myCarData.orientation.noseVector.dotProduct(facingFn.invoke(input).toVector3())
-                print("Ball Angle ")
-                println(ballAngle)
-                return solution
+                impact.time?.let { // We know the impact time.
+                    var orientation= Mat3.lookingTo(facingFn.invoke(input).toVector3())
+
+                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.RED)
+                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.left() ), Color.GREEN)
+                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.up() ), Color.BLUE)
+                    // TODO: Take the table of velocities -> Angle from RocketScience for best angle of wavedash.
+                    // Currently wavedash is only forward dodge
+                    orientation = /* Mat3.rotationMatrix(orientation.forward(), -PI/6) */ Mat3.rotationMatrix(orientation.left(), -PI/8) *  orientation // Roll
+                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.PINK)
+                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.left() ), Color.ORANGE)
+                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.up() ), Color.CYAN)
+                    val solution = OrientationSolver.orientCar(input.myCarData, orientation, 1.0 / 60).withThrottle(1.0).withSlide(true)
+                    val timeUntil = impact.time - input.time
+                    if (timeUntil.millis < 100) {
+                        solution.withPitch(-1.0).withSteer(0.0).withJump(true)//.withBoost(true)
+                    }
+                    if (timeUntil.millis < 50) {
+                        solution.withJump(false)
+                    }
+                    // val ballAngle = input.myCarData.orientation.noseVector.dotProduct(facingFn.invoke(input).toVector3())
+                    print("Vel, Impact ")
+                    print(input.myCarData.velocity.flatten().magnitude())
+                    print(", ")
+                    println(timeUntil.millis)
+                    return solution
+                }
             }
         }
 
