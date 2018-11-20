@@ -58,15 +58,15 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
                 impact.time?.let { // We know the impact time.
                     var orientation= Mat3.lookingTo(facingFn.invoke(input).toVector3())
 
-                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.RED)
-                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.left() ), Color.GREEN)
-                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.up() ), Color.BLUE)
+                    // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.RED)
+                    // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.left() ), Color.GREEN)
+                    // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.up() ), Color.BLUE)
                     // TODO: Take the table of velocities -> Angle from RocketScience for best angle of wavedash.
                     // Currently wavedash is only forward dodge
                     orientation = /* Mat3.rotationMatrix(orientation.forward(), -PI/6) */ Mat3.rotationMatrix(orientation.left(), -PI/8) *  orientation // Roll
-                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.PINK)
-                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.left() ), Color.ORANGE)
-                    RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.up() ), Color.CYAN)
+                    // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.PINK)
+                    // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.left() ), Color.ORANGE)
+                    // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.up() ), Color.CYAN)
                     val solution = OrientationSolver.orientCar(input.myCarData, orientation, 1.0 / 60).withThrottle(1.0).withSlide(true)
                     val timeUntil = impact.time - input.time
                     if (timeUntil.millis < 100) {
@@ -76,10 +76,10 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
                         solution.withJump(false)
                     }
                     // val ballAngle = input.myCarData.orientation.noseVector.dotProduct(facingFn.invoke(input).toVector3())
-                    print("Vel, Impact ")
-                    print(input.myCarData.velocity.flatten().magnitude())
-                    print(", ")
-                    println(timeUntil.millis)
+                    // print("Vel, Impact ")
+                    // print(input.myCarData.velocity.flatten().magnitude())
+                    // print(", ")
+                    // println(timeUntil.millis)
                     return solution
                 }
             }
