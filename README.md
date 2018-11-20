@@ -10,7 +10,9 @@ This repository contains:
 
 ## Running ReliefBot
 
-If you want to play a local game with ReliefBot (or AdversityBot or Air Bud), follow this tutorial video: https://www.youtube.com/watch?v=VHOkWVYlfa0
+![Use the precompiled instead](https://i.imgur.com/p0Pamd9.png)
+
+If you want to play a local game with ReliefBot (or AdversityBot or Air Bud), the easiest way is to ***get the precompiled zip from https://drive.google.com/drive/folders/1zxLr46h_KAz61_N6XQ5e89skizPO0wo-?usp=sharing***. Follow this tutorial video for more instructions: https://www.youtube.com/watch?v=VHOkWVYlfa0
 
 [![Watch the video](https://img.youtube.com/vi/VHOkWVYlfa0/maxresdefault.jpg)](https://youtu.be/VHOkWVYlfa0)
 
