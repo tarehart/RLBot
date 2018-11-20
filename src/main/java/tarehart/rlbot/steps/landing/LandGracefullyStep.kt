@@ -15,6 +15,7 @@ import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import java.awt.Color
 import java.awt.Graphics2D
+import kotlin.math.PI
 
 class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : NestedPlanStep() {
 
@@ -44,16 +45,29 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         val renderer = BotLoopRenderer.forBotLoop(input.bot)
         carMotion.renderIn3d(renderer)
 
+        var orientation= Mat3.lookingTo(facingFn.invoke(input).toVector3())
+
+        orientation *= Mat3.rotationMatrix(orientation.left(), PI/6) // Pitch
+        // orientation *= Mat3.rotationMatrix(orientation.forward(), PI/6) // Roll
+        RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.WHITE)
+
         impact?.let {
             RenderUtil.drawSquare(renderer, Plane(it.direction, it.position), 5.0, Color.RED)
             if (it.direction.z == 0.0) {
                 // It's a wall!
                 val targetOrientation = Mat3.lookingTo(Vector3(0.0, 0.0, -1.0), it.direction)
                 return OrientationSolver.orientCar(input.myCarData, targetOrientation, 1.0 / 60).withThrottle(1.0)
+            } else {
+                // It's not a wall!
+                val solution = OrientationSolver.orientCar(input.myCarData, orientation, 1.0 / 60).withThrottle(1.0).withSlide(true)
+                val ballAngle = input.myCarData.orientation.noseVector.dotProduct(facingFn.invoke(input).toVector3())
+                print("Ball Angle ")
+                println(ballAngle)
+                return solution
             }
         }
 
-        return OrientationSolver.orientCar(input.myCarData, Mat3.lookingTo(facingFn.invoke(input).toVector3()), 1.0 / 60).withThrottle(1.0)
+        return OrientationSolver.orientCar(input.myCarData, Mat3.lookingTo(facingFn.invoke(input).toVector3()), 1.0 / 60).withThrottle(1.0).withSlide(true)
     }
 
     override fun canAbortPlanInternally(): Boolean {

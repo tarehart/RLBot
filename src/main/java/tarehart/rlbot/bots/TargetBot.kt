@@ -41,7 +41,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         GameState()
                 .withCarState(0, CarState().withPhysics(PhysicsState()
                         .withLocation(StateVector(35F, -50F, 30F))
-                        .withVelocity(StateVector(50F, 0F, 0F))
+                        .withVelocity(StateVector(0F, 8F, 0F))
                         .withAngularVelocity(StateVector(0F, 0F, 0F))
                         .withRotation(DesiredRotation(randomRotation(), randomRotation(), randomRotation()))
                 )) },
@@ -113,7 +113,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     }, Duration.ofSeconds(4.0))
 
     override fun getOutput(input: AgentInput): AgentOutput {
-        return runHoopsKickoffTest(input)
+        return runOrientationTest(input)
     }
 
     private fun runHoopsKickoffTest(input: AgentInput): AgentOutput {
@@ -202,10 +202,11 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     private fun runOrientationTest(input: AgentInput): AgentOutput {
         val car = input.myCarData
 
+        println(input.time.toSeconds())
         orientationTestLoop.check(input)
 
         if (Plan.activePlanKt(currentPlan) == null) {
-            currentPlan = Plan().withStep(LandGracefullyStep { Vector2(0.0, 1.0) })
+            currentPlan = Plan().withStep(LandGracefullyStep(facingFn = LandGracefullyStep.FACE_BALL) )
         }
 
         currentPlan?.let {
