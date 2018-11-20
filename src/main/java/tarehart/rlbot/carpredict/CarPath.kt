@@ -38,7 +38,8 @@ class CarPath {
 
             for (p: Plane in planes) {
                 getPlaneBreak(prevSlice.space, currSlice.space, p)?.let {
-                    return Impact(it, p.normal)
+                    // The time component is not precise.
+                    return Impact(it, p.normal, prevSlice.time)
                 }
             }
         }
