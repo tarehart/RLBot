@@ -55,7 +55,7 @@ class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex
 
         val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(DemolishEnemyStep())
 
-        if (situation.shotOnGoalAvailable && situation.teamPlayerWithInitiative.car == car) {
+        if (situation.shotOnGoalAvailable && situation.teamPlayerWithInitiative?.car == car) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
@@ -71,11 +71,11 @@ class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex
         val situation = bundle.tacticalSituation
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative.car == car) {
+        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
             return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
         }
 
-        if (situation.scoredOnThreat != null && situation.teamPlayerWithInitiative.car == car && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+        if (situation.scoredOnThreat != null && situation.teamPlayerWithInitiative?.car == car && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
             BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
             return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
         }

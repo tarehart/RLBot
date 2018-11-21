@@ -68,13 +68,14 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
-        addGenericSteps(plan, input, situation)
+        addGenericSteps(plan, bundle)
         return plan
     }
 
-    private fun addGenericSteps(plan: Plan, input:AgentInput, situation: TacticalSituation) {
+    private fun addGenericSteps(plan: Plan, bundle: TacticalBundle) {
 
-        if (WallTouchStep.hasWallTouchOpportunity(input, situation.ballPath)) {
+        val input = bundle.agentInput
+        if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
             plan.withStep(WallTouchStep())
         }
         if (input.myCarData.boost < 30) {
