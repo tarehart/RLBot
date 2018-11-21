@@ -40,8 +40,7 @@ class InterceptStep(
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val carData = bundle.agentInput.myCarData
-
-        val ballPath = ArenaModel.predictBallPath(bundle)
+        val ballPath = bundle.tacticalSituation.ballPath
         val fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(7.0), carData.boost, 0.0)
 
         val soonestIntercept = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)

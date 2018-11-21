@@ -47,9 +47,7 @@ class WallTouchStep : NestedPlanStep() {
             println("Failed to make the wall touch because the car has no wheel contact", input.playerIndex)
             return null
         }
-
-
-        val ballPath = ArenaModel.predictBallPath(bundle)
+        val ballPath = bundle.tacticalSituation.ballPath
         val fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
 
         val interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
