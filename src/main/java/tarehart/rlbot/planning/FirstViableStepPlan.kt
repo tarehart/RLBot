@@ -1,7 +1,7 @@
 package tarehart.rlbot.planning
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 
 class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
 
@@ -20,7 +20,7 @@ class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
             return posture.name + " " + (if (committed) "committed" else "sampling") + " - " + currentStep.situation
         }
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
         if (isComplete()) {
             return null
@@ -29,7 +29,7 @@ class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
         while (currentStepIndex < steps.size) {
             val currentStep = currentStep
 
-            val output = currentStep.getOutput(input)
+            val output = currentStep.getOutput(bundle)
             if (output != null) {
 
                 if (currentStepIndex < steps.size - 1) {

@@ -1,12 +1,9 @@
 package tarehart.rlbot.bots
 
-import rlbot.cppinterop.RLBotDll
 import rlbot.gamestate.*
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.hoops.HoopsZone
-import tarehart.rlbot.hoops.HoopsZone.Companion.getRandomZone
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
