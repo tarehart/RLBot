@@ -2,6 +2,7 @@ package tarehart.rlbot.bots
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
@@ -13,10 +14,22 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
 
     override fun getOutput(input: AgentInput): AgentOutput {
         getNewTacticsAdvisor(tacticsAdvisor)?.let { this.tacticsAdvisor = it }
-        val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)
-        val bundle = tacticsAdvisor!!.assessSituation(input, ballPath, currentPlan)
+        val bundle = tacticsAdvisor?.assessSituation(input, ballPath, currentPlan)
+        bundle?.let {
+            return getOutput(bundle)
+        }
+        // TODO: We should probably warn if this happens.
+        return AgentOutput()
+    }
 
+    /**
+     * @param bundle TacticalBundle produced from tacticsAdvisor.assessSituation
+     * @return AgentOutput to act on the car
+     */
+    open fun getOutput(bundle: TacticalBundle): AgentOutput {
+        val input = bundle.agentInput
+        val car = input.myCarData
         tacticsAdvisor!!.findMoreUrgentPlan(bundle, currentPlan)?.let {
             currentPlan = it
         }
@@ -32,7 +45,6 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
                 it.getOutput(bundle)?.let { return it }
             }
         }
-
         return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
     }
 
