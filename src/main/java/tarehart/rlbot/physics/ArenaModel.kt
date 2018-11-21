@@ -4,6 +4,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
@@ -196,6 +197,7 @@ class ArenaModel {
         }
 
         fun predictBallPath(bundle: TacticalBundle): BallPath {
+            val input = bundle.agentInput
             try {
                 val key = BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin)
                 return pathCache.get(key)
