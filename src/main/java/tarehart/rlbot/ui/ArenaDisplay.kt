@@ -1,7 +1,6 @@
 package tarehart.rlbot.ui
 
 import tarehart.rlbot.AgentInput
-import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
@@ -21,15 +20,14 @@ import javax.swing.JPanel
 class ArenaDisplay : JPanel() {
     private var realBallColor = NEUTRAL_BALL_COLOR
 
-    private var bundle: TacticalBundle? = null
+    private var input: AgentInput? = null
     private var myCar: CarData? = null
     private var ball: Vector3? = null
     private var ballPrediction = Vector3()
     private var expectedEnemyContact: Vector3? = null
 
-    fun updateInput(bundle: TacticalBundle) {
-        this.bundle = bundle
-        val input = bundle.agentInput
+    fun updateInput(input: AgentInput) {
+        this.input = input
         myCar = input.myCarData
         ball = input.ballPosition
         realBallColor = input.latestBallTouch?.let {
@@ -48,7 +46,7 @@ class ArenaDisplay : JPanel() {
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
-        val latestInput = bundle?.agentInput ?: return
+        val latestInput = input ?: return
         val latestBall = ball ?: return
 
         // Retrieve situation telemetry
