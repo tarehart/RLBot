@@ -54,6 +54,8 @@ class ChallengeStep: NestedPlanStep() {
         }
 
         val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return null
+        // TODO: Basically, destroy TacticsTelemetry because it shouldn't be needed.
+        // At least don't allow steps to use it, that is bad form.
         val ballAdvantage = tacticalSituation.ballAdvantage
         if (ballAdvantage.seconds > 1.0) {
             return null // We can probably go for a shot now.
