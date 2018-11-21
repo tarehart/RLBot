@@ -3,6 +3,7 @@ package tarehart.rlbot.tactics
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
@@ -36,14 +37,16 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         return setOf(GameMode.SOCCER)
     }
 
-    override fun findMoreUrgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    override fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
 
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
         val car = input.myCarData
-        val zonePlan = ZoneTelemetry.get(input.playerIndex)
+        val zonePlan = bundle.zonePlan
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
         if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
-            if (situation.teamPlayerWithInitiative.car == car) {
+            if (situation.teamPlayerWithInitiative?.car == car) {
                 return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
             }
             return Plan(Plan.Posture.KICKOFF).withStep(GetBoostStep())
@@ -69,7 +72,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
         }
 
-        if (getWaitToClear(zonePlan, input, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.WAITTOCLEAR.canInterrupt(currentPlan)) {
+        if (getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.WAITTOCLEAR.canInterrupt(currentPlan)) {
             println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
             return Plan(Plan.Posture.WAITTOCLEAR).withStep(RotateAndWaitToClearStep())
         }
@@ -82,7 +85,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
         }
 
-        if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
+        if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {
 
             if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(situation)) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
@@ -106,7 +109,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     .withStep(GetOnDefenseStep())
         }
 
-        val totalThreat = threatAssessor.measureThreat(input, situation.enemyPlayerWithInitiative)
+        val totalThreat = threatAssessor.measureThreat(bundle, situation.enemyPlayerWithInitiative)
 
         if (totalThreat > 3 &&  situation.ballAdvantage.seconds < 1 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan due to threat level.", input.playerIndex)
@@ -129,9 +132,11 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         return null
     }
 
-    override fun makeFreshPlan(bundle: TacticalBundle, situation: TacticalSituation): Plan {
+    override fun makeFreshPlan(bundle: TacticalBundle): Plan {
 
-        if (situation.teamPlayerWithInitiative.car != input.myCarData) {
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
+        if (situation.teamPlayerWithInitiative?.car != input.myCarData) {
 
             if (GoalUtil.getNearestGoal(situation.futureBallMotion?.space
                             ?: input.ballPosition).team == input.team) {
@@ -149,13 +154,11 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             }
         }
 
-        val ballPath = ArenaModel.predictBallPath(input)
-
         val raceResult = situation.ballAdvantage
 
         if (raceResult.seconds > 2) {
             // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
-            return makePlanWithPlentyOfTime(input, situation, ballPath)
+            return makePlanWithPlentyOfTime(bundle)
         }
 
         if (raceResult.seconds > -.3) {
@@ -166,7 +169,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
             } else {
                 // Doesn't matter if enemy wins the race, they are out of position.
-                return makePlanWithPlentyOfTime(input, situation, ballPath)
+                return makePlanWithPlentyOfTime(bundle)
             }
         }
 
@@ -182,16 +185,19 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
     }
 
-    private fun makePlanWithPlentyOfTime(bundle: TacticalBundle, situation: TacticalSituation, ballPath: BallPath): Plan {
+    private fun makePlanWithPlentyOfTime(bundle: TacticalBundle): Plan {
 
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
+        val ballPath = situation.ballPath
         val car = input.myCarData
 
-        if (DribbleStep.canDribble(input, false) && input.ballVelocity.magnitude() > 15) {
+        if (DribbleStep.canDribble(bundle, false) && input.ballVelocity.magnitude() > 15) {
             println("Beginning dribble", input.playerIndex)
             return Plan(OFFENSIVE).withStep(DribbleStep())
         }
 
-        if (WallTouchStep.hasWallTouchOpportunity(input, ballPath)) {
+        if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
             return FirstViableStepPlan(OFFENSIVE).withStep(WallTouchStep()).withStep(FlexibleKickStep(WallPass()))
         }
 
@@ -222,6 +228,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
     override fun assessSituation(input: AgentInput, currentPlan: Plan?): TacticalBundle {
 
+        val ballPath = ArenaModel.predictBallPath(input)
+
         val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
         val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)
 
@@ -237,6 +245,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
         val enemyGoalY = GoalUtil.getEnemyGoal(input.team).center.y
 
+        val teamPlan = TeamTelemetry.get(input.playerIndex)
 
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
@@ -261,7 +270,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry[situation] = input.playerIndex
 
-        return situation
+        return TacticalBundle(input, situation, teamPlan, zonePlan)
     }
 
     private fun getForceDefensivePosture(myCar: CarData, opponentCar: CarData?,
@@ -303,7 +312,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
     companion object {
 
         // Checks to see if the ball is in the corner and if the opponent is closer to it
-        fun getWaitToClear(zonePlan: ZonePlan?, bundle: TacticalBundle, enemyCar: CarData?): Boolean {
+        fun getWaitToClear(bundle: TacticalBundle, enemyCar: CarData?): Boolean {
+            val input = bundle.agentInput
+            val zonePlan = bundle.zonePlan
             val myGoalLocation = GoalUtil.getOwnGoal(input.team).center
             val myBallDistance = input.ballPosition.distance(input.myCarData.position)
             val enemyBallDistance = enemyCar?.let { c -> input.ballPosition.distance(c.position) } ?: java.lang.Double.MAX_VALUE
