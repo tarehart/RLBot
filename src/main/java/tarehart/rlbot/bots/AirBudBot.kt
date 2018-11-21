@@ -2,6 +2,7 @@ package tarehart.rlbot.bots
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
@@ -20,36 +21,40 @@ import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
-class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
+class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
 
-    private val tacticsAdvisor: TacticsAdvisor = SoccerTacticsAdvisor()
+    override fun getNewTacticsAdvisor(tacticsAdvisor: TacticsAdvisor?): TacticsAdvisor? {
+        if (tacticsAdvisor == null) return SoccerTacticsAdvisor()
+        return null
+    }
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput {
 
+        val input = bundle.agentInput
         val car = input.myCarData
-        val ballPath = ArenaModel.predictBallPath(input)
-        val situation = tacticsAdvisor.assessSituation(input, ballPath, currentPlan)
 
-        findMoreUrgentPlan(input, situation, currentPlan)?.let {
+        findMoreUrgentPlan(bundle, currentPlan)?.let {
             currentPlan = it
         }
 
         if (Plan.activePlanKt(currentPlan) == null) {
-            currentPlan = makeFreshPlan(input, situation)
+            currentPlan = makeFreshPlan(bundle)
         }
 
         currentPlan?.let {
             if (it.isComplete()) {
                 currentPlan = null
             } else {
-                it.getOutput(input)?.let { return it }
+                it.getOutput(bundle)?.let { return it }
             }
         }
 
         return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
     }
 
-    private fun makeFreshPlan(bundle: TacticalBundle, situation: TacticalSituation): Plan {
+    private fun makeFreshPlan(bundle: TacticalBundle): Plan {
+        val situation = bundle.tacticalSituation
+        val input = bundle.agentInput
         val car = input.myCarData
 
         val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
@@ -84,8 +89,10 @@ class AirBudBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         plan.withStep(GetOnOffenseStep())
     }
 
-    private fun findMoreUrgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    private fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
 
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
         val car = input.myCarData
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
