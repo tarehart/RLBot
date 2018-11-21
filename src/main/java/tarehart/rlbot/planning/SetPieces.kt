@@ -35,7 +35,7 @@ object SetPieces {
                                 .withThrottle(1.0)
                                 .withPitch(-1.0)
                 ))
-                .withStep(LandGracefullyStep({ it.myCarData.velocity.flatten()}))
+                .withStep(LandGracefullyStep({ it.agentInput.myCarData.velocity.flatten()}))
     }
 
     fun halfFlip(waypoint: Vector2): Plan {
