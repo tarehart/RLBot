@@ -220,7 +220,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 .withStep(DemolishEnemyStep())
     }
 
-    override fun assessSituation(bundle: TacticalBundle, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+    override fun assessSituation(input: AgentInput, currentPlan: Plan?): TacticalBundle {
 
         val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
         val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)
