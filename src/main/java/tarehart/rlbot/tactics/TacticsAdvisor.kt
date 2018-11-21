@@ -24,7 +24,7 @@ interface TacticsAdvisor {
 
     fun makeFreshPlan(bundle: TacticalBundle): Plan
 
-    fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalBundle
+    fun assessSituation(input: AgentInput, currentPlan: Plan?): TacticalBundle
 
     companion object {
 

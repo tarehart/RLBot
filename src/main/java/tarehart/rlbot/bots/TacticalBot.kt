@@ -3,7 +3,6 @@ package tarehart.rlbot.bots
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.tactics.TacticsAdvisor
@@ -14,8 +13,7 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
 
     override fun getOutput(input: AgentInput): AgentOutput {
         getNewTacticsAdvisor(tacticsAdvisor)?.let { this.tacticsAdvisor = it }
-        val ballPath = ArenaModel.predictBallPath(input)
-        val bundle = tacticsAdvisor?.assessSituation(input, ballPath, currentPlan)
+        val bundle = tacticsAdvisor?.assessSituation(input, currentPlan)
         bundle?.let {
             return getOutput(bundle)
         }
