@@ -3,8 +3,10 @@ package tarehart.rlbot.bots
 import rlbot.Bot
 import rlbot.flat.GameTickPacket
 import rlbot.render.NamedRenderer
+import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.physics.ArenaModel
@@ -63,7 +65,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             }
 
             val translatedInput = AgentInput(request, playerIndex, chronometer, frameCount++, this)
-
             val output = processInput(translatedInput)
 
             val elapsedMillis = java.time.Duration.between(timeBefore, Instant.now()).toMillis()
@@ -101,7 +102,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     }
 
 
-    fun processInput(bundle: TacticalBundle): AgentOutput {
+    fun processInput(input: AgentInput): AgentOutput {
         BotLog.setTimeStamp(input.time)
         val output: AgentOutput
         var ballPath = Optional.empty<BallPath>()
@@ -150,9 +151,9 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         return output
     }
 
-    protected abstract fun getOutput(bundle: TacticalBundle): AgentOutput
+    protected abstract fun getOutput(input: AgentInput): AgentOutput
 
-    protected open fun roundInLimbo(bundle: TacticalBundle) { }
+    protected open fun roundInLimbo(input: AgentInput) { }
 
     companion object {
         val lock = Object()
