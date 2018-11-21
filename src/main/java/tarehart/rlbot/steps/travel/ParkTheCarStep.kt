@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.travel
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BotMath
@@ -36,8 +37,9 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         return car.velocity.flatten().dotProduct(car.orientation.noseVector.flatten()) < 15
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
+        val input = bundle.agentInput
         val car = input.myCarData
         val latestTarget = targetFunction.invoke(input) ?: return null
         target = latestTarget
@@ -98,7 +100,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
                     val waypoint = latestTarget.position
 
-                    SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, input) }
+                    SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, bundle) }
 
                     val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
                     val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 20.0, distancePlot)
@@ -134,7 +136,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                 return startPlan(Plan(Plan.Posture.NEUTRAL)
                         .unstoppable()
                         .withStep(BlindStep(Duration.ofSeconds(0.01), AgentOutput().withJump()))
-                        .withStep(LandGracefullyStep { latestTarget.facing }), input)
+                        .withStep(LandGracefullyStep { latestTarget.facing }), bundle)
             } else {
 
                 if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {

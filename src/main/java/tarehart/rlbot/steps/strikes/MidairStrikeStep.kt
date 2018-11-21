@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.strikes
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.InterceptCalculator
@@ -43,26 +44,26 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         return "Midair Strike"
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
-        return input.myCarData.hasWheelContact
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
+        return bundle.agentInput.myCarData.hasWheelContact
     }
 
     override fun canAbortPlanInternally(): Boolean {
         return true
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         if (! ::lastMomentForDodge.isInitialized) {
-            lastMomentForDodge = input.time.plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart)
-            beginningOfStep = input.time
+            lastMomentForDodge = bundle.agentInput.time.plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart)
+            beginningOfStep = bundle.agentInput.time
         }
 
         // We hold down the jump button during the aerial for extra upward acceleration, but it wears off.
-        val timeSinceLaunch = Duration.between(beginningOfStep, input.time)
+        val timeSinceLaunch = Duration.between(beginningOfStep, bundle.agentInput.time)
 
-        val ballPath = ArenaModel.predictBallPath(input)
-        val car = input.myCarData
+        val ballPath = bundle.tacticalSituation.ballPath
+        val car = bundle.agentInput.myCarData
         val offset = offsetFn(intercept?.space, car.team)
 
         val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
@@ -70,46 +71,46 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             if (!car.hasWheelContact && car.position.z > 1) {
                 // Orient toward the ball and hope for an aerial intercept to resume
                 return OrientationSolver
-                        .orientCar(input.myCarData, Mat3.lookingTo(input.ballPosition - car.position), 1.0 / 60)
+                        .orientCar(bundle.agentInput.myCarData, Mat3.lookingTo(bundle.agentInput.ballPosition - car.position), 1.0 / 60)
                         .withThrottle(1.0)
             }
             return null
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3.0), Color.CYAN)
         RenderUtil.drawBallPath(renderer, ballPath, latestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
 
         intercept = latestIntercept.toSpaceTime()
         val carToIntercept = latestIntercept.space.minus(car.position)
-        val millisTillIntercept = Duration.between(input.time, latestIntercept.time).millis
-        val distance = car.position.distance(input.ballPosition)
+        val millisTillIntercept = Duration.between(bundle.agentInput.time, latestIntercept.time).millis
+        val distance = car.position.distance(bundle.agentInput.ballPosition)
 
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, latestIntercept.space)
 
-        if (hasJump && input.time.isBefore(lastMomentForDodge) && distance < DODGE_TIME.seconds * car.velocity.magnitude()
+        if (hasJump && bundle.agentInput.time.isBefore(lastMomentForDodge) && distance < DODGE_TIME.seconds * car.velocity.magnitude()
                 && latestIntercept.space.z - car.position.z < 1.5) {
             // Let's flip into the ball!
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
-                BotLog.println("Front flip strike", input.playerIndex)
+                BotLog.println("Front flip strike", bundle.agentInput.playerIndex)
                 startPlan(Plan()
                         .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
                         .withStep(BlindStep(Duration.ofSeconds(1.0), AgentOutput().withPitch(-1.0).withJump())),
-                        input)
+                        bundle)
             } else {
                 // Dodge to the side
-                BotLog.println("Side flip strike", input.playerIndex)
+                BotLog.println("Side flip strike", bundle.agentInput.playerIndex)
                 startPlan(Plan()
                         .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
                         .withStep(BlindStep(Duration.ofMillis(30), AgentOutput().withYaw((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump())),
-                        input)
+                        bundle)
             }
         }
 
-        val secondsSoFar = Duration.between(beginningOfStep, input.time).seconds
+        val secondsSoFar = Duration.between(beginningOfStep, bundle.agentInput.time).seconds
 
         if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 && Vector2.angle(car.velocity.flatten(), carToIntercept.flatten()) > Math.PI / 6) {
-            BotLog.println("Failed aerial on bad angle", input.playerIndex)
+            BotLog.println("Failed aerial on bad angle", bundle.agentInput.playerIndex)
             return null
         }
 

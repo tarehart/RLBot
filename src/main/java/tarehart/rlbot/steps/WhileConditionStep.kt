@@ -2,20 +2,21 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import java.awt.Graphics2D
 import java.util.function.Predicate
 
-class WhileConditionStep(private val predicate: Predicate<AgentInput>, private val outputFn: (input: AgentInput) -> AgentOutput) : StandardStep() {
+class WhileConditionStep(private val predicate: Predicate<TacticalBundle>, private val outputFn: (bundle: TacticalBundle) -> AgentOutput) : StandardStep() {
 
     override val situation = "Reactive memory"
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        if (!predicate.test(input)) {
+        if (!predicate.test(bundle)) {
             return null
         }
 
-        return outputFn(input)
+        return outputFn(bundle)
     }
 
     override fun canInterrupt(): Boolean {
@@ -28,7 +29,7 @@ class WhileConditionStep(private val predicate: Predicate<AgentInput>, private v
 
     companion object {
         
-        fun until(predicate: Predicate<AgentInput>, outputFn: (input: AgentInput) -> AgentOutput) : WhileConditionStep {
+        fun until(predicate: Predicate<TacticalBundle>, outputFn: (bundle: TacticalBundle) -> AgentOutput) : WhileConditionStep {
             return WhileConditionStep(predicate.negate(), outputFn)
         }
     }

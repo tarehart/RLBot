@@ -1,7 +1,7 @@
 package tarehart.rlbot.steps.wall
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.SteerUtil
@@ -13,8 +13,9 @@ class DescendFromWallStep : StandardStep() {
 
     override val situation = "Descending wall."
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
+        val input = bundle.agentInput
         val car = input.myCarData
         val ballShadow = Vector3(input.ballPosition.x, input.ballPosition.y, 0.0)
         if (ArenaModel.isCarOnWall(car)) {

@@ -1,7 +1,7 @@
 package tarehart.rlbot.planning
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.steps.Step
 import java.util.*
 
@@ -58,7 +58,7 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
         return this
     }
 
-    open fun getOutput(input: AgentInput): AgentOutput? {
+    open fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
         if (isComplete()) {
             return null
@@ -66,7 +66,7 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
 
         while (currentStepIndex < steps.size) {
 
-            val output = currentStep.getOutput(input)
+            val output = currentStep.getOutput(bundle)
 
             output?.let { return it }
 

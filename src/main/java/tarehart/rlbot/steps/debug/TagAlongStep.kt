@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.debug
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.routing.PositionFacing
@@ -12,7 +13,7 @@ import tarehart.rlbot.time.Duration
 
 class TagAlongStep : NestedPlanStep() {
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
         val p = Plan().withStep(ParkTheCarStep { inp ->
             val enemyCar = TacticsTelemetry[inp.playerIndex]?.enemyPlayerWithInitiative?.car!!
             val waypoint = enemyCar.position.plus(enemyCar.orientation.rightVector.scaled(4.0)).flatten()
@@ -20,7 +21,7 @@ class TagAlongStep : NestedPlanStep() {
             PositionFacing(waypoint, targetFacing)
         }).withStep(BlindStep(Duration.ofSeconds(0.2), AgentOutput()))
 
-        return startPlan(p, input)
+        return startPlan(p, bundle)
     }
 
     override fun getLocalSituation(): String {

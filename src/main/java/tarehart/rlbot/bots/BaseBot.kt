@@ -3,8 +3,10 @@ package tarehart.rlbot.bots
 import rlbot.Bot
 import rlbot.flat.GameTickPacket
 import rlbot.render.NamedRenderer
+import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.physics.ArenaModel
@@ -63,7 +65,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             }
 
             val translatedInput = AgentInput(request, playerIndex, chronometer, frameCount++, this)
-
             val output = processInput(translatedInput)
 
             val elapsedMillis = java.time.Duration.between(timeBefore, Instant.now()).toMillis()

@@ -1,6 +1,7 @@
 package tarehart.rlbot.tactics
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
@@ -19,11 +20,11 @@ interface TacticsAdvisor {
 
     fun suitableGameModes(): Set<GameMode>
 
-    fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan?
+    fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan?
 
-    fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan
+    fun makeFreshPlan(bundle: TacticalBundle): Plan
 
-    fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation
+    fun assessSituation(input: AgentInput, currentPlan: Plan?): TacticalBundle
 
     companion object {
 

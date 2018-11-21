@@ -1,14 +1,10 @@
 package tarehart.rlbot.steps.travel
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.steps.StandardStep
-import tarehart.rlbot.steps.Step
-
-import java.awt.*
-import java.util.Optional
 
 class LineUpInReverseStep(private val waypoint: Vector2) : StandardStep() {
     private var correctionDirection: Int? = null
@@ -16,9 +12,9 @@ class LineUpInReverseStep(private val waypoint: Vector2) : StandardStep() {
     override val situation: String
         get() = "Lining up in reverse"
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         val waypointToCar = car.position.flatten().minus(waypoint)
 

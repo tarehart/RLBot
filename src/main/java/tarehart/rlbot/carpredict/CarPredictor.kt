@@ -2,6 +2,7 @@ package tarehart.rlbot.carpredict
 
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.input.CarOrientation
 import tarehart.rlbot.math.Circle
@@ -18,8 +19,8 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
     private val SECONDS_SPENT_CIRCLING = 0.5
     private var sliceHistory = LinkedList<CarData>()
 
-    fun predictCarMotion(input: AgentInput, duration: Duration): CarPath {
-
+    fun predictCarMotion(bundle: TacticalBundle, duration: Duration): CarPath {
+        val input = bundle.agentInput
         val car = input.allCars[carIndex]
 
         val carPath: CarPath

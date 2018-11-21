@@ -1,6 +1,7 @@
 package tarehart.rlbot.hoops.tacticalstate
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -30,12 +31,14 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         return setOf(GameMode.HOOPS)
     }
 
-    override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    override fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
 
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
         if (Plan.Posture.KICKOFF.canInterrupt(currentPlan)) {
-            val muse = KickoffState().muse(input, situation)
+            val muse = KickoffState().muse(bundle)
             if (muse is KickoffState) {
-                return muse.newPlan(input, situation)
+                return muse.newPlan(bundle)
             }
         }
 
@@ -60,9 +63,10 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         return null
     }
 
-    override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+    override fun makeFreshPlan(bundle: TacticalBundle): Plan {
+        val input = bundle.agentInput
 
-        if (WallTouchStep.hasWallTouchOpportunity(input, situation.ballPath)) {
+        if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
                     .withStep(WallTouchStep())
                     .withStep(MidairStrikeStep(Duration.ofSeconds(0.3)))
@@ -80,8 +84,9 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 .withStep(GetOnDefenseStep())
     }
 
-    override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+    override fun assessSituation(input: AgentInput, currentPlan: Plan?): TacticalBundle {
 
+        val ballPath = ArenaModel.predictBallPath(input)
         val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
         val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)
 
@@ -91,11 +96,11 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
 
         val ourIntercept = TacticsAdvisor.getSoonestIntercept(input.myCarData, ballPath)
 
-        // TODO: Refactor ZoneTelemetry stuff for game mode equality
-        // val zonePlan = ZoneTelemetry[input.playerIndex]
+        val zonePlan = ZoneTelemetry[input.playerIndex]
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
 
+        val teamPlan = TeamTelemetry.get(input.playerIndex)
 
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
@@ -118,18 +123,10 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         )
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
+
+        // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry[situation] = input.playerIndex
 
-        // Get a steady state for the state machine
-//        var infinityCounter = 5
-//        do {
-//            val oldState = this.currentState
-//            this.currentState = this.currentState.muse(input, situation)
-//        } while (this.currentState != oldState && infinityCounter-- > 0)
-//        if (infinityCounter == 0) {
-//            println("Warning! Hoops State machine didn't reach a steady state.")
-//        }
-
-        return situation
+        return TacticalBundle(input, situation, teamPlan, zonePlan)
     }
 }

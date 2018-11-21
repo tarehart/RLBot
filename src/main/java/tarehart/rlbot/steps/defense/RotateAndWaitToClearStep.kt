@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.defense
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.ZoneTelemetry
@@ -13,10 +14,10 @@ import tarehart.rlbot.tactics.TacticsTelemetry
 class RotateAndWaitToClearStep : NestedPlanStep() {
 
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val positionFacing = GetOnDefenseStep.calculatePositionFacing(input)
-        val car = input.myCarData
+        val positionFacing = GetOnDefenseStep.calculatePositionFacing(bundle.agentInput)
+        val car = bundle.agentInput.myCarData
 
         val positionError = car.position.flatten().distance(positionFacing.position)
         val facingError = Vector2.angle(car.orientation.noseVector.flatten(), positionFacing.facing)
@@ -28,17 +29,17 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
         val plan = Plan(Plan.Posture.DEFENSIVE)
                 .withStep(ParkTheCarStep { inp -> GetOnDefenseStep.calculatePositionFacing(inp) })
 
-        return startPlan(plan, input)
+        return startPlan(plan, bundle)
     }
 
     override fun getLocalSituation(): String {
         return "Rotating and waiting to clear"
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
-        val tacticalSituation = TacticsTelemetry[input.myCarData.playerIndex]
-        val zonePlan = ZoneTelemetry[input.playerIndex]
-        return !SoccerTacticsAdvisor.getWaitToClear(zonePlan, input, tacticalSituation?.enemyPlayerWithInitiative?.car)
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
+        val tacticalSituation = TacticsTelemetry[bundle.agentInput.myCarData.playerIndex]
+        val zonePlan = ZoneTelemetry[bundle.agentInput.playerIndex]
+        return !SoccerTacticsAdvisor.getWaitToClear(bundle, tacticalSituation?.enemyPlayerWithInitiative?.car)
                 || tacticalSituation?.ballAdvantage?.seconds?.let { it > 0.8 } ?: false
     }
 

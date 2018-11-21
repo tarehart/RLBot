@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.demolition
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
@@ -28,16 +29,16 @@ class DemolishEnemyStep : NestedPlanStep() {
 
     class WheelContactWatcher(val carIndex: Int) {
         var previouslyHadWheelContact: Boolean? = null
-        fun justJumped(input: AgentInput): Boolean {
-            return previouslyHadWheelContact == true && inputChanged(input)
+        fun justJumped(bundle: TacticalBundle): Boolean {
+            return previouslyHadWheelContact == true && inputChanged(bundle)
         }
 
-        fun justLanded(input: AgentInput): Boolean {
-            return previouslyHadWheelContact == false && inputChanged(input)
+        fun justLanded(bundle: TacticalBundle): Boolean {
+            return previouslyHadWheelContact == false && inputChanged(bundle)
         }
 
-        private fun inputChanged(input: AgentInput): Boolean {
-            val car = input.allCars[carIndex]
+        private fun inputChanged(bundle: TacticalBundle): Boolean {
+            val car = bundle.agentInput.allCars[carIndex]
             val changed = previouslyHadWheelContact != null && previouslyHadWheelContact != car.hasWheelContact
             previouslyHadWheelContact = car.hasWheelContact
             return changed
@@ -58,11 +59,11 @@ class DemolishEnemyStep : NestedPlanStep() {
     private var enemyWatcher: WheelContactWatcher? = null
 
 
-    override fun doInitialComputation(input: AgentInput) {
-        super.doInitialComputation(input)
+    override fun doInitialComputation(bundle: TacticalBundle) {
+        super.doInitialComputation(bundle)
 
-        val car = input.myCarData
-        val oppositeTeam = input.getTeamRoster(input.team.opposite())
+        val car = bundle.agentInput.myCarData
+        val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
 
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
             oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) } ?: return
@@ -71,8 +72,8 @@ class DemolishEnemyStep : NestedPlanStep() {
             carPredictor = CarPredictor(enemyCar.playerIndex)
         }
 
-        val path = carPredictor.predictCarMotion(input, Duration.ofSeconds(SECONDS_TO_PREDICT))
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        val path = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(SECONDS_TO_PREDICT))
+        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         path.renderIn3d(renderer)
 
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(SECONDS_TO_PREDICT), car.boost)
@@ -83,14 +84,14 @@ class DemolishEnemyStep : NestedPlanStep() {
         }
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         if (!::selfContactWatcher.isInitialized) {
-            selfContactWatcher = WheelContactWatcher(input.playerIndex)
+            selfContactWatcher = WheelContactWatcher(bundle.agentInput.playerIndex)
         }
 
-        val car = input.myCarData
-        val oppositeTeam = input.getTeamRoster(input.team.opposite())
+        val car = bundle.agentInput.myCarData
+        val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
 
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
         oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) }
@@ -109,13 +110,13 @@ class DemolishEnemyStep : NestedPlanStep() {
 
         val transition = when (demolishPhase) {
 
-            DemolishPhase.CHASE -> chase(input, enemyCar) ?: return null
+            DemolishPhase.CHASE -> chase(bundle, enemyCar) ?: return null
 
             DemolishPhase.AWAIT_LIFTOFF -> DemolishTransition(
                     AgentOutput().withBoost().withJump(),
                     if (!car.hasWheelContact) DemolishPhase.JUMP else DemolishPhase.AWAIT_LIFTOFF)
 
-            DemolishPhase.JUMP -> jump(input, enemyCar) ?: return null
+            DemolishPhase.JUMP -> jump(bundle, enemyCar) ?: return null
 
             else -> DemolishTransition(AgentOutput().withThrottle(1.0), demolishPhase)
         }
@@ -124,16 +125,16 @@ class DemolishEnemyStep : NestedPlanStep() {
         return transition.output
     }
 
-    private fun chase(input: AgentInput, enemyCar: CarData): DemolishTransition? {
-        val car = input.myCarData
+    private fun chase(bundle: TacticalBundle, enemyCar: CarData): DemolishTransition? {
+        val car = bundle.agentInput.myCarData
 
         if (!hasEnoughBoost(car)) {
             return null
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
 
-        val path = carPredictor.predictCarMotion(input, Duration.ofSeconds(SECONDS_TO_PREDICT))
+        val path = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(SECONDS_TO_PREDICT))
         path.renderIn3d(renderer)
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(SECONDS_TO_PREDICT), car.boost)
         val carIntercept = CarInterceptPlanner.getCarIntercept(car, path, distancePlot)
@@ -153,14 +154,14 @@ class DemolishEnemyStep : NestedPlanStep() {
         return DemolishTransition(SteerUtil.steerTowardGroundPositionGreedily(car, enemyCar.position.flatten()), DemolishPhase.CHASE)
     }
 
-    private fun jump(input: AgentInput, enemyCar: CarData): DemolishTransition? {
+    private fun jump(bundle: TacticalBundle, enemyCar: CarData): DemolishTransition? {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         val simulationDuration = Duration.ofSeconds(SECONDS_BEFORE_CONTACT_TO_JUMP * 1.5)
 
-        val path = carPredictor.predictCarMotion(input, simulationDuration)
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        val path = carPredictor.predictCarMotion(bundle, simulationDuration)
+        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         path.renderIn3d(renderer)
         val distancePlot = AccelerationModel.simulateAcceleration(car, simulationDuration, car.boost)
         val carIntercept = CarInterceptPlanner.getCarIntercept(car, path, distancePlot)
@@ -174,7 +175,7 @@ class DemolishEnemyStep : NestedPlanStep() {
             val toIntercept = carIntercept.space - car.position
 
             if (needsDoubleJump && canDodge && !car.hasWheelContact) {
-                return workTowardDoubleJump(car, input)
+                return workTowardDoubleJump(car, bundle)
             }
 
             val steerCorrection = car.velocity.flatten().correctionAngle(toIntercept.flatten())
@@ -184,7 +185,7 @@ class DemolishEnemyStep : NestedPlanStep() {
                         .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
                                 .withBoost()
                                 .withRoll(-Math.signum(steerCorrection))
-                                .withJump())), input) ?: return null
+                                .withJump())), bundle) ?: return null
                 return DemolishTransition(immediateOutput, DemolishPhase.DODGE)
             }
         }
@@ -194,7 +195,7 @@ class DemolishEnemyStep : NestedPlanStep() {
         return DemolishTransition(AgentOutput().withJump().withBoost(), DemolishPhase.JUMP)
     }
 
-    private fun workTowardDoubleJump(car: CarData, input: AgentInput): DemolishTransition? {
+    private fun workTowardDoubleJump(car: CarData, bundle: TacticalBundle): DemolishTransition? {
         val timeSinceJump = Duration.between(momentJumped!!, car.time)
         if (timeSinceJump < Duration.ofMillis(200)) {
             // Don't double jump yet, we need to get more benefit from our initial jump.
@@ -204,7 +205,7 @@ class DemolishEnemyStep : NestedPlanStep() {
         canDodge = false
         val immediateOutput = startPlan(Plan().unstoppable()
                 .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost()))
-                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost().withJump())), input)
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost().withJump())), bundle)
                 ?: return null
 
         return DemolishTransition(immediateOutput, DemolishPhase.DODGE)

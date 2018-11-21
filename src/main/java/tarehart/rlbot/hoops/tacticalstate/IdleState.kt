@@ -4,6 +4,7 @@ import rlbot.flat.Vector3
 import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.BlindStep
@@ -15,7 +16,9 @@ class IdleState : TacticalState {
 
     val idleRenderer = NamedRenderer("hoopsIdleRenderer")
 
-    override fun muse(input: AgentInput, situation: TacticalSituation): TacticalState {
+    override fun muse(bundle: TacticalBundle): TacticalState {
+        val situation = bundle.tacticalSituation
+        val input = bundle.agentInput
         if (input.ballPosition.flatten().isZero) {
             return KickoffState()
         }
@@ -28,11 +31,11 @@ class IdleState : TacticalState {
         return this
     }
 
-    override fun urgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?) : Plan?{
+    override fun urgentPlan(bundle: TacticalBundle, currentPlan: Plan?) : Plan?{
         return null
     }
 
-    override fun newPlan(input: AgentInput, situation: TacticalSituation) : Plan {
+    override fun newPlan(bundle: TacticalBundle) : Plan {
         // println("I don't know what to do, empty plan for me")
         return Plan()
     }

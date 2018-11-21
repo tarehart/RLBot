@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -23,25 +24,25 @@ class GoForKickoffStep : NestedPlanStep() {
     private var counterAttack = false // Math.random() < .3
     private lateinit var startTime: GameTime
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
-        if (input.ballPosition.flatten().magnitudeSquared() > 0) {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
+        if (bundle.agentInput.ballPosition.flatten().magnitudeSquared() > 0) {
             return null
         }
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         if (kickoffType == null) {
             kickoffType = getKickoffType(car)
-            startTime = input.time
+            startTime = bundle.agentInput.time
         }
 
         if ((kickoffType == KickoffType.CENTER || kickoffType == KickoffType.CHEATIN) && counterAttack) {
-            val goalLine = GoalUtil.getOwnGoal(input.team).center.flatten()
+            val goalLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center.flatten()
             val toEnemy = goalLine.scaled(-1.0)
             return startPlan(Plan(Plan.Posture.NEUTRAL)
                     .withStep(ParkTheCarStep { _ -> PositionFacing(goalLine, toEnemy) })
                     .withStep(BlindStep(Duration.ofSeconds(0.5), AgentOutput())),
-                    input)
+                    bundle)
         }
 
         val target: Vector2
@@ -51,7 +52,7 @@ class GoForKickoffStep : NestedPlanStep() {
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
             return SteerUtil.steerTowardGroundPosition(car, target)
         }
-        return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(InterceptStep(Vector3())), input)
+        return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(InterceptStep(Vector3())), bundle)
     }
 
     private enum class KickoffType {

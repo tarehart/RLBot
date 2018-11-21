@@ -4,6 +4,7 @@ import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.VectorUtil
@@ -27,22 +28,22 @@ class WhatASaveStep : NestedPlanStep() {
 
     private var whichPost: Double? = null
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
-        val ballPath = ArenaModel.predictBallPath(input)
-        val goal = GoalUtil.getOwnGoal(input.team)
-        val currentThreat = TacticsTelemetry[input.playerIndex]?.scoredOnThreat
+        val car = bundle.agentInput.myCarData
+        val ballPath = bundle.tacticalSituation.ballPath
+        val goal = GoalUtil.getOwnGoal(bundle.agentInput.team)
+        val currentThreat = TacticsTelemetry[bundle.agentInput.playerIndex]?.scoredOnThreat
 
         if (currentThreat == null) {
-            RLBotDll.sendQuickChat(input.playerIndex, false, QuickChatSelection.Compliments_WhatASave)
+            RLBotDll.sendQuickChat(bundle.agentInput.playerIndex, false, QuickChatSelection.Compliments_WhatASave)
             return null
         }
 
         if (whichPost == null) {
 
             val carToThreat = currentThreat.space - car.position
-            val carApproachVsBallApproach = carToThreat.flatten().correctionAngle(input.ballVelocity.flatten())
+            val carApproachVsBallApproach = carToThreat.flatten().correctionAngle(bundle.agentInput.ballVelocity.flatten())
             // When carApproachVsBallApproach < 0, car is to the right of the ball, angle wise. Right is positive X when we're on the positive Y side of the field.
             whichPost = Math.signum(-carApproachVsBallApproach * currentThreat.space.y)
 
@@ -55,16 +56,16 @@ class WhatASaveStep : NestedPlanStep() {
         val threatPosition = InterceptCalculator.getInterceptOpportunity(car, ballPath, plot)?.space ?: currentThreat.space
 
         val carToIntercept = threatPosition.minus(car.position)
-        val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
+        val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(bundle.agentInput.ballVelocity.flatten())
 
         if (Math.abs(carApproachVsBallApproach) > Math.PI / 5) {
             return startPlan(
                     Plan(Plan.Posture.SAVE).withStep(InterceptStep(Vector3(0.0, Math.signum(goal.center.y) * 1.5, 0.0))),
-                    input)
+                    bundle)
         }
 
         return startPlan(FirstViableStepPlan(Plan.Posture.SAVE)
                 .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
-                .withStep(GetOnDefenseStep()), input)
+                .withStep(GetOnDefenseStep()), bundle)
     }
 }

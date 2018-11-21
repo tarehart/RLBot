@@ -6,6 +6,7 @@ import rlbot.render.NamedRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.hoops.HoopsZoneTeamless
 import tarehart.rlbot.math.OrientationSolver
@@ -59,7 +60,8 @@ class KickoffState : TacticalState {
     private var kickoffStyle = KickoffStyle.INDETERMINATE
 
 
-    override fun muse(input: AgentInput, situation: TacticalSituation): TacticalState {
+    override fun muse(bundle: TacticalBundle): TacticalState {
+        val input = bundle.agentInput
         if (!input.ballPosition.flatten().isZero) {
             return IdleState()
         } else if (input.ballPosition.flatten().isZero && input.ballVelocity.isZero && kickoffHasBegun) {
@@ -97,7 +99,7 @@ class KickoffState : TacticalState {
         }
 
         if (kickoffStyle == KickoffStyle.INDETERMINATE) {
-            determineKickoffStyle(input, situation)
+            determineKickoffStyle(bundle)
             if (kickoffStyle in arrayOf(KickoffStyle.CENTER, KickoffStyle.FORWARD_STANDARD, KickoffStyle.WIDE_KICKOFF)) {
                 RLBotDll.sendQuickChat(input.playerIndex, false, QuickChatSelection.Information_IGotIt)
             } else if (kickoffStyle != KickoffStyle.INDETERMINATE){
@@ -110,7 +112,10 @@ class KickoffState : TacticalState {
         return this
     }
 
-    private fun determineKickoffStyle(input: AgentInput, situation: TacticalSituation) {
+    private fun determineKickoffStyle(bundle: TacticalBundle) {
+
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
 
         // The ordinal value of HoopsZone is in kickoff priority order, I was going to use that
         // But its late and I have a matrix of who goes for kickoff in my notebook, so I'm doing that.
@@ -172,14 +177,15 @@ class KickoffState : TacticalState {
         }
     }
 
-    override fun urgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?) : Plan?{
+    override fun urgentPlan(bundle: TacticalBundle, currentPlan: Plan?) : Plan?{
         if(!kickoffHasBegun) {
             return Plan()
         }
         return null
     }
 
-    override fun newPlan(input: AgentInput, situation: TacticalSituation) : Plan {
+    override fun newPlan(bundle: TacticalBundle) : Plan {
+        val input = bundle.agentInput
         if (kickoffHasBegun) {
             if (kickoffStyle == KickoffStyle.CENTER) {
                 return Plan(Plan.Posture.KICKOFF)
@@ -205,10 +211,10 @@ class KickoffState : TacticalState {
                 boostRenderer.finishAndSend()
                 return Plan()
                         .withStep(WhileConditionStep(Predicate {
-                            closestSmallBoost.location.distance(it.myCarData.position) > 2.5
+                            closestSmallBoost.location.distance(it.agentInput.myCarData.position) > 2.5
                         }, {
-                            val guidance = (closestSmallBoost.location + it.ballPosition) / 2.0
-                            SteerUtil.steerTowardGroundPosition(it.myCarData, guidance)
+                            val guidance = (closestSmallBoost.location + it.agentInput.ballPosition) / 2.0
+                            SteerUtil.steerTowardGroundPosition(it.agentInput.myCarData, guidance)
                         }))
                         .withStep(BlindStep(Duration.ofMillis(20), SteerUtil.steerTowardGroundPosition(input.myCarData, input.ballPosition).withBoost(true)))
                         .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(true)))

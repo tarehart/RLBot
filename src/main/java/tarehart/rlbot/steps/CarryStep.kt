@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
@@ -9,11 +10,8 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.PlanGuidance
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
-
-import java.awt.*
 
 import tarehart.rlbot.tuning.BotLog.println
 
@@ -25,25 +23,25 @@ class CarryStep : StandardStep() {
     override val situation: String
         get() = "Carrying"
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        if (!canCarry(input, true)) {
+        val ballPath = bundle.tacticalSituation.ballPath
+
+        if (!canCarry(bundle, true)) {
             return null
         }
 
-        val ballVelocityFlat = input.ballVelocity.flatten()
+        val ballVelocityFlat = bundle.agentInput.ballVelocity.flatten()
         val leadSeconds = .2
-
-        val ballPath = ArenaModel.predictBallPath(input)
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         motionAfterWallBounce?.time?.let {
-            if (Duration.between(input.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
+            if (Duration.between(bundle.agentInput.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
         }
 
-        val futureBallPosition = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
+        val futureBallPosition = ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
 
-        val scoreLocation = GoalUtil.getEnemyGoal(input.team).getNearestEntrance(input.ballPosition, 3.0).flatten()
+        val scoreLocation = GoalUtil.getEnemyGoal(bundle.agentInput.team).getNearestEntrance(bundle.agentInput.ballPosition, 3.0).flatten()
 
         val ballToGoal = scoreLocation.minus(futureBallPosition)
         val pushDirection: Vector2
@@ -57,9 +55,9 @@ class CarryStep : StandardStep() {
         pressurePoint = futureBallPosition.minus(pushDirection.scaled(approachDistance))
 
 
-        val hurryUp = input.time.plusSeconds(leadSeconds)
+        val hurryUp = bundle.agentInput.time.plusSeconds(leadSeconds)
 
-        return SteerUtil.getThereOnTime(input.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
+        return SteerUtil.getThereOnTime(bundle.agentInput.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
     }
 
     companion object {
@@ -81,50 +79,50 @@ class CarryStep : StandardStep() {
             return Vector3(x, y, zDiff)
         }
 
-        private fun canCarry(input: AgentInput, log: Boolean): Boolean {
+        private fun canCarry(bundle: TacticalBundle, log: Boolean): Boolean {
 
-            val car = input.myCarData
-            val (x, y, z) = positionInCarCoordinates(car, input.ballPosition)
+            val car = bundle.agentInput.myCarData
+            val (x, y, z) = positionInCarCoordinates(car, bundle.agentInput.ballPosition)
 
             val xMag = Math.abs(x)
             if (xMag > MAX_X_DIFF) {
                 if (log) {
-                    println("Fell off the side", input.playerIndex)
+                    println("Fell off the side", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (y > MAX_Y) {
                 if (log) {
-                    println("Fell off the front", input.playerIndex)
+                    println("Fell off the front", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (y < MIN_Y) {
                 if (log) {
-                    println("Fell off the back", input.playerIndex)
+                    println("Fell off the back", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (z > 3) {
                 if (log) {
-                    println("Ball too high to carry", input.playerIndex)
+                    println("Ball too high to carry", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (z < 1) {
                 if (log) {
-                    println("Ball too low to carry", input.playerIndex)
+                    println("Ball too low to carry", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
-            if (VectorUtil.flatDistance(car.velocity, input.ballVelocity) > 10) {
+            if (VectorUtil.flatDistance(car.velocity, bundle.agentInput.ballVelocity) > 10) {
                 if (log) {
-                    println("Velocity too different to carry.", input.playerIndex)
+                    println("Velocity too different to carry.", bundle.agentInput.playerIndex)
                 }
                 return false
             }

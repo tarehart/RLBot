@@ -1,18 +1,15 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
-
-import java.awt.*
-import java.util.Optional
+import tarehart.rlbot.TacticalBundle
 
 class WaitForActive : StandardStep() {
 
     override val situation: String
         get() = "Idling"
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
-        return if (input.matchInfo.roundActive) {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
+        return if (bundle.agentInput.matchInfo.roundActive) {
             null
         } else AgentOutput()
     }

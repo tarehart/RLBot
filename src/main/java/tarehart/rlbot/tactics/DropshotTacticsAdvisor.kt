@@ -1,6 +1,7 @@
 package tarehart.rlbot.tactics
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
@@ -26,8 +27,10 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         return setOf(GameMode.DROPSHOT)
     }
 
-    override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    override fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
 
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
         val car = input.myCarData
 
         if (!car.hasWheelContact && Plan.Posture.LANDING.canInterrupt(currentPlan) && car.position.z > 5) {
@@ -51,7 +54,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
             if (!willLandOnOwnSide && isBallFriendly && isBouncy && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
                 // The ball is about to score or do some damage. Get out of the way!
 
-                if (situation.teamPlayerWithInitiative.car == input.myCarData && DemolishEnemyStep.hasEnoughBoost(car)) {
+                if (situation.teamPlayerWithInitiative?.car == input.myCarData && DemolishEnemyStep.hasEnoughBoost(car)) {
                     return Plan(Plan.Posture.OFFENSIVE)
                             .withStep(DemolishEnemyStep())
                 }
@@ -63,9 +66,12 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         return null
     }
 
-    override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+    override fun makeFreshPlan(bundle: TacticalBundle): Plan {
 
-        if (WallTouchStep.hasWallTouchOpportunity(input, situation.ballPath)) {
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
+
+        if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
                     .withStep(WallTouchStep())
                     .withStep(MidairStrikeStep(Duration.ofSeconds(0.3)))
@@ -75,7 +81,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
             return Plan().withStep(DescendFromWallStep())
         }
 
-        if (situation.teamPlayerWithBestShot.car == input.myCarData || situation.needsDefensiveClear) {
+        if (situation.teamPlayerWithBestShot?.car == input.myCarData || situation.needsDefensiveClear) {
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
                     .withStep(FlexibleKickStep(KickToEnemyHalf()))
                     .withStep(CatchBallStep())
@@ -96,7 +102,9 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         return rotationPlan
     }
 
-    override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+    override fun assessSituation(input: AgentInput, currentPlan: Plan?): TacticalBundle {
+
+        val ballPath = ArenaModel.predictBallPath(input)
 
         // DropshotWallKick().getKickDirection(input.myCarData, input.ballPosition)
 
@@ -112,6 +120,8 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         val zonePlan = ZoneTelemetry[input.playerIndex]
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
+
+        val teamPlan = TeamTelemetry.get(input.playerIndex)
 
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
@@ -136,7 +146,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry[situation] = input.playerIndex
 
-        return situation
+        return TacticalBundle(input, situation, teamPlan, zonePlan)
     }
 
     // Really only used for avoiding "Disable Goal Reset" own goals

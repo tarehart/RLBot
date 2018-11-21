@@ -1,14 +1,12 @@
 package tarehart.rlbot.steps.debug
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.steps.StandardStep
-import tarehart.rlbot.steps.Step
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 
-import java.awt.*
 import java.time.LocalDateTime
 
 
@@ -18,20 +16,20 @@ class CalibrateStep : StandardStep() {
 
     override val situation = "Calibrating"
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         if (!::gameClockStart.isInitialized && Math.abs(car.spin.yawRate) < TINY_VALUE && car.hasWheelContact) {
-            gameClockStart = input.time
+            gameClockStart = bundle.agentInput.time
             wallClockStart = LocalDateTime.now()
         }
 
         if (::gameClockStart.isInitialized) {
             if (car.spin.yawRate > TINY_VALUE) {
                 BotLog.println(String.format("Game Latency: %s \nWall Latency: %s",
-                        Duration.between(gameClockStart, input.time).seconds,
-                        java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), input.playerIndex)
+                        Duration.between(gameClockStart, bundle.agentInput.time).seconds,
+                        java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), bundle.agentInput.playerIndex)
                 return null
             }
             return AgentOutput().withSteer(1.0).withThrottle(1.0)
