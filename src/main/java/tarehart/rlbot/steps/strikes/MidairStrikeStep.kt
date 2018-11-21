@@ -62,7 +62,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         // We hold down the jump button during the aerial for extra upward acceleration, but it wears off.
         val timeSinceLaunch = Duration.between(beginningOfStep, bundle.agentInput.time)
 
-        val ballPath = ArenaModel.predictBallPath(bundle)
+        val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
         val offset = offsetFn(intercept?.space, car.team)
 

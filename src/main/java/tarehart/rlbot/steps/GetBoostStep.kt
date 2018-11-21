@@ -98,7 +98,7 @@ class GetBoostStep : NestedPlanStep() {
             return nearestLocation
         }
 
-        val ballPath = ArenaModel.predictBallPath(bundle)
+        val ballPath = bundle.tacticalSituation.ballPath
         val endpoint = ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(3.0)) ?: ballPath.endpoint
         // Add a defensive bias.
         val defensiveBias = 50 * Math.signum(GoalUtil.getOwnGoal(bundle.agentInput.team).center.y)

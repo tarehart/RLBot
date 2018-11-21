@@ -39,7 +39,7 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         val tacticalSituation = TacticsTelemetry[bundle.agentInput.myCarData.playerIndex]
         val zonePlan = ZoneTelemetry[bundle.agentInput.playerIndex]
-        return !SoccerTacticsAdvisor.getWaitToClear(zonePlan, bundle.agentInput, tacticalSituation?.enemyPlayerWithInitiative?.car)
+        return !SoccerTacticsAdvisor.getWaitToClear(bundle, tacticalSituation?.enemyPlayerWithInitiative?.car)
                 || tacticalSituation?.ballAdvantage?.seconds?.let { it > 0.8 } ?: false
     }
 

@@ -25,14 +25,14 @@ class CarryStep : StandardStep() {
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
+        val ballPath = bundle.tacticalSituation.ballPath
+
         if (!canCarry(bundle, true)) {
             return null
         }
 
         val ballVelocityFlat = bundle.agentInput.ballVelocity.flatten()
         val leadSeconds = .2
-
-        val ballPath = ArenaModel.predictBallPath(bundle)
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         motionAfterWallBounce?.time?.let {

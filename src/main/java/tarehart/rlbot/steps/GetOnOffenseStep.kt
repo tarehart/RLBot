@@ -27,11 +27,10 @@ class GetOnOffenseStep : NestedPlanStep() {
     }
 
     override fun doInitialComputation(bundle: TacticalBundle) {
-        val tacticalSituationOption = TacticsTelemetry.get(bundle.agentInput.playerIndex)
+        val situation = bundle.tacticalSituation
+        val ballPath = bundle.tacticalSituation.ballPath
 
-        val ballPath = ArenaModel.predictBallPath(bundle)
-
-        val ballFuture = tacticalSituationOption?.expectedContact?.space ?:
+        val ballFuture = situation.expectedContact?.space ?:
                 ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(4.0))?.space ?: bundle.agentInput.ballPosition
 
         latestBallFuture = ballFuture

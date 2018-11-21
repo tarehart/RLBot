@@ -36,8 +36,7 @@ class DribbleStep : NestedPlanStep() {
 
         val ballSpeed = ballVelocityFlat.magnitude()
         val leadSeconds = .2
-
-        val ballPath = ArenaModel.predictBallPath(bundle)
+        val ballPath = bundle.tacticalSituation.ballPath
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         motionAfterWallBounce?.time?.let {

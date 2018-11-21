@@ -31,7 +31,7 @@ class WhatASaveStep : NestedPlanStep() {
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = bundle.agentInput.myCarData
-        val ballPath = ArenaModel.predictBallPath(bundle)
+        val ballPath = bundle.tacticalSituation.ballPath
         val goal = GoalUtil.getOwnGoal(bundle.agentInput.team)
         val currentThreat = TacticsTelemetry[bundle.agentInput.playerIndex]?.scoredOnThreat
 

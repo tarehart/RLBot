@@ -21,7 +21,7 @@ class CatchBallStep : StandardStep() {
 
         val car = bundle.agentInput.myCarData
 
-        val ballPath = ArenaModel.predictBallPath(bundle)
+        val ballPath = bundle.tacticalSituation.ballPath
         val catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car)) ?: return null
 
         // Weed out any intercepts after a catch opportunity. Should just catch it.
