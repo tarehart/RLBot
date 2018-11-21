@@ -1,12 +1,12 @@
 package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 
-class TeamIntent(car: CarData, bundle: TacticalBundle) {
+class TeamIntent(car: CarData, input: AgentInput) {
     var certainty: Int = 0
     var action: TeamAction = TeamAction.WTF
-    val car: CarData = car
     val hasPossession: Boolean = ZoneUtil.carHasPossession(input.ballPosition, car, input.getAllOtherCars(car.playerIndex))
 
     init {
