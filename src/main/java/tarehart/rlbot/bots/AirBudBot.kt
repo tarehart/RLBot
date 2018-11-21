@@ -64,7 +64,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
         }
 
         val enemyGoalProximity = GoalUtil.getEnemyGoal(car.team).center.distance(input.ballPosition)
-        if (situation.shotOnGoalAvailable && enemyGoalProximity < 80 && situation.teamPlayerWithInitiative.car == car) {
+        if (situation.shotOnGoalAvailable && enemyGoalProximity < 80 && situation.teamPlayerWithInitiative?.car == car) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
@@ -96,7 +96,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
         val car = input.myCarData
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative.car == car) {
+        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
             return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
         }
 
@@ -111,7 +111,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
             return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
         }
 
-        if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative.car == input.myCarData) {
+        if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             BotLog.println("Canceling current plan. Going for clear!", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.CLEAR)
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
