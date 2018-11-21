@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.wall
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
@@ -40,6 +41,7 @@ class WallTouchStep : NestedPlanStep() {
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
+        val input = bundle.agentInput
         val car = input.myCarData
         if (!car.hasWheelContact) {
             println("Failed to make the wall touch because the car has no wheel contact", input.playerIndex)
@@ -47,7 +49,7 @@ class WallTouchStep : NestedPlanStep() {
         }
 
 
-        val ballPath = ArenaModel.predictBallPath(input)
+        val ballPath = ArenaModel.predictBallPath(bundle)
         val fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
 
         val interceptOpportunity = InterceptCalculator.getFilteredInterceptOpportunity(
@@ -83,7 +85,7 @@ class WallTouchStep : NestedPlanStep() {
             return null
         }
 
-        if (readyToJump(input, motion.toSpaceTime())) {
+        if (readyToJump(bundle, motion.toSpaceTime())) {
             println("Jumping for wall touch.", input.playerIndex)
             // Continue this step until it becomes quite likely that we've hit the ball. Transitioning to
             // midair strike immediately before ball contact is unpleasant.
@@ -91,7 +93,7 @@ class WallTouchStep : NestedPlanStep() {
                     Plan(Plan.Posture.NEUTRAL)
                             .withStep(BlindStep(Duration.ofSeconds(.1), AgentOutput().withThrottle(1.0).withJump()))
                             .withStep(MidairStrikeStep(Duration.ofMillis(0))),
-                    input)
+                    bundle)
         }
 
         return SteerUtil.steerTowardPositionAcrossSeam(car, motion.space)
@@ -120,6 +122,7 @@ class WallTouchStep : NestedPlanStep() {
 
         private fun readyToJump(bundle: TacticalBundle, carPositionAtContact: SpaceTime): Boolean {
 
+            val input = bundle.agentInput
             val car = input.myCarData
             if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .3 || !ArenaModel.isCarOnWall(car)) {
                 return false // Really close to wall, no need to jump. Just chip it.
@@ -138,6 +141,8 @@ class WallTouchStep : NestedPlanStep() {
         }
 
         private fun isAcceptableZoneForWallTouch(bundle: TacticalBundle, ballPosition: Vector3): Boolean {
+            val input = bundle.agentInput
+            // TODO: No! I forbid. Use bundle.
             val situation = TacticsTelemetry[input.playerIndex] ?: return false
             val hasTeammate = input.getTeamRoster(input.team).size > 1
             val allowedYValue = if (hasTeammate) 1.0 else .7
@@ -153,11 +158,11 @@ class WallTouchStep : NestedPlanStep() {
         fun hasWallTouchOpportunity(bundle: TacticalBundle, ballPath: BallPath): Boolean {
 
             val nearWallOption = ballPath.findSlice { ballPosition: BallSlice ->
-                isAcceptableZoneForWallTouch(input, ballPosition.space) && isBallOnWall(ballPosition) }
+                isAcceptableZoneForWallTouch(bundle, ballPosition.space) && isBallOnWall(ballPosition) }
 
             if (nearWallOption != null) {
                 val time = nearWallOption.time
-                if (Duration.between(input.time, time).seconds > 3) {
+                if (Duration.between(bundle.agentInput.time, time).seconds > 3) {
                     return false // Not on wall soon enough
                 }
 
@@ -167,8 +172,8 @@ class WallTouchStep : NestedPlanStep() {
                     if (ArenaModel.getDistanceFromWall(space) > ACCEPTABLE_WALL_DISTANCE) {
                         return false
                     }
-                    val ownGoalCenter = GoalUtil.getOwnGoal(input.team).center
-                    return space.distance(ownGoalCenter) > input.myCarData.position.distance(ownGoalCenter)
+                    val ownGoalCenter = GoalUtil.getOwnGoal(bundle.agentInput.team).center
+                    return space.distance(ownGoalCenter) > bundle.agentInput.myCarData.position.distance(ownGoalCenter)
                 }
 
             }
