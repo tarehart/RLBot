@@ -1,6 +1,7 @@
 package tarehart.rlbot.ui
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
@@ -53,8 +54,9 @@ class PlainReadout {
         caret.updatePolicy = DefaultCaret.ALWAYS_UPDATE
     }
 
-    fun update(bundle: TacticalBundle, posture: Plan.Posture, situation: String, log: String, ballPath: BallPath) {
+    fun update(bundle: TacticalBundle, posture: Plan.Posture, situation: String, log: String) {
 
+        val input = bundle.agentInput
         var log = log
 
         if (!rootPanel.isShowing) {
@@ -84,8 +86,8 @@ class PlainReadout {
         }
         logViewer.append(log)
 
-        gatherBallPredictionData(input, ballPath)
-        val ballPredictionOption = getBallPrediction(input)
+        gatherBallPredictionData(bundle)
+        val ballPredictionOption = getBallPrediction(bundle)
         if (ballPredictionOption.isPresent) {
             val ballPrediction = ballPredictionOption.get()
             ballHeightPredicted.value = (ballPrediction.z * HEIGHT_BAR_MULTIPLIER).toInt()
@@ -98,14 +100,15 @@ class PlainReadout {
             arenaDisplay.updateExpectedEnemyContact(tacSituation.expectedEnemyContact)
         }
 
-        updateBallHeightMaxes(input)
-        updateTacticsInfo(input)
-        updateOmniText(input, tacSituation)
-        arenaDisplay.updateInput(input)
+        updateBallHeightMaxes(bundle)
+        updateTacticsInfo(bundle)
+        updateOmniText(bundle)
+        arenaDisplay.updateInput(bundle)
         arenaDisplay.repaint()
     }
 
     private fun updateBallHeightMaxes(bundle: TacticalBundle) {
+        val input = bundle.agentInput
         // Calculate and display Ball Height Actual Max
         if (ballHeightActualMax.value < ballHeightActual.value) {
             ballHeightActualMax.value = ballHeightActual.value
@@ -123,7 +126,9 @@ class PlainReadout {
         }
     }
 
-    private fun gatherBallPredictionData(bundle: TacticalBundle, ballPath: BallPath?) {
+    private fun gatherBallPredictionData(bundle: TacticalBundle) {
+        val input = bundle.agentInput
+        val ballPath = bundle.tacticalSituation.ballPath
         val predictionMillis = predictionTime.value
         val predictionTime = input.time.plus(Duration.ofMillis(predictionMillis.toLong()))
 
@@ -140,11 +145,14 @@ class PlainReadout {
     }
 
     private fun getBallPrediction(bundle: TacticalBundle): Optional<Vector3> {
+        val input = bundle.agentInput
         val predictionOfNow = warehouse.getPredictionOfMoment(input.time)
         return predictionOfNow.map { ballPrediction -> ballPrediction.predictedLocation }
     }
 
-    private fun updateOmniText(bundle: TacticalBundle, situation: TacticalSituation?) {
+    private fun updateOmniText(bundle: TacticalBundle) {
+        val input = bundle.agentInput
+        val situation = bundle.tacticalSituation
 
         val zonePlan = ZoneTelemetry[input.playerIndex]
 
@@ -173,6 +181,7 @@ class PlainReadout {
     }
 
     private fun updateTacticsInfo(bundle: TacticalBundle) {
+        val input = bundle.agentInput
         val situation = TacticsTelemetry[input.playerIndex]
 
         if (situation != null) {
