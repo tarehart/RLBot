@@ -4,6 +4,7 @@ import rlbot.flat.Vector3
 import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.BlindStep
@@ -16,6 +17,7 @@ class IdleState : TacticalState {
     val idleRenderer = NamedRenderer("hoopsIdleRenderer")
 
     override fun muse(bundle: TacticalBundle, situation: TacticalSituation): TacticalState {
+        val input = bundle.agentInput
         if (input.ballPosition.flatten().isZero) {
             return KickoffState()
         }
