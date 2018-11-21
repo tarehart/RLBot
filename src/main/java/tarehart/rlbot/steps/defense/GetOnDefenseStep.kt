@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.defense
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
@@ -22,19 +23,19 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
         if (startTime == null) {
-            startTime = input.time
+            startTime = bundle.agentInput.time
         }
 
         val plan = Plan(Plan.Posture.DEFENSIVE).withStep(ParkTheCarStep { inp ->
             calculatePositionFacing(inp)
         })
 
-        return startPlan(plan, input)
+        return startPlan(plan, bundle)
     }
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        val st = startTime ?: input.time
-        return Duration.between(st, input.time).seconds > lifespan
+        val st = startTime ?: bundle.agentInput.time
+        return Duration.between(st, bundle.agentInput.time).seconds > lifespan
     }
 
     companion object {

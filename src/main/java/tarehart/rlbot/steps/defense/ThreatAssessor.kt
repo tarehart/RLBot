@@ -1,6 +1,7 @@
 package tarehart.rlbot.steps.defense
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.VectorUtil
@@ -20,8 +21,8 @@ class ThreatAssessor {
 
     fun measureThreat(bundle: TacticalBundle, enemyCarOption: CarWithIntercept?): Double {
 
-        val enemyPosture = measureEnemyPosture(input, enemyCarOption)
-        var ballThreat = measureBallThreat(input) * .3
+        val enemyPosture = measureEnemyPosture(bundle, enemyCarOption)
+        var ballThreat = measureBallThreat(bundle) * .3
         if (ballThreat < 0) {
             ballThreat *= .3
         }
@@ -37,10 +38,10 @@ class ThreatAssessor {
             return 0.0
         }
 
-        val myGoal = GoalUtil.getOwnGoal(input.team)
-        val ballToGoal = myGoal.center.minus(input.ballPosition)
+        val myGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
+        val ballToGoal = myGoal.center.minus(bundle.agentInput.ballPosition)
 
-        val carToBall = input.ballPosition.minus(enemyCar.car.position)
+        val carToBall = bundle.agentInput.ballPosition.minus(enemyCar.car.position)
         val rightSideVector = VectorUtil.project(carToBall.scaledToMagnitude(10.0), ballToGoal)
 
         return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal))
@@ -49,14 +50,14 @@ class ThreatAssessor {
 
     private fun measureBallThreat(bundle: TacticalBundle): Double {
 
-        val car = input.myCarData
-        val myGoal = GoalUtil.getOwnGoal(input.team)
-        val ballToGoal = myGoal.center.minus(input.ballPosition)
+        val car = bundle.agentInput.myCarData
+        val myGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
+        val ballToGoal = myGoal.center.minus(bundle.agentInput.ballPosition)
 
-        val ballVelocityTowardGoal = VectorUtil.project(input.ballVelocity, ballToGoal)
+        val ballVelocityTowardGoal = VectorUtil.project(bundle.agentInput.ballVelocity, ballToGoal)
         val ballSpeedTowardGoal = ballVelocityTowardGoal.magnitude() * Math.signum(ballVelocityTowardGoal.dotProduct(ballToGoal))
 
-        val carToBall = input.ballPosition.minus(car.position)
+        val carToBall = bundle.agentInput.ballPosition.minus(car.position)
         val wrongSideVector = VectorUtil.project(carToBall, ballToGoal)
         val wrongSidedness = wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal))
 
