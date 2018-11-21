@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.challenge
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.intercept.AirTouchPlanner
 import tarehart.rlbot.math.Plane
@@ -34,28 +35,28 @@ class ChallengeStep: NestedPlanStep() {
     }
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return false
+        val tacticalSituation = TacticsTelemetry.get(bundle.agentInput.playerIndex) ?: return false
         return !threatExists(tacticalSituation)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         if (originalTouch == null) {
-            originalTouch = input.latestBallTouch
+            originalTouch = bundle.agentInput.latestBallTouch
         } else {
 
-            if (originalTouch?.position ?: Vector3() != input.latestBallTouch?.position ?: Vector3()) {
+            if (originalTouch?.position ?: Vector3() != bundle.agentInput.latestBallTouch?.position ?: Vector3()) {
                 // There has been a new ball touch.
-                println("Ball has been touched, quitting challenge", input.playerIndex)
+                println("Ball has been touched, quitting challenge", bundle.agentInput.playerIndex)
                 return null
             }
         }
 
-        val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return null
         // TODO: Basically, destroy TacticsTelemetry because it shouldn't be needed.
         // At least don't allow steps to use it, that is bad form.
+        val tacticalSituation = TacticsTelemetry.get(bundle.agentInput.playerIndex) ?: return null
         val ballAdvantage = tacticalSituation.ballAdvantage
         if (ballAdvantage.seconds > 1.0) {
             return null // We can probably go for a shot now.
@@ -68,7 +69,7 @@ class ChallengeStep: NestedPlanStep() {
             return null
         }
 
-        val enemyShotLine = GoalUtil.getOwnGoal(input.team).center - enemyContact.space
+        val enemyShotLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center - enemyContact.space
 
         val flatPosition = car.position.flatten()
         val defensiveNode = enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(backoff)
@@ -80,23 +81,23 @@ class ChallengeStep: NestedPlanStep() {
             startPlan(
                     Plan(Plan.Posture.DEFENSIVE)
                             .withStep(FlexibleKickStep(KickAwayFromOwnGoal())),
-                    input)
+                    bundle)
         }
 
         if (defensiveNodeDistance < backoff + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
             startPlan(
                     Plan(Plan.Posture.DEFENSIVE)
                             .withStep(InterceptStep(enemyShotLine.scaledToMagnitude(1.5))),
-                    input)
+                    bundle)
         }
 
         SteerUtil.getSensibleFlip(car, defensiveNode)?.let {
             if (car.boost < 1 && tacticalSituation.distanceBallIsBehindUs > 0) { // Use more boost and less flipping during challenges.
-                return startPlan(it, input)
+                return startPlan(it, bundle)
             }
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.0, Color(0.8f, 0.0f, 0.8f))
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.5, Color(0.8f, 0.0f, 0.8f))
 
