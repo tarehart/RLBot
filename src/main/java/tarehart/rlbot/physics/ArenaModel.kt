@@ -196,8 +196,7 @@ class ArenaModel {
             return Math.abs(position.y) > BACK_WALL
         }
 
-        fun predictBallPath(bundle: TacticalBundle): BallPath {
-            val input = bundle.agentInput
+        fun predictBallPath(input: AgentInput): BallPath {
             try {
                 val key = BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin)
                 return pathCache.get(key)
