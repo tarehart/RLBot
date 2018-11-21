@@ -3,6 +3,7 @@ package tarehart.rlbot.bots
 import rlbot.gamestate.*
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
@@ -110,11 +111,11 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                 ))
     }, Duration.ofSeconds(4.0))
 
-    override fun getOutput(bundle: TacticalBundle): AgentOutput {
+    override fun getOutput(input: AgentInput): AgentOutput {
         return runOrientationTest(input)
     }
 
-    private fun runHoopsKickoffTest(bundle: TacticalBundle): AgentOutput {
+    private fun runHoopsKickoffTest(input: AgentInput): AgentOutput {
 
         if (hoopKickoffLoop.check(input)) {
             currentPlan = Plan()
@@ -126,7 +127,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             if (it.isComplete()) {
                 currentPlan = null
             } else {
-                it.getOutput(input)?.let { return it }
+                it.getOutput(TacticalBundle.dummy(input))?.let { return it }
             }
         }
         return AgentOutput()
@@ -140,7 +141,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     // Aerial integration test, can ReliefBot smash the ball in the air, every time.
     // Follow up test would be, can ReliefBot hit the ball at a target, i.e a point on goal or at a wall.
     // But that can be another test for a later time.
-    private fun runAerialTest(bundle: TacticalBundle): AgentOutput {
+    private fun runAerialTest(input: AgentInput): AgentOutput {
         val car = input.myCarData
 
         if (input.playerIndex == 0) {
@@ -189,7 +190,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                 if (it.isComplete()) {
                     currentPlan = null
                 } else {
-                    it.getOutput(input)?.let { return it }
+                    it.getOutput(TacticalBundle.dummy(input))?.let { return it }
                 }
             }
         }
@@ -197,7 +198,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         return AgentOutput()
     }
 
-    private fun runOrientationTest(bundle: TacticalBundle): AgentOutput {
+    private fun runOrientationTest(input: AgentInput): AgentOutput {
         val car = input.myCarData
 
         orientationTestLoop.check(input)
@@ -218,14 +219,14 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             if (it.isComplete()) {
                 currentPlan = null
             } else {
-                it.getOutput(input)?.let { return it }
+                it.getOutput(TacticalBundle.dummy(input))?.let { return it }
             }
         }
 
         return AgentOutput()
     }
 
-    private fun runDemolitionTest(bundle: TacticalBundle): AgentOutput {
+    private fun runDemolitionTest(input: AgentInput): AgentOutput {
         if (!input.matchInfo.roundActive) {
             return AgentOutput()
         }
@@ -249,7 +250,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             return AgentOutput().withThrottle(1.0).withBoost()
         }
 
-        return currentPlan?.getOutput(input) ?: AgentOutput()
+        return currentPlan?.getOutput(TacticalBundle.dummy(input)) ?: AgentOutput()
     }
 }
 
