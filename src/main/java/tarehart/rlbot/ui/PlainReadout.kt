@@ -53,7 +53,7 @@ class PlainReadout {
         caret.updatePolicy = DefaultCaret.ALWAYS_UPDATE
     }
 
-    fun update(input: AgentInput, posture: Plan.Posture, situation: String, log: String, ballPath: BallPath) {
+    fun update(bundle: TacticalBundle, posture: Plan.Posture, situation: String, log: String, ballPath: BallPath) {
 
         var log = log
 
@@ -105,7 +105,7 @@ class PlainReadout {
         arenaDisplay.repaint()
     }
 
-    private fun updateBallHeightMaxes(input: AgentInput) {
+    private fun updateBallHeightMaxes(bundle: TacticalBundle) {
         // Calculate and display Ball Height Actual Max
         if (ballHeightActualMax.value < ballHeightActual.value) {
             ballHeightActualMax.value = ballHeightActual.value
@@ -123,7 +123,7 @@ class PlainReadout {
         }
     }
 
-    private fun gatherBallPredictionData(input: AgentInput, ballPath: BallPath?) {
+    private fun gatherBallPredictionData(bundle: TacticalBundle, ballPath: BallPath?) {
         val predictionMillis = predictionTime.value
         val predictionTime = input.time.plus(Duration.ofMillis(predictionMillis.toLong()))
 
@@ -139,12 +139,12 @@ class PlainReadout {
         }
     }
 
-    private fun getBallPrediction(input: AgentInput): Optional<Vector3> {
+    private fun getBallPrediction(bundle: TacticalBundle): Optional<Vector3> {
         val predictionOfNow = warehouse.getPredictionOfMoment(input.time)
         return predictionOfNow.map { ballPrediction -> ballPrediction.predictedLocation }
     }
 
-    private fun updateOmniText(input: AgentInput, situation: TacticalSituation?) {
+    private fun updateOmniText(bundle: TacticalBundle, situation: TacticalSituation?) {
 
         val zonePlan = ZoneTelemetry[input.playerIndex]
 
@@ -172,7 +172,7 @@ class PlainReadout {
         return zone.mainZone.toString() + " " + zone.subZone
     }
 
-    private fun updateTacticsInfo(input: AgentInput) {
+    private fun updateTacticsInfo(bundle: TacticalBundle) {
         val situation = TacticsTelemetry[input.playerIndex]
 
         if (situation != null) {

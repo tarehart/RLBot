@@ -30,7 +30,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         return setOf(GameMode.HOOPS)
     }
 
-    override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    override fun findMoreUrgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
         if (Plan.Posture.KICKOFF.canInterrupt(currentPlan)) {
             val muse = KickoffState().muse(input, situation)
@@ -60,7 +60,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         return null
     }
 
-    override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+    override fun makeFreshPlan(bundle: TacticalBundle, situation: TacticalSituation): Plan {
 
         if (WallTouchStep.hasWallTouchOpportunity(input, situation.ballPath)) {
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
@@ -80,7 +80,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 .withStep(GetOnDefenseStep())
     }
 
-    override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+    override fun assessSituation(bundle: TacticalBundle, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
         val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
         val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)

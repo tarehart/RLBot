@@ -31,7 +31,7 @@ class CatchBallStep : StandardStep() {
         } else playCatch(bundle, latestCatchLocation)
     }
 
-    private fun playCatch(input: AgentInput, catchLocation: SpaceTime): AgentOutput {
+    private fun playCatch(bundle: TacticalBundle, catchLocation: SpaceTime): AgentOutput {
         val car = input.myCarData
         val enemyGoal = GoalUtil.getEnemyGoal(car.team).center
         val enemyGoalToLoc = catchLocation.space.minus(enemyGoal)

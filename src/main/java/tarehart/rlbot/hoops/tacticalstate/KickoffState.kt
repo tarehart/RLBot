@@ -59,7 +59,7 @@ class KickoffState : TacticalState {
     private var kickoffStyle = KickoffStyle.INDETERMINATE
 
 
-    override fun muse(input: AgentInput, situation: TacticalSituation): TacticalState {
+    override fun muse(bundle: TacticalBundle, situation: TacticalSituation): TacticalState {
         if (!input.ballPosition.flatten().isZero) {
             return IdleState()
         } else if (input.ballPosition.flatten().isZero && input.ballVelocity.isZero && kickoffHasBegun) {
@@ -110,7 +110,7 @@ class KickoffState : TacticalState {
         return this
     }
 
-    private fun determineKickoffStyle(input: AgentInput, situation: TacticalSituation) {
+    private fun determineKickoffStyle(bundle: TacticalBundle, situation: TacticalSituation) {
 
         // The ordinal value of HoopsZone is in kickoff priority order, I was going to use that
         // But its late and I have a matrix of who goes for kickoff in my notebook, so I'm doing that.
@@ -172,14 +172,14 @@ class KickoffState : TacticalState {
         }
     }
 
-    override fun urgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?) : Plan?{
+    override fun urgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?) : Plan?{
         if(!kickoffHasBegun) {
             return Plan()
         }
         return null
     }
 
-    override fun newPlan(input: AgentInput, situation: TacticalSituation) : Plan {
+    override fun newPlan(bundle: TacticalBundle, situation: TacticalSituation) : Plan {
         if (kickoffHasBegun) {
             if (kickoffStyle == KickoffStyle.CENTER) {
                 return Plan(Plan.Posture.KICKOFF)

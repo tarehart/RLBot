@@ -18,7 +18,7 @@ import java.awt.*
 
 class DribbleStep : NestedPlanStep() {
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
 
@@ -104,7 +104,7 @@ class DribbleStep : NestedPlanStep() {
 
         val DRIBBLE_DISTANCE = 20.0
 
-        fun canDribble(input: AgentInput, log: Boolean): Boolean {
+        fun canDribble(bundle: TacticalBundle, log: Boolean): Boolean {
 
             val car = input.myCarData
             val ballToMe = car.position.minus(input.ballPosition)

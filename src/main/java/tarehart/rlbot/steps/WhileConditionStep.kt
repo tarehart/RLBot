@@ -6,7 +6,7 @@ import tarehart.rlbot.TacticalBundle
 import java.awt.Graphics2D
 import java.util.function.Predicate
 
-class WhileConditionStep(private val predicate: Predicate<AgentInput>, private val outputFn: (input: AgentInput) -> AgentOutput) : StandardStep() {
+class WhileConditionStep(private val predicate: Predicate<AgentInput>, private val outputFn: (bundle: TacticalBundle) -> AgentOutput) : StandardStep() {
 
     override val situation = "Reactive memory"
 
@@ -29,7 +29,7 @@ class WhileConditionStep(private val predicate: Predicate<AgentInput>, private v
 
     companion object {
         
-        fun until(predicate: Predicate<AgentInput>, outputFn: (input: AgentInput) -> AgentOutput) : WhileConditionStep {
+        fun until(predicate: Predicate<AgentInput>, outputFn: (bundle: TacticalBundle) -> AgentOutput) : WhileConditionStep {
             return WhileConditionStep(predicate.negate(), outputFn)
         }
     }

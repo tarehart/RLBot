@@ -20,13 +20,13 @@ import javax.swing.JPanel
 class ArenaDisplay : JPanel() {
     private var realBallColor = NEUTRAL_BALL_COLOR
 
-    private var input: AgentInput? = null
+    private var bundle: TacticalBundle? = null
     private var myCar: CarData? = null
     private var ball: Vector3? = null
     private var ballPrediction = Vector3()
     private var expectedEnemyContact: Vector3? = null
 
-    fun updateInput(input: AgentInput) {
+    fun updateInput(bundle: TacticalBundle) {
         this.input = input
         myCar = input.myCarData
         ball = input.ballPosition

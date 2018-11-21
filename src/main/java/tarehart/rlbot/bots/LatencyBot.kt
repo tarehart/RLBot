@@ -12,7 +12,7 @@ class LatencyBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
     private var hasJumped: Boolean = false
 
-    override fun getOutput(input: AgentInput): AgentOutput {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput {
 
         if (!hasJumped) {
             if (VectorUtil.flatDistance(input.ballPosition, Vector3()) > 0) {

@@ -19,7 +19,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
         return "Final approach"
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         if (strikeStarted) {
             return null // If we're here, then we already launched and then finished our strike, so we're totally done.

@@ -29,7 +29,7 @@ class ReliefBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         return gameMode
     }
 
-    override fun getOutput(input: AgentInput): AgentOutput {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput {
 
         gameMode()
 
@@ -57,7 +57,7 @@ class ReliefBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
     }
 
-    override fun roundInLimbo(input: AgentInput) {
+    override fun roundInLimbo(bundle: TacticalBundle) {
         // NeverCast here, I want my hoops code to run even when the game hasn't started.
         if (gameMode() == GameMode.HOOPS) {
             val ballPath = ArenaModel.predictBallPath(input)

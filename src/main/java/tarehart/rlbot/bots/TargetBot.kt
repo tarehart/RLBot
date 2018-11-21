@@ -110,11 +110,11 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                 ))
     }, Duration.ofSeconds(4.0))
 
-    override fun getOutput(input: AgentInput): AgentOutput {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput {
         return runOrientationTest(input)
     }
 
-    private fun runHoopsKickoffTest(input: AgentInput): AgentOutput {
+    private fun runHoopsKickoffTest(bundle: TacticalBundle): AgentOutput {
 
         if (hoopKickoffLoop.check(input)) {
             currentPlan = Plan()
@@ -140,7 +140,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     // Aerial integration test, can ReliefBot smash the ball in the air, every time.
     // Follow up test would be, can ReliefBot hit the ball at a target, i.e a point on goal or at a wall.
     // But that can be another test for a later time.
-    private fun runAerialTest(input: AgentInput): AgentOutput {
+    private fun runAerialTest(bundle: TacticalBundle): AgentOutput {
         val car = input.myCarData
 
         if (input.playerIndex == 0) {
@@ -197,7 +197,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         return AgentOutput()
     }
 
-    private fun runOrientationTest(input: AgentInput): AgentOutput {
+    private fun runOrientationTest(bundle: TacticalBundle): AgentOutput {
         val car = input.myCarData
 
         orientationTestLoop.check(input)
@@ -225,7 +225,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         return AgentOutput()
     }
 
-    private fun runDemolitionTest(input: AgentInput): AgentOutput {
+    private fun runDemolitionTest(bundle: TacticalBundle): AgentOutput {
         if (!input.matchInfo.roundActive) {
             return AgentOutput()
         }

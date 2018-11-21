@@ -20,7 +20,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
 
     private var startTime: GameTime? = null
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
         if (startTime == null) {
             startTime = input.time
         }
@@ -32,7 +32,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
         return startPlan(plan, input)
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         val st = startTime ?: input.time
         return Duration.between(st, input.time).seconds > lifespan
     }

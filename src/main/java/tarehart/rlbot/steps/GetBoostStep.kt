@@ -18,7 +18,7 @@ import tarehart.rlbot.tuning.BotLog.println
 class GetBoostStep : NestedPlanStep() {
     private var targetLocation: BoostPad? = null
 
-    public override fun doInitialComputation(input: AgentInput) {
+    public override fun doInitialComputation(bundle: TacticalBundle) {
 
         if (targetLocation == null) {
             init(input)
@@ -33,14 +33,14 @@ class GetBoostStep : NestedPlanStep() {
 
     }
 
-    public override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    public override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
 
         return input.myCarData.boost > 99 ||
                 targetLocation == null || !targetLocation!!.isActive
 
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
         val targetLoc = targetLocation ?: return null
@@ -70,7 +70,7 @@ class GetBoostStep : NestedPlanStep() {
         }
     }
 
-    private fun init(input: AgentInput) {
+    private fun init(bundle: TacticalBundle) {
         targetLocation = getTacticalBoostLocation(input)
     }
 
@@ -79,7 +79,7 @@ class GetBoostStep : NestedPlanStep() {
     }
 
 
-    private fun getTacticalBoostLocation(input: AgentInput): BoostPad? {
+    private fun getTacticalBoostLocation(bundle: TacticalBundle): BoostPad? {
         var nearestLocation: BoostPad? = null
         var minTime = java.lang.Double.MAX_VALUE
         val carData = input.myCarData

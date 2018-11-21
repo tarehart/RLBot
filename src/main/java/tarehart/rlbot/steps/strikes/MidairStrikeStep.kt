@@ -43,7 +43,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         return "Midair Strike"
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         return input.myCarData.hasWheelContact
     }
 
@@ -51,7 +51,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         return true
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         if (! ::lastMomentForDodge.isInitialized) {
             lastMomentForDodge = input.time.plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart)

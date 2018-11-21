@@ -19,18 +19,18 @@ interface TacticsAdvisor {
 
     fun suitableGameModes(): Set<GameMode>
 
-    fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan?
+    fun findMoreUrgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?): Plan?
 
-    fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan
+    fun makeFreshPlan(bundle: TacticalBundle, situation: TacticalSituation): Plan
 
-    fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation
+    fun assessSituation(bundle: TacticalBundle, ballPath: BallPath, currentPlan: Plan?): TacticalSituation
 
     companion object {
 
         val LOOKAHEAD_SECONDS = 2.0
         val PLAN_HORIZON = Duration.ofSeconds(6.0)
 
-        fun getYAxisWrongSidedness(input: AgentInput): Double {
+        fun getYAxisWrongSidedness(bundle: TacticalBundle): Double {
             val (_, y) = GoalUtil.getOwnGoal(input.team).center
             val playerToBallY = input.ballPosition.y - input.myCarData.position.y
             return playerToBallY * Math.signum(y)
@@ -63,7 +63,7 @@ interface TacticsAdvisor {
         }
 
 
-        fun measureOutOfPosition(input: AgentInput): Double {
+        fun measureOutOfPosition(bundle: TacticalBundle): Double {
             val car = input.myCarData
             val myGoal = GoalUtil.getOwnGoal(input.team)
             val ballToGoal = myGoal.center.minus(input.ballPosition)

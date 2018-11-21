@@ -39,7 +39,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     //private var earliestIntercept: GameTime? = null
     private val disruptionMeter = BallPathDisruptionMeter()
 
-    override fun doInitialComputation(input: AgentInput) {
+    override fun doInitialComputation(bundle: TacticalBundle) {
         recentCar = input.myCarData
 
         if (doneMoment == null && input.myCarData.position.distance(input.ballPosition) < 4.5) {
@@ -48,7 +48,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
 
@@ -179,7 +179,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         return getNavigation(input, precisionPlan.steerPlan)
     }
 
-    private fun getNavigation(input: AgentInput, circleTurnOption: SteerPlan): AgentOutput? {
+    private fun getNavigation(bundle: TacticalBundle, circleTurnOption: SteerPlan): AgentOutput? {
         val car = input.myCarData
 
         SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)?.let {

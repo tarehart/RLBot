@@ -18,7 +18,7 @@ import java.util.Optional
 class ThreatAssessor {
 
 
-    fun measureThreat(input: AgentInput, enemyCarOption: CarWithIntercept?): Double {
+    fun measureThreat(bundle: TacticalBundle, enemyCarOption: CarWithIntercept?): Double {
 
         val enemyPosture = measureEnemyPosture(input, enemyCarOption)
         var ballThreat = measureBallThreat(input) * .3
@@ -31,7 +31,7 @@ class ThreatAssessor {
         return enemyThreat + ballThreat
     }
 
-    private fun measureEnemyPosture(input: AgentInput, enemyCar: CarWithIntercept?): Double {
+    private fun measureEnemyPosture(bundle: TacticalBundle, enemyCar: CarWithIntercept?): Double {
 
         if (enemyCar == null) {
             return 0.0
@@ -47,7 +47,7 @@ class ThreatAssessor {
     }
 
 
-    private fun measureBallThreat(input: AgentInput): Double {
+    private fun measureBallThreat(bundle: TacticalBundle): Double {
 
         val car = input.myCarData
         val myGoal = GoalUtil.getOwnGoal(input.team)

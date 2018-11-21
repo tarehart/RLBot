@@ -6,7 +6,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.tuning.BotLog
 
-class ZonePlan(input: AgentInput) {
+class ZonePlan(bundle: TacticalBundle) {
 
     val ballPosition: Vector3 = input.ballPosition
     val myCar: CarData = input.myCarData

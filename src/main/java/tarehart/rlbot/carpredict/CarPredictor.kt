@@ -18,7 +18,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
     private val SECONDS_SPENT_CIRCLING = 0.5
     private var sliceHistory = LinkedList<CarData>()
 
-    fun predictCarMotion(input: AgentInput, duration: Duration): CarPath {
+    fun predictCarMotion(bundle: TacticalBundle, duration: Duration): CarPath {
 
         val car = input.allCars[carIndex]
 

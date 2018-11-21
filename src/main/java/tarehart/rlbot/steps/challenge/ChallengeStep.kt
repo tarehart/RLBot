@@ -33,12 +33,12 @@ class ChallengeStep: NestedPlanStep() {
         return  "Working on challenge"
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         val tacticalSituation = TacticsTelemetry.get(input.playerIndex) ?: return false
         return !threatExists(tacticalSituation)
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
 

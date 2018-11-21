@@ -36,7 +36,7 @@ class InterceptStep(
     private var chosenIntercept: Intercept? = null
     private var originalTouch: BallTouch? = null
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val carData = input.myCarData
 
@@ -87,7 +87,7 @@ class InterceptStep(
         return getThereOnTime(input, soonestIntercept)
     }
 
-    private fun getThereOnTime(input: AgentInput, intercept: Intercept): AgentOutput {
+    private fun getThereOnTime(bundle: TacticalBundle, intercept: Intercept): AgentOutput {
 
         val car = input.myCarData
 

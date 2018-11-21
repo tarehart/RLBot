@@ -38,7 +38,7 @@ class WallTouchStep : NestedPlanStep() {
         return "Making a wall touch."
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
         if (!car.hasWheelContact) {
@@ -118,7 +118,7 @@ class WallTouchStep : NestedPlanStep() {
             return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE
         }
 
-        private fun readyToJump(input: AgentInput, carPositionAtContact: SpaceTime): Boolean {
+        private fun readyToJump(bundle: TacticalBundle, carPositionAtContact: SpaceTime): Boolean {
 
             val car = input.myCarData
             if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .3 || !ArenaModel.isCarOnWall(car)) {
@@ -137,7 +137,7 @@ class WallTouchStep : NestedPlanStep() {
             return tMinus < 0.1 && tMinus > -.4 && linedUp
         }
 
-        private fun isAcceptableZoneForWallTouch(input: AgentInput, ballPosition: Vector3): Boolean {
+        private fun isAcceptableZoneForWallTouch(bundle: TacticalBundle, ballPosition: Vector3): Boolean {
             val situation = TacticsTelemetry[input.playerIndex] ?: return false
             val hasTeammate = input.getTeamRoster(input.team).size > 1
             val allowedYValue = if (hasTeammate) 1.0 else .7
@@ -150,7 +150,7 @@ class WallTouchStep : NestedPlanStep() {
             return true
         }
 
-        fun hasWallTouchOpportunity(input: AgentInput, ballPath: BallPath): Boolean {
+        fun hasWallTouchOpportunity(bundle: TacticalBundle, ballPath: BallPath): Boolean {
 
             val nearWallOption = ballPath.findSlice { ballPosition: BallSlice ->
                 isAcceptableZoneForWallTouch(input, ballPosition.space) && isBallOnWall(ballPosition) }

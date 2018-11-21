@@ -23,7 +23,7 @@ class GoForKickoffStep : NestedPlanStep() {
     private var counterAttack = false // Math.random() < .3
     private lateinit var startTime: GameTime
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
         if (input.ballPosition.flatten().magnitudeSquared() > 0) {
             return null
         }

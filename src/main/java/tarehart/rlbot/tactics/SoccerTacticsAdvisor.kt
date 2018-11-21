@@ -36,7 +36,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         return setOf(GameMode.SOCCER)
     }
 
-    override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    override fun findMoreUrgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
         val car = input.myCarData
         val zonePlan = ZoneTelemetry.get(input.playerIndex)
@@ -129,7 +129,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         return null
     }
 
-    override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+    override fun makeFreshPlan(bundle: TacticalBundle, situation: TacticalSituation): Plan {
 
         if (situation.teamPlayerWithInitiative.car != input.myCarData) {
 
@@ -182,7 +182,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
     }
 
-    private fun makePlanWithPlentyOfTime(input: AgentInput, situation: TacticalSituation, ballPath: BallPath): Plan {
+    private fun makePlanWithPlentyOfTime(bundle: TacticalBundle, situation: TacticalSituation, ballPath: BallPath): Plan {
 
         val car = input.myCarData
 
@@ -220,7 +220,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 .withStep(DemolishEnemyStep())
     }
 
-    override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+    override fun assessSituation(bundle: TacticalBundle, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
         val teamIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team), ballPath)
         val enemyIntercepts = TacticsAdvisor.getCarIntercepts(input.getTeamRoster(input.team.opposite()), ballPath)
@@ -303,7 +303,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
     companion object {
 
         // Checks to see if the ball is in the corner and if the opponent is closer to it
-        fun getWaitToClear(zonePlan: ZonePlan?, input: AgentInput, enemyCar: CarData?): Boolean {
+        fun getWaitToClear(zonePlan: ZonePlan?, bundle: TacticalBundle, enemyCar: CarData?): Boolean {
             val myGoalLocation = GoalUtil.getOwnGoal(input.team).center
             val myBallDistance = input.ballPosition.distance(input.myCarData.position)
             val enemyBallDistance = enemyCar?.let { c -> input.ballPosition.distance(c.position) } ?: java.lang.Double.MAX_VALUE

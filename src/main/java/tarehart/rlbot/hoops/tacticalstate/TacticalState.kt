@@ -5,7 +5,7 @@ import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.tactics.TacticalSituation
 
 interface TacticalState {
-    fun muse(input: AgentInput, situation: TacticalSituation): TacticalState
-    fun urgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?) : Plan?
-    fun newPlan(input: AgentInput, situation: TacticalSituation) : Plan
+    fun muse(bundle: TacticalBundle, situation: TacticalSituation): TacticalState
+    fun urgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?) : Plan?
+    fun newPlan(bundle: TacticalBundle, situation: TacticalSituation) : Plan
 }

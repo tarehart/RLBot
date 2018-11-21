@@ -7,7 +7,7 @@ import tarehart.rlbot.planning.SetPieces
 
 class JumpingBeanBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
-    override fun getOutput(input: AgentInput): AgentOutput {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput {
 
         if (Plan.activePlanKt(currentPlan) == null) {
             currentPlan = SetPieces.jumpSuperHigh(10.0)

@@ -9,7 +9,7 @@ import tarehart.rlbot.tuning.BotLog.println
 
 class ChaseBallStep : NestedPlanStep() {
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
         val tacticalSituation = TacticsTelemetry[input.playerIndex]
 
         if (tacticalSituation?.expectedContact != null) {

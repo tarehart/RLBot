@@ -20,7 +20,7 @@ class AdversityBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
     private val tacticsAdvisor: TacticsAdvisor = SoccerTacticsAdvisor()
 
-    override fun getOutput(input: AgentInput): AgentOutput {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput {
 
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)
@@ -45,7 +45,7 @@ class AdversityBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
     }
 
-    private fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+    private fun makeFreshPlan(bundle: TacticalBundle, situation: TacticalSituation): Plan {
         val car = input.myCarData
 
         val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(DemolishEnemyStep())
@@ -59,7 +59,7 @@ class AdversityBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
         return plan
     }
 
-    private fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    private fun findMoreUrgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
         val car = input.myCarData
 

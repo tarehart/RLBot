@@ -36,7 +36,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         return car.velocity.flatten().dotProduct(car.orientation.noseVector.flatten()) < 15
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
         val latestTarget = targetFunction.invoke(input) ?: return null

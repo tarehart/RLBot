@@ -6,7 +6,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.tuning.BotLog
 
-class TeamPlan(input: AgentInput) {
+class TeamPlan(bundle: TacticalBundle) {
 
     val teamIntents: MutableList<TeamIntent> = mutableListOf<TeamIntent>()
     val ballPosition: Vector3 = input.ballPosition

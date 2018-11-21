@@ -25,7 +25,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         return "Getting on offense"
     }
 
-    override fun doInitialComputation(input: AgentInput) {
+    override fun doInitialComputation(bundle: TacticalBundle) {
         val tacticalSituationOption = TacticsTelemetry.get(input.playerIndex)
 
         val ballPath = ArenaModel.predictBallPath(input)
@@ -65,7 +65,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         }
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         val car = input.myCarData
         val target = latestTarget ?: return true
         val ballFuture = latestBallFuture ?: return true
@@ -80,7 +80,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         return false
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
         val target = latestTarget ?: return null

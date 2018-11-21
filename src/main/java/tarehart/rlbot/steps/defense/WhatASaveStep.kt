@@ -27,7 +27,7 @@ class WhatASaveStep : NestedPlanStep() {
 
     private var whichPost: Double? = null
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
         val ballPath = ArenaModel.predictBallPath(input)

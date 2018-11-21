@@ -13,7 +13,7 @@ import tarehart.rlbot.tactics.TacticsTelemetry
 class RotateAndWaitToClearStep : NestedPlanStep() {
 
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val positionFacing = GetOnDefenseStep.calculatePositionFacing(input)
         val car = input.myCarData
@@ -35,7 +35,7 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
         return "Rotating and waiting to clear"
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         val tacticalSituation = TacticsTelemetry[input.myCarData.playerIndex]
         val zonePlan = ZoneTelemetry[input.playerIndex]
         return !SoccerTacticsAdvisor.getWaitToClear(zonePlan, input, tacticalSituation?.enemyPlayerWithInitiative?.car)

@@ -13,7 +13,7 @@ abstract class NestedPlanStep : Step {
     protected var zombie : Boolean = false
     protected var cancelPlan = false
 
-    protected fun startPlan(p: Plan, input: AgentInput): AgentOutput? {
+    protected fun startPlan(p: Plan, bundle: TacticalBundle): AgentOutput? {
         plan = p
         return p.getOutput(input)
     }
@@ -36,7 +36,7 @@ abstract class NestedPlanStep : Step {
      * This allows you to avoid duplicate computation, e.g. in the shouldCancelPlanAndAbort function,
      * by storing the results in a field.
      */
-    open protected fun doInitialComputation(input: AgentInput) {
+    open protected fun doInitialComputation(bundle: TacticalBundle) {
         // Do nothing. Feel free to override.
     }
 
@@ -44,11 +44,11 @@ abstract class NestedPlanStep : Step {
      * Please avoid side effects. If you want to store the results of computation,
      * please use the doInitialComputation function.
      */
-    open protected fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    open protected fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         return false
     }
 
-    abstract fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput?
+    abstract fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput?
 
     abstract fun getLocalSituation() : String
 

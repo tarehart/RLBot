@@ -101,7 +101,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     }
 
 
-    fun processInput(input: AgentInput): AgentOutput {
+    fun processInput(bundle: TacticalBundle): AgentOutput {
         BotLog.setTimeStamp(input.time)
         val output: AgentOutput
         var ballPath = Optional.empty<BallPath>()
@@ -150,9 +150,9 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         return output
     }
 
-    protected abstract fun getOutput(input: AgentInput): AgentOutput
+    protected abstract fun getOutput(bundle: TacticalBundle): AgentOutput
 
-    protected open fun roundInLimbo(input: AgentInput) { }
+    protected open fun roundInLimbo(bundle: TacticalBundle) { }
 
     companion object {
         val lock = Object()

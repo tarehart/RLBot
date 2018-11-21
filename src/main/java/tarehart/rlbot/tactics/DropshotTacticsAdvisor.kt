@@ -26,7 +26,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         return setOf(GameMode.DROPSHOT)
     }
 
-    override fun findMoreUrgentPlan(input: AgentInput, situation: TacticalSituation, currentPlan: Plan?): Plan? {
+    override fun findMoreUrgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?): Plan? {
 
         val car = input.myCarData
 
@@ -63,7 +63,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         return null
     }
 
-    override fun makeFreshPlan(input: AgentInput, situation: TacticalSituation): Plan {
+    override fun makeFreshPlan(bundle: TacticalBundle, situation: TacticalSituation): Plan {
 
         if (WallTouchStep.hasWallTouchOpportunity(input, situation.ballPath)) {
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
@@ -96,7 +96,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         return rotationPlan
     }
 
-    override fun assessSituation(input: AgentInput, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
+    override fun assessSituation(bundle: TacticalBundle, ballPath: BallPath, currentPlan: Plan?): TacticalSituation {
 
         // DropshotWallKick().getKickDirection(input.myCarData, input.ballPosition)
 

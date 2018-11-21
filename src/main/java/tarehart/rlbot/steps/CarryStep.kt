@@ -79,7 +79,7 @@ class CarryStep : StandardStep() {
             return Vector3(x, y, zDiff)
         }
 
-        private fun canCarry(input: AgentInput, log: Boolean): Boolean {
+        private fun canCarry(bundle: TacticalBundle, log: Boolean): Boolean {
 
             val car = input.myCarData
             val (x, y, z) = positionInCarCoordinates(car, input.ballPosition)

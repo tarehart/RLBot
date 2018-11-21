@@ -25,11 +25,11 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         return "Landing gracefully"
     }
 
-    override fun shouldCancelPlanAndAbort(input: AgentInput): Boolean {
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         return input.myCarData.position.z < NEEDS_LANDING_HEIGHT || ArenaModel.isBehindGoalLine(input.myCarData.position)
     }
 
-    override fun doComputationInLieuOfPlan(input: AgentInput): AgentOutput? {
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = input.myCarData
 
@@ -105,12 +105,12 @@ class LandGracefullyStep(private val facingFn: (AgentInput) -> Vector2) : Nested
         val FACE_BALL = { inp: AgentInput -> faceBall(inp) }
         val FACE_MOTION = { inp: AgentInput -> faceVelocity(inp) }
 
-        private fun faceBall(input: AgentInput): Vector2 {
+        private fun faceBall(bundle: TacticalBundle): Vector2 {
             val toBall = input.ballPosition.minus(input.myCarData.position).flatten()
             return toBall.normalized()
         }
 
-        private fun faceVelocity(input: AgentInput): Vector2 {
+        private fun faceVelocity(bundle: TacticalBundle): Vector2 {
             return input.myCarData.velocity.flatten().normalized()
         }
     }
