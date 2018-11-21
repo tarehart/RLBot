@@ -14,7 +14,7 @@ class LineUpInReverseStep(private val waypoint: Vector2) : StandardStep() {
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        val car = bundle.myCarData
+        val car = bundle.agentInput.myCarData
 
         val waypointToCar = car.position.flatten().minus(waypoint)
 
