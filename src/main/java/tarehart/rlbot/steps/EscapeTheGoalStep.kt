@@ -16,7 +16,7 @@ class EscapeTheGoalStep : StandardStep() {
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        val car = bundle.myCarData
+        val car = bundle.agentInput.myCarData
         if (!ArenaModel.isBehindGoalLine(car.position)) {
             return null
         }

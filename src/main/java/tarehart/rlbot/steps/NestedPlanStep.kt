@@ -15,7 +15,7 @@ abstract class NestedPlanStep : Step {
 
     protected fun startPlan(p: Plan, bundle: TacticalBundle): AgentOutput? {
         plan = p
-        return p.getOutput(input)
+        return p.getOutput(bundle)
     }
 
     final override fun getOutput(bundle: TacticalBundle): AgentOutput? {

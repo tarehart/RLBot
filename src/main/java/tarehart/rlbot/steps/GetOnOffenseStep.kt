@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -26,17 +27,17 @@ class GetOnOffenseStep : NestedPlanStep() {
     }
 
     override fun doInitialComputation(bundle: TacticalBundle) {
-        val tacticalSituationOption = TacticsTelemetry.get(input.playerIndex)
+        val tacticalSituationOption = TacticsTelemetry.get(bundle.agentInput.playerIndex)
 
-        val ballPath = ArenaModel.predictBallPath(input)
+        val ballPath = ArenaModel.predictBallPath(bundle)
 
         val ballFuture = tacticalSituationOption?.expectedContact?.space ?:
-                ballPath.getMotionAt(input.time.plusSeconds(4.0))?.space ?: input.ballPosition
+                ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(4.0))?.space ?: bundle.agentInput.ballPosition
 
         latestBallFuture = ballFuture
 
-        val enemyGoal = GoalUtil.getEnemyGoal(input.team)
-        val ownGoal = GoalUtil.getOwnGoal(input.team)
+        val enemyGoal = GoalUtil.getEnemyGoal(bundle.agentInput.team)
+        val ownGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
 
 
         val backoff = 20 + ballFuture.z
@@ -66,7 +67,7 @@ class GetOnOffenseStep : NestedPlanStep() {
     }
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
         val target = latestTarget ?: return true
         val ballFuture = latestBallFuture ?: return true
         val backoff = ballFuture.flatten().distance(target.position)
@@ -82,17 +83,17 @@ class GetOnOffenseStep : NestedPlanStep() {
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
         val target = latestTarget ?: return null
 
         SteerUtil.getSensibleFlip(car, target.position)?.let {
-            println("Front flip toward offense", input.playerIndex)
-            return startPlan(it, input)
+            println("Front flip toward offense", bundle.agentInput.playerIndex)
+            return startPlan(it, bundle)
         }
 
         return startPlan(
                 Plan().withStep(ParkTheCarStep({ latestTarget })),
-                input)
+                bundle)
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {

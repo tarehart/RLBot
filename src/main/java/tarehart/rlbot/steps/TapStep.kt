@@ -12,9 +12,9 @@ class TapStep(private val numFrames: Int, private val output: AgentOutput) : Sta
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        if (previousTime == null || bundle.time.isAfter(previousTime!!)) {
+        if (previousTime == null || bundle.agentInput.time.isAfter(previousTime!!)) {
             frameCount++
-            previousTime = bundle.time
+            previousTime = bundle.agentInput.time
         }
 
         return if (frameCount > numFrames) {

@@ -14,10 +14,10 @@ class BlindStep(private val duration: Duration, private val output: AgentOutput)
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
         if (! ::scheduledEndTime.isInitialized) {
-            scheduledEndTime = bundle.time.plus(duration)
+            scheduledEndTime = bundle.agentInput.time.plus(duration)
         }
 
-        if (bundle.time.isAfter(scheduledEndTime)) {
+        if (bundle.agentInput.time.isAfter(scheduledEndTime)) {
             return null
         }
 

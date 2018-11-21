@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
@@ -20,33 +21,33 @@ class DribbleStep : NestedPlanStep() {
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
-        if (!canDribble(input, true)) {
+        if (!canDribble(bundle, true)) {
             return null
         }
 
         val myPositonFlat = car.position.flatten()
         val myDirectionFlat = car.orientation.noseVector.flatten()
-        val ballPositionFlat = input.ballPosition.flatten()
-        val ballVelocityFlat = input.ballVelocity.flatten()
+        val ballPositionFlat = bundle.agentInput.ballPosition.flatten()
+        val ballVelocityFlat = bundle.agentInput.ballVelocity.flatten()
         val toBallFlat = ballPositionFlat.minus(myPositonFlat)
         val flatDistance = toBallFlat.magnitude()
 
         val ballSpeed = ballVelocityFlat.magnitude()
         val leadSeconds = .2
 
-        val ballPath = ArenaModel.predictBallPath(input)
+        val ballPath = ArenaModel.predictBallPath(bundle)
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         motionAfterWallBounce?.time?.let {
-            if (Duration.between(input.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
+            if (Duration.between(bundle.agentInput.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
         }
 
-        val futureBallPosition = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
+        val futureBallPosition = ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
 
 
-        val scoreLocation = GoalUtil.getEnemyGoal(input.team).getNearestEntrance(input.ballPosition, 3.0).flatten()
+        val scoreLocation = GoalUtil.getEnemyGoal(bundle.agentInput.team).getNearestEntrance(bundle.agentInput.ballPosition, 3.0).flatten()
 
         val ballToGoal = scoreLocation.minus(futureBallPosition)
         val pushDirection: Vector2
@@ -69,9 +70,9 @@ class DribbleStep : NestedPlanStep() {
         val carToPressurePoint = pressurePoint.minus(myPositonFlat)
         val carToBall = futureBallPosition.minus(myPositonFlat)
 
-        val hurryUp = input.time.plusSeconds(leadSeconds)
+        val hurryUp = bundle.agentInput.time.plusSeconds(leadSeconds)
 
-        val hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || input.ballPosition.z > 2
+        val hasLineOfSight = pushDirection.normalized().dotProduct(carToBall.normalized()) > -.2 || bundle.agentInput.ballPosition.z > 2
         if (!hasLineOfSight) {
             // Steer toward a farther-back waypoint.
             val (x, y) = VectorUtil.orthogonal(pushDirection) { v -> v.dotProduct(ballToGoal) < 0 }.scaledToMagnitude(5.0)
@@ -81,12 +82,12 @@ class DribbleStep : NestedPlanStep() {
 
         val dribble = SteerUtil.getThereOnTime(car, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
         if (carToPressurePoint.normalized().dotProduct(ballToGoal.normalized()) > .80 &&
-                flatDistance > 3 && flatDistance < 5 && input.ballPosition.z < 2 && approachDistance < 2
+                flatDistance > 3 && flatDistance < 5 && bundle.agentInput.ballPosition.z < 2 && approachDistance < 2
                 && Vector2.angle(myDirectionFlat, carToPressurePoint) < Math.PI / 12) {
             if (car.boost > 0) {
                 dribble.withThrottle(1.0).withBoost()
             } else {
-                return startPlan(SetPieces.frontFlip(), input)
+                return startPlan(SetPieces.frontFlip(), bundle)
             }
         }
         return dribble
@@ -106,43 +107,43 @@ class DribbleStep : NestedPlanStep() {
 
         fun canDribble(bundle: TacticalBundle, log: Boolean): Boolean {
 
-            val car = input.myCarData
-            val ballToMe = car.position.minus(input.ballPosition)
+            val car = bundle.agentInput.myCarData
+            val ballToMe = car.position.minus(bundle.agentInput.ballPosition)
 
             if (ballToMe.magnitude() > DRIBBLE_DISTANCE) {
                 // It got away from us
                 if (log) {
-                    BotLog.println("Too far to dribble", input.playerIndex)
+                    BotLog.println("Too far to dribble", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
-            if (input.ballPosition.minus(car.position).normaliseCopy().dotProduct(
-                            GoalUtil.getOwnGoal(input.team).center.minus(input.ballPosition).normaliseCopy()) > .9) {
+            if (bundle.agentInput.ballPosition.minus(car.position).normaliseCopy().dotProduct(
+                            GoalUtil.getOwnGoal(bundle.agentInput.team).center.minus(bundle.agentInput.ballPosition).normaliseCopy()) > .9) {
                 // Wrong side of ball
                 if (log) {
-                    BotLog.println("Wrong side of ball for dribble", input.playerIndex)
+                    BotLog.println("Wrong side of ball for dribble", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
-            if (VectorUtil.flatDistance(car.velocity, input.ballVelocity) > 30) {
+            if (VectorUtil.flatDistance(car.velocity, bundle.agentInput.ballVelocity) > 30) {
                 if (log) {
-                    BotLog.println("Velocity too different to dribble.", input.playerIndex)
+                    BotLog.println("Velocity too different to dribble.", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
-            if (BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 50) {
+            if (BallPhysics.getGroundBounceEnergy(bundle.agentInput.ballPosition.z, bundle.agentInput.ballVelocity.z) > 50) {
                 if (log) {
-                    BotLog.println("Ball bouncing too hard to dribble", input.playerIndex)
+                    BotLog.println("Ball bouncing too hard to dribble", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (car.position.z > 5) {
                 if (log) {
-                    BotLog.println("Car too high to dribble", input.playerIndex)
+                    BotLog.println("Car too high to dribble", bundle.agentInput.playerIndex)
                 }
                 return false
             }

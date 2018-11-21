@@ -19,20 +19,20 @@ class CatchBallStep : StandardStep() {
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        val car = bundle.myCarData
+        val car = bundle.agentInput.myCarData
 
         val ballPath = ArenaModel.predictBallPath(bundle)
         val catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car)) ?: return null
 
         // Weed out any intercepts after a catch opportunity. Should just catch it.
         latestCatchLocation = catchOpportunity
-        return if (Duration.between(bundle.time, latestCatchLocation.time).seconds > 2) {
+        return if (Duration.between(bundle.agentInput.time, latestCatchLocation.time).seconds > 2) {
             null // Don't wait around for so long
         } else playCatch(bundle, latestCatchLocation)
     }
 
     private fun playCatch(bundle: TacticalBundle, catchLocation: SpaceTime): AgentOutput {
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
         val enemyGoal = GoalUtil.getEnemyGoal(car.team).center
         val enemyGoalToLoc = catchLocation.space.minus(enemyGoal)
         val offset = Vector3(enemyGoalToLoc.x, enemyGoalToLoc.y, 0.0).scaledToMagnitude(1.2)

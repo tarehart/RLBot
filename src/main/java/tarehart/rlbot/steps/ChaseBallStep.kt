@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.tactics.TacticsTelemetry
 
@@ -10,7 +11,7 @@ import tarehart.rlbot.tuning.BotLog.println
 class ChaseBallStep : NestedPlanStep() {
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
-        val tacticalSituation = TacticsTelemetry[input.playerIndex]
+        val tacticalSituation = TacticsTelemetry[bundle.agentInput.playerIndex]
 
         if (tacticalSituation?.expectedContact != null) {
             // There's an intercept, quit this thing.
@@ -18,14 +19,14 @@ class ChaseBallStep : NestedPlanStep() {
             return null
         }
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
-        SteerUtil.getSensibleFlip(car, input.ballPosition)?.let {
-            println("Front flip after ball", input.playerIndex)
-            return startPlan(it, input)
+        SteerUtil.getSensibleFlip(car, bundle.agentInput.ballPosition)?.let {
+            println("Front flip after ball", bundle.agentInput.playerIndex)
+            return startPlan(it, bundle)
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, input.ballPosition)
+        return SteerUtil.steerTowardGroundPosition(car, bundle.agentInput.ballPosition)
     }
 
     override fun getLocalSituation(): String {

@@ -9,7 +9,7 @@ class WaitForActive : StandardStep() {
         get() = "Idling"
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
-        return if (bundle.matchInfo.roundActive) {
+        return if (bundle.agentInput.matchInfo.roundActive) {
             null
         } else AgentOutput()
     }

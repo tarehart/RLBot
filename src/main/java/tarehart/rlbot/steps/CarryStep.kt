@@ -29,19 +29,19 @@ class CarryStep : StandardStep() {
             return null
         }
 
-        val ballVelocityFlat = bundle.ballVelocity.flatten()
+        val ballVelocityFlat = bundle.agentInput.ballVelocity.flatten()
         val leadSeconds = .2
 
         val ballPath = ArenaModel.predictBallPath(bundle)
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         motionAfterWallBounce?.time?.let {
-            if (Duration.between(bundle.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
+            if (Duration.between(bundle.agentInput.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
         }
 
-        val futureBallPosition = ballPath.getMotionAt(bundle.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
+        val futureBallPosition = ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
 
-        val scoreLocation = GoalUtil.getEnemyGoal(bundle.team).getNearestEntrance(bundle.ballPosition, 3.0).flatten()
+        val scoreLocation = GoalUtil.getEnemyGoal(bundle.agentInput.team).getNearestEntrance(bundle.agentInput.ballPosition, 3.0).flatten()
 
         val ballToGoal = scoreLocation.minus(futureBallPosition)
         val pushDirection: Vector2
@@ -55,9 +55,9 @@ class CarryStep : StandardStep() {
         pressurePoint = futureBallPosition.minus(pushDirection.scaled(approachDistance))
 
 
-        val hurryUp = bundle.time.plusSeconds(leadSeconds)
+        val hurryUp = bundle.agentInput.time.plusSeconds(leadSeconds)
 
-        return SteerUtil.getThereOnTime(bundle.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
+        return SteerUtil.getThereOnTime(bundle.agentInput.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
     }
 
     companion object {
@@ -81,48 +81,48 @@ class CarryStep : StandardStep() {
 
         private fun canCarry(bundle: TacticalBundle, log: Boolean): Boolean {
 
-            val car = input.myCarData
-            val (x, y, z) = positionInCarCoordinates(car, input.ballPosition)
+            val car = bundle.agentInput.myCarData
+            val (x, y, z) = positionInCarCoordinates(car, bundle.agentInput.ballPosition)
 
             val xMag = Math.abs(x)
             if (xMag > MAX_X_DIFF) {
                 if (log) {
-                    println("Fell off the side", input.playerIndex)
+                    println("Fell off the side", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (y > MAX_Y) {
                 if (log) {
-                    println("Fell off the front", input.playerIndex)
+                    println("Fell off the front", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (y < MIN_Y) {
                 if (log) {
-                    println("Fell off the back", input.playerIndex)
+                    println("Fell off the back", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (z > 3) {
                 if (log) {
-                    println("Ball too high to carry", input.playerIndex)
+                    println("Ball too high to carry", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
             if (z < 1) {
                 if (log) {
-                    println("Ball too low to carry", input.playerIndex)
+                    println("Ball too low to carry", bundle.agentInput.playerIndex)
                 }
                 return false
             }
 
-            if (VectorUtil.flatDistance(car.velocity, input.ballVelocity) > 10) {
+            if (VectorUtil.flatDistance(car.velocity, bundle.agentInput.ballVelocity) > 10) {
                 if (log) {
-                    println("Velocity too different to carry.", input.playerIndex)
+                    println("Velocity too different to carry.", bundle.agentInput.playerIndex)
                 }
                 return false
             }
