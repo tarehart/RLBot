@@ -31,9 +31,7 @@ interface TacticsAdvisor {
         val LOOKAHEAD_SECONDS = 2.0
         val PLAN_HORIZON = Duration.ofSeconds(6.0)
 
-        fun getYAxisWrongSidedness(bundle: TacticalBundle): Double {
-            // TODO: Situations like this I'm not sure if we want to just pass input or keep passing TacticalBundle.
-            val input = bundle.agentInput
+        fun getYAxisWrongSidedness(input: AgentInput): Double {
             val (_, y) = GoalUtil.getOwnGoal(input.team).center
             val playerToBallY = input.ballPosition.y - input.myCarData.position.y
             return playerToBallY * Math.signum(y)
@@ -66,8 +64,7 @@ interface TacticsAdvisor {
         }
 
 
-        fun measureOutOfPosition(bundle: TacticalBundle): Double {
-            val input = bundle.agentInput
+        fun measureOutOfPosition(input: AgentInput): Double {
             val car = input.myCarData
             val myGoal = GoalUtil.getOwnGoal(input.team)
             val ballToGoal = myGoal.center.minus(input.ballPosition)
