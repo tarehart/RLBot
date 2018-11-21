@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.debug
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.routing.PositionFacing
@@ -20,7 +21,7 @@ class TagAlongStep : NestedPlanStep() {
             PositionFacing(waypoint, targetFacing)
         }).withStep(BlindStep(Duration.ofSeconds(0.2), AgentOutput()))
 
-        return startPlan(p, input)
+        return startPlan(p, bundle)
     }
 
     override fun getLocalSituation(): String {

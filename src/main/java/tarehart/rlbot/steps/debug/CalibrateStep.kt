@@ -18,18 +18,18 @@ class CalibrateStep : StandardStep() {
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        val car = bundle.myCarData
+        val car = bundle.agentInput.myCarData
 
         if (!::gameClockStart.isInitialized && Math.abs(car.spin.yawRate) < TINY_VALUE && car.hasWheelContact) {
-            gameClockStart = bundle.time
+            gameClockStart = bundle.agentInput.time
             wallClockStart = LocalDateTime.now()
         }
 
         if (::gameClockStart.isInitialized) {
             if (car.spin.yawRate > TINY_VALUE) {
                 BotLog.println(String.format("Game Latency: %s \nWall Latency: %s",
-                        Duration.between(gameClockStart, bundle.time).seconds,
-                        java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), bundle.playerIndex)
+                        Duration.between(gameClockStart, bundle.agentInput.time).seconds,
+                        java.time.Duration.between(wallClockStart, LocalDateTime.now()).toMillis() / 1000.0), bundle.agentInput.playerIndex)
                 return null
             }
             return AgentOutput().withSteer(1.0).withThrottle(1.0)
