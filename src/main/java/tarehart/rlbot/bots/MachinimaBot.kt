@@ -7,7 +7,7 @@ import tarehart.rlbot.planning.SteerUtil
 
 class MachinimaBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
-    override fun getOutput(bundle: TacticalBundle): AgentOutput {
+    override fun getOutput(input: AgentInput): AgentOutput {
 
         val enemyCar = input.getTeamRoster(input.team.opposite())[0]
         val waypoint = enemyCar.position + enemyCar.orientation.rightVector.scaled(3.0) + enemyCar.orientation.noseVector.scaled(1.0)

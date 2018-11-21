@@ -2,6 +2,7 @@ package tarehart.rlbot.bots
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
@@ -12,7 +13,7 @@ class LatencyBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
     private var hasJumped: Boolean = false
 
-    override fun getOutput(bundle: TacticalBundle): AgentOutput {
+    override fun getOutput(input: AgentInput): AgentOutput {
 
         if (!hasJumped) {
             if (VectorUtil.flatDistance(input.ballPosition, Vector3()) > 0) {
@@ -28,6 +29,6 @@ class LatencyBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             currentPlan = Plan().withStep(CalibrateStep())
         }
 
-        return currentPlan?.getOutput(input) ?: AgentOutput()
+        return currentPlan?.getOutput(TacticalBundle.dummy(input)) ?: AgentOutput()
     }
 }
