@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.state
 import rlbot.cppinterop.RLBotDll
 import rlbot.gamestate.GameState
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
@@ -15,8 +16,8 @@ class ResetLoop(private val gameState: () -> GameState, private val duration: Du
      * @return true if the game has been reset
      */
     fun check(bundle: TacticalBundle) : Boolean {
-        if (input.time > nextReset) {
-            reset(input)
+        if (bundle.agentInput.time > nextReset) {
+            reset(bundle)
             return true
         }
         return false
@@ -24,7 +25,7 @@ class ResetLoop(private val gameState: () -> GameState, private val duration: Du
 
     fun reset(bundle: TacticalBundle) {
         RLBotDll.setGameState(gameState.invoke().buildPacket())
-        nextReset = input.time + duration
+        nextReset = bundle.agentInput.time + duration
     }
 
 }
