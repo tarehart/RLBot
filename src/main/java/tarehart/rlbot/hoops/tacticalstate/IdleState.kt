@@ -16,7 +16,8 @@ class IdleState : TacticalState {
 
     val idleRenderer = NamedRenderer("hoopsIdleRenderer")
 
-    override fun muse(bundle: TacticalBundle, situation: TacticalSituation): TacticalState {
+    override fun muse(bundle: TacticalBundle): TacticalState {
+        val situation = bundle.tacticalSituation
         val input = bundle.agentInput
         if (input.ballPosition.flatten().isZero) {
             return KickoffState()
@@ -30,11 +31,11 @@ class IdleState : TacticalState {
         return this
     }
 
-    override fun urgentPlan(bundle: TacticalBundle, situation: TacticalSituation, currentPlan: Plan?) : Plan?{
+    override fun urgentPlan(bundle: TacticalBundle, currentPlan: Plan?) : Plan?{
         return null
     }
 
-    override fun newPlan(bundle: TacticalBundle, situation: TacticalSituation) : Plan {
+    override fun newPlan(bundle: TacticalBundle) : Plan {
         // println("I don't know what to do, empty plan for me")
         return Plan()
     }

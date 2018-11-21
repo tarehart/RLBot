@@ -36,9 +36,9 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         val input = bundle.agentInput
         val situation = bundle.tacticalSituation
         if (Plan.Posture.KICKOFF.canInterrupt(currentPlan)) {
-            val muse = KickoffState().muse(input, situation)
+            val muse = KickoffState().muse(bundle)
             if (muse is KickoffState) {
-                return muse.newPlan(input, situation)
+                return muse.newPlan(bundle)
             }
         }
 
