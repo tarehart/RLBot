@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.strikes
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.input.CarData
@@ -38,45 +39,45 @@ class InterceptStep(
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val carData = input.myCarData
+        val carData = bundle.agentInput.myCarData
 
-        val ballPath = ArenaModel.predictBallPath(input)
+        val ballPath = ArenaModel.predictBallPath(bundle)
         val fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(7.0), carData.boost, 0.0)
 
         val soonestIntercept = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)
         if (soonestIntercept == null) {
-            println("No intercept option found, aborting.", input.playerIndex)
+            println("No intercept option found, aborting.", bundle.agentInput.playerIndex)
             return null
         }
 
         chosenIntercept = soonestIntercept
 
-        val launchPlan = StrikePlanner.planImmediateLaunch(input.myCarData, soonestIntercept)
+        val launchPlan = StrikePlanner.planImmediateLaunch(bundle.agentInput.myCarData, soonestIntercept)
 
         launchPlan?.let {
             it.unstoppable()
-            return startPlan(it, input)
+            return startPlan(it, bundle)
         }
 
         if (originalIntercept == null) {
             originalIntercept = soonestIntercept
-            originalTouch = input.latestBallTouch
+            originalTouch = bundle.agentInput.latestBallTouch
 
         } else {
 
             if (originalIntercept?.let { ballPath.getMotionAt(it.time)?.space?.distance(it.space)?.takeIf { it > 10 } } != null) {
-                println("Ball slices has diverged from expectation, will quit.", input.playerIndex)
+                println("Ball slices has diverged from expectation, will quit.", bundle.agentInput.playerIndex)
                 zombie = true
             }
 
-            if (originalTouch?.position ?: Vector3() != input.latestBallTouch?.position ?: Vector3()) {
+            if (originalTouch?.position ?: Vector3() != bundle.agentInput.latestBallTouch?.position ?: Vector3()) {
                 // There has been a new ball touch.
-                println("Ball has been touched, quitting intercept", input.playerIndex)
+                println("Ball has been touched, quitting intercept", bundle.agentInput.playerIndex)
                 return null
             }
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         RenderUtil.drawSphere(renderer, soonestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
         RenderUtil.drawBallPath(renderer, ballPath, soonestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
         if (!interceptModifier.isZero) {
@@ -84,16 +85,16 @@ class InterceptStep(
         }
 
 
-        return getThereOnTime(input, soonestIntercept)
+        return getThereOnTime(bundle, soonestIntercept)
     }
 
     private fun getThereOnTime(bundle: TacticalBundle, intercept: Intercept): AgentOutput {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         SteerUtil.getSensibleFlip(car, intercept.space)?.let {
-            println("Front flip toward intercept", input.playerIndex)
-            startPlan(it, input)
+            println("Front flip toward intercept", bundle.agentInput.playerIndex)
+            startPlan(it, bundle)
         }?.let { return it }
 
         val timeToIntercept = Duration.between(car.time, intercept.time)

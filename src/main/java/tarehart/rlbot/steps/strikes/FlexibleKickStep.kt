@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.strikes
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.input.CarData
@@ -40,25 +41,25 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private val disruptionMeter = BallPathDisruptionMeter()
 
     override fun doInitialComputation(bundle: TacticalBundle) {
-        recentCar = input.myCarData
+        recentCar = bundle.agentInput.myCarData
 
-        if (doneMoment == null && input.myCarData.position.distance(input.ballPosition) < 4.5) {
+        if (doneMoment == null && bundle.agentInput.myCarData.position.distance(bundle.agentInput.ballPosition) < 4.5) {
             // You get a tiny bit more time
-            doneMoment = input.time.plus(Duration.ofMillis(200))
+            doneMoment = bundle.agentInput.time.plus(Duration.ofMillis(200))
         }
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         if (!initialized) {
-            originalTouch = input.latestBallTouch
+            originalTouch = bundle.agentInput.latestBallTouch
             initialized = true
         }
 
         doneMoment?.let {
-            if (input.time.isAfter(it)) {
+            if (bundle.agentInput.time.isAfter(it)) {
                 return null
             }
         }
@@ -68,7 +69,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
 
         val strikeProfileFn = { intercept:Vector3, approachAngle: Double, car: CarData -> AirTouchPlanner.getStrikeProfile(intercept, approachAngle, car) }
-        val ballPath = ArenaModel.predictBallPath(input)
+        val ballPath = ArenaModel.predictBallPath(bundle)
 
         val overallPredicate = { cd: CarData, st: SpaceTime, str: StrikeProfile ->
             val verticallyAccessible = str.verticallyAccessible.invoke(cd, st)
@@ -97,13 +98,13 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
 
         if (FinalApproachStep.readyForFinalApproach(car, precisionPlan.kickPlan.launchPad)) {
-            return startPlan(Plan().withStep(FinalApproachStep(precisionPlan.kickPlan)), input)
+            return startPlan(Plan().withStep(FinalApproachStep(precisionPlan.kickPlan)), bundle)
         }
 
 
-        if (input.latestBallTouch?.position ?: Vector3() != originalTouch?.position ?: Vector3()) {
+        if (bundle.agentInput.latestBallTouch?.position ?: Vector3() != originalTouch?.position ?: Vector3()) {
             // There has been a new ball touch.
-            println("Ball has been touched, quitting flexible hit", input.playerIndex)
+            println("Ball has been touched, quitting flexible hit", bundle.agentInput.playerIndex)
             cancelPlan = true
             return null
         }
@@ -168,23 +169,23 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 //        recentCircleTurnPlan = circleTurnPlan
 
         if (ArenaModel.getDistanceFromWall(Vector3(precisionPlan.steerPlan.waypoint.x, precisionPlan.steerPlan.waypoint.y, 0.0)) < -1) {
-            println("Failing flexible hit because waypoint is out of bounds", input.playerIndex)
+            println("Failing flexible hit because waypoint is out of bounds", bundle.agentInput.playerIndex)
             return null
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(input.bot)
+        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         precisionPlan.kickPlan.renderDebugInfo(renderer)
         precisionPlan.steerPlan.route.renderDebugInfo(renderer)
 
-        return getNavigation(input, precisionPlan.steerPlan)
+        return getNavigation(bundle, precisionPlan.steerPlan)
     }
 
     private fun getNavigation(bundle: TacticalBundle, circleTurnOption: SteerPlan): AgentOutput? {
-        val car = input.myCarData
+        val car = bundle.agentInput.myCarData
 
         SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)?.let {
-            println("Front flip toward flexible hit", input.playerIndex)
-            return startPlan(it, input)
+            println("Front flip toward flexible hit", bundle.agentInput.playerIndex)
+            return startPlan(it, bundle)
         }
 
         return circleTurnOption.immediateSteer
