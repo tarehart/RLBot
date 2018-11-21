@@ -153,8 +153,9 @@ class WallTouchStep : NestedPlanStep() {
             return true
         }
 
-        fun hasWallTouchOpportunity(bundle: TacticalBundle, ballPath: BallPath): Boolean {
+        fun hasWallTouchOpportunity(bundle: TacticalBundle): Boolean {
 
+            val ballPath = bundle.tacticalSituation.ballPath
             val nearWallOption = ballPath.findSlice { ballPosition: BallSlice ->
                 isAcceptableZoneForWallTouch(bundle, ballPosition.space) && isBallOnWall(ballPosition) }
 
