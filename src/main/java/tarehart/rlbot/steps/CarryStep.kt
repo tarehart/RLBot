@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
@@ -9,11 +10,8 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.PlanGuidance
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
-
-import java.awt.*
 
 import tarehart.rlbot.tuning.BotLog.println
 
@@ -25,25 +23,25 @@ class CarryStep : StandardStep() {
     override val situation: String
         get() = "Carrying"
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        if (!canCarry(input, true)) {
+        if (!canCarry(bundle, true)) {
             return null
         }
 
-        val ballVelocityFlat = input.ballVelocity.flatten()
+        val ballVelocityFlat = bundle.ballVelocity.flatten()
         val leadSeconds = .2
 
-        val ballPath = ArenaModel.predictBallPath(input)
+        val ballPath = ArenaModel.predictBallPath(bundle)
 
         val motionAfterWallBounce = ballPath.getMotionAfterWallBounce(1)
         motionAfterWallBounce?.time?.let {
-            if (Duration.between(input.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
+            if (Duration.between(bundle.time, it).seconds < 1) return null // The carry step is not in the business of wall reads.
         }
 
-        val futureBallPosition = ballPath.getMotionAt(input.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
+        val futureBallPosition = ballPath.getMotionAt(bundle.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
 
-        val scoreLocation = GoalUtil.getEnemyGoal(input.team).getNearestEntrance(input.ballPosition, 3.0).flatten()
+        val scoreLocation = GoalUtil.getEnemyGoal(bundle.team).getNearestEntrance(bundle.ballPosition, 3.0).flatten()
 
         val ballToGoal = scoreLocation.minus(futureBallPosition)
         val pushDirection: Vector2
@@ -57,9 +55,9 @@ class CarryStep : StandardStep() {
         pressurePoint = futureBallPosition.minus(pushDirection.scaled(approachDistance))
 
 
-        val hurryUp = input.time.plusSeconds(leadSeconds)
+        val hurryUp = bundle.time.plusSeconds(leadSeconds)
 
-        return SteerUtil.getThereOnTime(input.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
+        return SteerUtil.getThereOnTime(bundle.myCarData, SpaceTime(Vector3(pressurePoint.x, pressurePoint.y, 0.0), hurryUp))
     }
 
     companion object {

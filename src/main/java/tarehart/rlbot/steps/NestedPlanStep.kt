@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.PlanGuidance
 import java.awt.Graphics2D
@@ -17,17 +18,17 @@ abstract class NestedPlanStep : Step {
         return p.getOutput(input)
     }
 
-    final override fun getOutput(input: AgentInput): AgentOutput? {
+    final override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        doInitialComputation(input)
+        doInitialComputation(bundle)
 
-        if (zombie || shouldCancelPlanAndAbort(input) && canAbortPlanInternally()) {
+        if (zombie || shouldCancelPlanAndAbort(bundle) && canAbortPlanInternally()) {
             return null
         }
 
-        plan?.getOutput(input)?.let { return it }
+        plan?.getOutput(bundle)?.let { return it }
 
-        return doComputationInLieuOfPlan(input)
+        return doComputationInLieuOfPlan(bundle)
     }
 
     /**

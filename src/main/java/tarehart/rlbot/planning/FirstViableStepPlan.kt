@@ -3,8 +3,6 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 
-import java.util.Optional
-
 class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
 
     private var frameCount = 0

@@ -1,7 +1,7 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.PlanGuidance
 
 import java.awt.*
@@ -15,7 +15,7 @@ interface Step {
      * Return the output you want to pass to the bot.
      * If you pass Optional.empty(), you are declaring yourself to be complete.
      */
-    fun getOutput(input: AgentInput): AgentOutput?
+    fun getOutput(bundle: TacticalBundle): AgentOutput?
 
     fun canInterrupt(): Boolean
 

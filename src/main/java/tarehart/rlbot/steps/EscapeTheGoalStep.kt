@@ -1,7 +1,7 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
@@ -14,9 +14,9 @@ class EscapeTheGoalStep : StandardStep() {
 
     override val situation = "Escaping the goal"
 
-    override fun getOutput(input: AgentInput): AgentOutput? {
+    override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        val car = input.myCarData
+        val car = bundle.myCarData
         if (!ArenaModel.isBehindGoalLine(car.position)) {
             return null
         }
