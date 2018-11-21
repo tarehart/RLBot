@@ -21,8 +21,30 @@ class TacticalSituation(
         val currentPlan: Plan? = null,
         val futureBallMotion: BallSlice? = null,
         val enemyPlayerWithInitiative: CarWithIntercept?,
-        val teamPlayerWithInitiative: CarWithIntercept,
-        val teamPlayerWithBestShot: CarWithIntercept,
+        val teamPlayerWithInitiative: CarWithIntercept?,
+        val teamPlayerWithBestShot: CarWithIntercept?,
         val ballPath: BallPath,
         val gameMode: GameMode
-)
+) {
+    companion object {
+        val DUMMY = TacticalSituation(
+                0.0,
+                0.0,
+                null,
+                null,
+                null,
+                Duration.ofMillis(0),
+                null,
+                false,
+                false,
+                true,
+                null,
+                null,
+                null,
+                null,
+                null,
+                BallPath(),
+                GameMode.SOCCER
+        )
+    }
+}
