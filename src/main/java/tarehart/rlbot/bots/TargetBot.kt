@@ -117,7 +117,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
     private fun runHoopsKickoffTest(input: AgentInput): AgentOutput {
 
-        if (hoopKickoffLoop.check(input)) {
+        if (hoopKickoffLoop.check(input.time)) {
             currentPlan = Plan()
                     .withStep(BlindStep(Duration.ofMillis(1000), AgentOutput()))
                     .withStep(SetStateStep(GameState().withBallState(BallState().withPhysics(PhysicsState().withVelocity(StateVector(0F, 0F, 20F))))))
@@ -157,7 +157,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                     aerialTestCounter++
                 }
                 ballWasValidated = false
-                aerialTestLoop.reset(input) // Reset early because we hit the ball, good job
+                aerialTestLoop.reset(input.time) // Reset early because we hit the ball, good job
                 print("Touch Success: ")
                 print(aerialSuccessCounter)
                 print("/")
@@ -173,7 +173,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                 }
             }
 
-            if (aerialTestLoop.check(input)) {
+            if (aerialTestLoop.check(input.time)) {
                 if (ballWasValidated) aerialTestCounter ++
                 aerialCollisionThisTest = false
                 print("Touch Success: ")
@@ -201,7 +201,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     private fun runOrientationTest(input: AgentInput): AgentOutput {
         val car = input.myCarData
 
-        orientationTestLoop.check(input)
+        orientationTestLoop.check(input.time)
 
         /* RLBotDll.setGameState(
                 GameState().withCarState(0, CarState().withPhysics(
@@ -231,7 +231,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             return AgentOutput()
         }
 
-        demolishTestLoop.check(input)
+        demolishTestLoop.check(input.time)
 
         if (Plan.activePlanKt(currentPlan) == null) {
             val enemy = input.getTeamRoster(input.team.opposite())[0]
