@@ -11,12 +11,15 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
 
     private lateinit var tacticsAdvisor: TacticsAdvisor
 
-    override fun getOutput(input: AgentInput): AgentOutput {
-
+    private fun assessSituation(input: AgentInput): TacticalBundle {
         if (!::tacticsAdvisor.isInitialized) {
             tacticsAdvisor = getNewTacticsAdvisor()
         }
-        val bundle = tacticsAdvisor.assessSituation(input, currentPlan)
+        return tacticsAdvisor.assessSituation(input, currentPlan)
+    }
+
+    override fun getOutput(input: AgentInput): AgentOutput {
+        val bundle = assessSituation(input);
         return getOutput(bundle)
     }
 
@@ -62,6 +65,13 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
                 HoopsTacticsAdvisor()
             }
         }
+    }
+
+    override fun roundInLimbo(input: AgentInput) {
+        // Situation is assessed even when we can't control the car.
+        // We may want the ability to control the wheels or something for aesthetic later
+        // We would need to return an AgentOutput in that case.
+        assessSituation(input)
     }
 
 }
