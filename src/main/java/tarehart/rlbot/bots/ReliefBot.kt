@@ -4,25 +4,6 @@ import tarehart.rlbot.tactics.*
 
 class ReliefBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
 
-    override fun getNewTacticsAdvisor(): TacticsAdvisor {
-        val gameMode = GameModeSniffer.getGameMode()
-
-        return when (gameMode) {
-            GameMode.SOCCER -> {
-                println("Game Mode: Soccar")
-                SoccerTacticsAdvisor()
-            }
-            GameMode.DROPSHOT -> {
-                println("Game Mode: Dropshot")
-                DropshotTacticsAdvisor()
-            }
-            GameMode.HOOPS -> {
-                println("Game Mode: Hoops")
-                HoopsTacticsAdvisor()
-            }
-        }
-    }
-
     // TODO: Make a better implementation for this
     /*
     override fun roundInLimbo(bundle: TacticalBundle) {

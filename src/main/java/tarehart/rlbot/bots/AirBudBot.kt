@@ -24,10 +24,6 @@ import tarehart.rlbot.tuning.BotLog
 
 class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
 
-    override fun getNewTacticsAdvisor(): TacticsAdvisor {
-        return SoccerTacticsAdvisor()
-    }
-
     override fun getOutput(bundle: TacticalBundle): AgentOutput {
 
         val input = bundle.agentInput

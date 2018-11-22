@@ -5,7 +5,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.tactics.TacticsAdvisor
+import tarehart.rlbot.tactics.*
 
 abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
@@ -45,6 +45,23 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
         return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
     }
 
-    abstract fun getNewTacticsAdvisor() : TacticsAdvisor
+    open fun getNewTacticsAdvisor() : TacticsAdvisor {
+        val gameMode = GameModeSniffer.getGameMode()
+
+        return when (gameMode) {
+            GameMode.SOCCER -> {
+                println("Game Mode: Soccar")
+                SoccerTacticsAdvisor()
+            }
+            GameMode.DROPSHOT -> {
+                println("Game Mode: Dropshot")
+                DropshotTacticsAdvisor()
+            }
+            GameMode.HOOPS -> {
+                println("Game Mode: Hoops")
+                HoopsTacticsAdvisor()
+            }
+        }
+    }
 
 }
