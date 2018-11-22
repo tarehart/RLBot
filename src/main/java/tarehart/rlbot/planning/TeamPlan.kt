@@ -8,14 +8,5 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.tuning.BotLog
 
 class TeamPlan(input: AgentInput) {
-
-    val teamIntents: MutableList<TeamIntent> = mutableListOf<TeamIntent>()
-
-
-    init {
-        // Store data for later use and for telemetry output
-        input.allCars.forEach {
-            teamIntents.add(TeamIntent(it, input))
-        }
-    }
+    val teamIntents = input.allCars.map { TeamIntent(it, input) }
 }

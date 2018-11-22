@@ -59,8 +59,8 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
 
     companion object {
 
-        private val GOAL_DISTANCE = 102.0
-        val GOAL_HEIGHT = 12.0
-        val EXTENT = 17.8555
+        private const val GOAL_DISTANCE = 102.0
+        private const val GOAL_HEIGHT = 12.0
+        const val EXTENT = 17.8555
     }
 }

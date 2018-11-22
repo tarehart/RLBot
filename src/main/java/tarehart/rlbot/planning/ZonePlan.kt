@@ -8,19 +8,15 @@ import tarehart.rlbot.tuning.BotLog
 
 class ZonePlan(input: AgentInput) {
 
-    val ballPosition: Vector3 = input.ballPosition
-    val myCar: CarData = input.myCarData
-    val ballZone: Zone
-    val myZone: Zone // DON'T LET ME IN MY ZONE
-    private val ballIsInMyBox: Boolean
-    private val ballIsInOpponentBox: Boolean
+    val ballZone = getZone(input.ballPosition)
+    val myZone = getZone(input.myCarData.position) // DON'T LET ME IN MY ZONE
+    val ballIsInMyBox: Boolean
+    val ballIsInOpponentBox: Boolean
 
 
     init {
         // Store data for later use and for telemetry output
-
-        ballZone = getZone(ballPosition)
-        myZone = getZone(myCar.position)
+        val myCar = input.myCarData
 
         if (isAnalysisSane(ballZone, myZone, myCar.playerIndex)) {
 
@@ -33,8 +29,8 @@ class ZonePlan(input: AgentInput) {
                 ballIsInOpponentBox = this.ballZone.subZone == Zone.SubZone.BLUEBOX
             }
         } else {
-            ballIsInMyBox = false;
-            ballIsInOpponentBox = false;
+            ballIsInMyBox = false
+            ballIsInOpponentBox = false
         }
     }
 
@@ -53,7 +49,7 @@ class ZonePlan(input: AgentInput) {
         }
 
         // The order of analysis of zones basically determines their priority
-        fun getMainZone(point: Vector3): Zone.MainZone {
+        private fun getMainZone(point: Vector3): Zone.MainZone {
             val flatPoint = point.flatten()
             if (flatPoint in ZoneDefinitions.ORANGE)
                 return Zone.MainZone.ORANGE
@@ -63,7 +59,7 @@ class ZonePlan(input: AgentInput) {
         }
 
         // The order of analysis of sub zones basically determines their priority
-        fun getSubZone(point: Vector3): Zone.SubZone {
+        private fun getSubZone(point: Vector3): Zone.SubZone {
             val flatPoint = point.flatten()
             if (flatPoint in ZoneDefinitions.TOPCORNER)
                 return Zone.SubZone.TOPCORNER
@@ -81,8 +77,8 @@ class ZonePlan(input: AgentInput) {
                 return Zone.SubZone.TOP
             if (flatPoint in ZoneDefinitions.BOTTOM)
                 return Zone.SubZone.BOTTOM
-            else
-                return Zone.SubZone.NONE
+
+            return Zone.SubZone.NONE
         }
 
         fun isAnalysisSane(ballZone: Zone, myZone: Zone, playerIndex: Int): Boolean {

@@ -49,8 +49,8 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
 
     companion object {
 
-        private val GOAL_DISTANCE = 65.0
-        val GOAL_HEIGHT = 7.0
-        val RADIUS = 16.0
+        private const val GOAL_DISTANCE = 65.0
+        const val GOAL_HEIGHT = 7.0
+        const val RADIUS = 16.0
     }
 }
