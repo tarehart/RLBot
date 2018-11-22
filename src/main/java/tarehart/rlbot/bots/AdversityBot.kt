@@ -1,10 +1,10 @@
 package tarehart.rlbot.bots
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.FirstViableStepPlan
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
@@ -13,15 +13,13 @@ import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
-import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.tuning.BotLog
 
 class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
 
-    override fun getNewTacticsAdvisor(tacticsAdvisor: TacticsAdvisor?): TacticsAdvisor? {
-        if (tacticsAdvisor == null) return SoccerTacticsAdvisor()
-        return null
+    override fun getNewTacticsAdvisor(): TacticsAdvisor {
+        return SoccerTacticsAdvisor()
     }
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput {

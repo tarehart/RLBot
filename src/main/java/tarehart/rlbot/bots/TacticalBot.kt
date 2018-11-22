@@ -9,16 +9,15 @@ import tarehart.rlbot.tactics.TacticsAdvisor
 
 abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
-    private var tacticsAdvisor: TacticsAdvisor? = null
+    private lateinit var tacticsAdvisor: TacticsAdvisor
 
     override fun getOutput(input: AgentInput): AgentOutput {
-        getNewTacticsAdvisor(tacticsAdvisor)?.let { this.tacticsAdvisor = it }
-        val bundle = tacticsAdvisor?.assessSituation(input, currentPlan)
-        bundle?.let {
-            return getOutput(bundle)
+
+        if (!::tacticsAdvisor.isInitialized) {
+            tacticsAdvisor = getNewTacticsAdvisor()
         }
-        // TODO: We should probably warn if this happens.
-        return AgentOutput()
+        val bundle = tacticsAdvisor.assessSituation(input, currentPlan)
+        return getOutput(bundle)
     }
 
     /**
@@ -28,12 +27,12 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
     open fun getOutput(bundle: TacticalBundle): AgentOutput {
         val input = bundle.agentInput
         val car = input.myCarData
-        tacticsAdvisor!!.findMoreUrgentPlan(bundle, currentPlan)?.let {
+        tacticsAdvisor.findMoreUrgentPlan(bundle, currentPlan)?.let {
             currentPlan = it
         }
 
         if (Plan.activePlanKt(currentPlan) == null) {
-            currentPlan = tacticsAdvisor!!.makeFreshPlan(bundle)
+            currentPlan = tacticsAdvisor.makeFreshPlan(bundle)
         }
 
         currentPlan?.let {
@@ -46,6 +45,6 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
         return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
     }
 
-    abstract fun getNewTacticsAdvisor(tacticsAdvisor: TacticsAdvisor?) : TacticsAdvisor?
+    abstract fun getNewTacticsAdvisor() : TacticsAdvisor
 
 }

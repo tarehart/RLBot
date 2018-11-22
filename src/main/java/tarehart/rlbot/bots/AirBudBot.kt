@@ -1,11 +1,13 @@
 package tarehart.rlbot.bots
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.FirstViableStepPlan
+import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.EscapeTheGoalStep
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
@@ -16,16 +18,14 @@ import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
-import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
 class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
 
-    override fun getNewTacticsAdvisor(tacticsAdvisor: TacticsAdvisor?): TacticsAdvisor? {
-        if (tacticsAdvisor == null) return SoccerTacticsAdvisor()
-        return null
+    override fun getNewTacticsAdvisor(): TacticsAdvisor {
+        return SoccerTacticsAdvisor()
     }
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput {
