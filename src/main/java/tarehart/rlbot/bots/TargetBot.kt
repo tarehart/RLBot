@@ -111,8 +111,37 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                 ))
     }, Duration.ofSeconds(4.0))
 
+    private val carryLoop = ResetLoop({
+        GameState()
+                .withBallState(BallState().withPhysics(PhysicsState()
+                        .withLocation(StateVector(0f, 0f, 3f ))
+                        .withVelocity(StateVector(0f, 0f, 0f))
+                        .withAngularVelocity(StateVector(0f, 0f, 0f))
+                        .withRotation(DesiredRotation(0f, 0f, 0f))))
+
+                .withCarState(0, CarState()
+                        .withPhysics(PhysicsState()
+                            .withLocation(StateVector(0f, 0f, 0f))
+                            .withVelocity(StateVector(0f, 0f, 0f))
+                            .withAngularVelocity(DesiredVector3(0f, 0f, 0f))
+                            .withRotation(DesiredRotation(0f, 0f, 0f)))
+                        .withBoostAmount(33.0F))
+
+    }, Duration.ofSeconds(10.0))
+
     override fun getOutput(input: AgentInput): AgentOutput {
-        return runOrientationTest(input)
+        return runCarryBotTest(input)
+    }
+
+    private fun runCarryBotTest(input: AgentInput): AgentOutput {
+        val carryBot = input.allCars[1 - input.playerIndex]
+        val distance = input.ballPosition.distance(carryBot.position)
+        if (carryLoop.getDurationSinceReset(input.time).seconds > 500 && distance > 4) {
+            carryLoop.reset(input.time)
+        } else {
+            carryLoop.check(input.time)
+        }
+        return AgentOutput()
     }
 
     private fun runHoopsKickoffTest(input: AgentInput): AgentOutput {
