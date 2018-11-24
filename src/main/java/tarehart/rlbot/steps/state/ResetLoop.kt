@@ -10,6 +10,7 @@ import tarehart.rlbot.time.GameTime
 class ResetLoop(private val gameState: () -> GameState, private val duration: Duration) {
 
     private var nextReset = GameTime(0)
+    private var lastResetTime = GameTime(0)
 
     /**
      * @param input Current agent input, used for game time
@@ -25,7 +26,12 @@ class ResetLoop(private val gameState: () -> GameState, private val duration: Du
 
     fun reset(time: GameTime) {
         RLBotDll.setGameState(gameState.invoke().buildPacket())
+        lastResetTime = time
         nextReset = time + duration
+    }
+
+    fun getDurationSinceReset(time: GameTime) : Duration {
+        return time - lastResetTime
     }
 
 }
