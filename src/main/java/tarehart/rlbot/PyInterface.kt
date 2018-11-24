@@ -26,6 +26,8 @@ class PyInterface(private val botManager: BotManager, private val statusSummary:
             newBot = AirBudBot(teamEnum, index)
         } else if (botType.startsWith("TargetBot")) {
             newBot = TargetBot(teamEnum, index)
+        } else if (botType.startsWith("CarryBot")) {
+            newBot = CarryBot(teamEnum, index)
         } else {
             newBot = ReliefBot(teamEnum, index)
         }
