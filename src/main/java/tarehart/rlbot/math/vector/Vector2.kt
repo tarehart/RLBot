@@ -128,5 +128,7 @@ data class Vector2(val x: Double, val y: Double) {
         fun angle(a: Vector2, b: Vector2): Double {
             return Math.abs(a.correctionAngle(b))
         }
+
+        val ZERO = Vector2(0.0, 0.0)
     }
 }
