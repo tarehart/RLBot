@@ -1,5 +1,6 @@
 package tarehart.rlbot.carpredict
 
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
@@ -10,6 +11,9 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
 import java.util.Optional
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 object AccelerationModel {
 
@@ -25,6 +29,96 @@ object AccelerationModel {
     private val AIR_BOOST_ACCELERATION = 19.0 // It's a tiny bit faster, but account for course correction wiggle
     private val BOOST_CONSUMED_PER_SECOND = 25.0
 
+    // Thanks @chip#7643 for these uu values
+    private val BRAKING_DECELERATION = -3500 / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val COASTING_DECELERATION = -525 / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val FULL_THROTTLE_ACCEL_AT_0 = 1600 / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val FULL_THROTTLE_TOP_SPEED = 1410 / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val BOOST_ACCEL = 991.66 / Vector3.PACKET_DISTANCE_TO_CLASSIC // I know we have 3 values for boost now... :/
+
+
+    /*
+     * Negative throttle: Braking has exactly 3500uu/s²
+     * 0 Throttle: Coasting slows you down at 525uu/s²
+     * Throttle > 0: Depends on current velocity, from 1600uu/s² at 0, to 0 acceleration when speed is 1410uu/s
+     * Boosting adds an additional 991.6666uu/s² always
+     */
+
+    /**
+     * Gets the acceleration in UU/s (ReliefBot units) with the throttle input and current velocity
+     */
+    fun getAccelerationWithThrottle(throttle: Double, carToManipulate: CarData): Double {
+        val forwardSpeed = carToManipulate.velocity.dotProduct(carToManipulate.orientation.noseVector)
+        if (throttle < 0) return BRAKING_DECELERATION
+        else if (throttle > 0) {
+            // Acceleration at full speed is 0
+            val maxAccel = FULL_THROTTLE_ACCEL_AT_0 * (FULL_THROTTLE_TOP_SPEED - forwardSpeed) / FULL_THROTTLE_TOP_SPEED
+            return throttle * maxAccel
+        } else { // throttle == 0
+            return COASTING_DECELERATION
+        }
+    }
+
+    fun getThrottleForAcceleration(desiredAcceleration: Double, carToManipulate: CarData): Double {
+        val forwardSpeed = carToManipulate.velocity.dotProduct(carToManipulate.orientation.noseVector)
+        if (desiredAcceleration < 0) {
+            // Get the closest one out of braking or coasting, hopefully this works. I've no idea if it will
+            if (abs(desiredAcceleration - COASTING_DECELERATION) > abs(desiredAcceleration - BRAKING_DECELERATION)) {
+                return 0.0
+            } else {
+                return -1.0
+            }
+        } else {
+            // Desired acceleration of 0 requires we throttle a little bit.
+            val maxAccel = FULL_THROTTLE_ACCEL_AT_0 * (FULL_THROTTLE_TOP_SPEED - forwardSpeed) / FULL_THROTTLE_TOP_SPEED
+            return max(min(1.0, desiredAcceleration / maxAccel), 0.001)
+        }
+    }
+
+    fun getAccelerationForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64)) : Double {
+        val forwardSpeed = carToManipulate.velocity.dotProduct(carToManipulate.orientation.noseVector)
+        val timeToChangeSpeed = accelerationTime.seconds
+        val changeInVelocity = desiredSpeed - forwardSpeed
+        val desiredAcceleration = changeInVelocity / timeToChangeSpeed
+        return desiredAcceleration
+    }
+
+    fun getThrottleForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64) ) : Double {
+        val desiredAcceleration = getAccelerationForDesiredSpeed(desiredSpeed, carToManipulate, accelerationTime)
+        return getThrottleForAcceleration(desiredAcceleration, carToManipulate)
+    }
+
+    /**
+     * Return control output to reach desired speed
+     * Will attempt to solve for boost if permitted
+     */
+    fun getControlsForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64), allowBoostUse : Boolean = true ) : AgentOutput {
+        // Don't solve for boost if our acceleration time is greater than the max amount of boost we have
+        // Assuming that acceleration time is how long we are intending to distribute the acceleration over, the boost wont last.
+        val shouldSolveBoost = allowBoostUse && (carToManipulate.boost >= (BOOST_CONSUMED_PER_SECOND * accelerationTime.seconds))
+
+        val solutionWithoutBoost = getThrottleForDesiredSpeed(desiredSpeed, carToManipulate, accelerationTime)
+
+        if (shouldSolveBoost && (1.0 - solutionWithoutBoost) < 0.01) {
+            val accelerationForSpeed = getAccelerationForDesiredSpeed(desiredSpeed, carToManipulate, accelerationTime)
+            val accelerationWithThrottle = getAccelerationWithThrottle(solutionWithoutBoost, carToManipulate)
+            if (accelerationWithThrottle < accelerationForSpeed) {
+                // The acceleration we need cannot be delivered from throttle
+                // We will calculate the throttle required LESS the boost acceleration, and see if that helps
+                // We should not overshoot with boost, its better to conserve the boost than overshoot and decelerate (in my current opinion)
+                val throttleAcceleration = accelerationForSpeed - BOOST_ACCEL
+                val boostedThrottle = getThrottleForAcceleration(throttleAcceleration, carToManipulate)
+                val boostedThrottleAccel = getAccelerationWithThrottle(boostedThrottle, carToManipulate)
+                // Maybe do some logic on this to better decide of we should boost.
+                if (boostedThrottle >= solutionWithoutBoost) {
+                    return AgentOutput().withThrottle(boostedThrottle).withBoost()
+                }
+            }
+        }
+
+
+        return AgentOutput().withThrottle(solutionWithoutBoost)
+    }
 
     fun getTravelSeconds(carData: CarData, plot: DistancePlot, target: Vector3): Duration? {
         val distance = carData.position.distance(target)
