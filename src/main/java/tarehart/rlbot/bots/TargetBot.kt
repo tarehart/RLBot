@@ -136,7 +136,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     private fun runCarryBotTest(input: AgentInput): AgentOutput {
         val carryBot = input.allCars[1 - input.playerIndex]
         val distance = input.ballPosition.distance(carryBot.position)
-        if (carryLoop.getDurationSinceReset(input.time).seconds > 500 && distance > 4) {
+        if (carryLoop.getDurationSinceReset(input.time).millis > 500 && distance > 4) {
             carryLoop.reset(input.time)
         } else {
             carryLoop.check(input.time)
