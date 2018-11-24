@@ -14,6 +14,7 @@ import tarehart.rlbot.steps.state.ResetLoop
 import tarehart.rlbot.steps.state.SetStateStep
 import tarehart.rlbot.steps.state.StateVector
 import tarehart.rlbot.time.Duration
+import kotlin.math.PI
 
 class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
@@ -109,7 +110,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
                         PhysicsState()
                                 .withLocation(StateVector(-50F, 0F, 0F))
                 ))
-    }, Duration.ofSeconds(4.0))
+    }, Duration.ofSeconds(3.5))
 
     private val carryLoop = ResetLoop({
         GameState()
@@ -121,13 +122,13 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
                 .withCarState(0, CarState()
                         .withPhysics(PhysicsState()
-                            .withLocation(StateVector(0f, 0f, 0f))
+                            .withLocation(StateVector(10f, 110f, 0f))
                             .withVelocity(StateVector(0f, 0f, 0f))
                             .withAngularVelocity(DesiredVector3(0f, 0f, 0f))
-                            .withRotation(DesiredRotation(0f, 0f, 0f)))
+                            .withRotation(DesiredRotation(0f, -(PI/2).toFloat(), 0f)))
                         .withBoostAmount(33.0F))
 
-    }, Duration.ofSeconds(10.0))
+    }, Duration.ofSeconds(14.0))
 
     override fun getOutput(input: AgentInput): AgentOutput {
         return runCarryBotTest(input)
@@ -136,7 +137,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
     private fun runCarryBotTest(input: AgentInput): AgentOutput {
         val carryBot = input.allCars[1 - input.playerIndex]
         val distance = input.ballPosition.distance(carryBot.position)
-        if (carryLoop.getDurationSinceReset(input.time).millis > 500 && distance > 4) {
+        if (carryLoop.getDurationSinceReset(input.time).seconds > 10 && distance > 4) {
             carryLoop.reset(input.time)
         } else {
             carryLoop.check(input.time)

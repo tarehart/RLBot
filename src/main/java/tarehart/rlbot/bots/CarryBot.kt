@@ -3,13 +3,17 @@ package tarehart.rlbot.bots
 import sun.management.Agent
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
+import java.util.*
+import kotlin.math.max
 
 class CarryBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
     override fun getOutput(bundle: TacticalBundle): AgentOutput {
@@ -36,10 +40,31 @@ class CarryBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
         return AgentOutput()
     }
 
+    var lastSpeedChange = GameTime(0)
+    var desiredSpeed = 10.0
+
     private fun makeFreshPlan(bundle: TacticalBundle): Plan {
         val input = bundle.agentInput
         val car = input.myCarData
         val situation = bundle.tacticalSituation
+
+        if ((input.time - lastSpeedChange).seconds > 3) {
+            desiredSpeed = Random().nextDouble() * 25 + 1
+            lastSpeedChange = input.time
+        }
+
+        val percentSuccess = 100.0 * car.velocity.magnitude() / desiredSpeed
+        print("Speed maintenance: ")
+        print(percentSuccess)
+        print(", ")
+        println(desiredSpeed)
+
+        return Plan(Plan.Posture.KICKOFF).withStep(BlindStep(
+                duration = Duration.ofMillis(32),
+                output = ({
+                    AccelerationModel.getControlsForDesiredSpeed(desiredSpeed, car)
+                }())
+        ))
 
         val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
 
