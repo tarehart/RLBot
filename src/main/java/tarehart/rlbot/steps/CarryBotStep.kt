@@ -1,9 +1,11 @@
 package tarehart.rlbot.steps
 
+import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
+import tarehart.rlbot.carpredict.ControlFinesse
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
@@ -12,10 +14,14 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
 
 import tarehart.rlbot.tuning.BotLog.println
+import java.awt.Color
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * I don't think this was ever tested.
@@ -30,7 +36,8 @@ class CarryBotStep : StandardStep() {
         val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
         val ballPosition = bundle.agentInput.ballPosition
-        val CAR_HEIGHT = 3.0 // Octane height that the ball will sit at most the time.
+        val ballVelocity = bundle.agentInput.ballVelocity
+
 
         // Can the ball be carried right now
         // This checks if the ball is on the car, getting the ball onto the car is the responsibility of another step
@@ -46,18 +53,67 @@ class CarryBotStep : StandardStep() {
         }
 
         val ballOffset = positionInCarCoordinates(car, ballPosition)
-        val rollDistance = ballOffset.flatten().distance(Vector2.ZERO)
-        val ballContact = ballOffset.z - CAR_HEIGHT < 0.1 && rollDistance < 1.5
+        val ballPristine = carPositionInPristineCoordinates(ballOffset)
+        val rollDistance = ballPristine.flatten().distance(Vector2.ZERO)
+        val ballContact = ballPristine.z <= 1
 
 
         if (ballContact) {
-            println("Contact")
-            if (ballOffset.y < 0) {
-                return AgentOutput().withThrottle(0.0)
-            } else {
-                return AgentOutput().withThrottle(ballOffset.y)
+            print("Contact, ")
+            print(ballPristine.y)
+            print(", ")
+
+            val ballAcceleration = ballOffset.y * car.velocity.dotProduct(car.orientation.noseVector)
+            print(ballAcceleration)
+            print(", ")
+            println(ballVelocity.dotProduct(car.orientation.noseVector))
+
+/*
+            val ballOffset2D = ballOffset.flatten()
+
+
+            var desiredLeanOffset = 0.05
+
+            var desiredBallSpeed = 25.0
+            val offsetSpeedCompensation = 0.5
+            var desiredOffset = 0.0
+
+            var ballSpeed = ballVelocity.dotProduct(car.orientation.noseVector)
+
+            /*
+            if (ballPosition.y > -50) {
+                desiredBallSpeed = 3.0
             }
+            **/
+
+            if (desiredBallSpeed < ballSpeed - 5) {
+                desiredBallSpeed = ballSpeed - 5
+            }
+
+            val maxBallOffset = 1.3
+            desiredOffset = maxBallOffset * min(1.0, (desiredBallSpeed - ballSpeed) / 2)
+            val ballForwardOffset = ballOffset.dotProduct(car.orientation.noseVector)
+
+            val offsetDelta = ballForwardOffset - desiredOffset
+            println(offsetDelta)
+
+            val carSpeed = ballSpeed * (1 + offsetSpeedCompensation * offsetDelta)
+
+            val allowBoost = offsetDelta > maxBallOffset / 2
+
+            val matchBallSpeed = AccelerationModel
+                    .getControlsForDesiredSpeed(carSpeed, car, finesse = ControlFinesse(allowBoost = allowBoost))
+                    .withSteer(0.0)
+
+            val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
+            RenderUtil.drawSphere(renderer, ballPosition + car.orientation.noseVector.scaled(maxBallOffset), 0.5, Color.ORANGE)
+            RenderUtil.drawSphere(renderer, ballPosition + car.orientation.noseVector.scaled(offsetDelta), 0.5, Color.BLUE)
+
+            return matchBallSpeed
+            */
         }
+
+        return AccelerationModel.getControlsForDesiredSpeed(ballVelocity.flatten().magnitude(), car)
 
         /*
         val ballVelocityFlat = bundle.agentInput.ballVelocity.flatten()
@@ -91,11 +147,15 @@ class CarryBotStep : StandardStep() {
         private val MAX_Y = 1.5
         private val MIN_Y = -0.9
 
+        // The perfect ball position off car center of mass where the ball will be completely still
+        // This is for the octane.
+        val PRISTINE_CENTER = Vector3(0.0, -0.013, 2.63)
+
         private fun positionInCarCoordinates(car: CarData, worldPosition: Vector3): Vector3 {
             // We will assume that the car is flat on the ground.
 
-            // We will treat (0, 1) as the car's natural orientation.
-            val carYaw = Vector2(0.0, 1.0).correctionAngle(car.orientation.noseVector.flatten())
+            // We will treat NOSE as the cars natural orientation
+            val carYaw =  car.orientation.noseVector.flatten().correctionAngle(car.orientation.noseVector.flatten())
 
             val carToPosition = worldPosition.minus(car.position).flatten()
 
@@ -103,6 +163,10 @@ class CarryBotStep : StandardStep() {
 
             val zDiff = worldPosition.z - car.position.z
             return Vector3(x, y, zDiff)
+        }
+
+        private fun carPositionInPristineCoordinates(carPosition: Vector3) : Vector3 {
+            return carPosition - PRISTINE_CENTER
         }
 
         fun canCarry(bundle: TacticalBundle, log: Boolean): Boolean {

@@ -1,5 +1,6 @@
 package tarehart.rlbot.carpredict
 
+import sun.management.Agent
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.StrikeProfile
@@ -92,10 +93,10 @@ object AccelerationModel {
      * Return control output to reach desired speed
      * Will attempt to solve for boost if permitted
      */
-    fun getControlsForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64), allowBoostUse : Boolean = true ) : AgentOutput {
+    fun getControlsForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64), finesse: ControlFinesse = ControlFinesse() ) : AgentOutput {
         // Don't solve for boost if our acceleration time is greater than the max amount of boost we have
         // Assuming that acceleration time is how long we are intending to distribute the acceleration over, the boost wont last.
-        val shouldSolveBoost = allowBoostUse && (carToManipulate.boost >= (BOOST_CONSUMED_PER_SECOND * accelerationTime.seconds))
+        val shouldSolveBoost = finesse.allowBoost && (carToManipulate.boost >= (BOOST_CONSUMED_PER_SECOND * accelerationTime.seconds))
 
         val solutionWithoutBoost = getThrottleForDesiredSpeed(desiredSpeed, carToManipulate, accelerationTime)
 
@@ -111,13 +112,26 @@ object AccelerationModel {
                 val boostedThrottleAccel = getAccelerationWithThrottle(boostedThrottle, carToManipulate)
                 // Maybe do some logic on this to better decide of we should boost.
                 if (boostedThrottle >= solutionWithoutBoost) {
-                    return AgentOutput().withThrottle(boostedThrottle).withBoost()
+                    return getOutputWithFinesse( AgentOutput().withThrottle(boostedThrottle).withBoost(), carToManipulate, finesse)
                 }
             }
         }
 
 
-        return AgentOutput().withThrottle(solutionWithoutBoost)
+        return getOutputWithFinesse(AgentOutput().withThrottle(solutionWithoutBoost), carToManipulate, finesse)
+    }
+
+    fun getOutputWithFinesse(output: AgentOutput, target: CarData, finesse: ControlFinesse) : AgentOutput {
+        if (!finesse.allowBoost) {
+            output.withBoost(false)
+        }
+
+        // If the direction of throttle is not equal to the direction of travel and we aren't permitted to brake
+        // Then cancel it out
+        if (!finesse.allowBrake && target.orientation.noseVector.dotProduct(target.velocity) * output.throttle < 0) {
+            output.withThrottle(0.0)
+        }
+        return output
     }
 
     fun getTravelSeconds(carData: CarData, plot: DistancePlot, target: Vector3): Duration? {

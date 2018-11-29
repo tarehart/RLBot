@@ -53,19 +53,6 @@ class CarryBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
             lastSpeedChange = input.time
         }
 
-        val percentSuccess = 100.0 * car.velocity.magnitude() / desiredSpeed
-        print("Speed maintenance: ")
-        print(percentSuccess)
-        print(", ")
-        println(desiredSpeed)
-
-        return Plan(Plan.Posture.KICKOFF).withStep(BlindStep(
-                duration = Duration.ofMillis(32),
-                output = ({
-                    AccelerationModel.getControlsForDesiredSpeed(desiredSpeed, car)
-                }())
-        ))
-
         val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
 
         if (CarryBotStep.canCarry(bundle, true)) {
