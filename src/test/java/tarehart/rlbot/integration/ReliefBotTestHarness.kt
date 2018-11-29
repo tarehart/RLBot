@@ -37,7 +37,7 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
 
     fun runTillComplete() {
         start()
-        while(!testCase.isComplete) {
+        while(!testCase.isComplete && 0 in botManager.runningBotIndices) {
             Thread.sleep(100)
         }
         stop()
