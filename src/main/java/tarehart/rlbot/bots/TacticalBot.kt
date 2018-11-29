@@ -10,6 +10,7 @@ import tarehart.rlbot.tactics.*
 abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
     private lateinit var tacticsAdvisor: TacticsAdvisor
+    private val bundleListeners = ArrayList<BundleListener>()
 
     private fun assessSituation(input: AgentInput): TacticalBundle {
         if (!::tacticsAdvisor.isInitialized) {
@@ -28,6 +29,9 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
      * @return AgentOutput to act on the car
      */
     open fun getOutput(bundle: TacticalBundle): AgentOutput {
+
+        bundleListeners.forEach { it.processBundle(bundle) }
+
         val input = bundle.agentInput
         val car = input.myCarData
         tacticsAdvisor.findMoreUrgentPlan(bundle, currentPlan)?.let {
@@ -72,6 +76,10 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
         // We may want the ability to control the wheels or something for aesthetic later
         // We would need to return an AgentOutput in that case.
         assessSituation(input)
+    }
+
+    fun registerBundleListener(bundleListener: BundleListener) {
+        bundleListeners.add(bundleListener)
     }
 
 }

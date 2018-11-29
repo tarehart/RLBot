@@ -8,6 +8,7 @@ class StateVector(x: Float?, y: Float?, z:Float?): DesiredVector3(
 
     companion object {
         val CONVERSION = Vector3.PACKET_DISTANCE_TO_CLASSIC.toFloat()
+        val ZERO = StateVector(0F, 0F, 0F)
     }
 }
 
