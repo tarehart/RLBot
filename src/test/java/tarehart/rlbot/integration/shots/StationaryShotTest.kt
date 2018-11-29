@@ -3,13 +3,12 @@ package tarehart.rlbot.integration.shots
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
+import org.junit.runner.RunWith
 import rlbot.gamestate.*
 import rlbot.manager.BotManager
 import rlbot.pyinterop.PythonServer
 import tarehart.rlbot.DEFAULT_PORT
-import tarehart.rlbot.integration.IntegrationPyInterface
-import tarehart.rlbot.integration.ReliefBotTestHarness
-import tarehart.rlbot.integration.StateSettingTestCase
+import tarehart.rlbot.integration.*
 import tarehart.rlbot.integration.asserts.AssertStatus
 import tarehart.rlbot.integration.asserts.PlaneBreakAssert
 import tarehart.rlbot.physics.ArenaModel
@@ -19,6 +18,7 @@ import tarehart.rlbot.steps.state.StateVector
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
+@RunWith(ReliefBotTestRunner::class)
 class StationaryShotTest {
 
     @Test
@@ -42,15 +42,7 @@ class StationaryShotTest {
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(5.0))))
 
-        val harness = ReliefBotTestHarness(testCase)
-        harness.runTillComplete()
-
-        Assert.assertTrue(testCase.isComplete)
-        testCase.conditions.forEach {
-            if (it.status == AssertStatus.FAILED)  {
-                Assert.fail(it.message)
-            }
-        }
+        assertReliefBotTestCase(testCase)
     }
 
     // This test case is currently failing for me. Something to work on soon!
@@ -75,27 +67,7 @@ class StationaryShotTest {
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(5.0))))
 
-        val harness = ReliefBotTestHarness(testCase)
-        harness.runTillComplete()
-
-        Assert.assertTrue(testCase.isComplete)
-        testCase.conditions.forEach {
-            if (it.status == AssertStatus.FAILED)  {
-                Assert.fail(it.message)
-            }
-        }
-    }
-
-    companion object {
-
-        @BeforeClass
-        @JvmStatic
-        fun startListening() {
-            val port = readPortFromFile().orElse(DEFAULT_PORT)
-            val pythonInterface = IntegrationPyInterface(BotManager())
-            val pythonServer = PythonServer(pythonInterface, port)
-            pythonServer.start()
-        }
+        assertReliefBotTestCase(testCase)
     }
 
 }
