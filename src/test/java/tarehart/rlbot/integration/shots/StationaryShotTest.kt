@@ -4,6 +4,7 @@ import org.junit.Test
 import rlbot.gamestate.*
 import tarehart.rlbot.integration.StateSettingAbstractTest
 import tarehart.rlbot.integration.StateSettingTestCase
+import tarehart.rlbot.integration.asserts.BallTouchAssert
 import tarehart.rlbot.integration.asserts.PlaneBreakAssert
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.SoccerGoal
@@ -29,11 +30,14 @@ class StationaryShotTest: StateSettingAbstractTest() {
                                 .withAngularVelocity(StateVector.ZERO)
                                 .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
                         )),
-                hashSetOf(PlaneBreakAssert(
+                hashSetOf(
+                        PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(2.0),
-                        delayWhenBallFloating = true)))
+                        delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(1.6))))
 
         runTestCase(testCase)
     }
@@ -58,7 +62,9 @@ class StationaryShotTest: StateSettingAbstractTest() {
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(2.5),
-                        delayWhenBallFloating = true)))
+                        delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(2.3))))
 
         runTestCase(testCase)
     }
@@ -82,7 +88,9 @@ class StationaryShotTest: StateSettingAbstractTest() {
                 hashSetOf(PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(5.0))))
+                        timeLimit = Duration.ofSeconds(5.0)),
+
+                        BallTouchAssert(Duration.ofSeconds(2.6))))
 
         runTestCase(testCase)
     }
@@ -106,7 +114,11 @@ class StationaryShotTest: StateSettingAbstractTest() {
                 hashSetOf(PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(5.0))))
+                        timeLimit = Duration.ofSeconds(4.5),
+                        delayWhenBallFloating = true),
+
+                        // TODO: This is a very slow time to ball
+                        BallTouchAssert(Duration.ofSeconds(4.3))))
 
         runTestCase(testCase)
     }
@@ -130,7 +142,11 @@ class StationaryShotTest: StateSettingAbstractTest() {
                 hashSetOf(PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(5.0))))
+                        timeLimit = Duration.ofSeconds(4.3),
+                        delayWhenBallFloating = true),
+
+                        // TODO: This is a very slow time to ball
+                        BallTouchAssert(Duration.ofSeconds(4.2))))
 
         runTestCase(testCase)
     }
