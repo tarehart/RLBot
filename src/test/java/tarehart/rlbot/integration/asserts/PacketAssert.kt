@@ -2,6 +2,7 @@ package tarehart.rlbot.integration.asserts
 
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.integration.metrics.IntegrationMetric
+import tarehart.rlbot.integration.metrics.TimeMetric
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.time.Duration
@@ -13,6 +14,10 @@ abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: 
     open var message: String? = null
 
     val metrics : ArrayList<IntegrationMetric<*, *>> = arrayListOf()
+
+    init {
+        metrics.add(TimeMetric(timeLimit, "Time Limit"))
+    }
 
     fun addMetric(metric: IntegrationMetric<*, *>) {
         metrics.add(metric)
