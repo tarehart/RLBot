@@ -34,7 +34,7 @@ object DirectedKickUtil {
         val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
         val currentSpeed = car.velocity.flatten().magnitude()
         val anticipatedSpeed = if (intercept.spareTime.millis > 0) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
-        val closenessRatio = Math.max(1.0, 1 / secondsTillIntercept)
+        val closenessRatio = Math.min(1.0, 1 / secondsTillIntercept)
         val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * anticipatedSpeed
         val impactSpeed: Double
         val interceptModifier = intercept.space - intercept.ballSlice.space
@@ -94,10 +94,10 @@ object DirectedKickUtil {
         when (intercept.strikeProfile.style) {
             StrikeProfile.Style.CHIP -> {
 
-                val carCornerSpacing = Math.abs(estimatedApproachToKickForce) * 6
+                val carCornerSpacing = Math.abs(estimatedApproachToKickForce) * 1
 
-                launchPosition = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(3.4 + carCornerSpacing)
-                launchPad = getStandardWaypoint(car, launchPosition, toInterceptNorm, intercept)
+                launchPosition = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(3.2 + carCornerSpacing)
+                launchPad = getAnyFacingWaypoint(launchPosition, intercept)
             }
             StrikeProfile.Style.DIAGONAL_HIT -> {
 
@@ -121,16 +121,13 @@ object DirectedKickUtil {
                     launchPad = angled
                 } else {
 
-                    // TODO: figure out how to hit the ball with the front corner of the car if we need an angled force.
-
                     facing = VectorUtil.rotateVector(flatForce, -Math.signum(toKickForce) * Math.PI / 2)
 
                     // Consider the entire strike duration, not just the hang time.
                     val backoff = intercept.strikeProfile.strikeDuration.seconds * arrivalSpeed
                     launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(2.0) -
                             facing.scaledToMagnitude(backoff)
-                    // TODO: consider separating out the hop position and the dodge position
-                    launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
+                    launchPad = getStandardWaypoint(launchPosition, facing, intercept)
                 }
             }
             StrikeProfile.Style.FLIP_HIT -> {
@@ -138,14 +135,14 @@ object DirectedKickUtil {
                 val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, arrivalSpeed + intercept.strikeProfile.speedBoost)
                 val strikeTravel = intercept.strikeProfile.hangTime * arrivalSpeed + intercept.strikeProfile.dodgeSeconds * postDodgeSpeed
                 launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
-                launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
+                launchPad = getStandardWaypoint(launchPosition, facing, intercept)
             }
             StrikeProfile.Style.JUMP_HIT -> {
                 facing = flatForce.normalized()
                 val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, arrivalSpeed + intercept.strikeProfile.speedBoost)
                 val strikeTravel = intercept.strikeProfile.hangTime * arrivalSpeed + intercept.strikeProfile.dodgeSeconds * postDodgeSpeed
                 launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
-                launchPad = getStandardWaypoint(car, launchPosition, facing, intercept)
+                launchPad = getStandardWaypoint(launchPosition, facing, intercept)
             }
             StrikeProfile.Style.AERIAL -> {
 
@@ -183,7 +180,7 @@ object DirectedKickUtil {
         return kickPlan
     }
 
-    private fun getStandardWaypoint(car: CarData, launchPosition: Vector2, facing: Vector2, intercept: Intercept): PreKickWaypoint {
+    private fun getStandardWaypoint(launchPosition: Vector2, facing: Vector2, intercept: Intercept): PreKickWaypoint {
         val launchPad: PreKickWaypoint
 
         // Time is chosen with a bias toward hurrying
@@ -191,6 +188,20 @@ object DirectedKickUtil {
         launchPad = StrictPreKickWaypoint(
                 position = launchPosition,
                 facing = facing,
+                expectedTime = launchPadMoment,
+                waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
+        )
+
+        return launchPad
+    }
+
+    private fun getAnyFacingWaypoint(launchPosition: Vector2, intercept: Intercept): PreKickWaypoint {
+        val launchPad: PreKickWaypoint
+
+        // Time is chosen with a bias toward hurrying
+        val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
+        launchPad = AnyFacingPreKickWaypoint(
+                position = launchPosition,
                 expectedTime = launchPadMoment,
                 waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
         )

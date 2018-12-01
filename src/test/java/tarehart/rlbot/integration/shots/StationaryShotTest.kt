@@ -62,6 +62,30 @@ class StationaryShotTest: StateSettingAbstractTest() {
     }
 
     @Test
+    fun testVeryAngledShot() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 30F, ArenaModel.BALL_RADIUS))
+                                .withVelocity(StateVector.ZERO)
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(50F, -10F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(PlaneBreakAssert(
+                        plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                        extent = SoccerGoal.EXTENT,
+                        timeLimit = Duration.ofSeconds(5.0))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
     fun testSideShot() {
 
         val testCase = StateSettingTestCase(
