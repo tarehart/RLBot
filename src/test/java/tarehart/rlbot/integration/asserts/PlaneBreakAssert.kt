@@ -2,6 +2,8 @@ package tarehart.rlbot.integration.asserts
 
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
+import tarehart.rlbot.integration.metrics.DistanceMetric
+import tarehart.rlbot.integration.metrics.ElapsedTimeMetric
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.planning.GoalUtil
@@ -15,8 +17,10 @@ class PlaneBreakAssert(val plane: Plane, val extent: Double, timeLimit: Duration
         val planeIntersection = VectorUtil.getPlaneIntersection(plane, prevBallLoc, ballLoc - prevBallLoc)
 
         planeIntersection?.let {
-            if (it.distance(plane.position) <= extent) {
+            val distance = it.distance(plane.position)
+            if (distance <= extent) {
                 status = AssertStatus.SUCCEEDED
+                addMetric(DistanceMetric(distance))
             }
         }
     }

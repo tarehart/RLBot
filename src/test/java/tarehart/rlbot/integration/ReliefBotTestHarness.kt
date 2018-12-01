@@ -55,6 +55,13 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
             Thread.sleep(100)
         }
         stop()
+        // Spit out the metrics, would be nice to log these to a file so we can compare them over time.
+        testCase.conditions.filter { !it.metrics.isEmpty() }.forEach {
+            println("Condition ${it.javaClass.name} met with metrics")
+            it.metrics.forEach {
+                println("\t${it.toString()}")
+            }
+        }
     }
 
     companion object {

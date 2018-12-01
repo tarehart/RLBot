@@ -6,6 +6,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.BundleListener
 import tarehart.rlbot.integration.asserts.AssertStatus
 import tarehart.rlbot.integration.asserts.PacketAssert
+import tarehart.rlbot.integration.metrics.ElapsedTimeMetric
 import tarehart.rlbot.time.GameTime
 
 class StateSettingTestCase(private val initialState: GameState, val conditions: Set<PacketAssert>): BundleListener {
@@ -34,6 +35,9 @@ class StateSettingTestCase(private val initialState: GameState, val conditions: 
                 packetAssert.message = "Timed out!"
             } else {
                 packetAssert.checkBundle(bundle, previousBundle)
+                if (packetAssert.status == AssertStatus.SUCCEEDED) {
+                    packetAssert.addMetric(ElapsedTimeMetric(duration))
+                }
             }
 
             hasPendingAsserts = hasPendingAsserts || packetAssert.status == AssertStatus.PENDING
