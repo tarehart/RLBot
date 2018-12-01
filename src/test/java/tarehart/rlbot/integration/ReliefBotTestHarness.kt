@@ -1,6 +1,7 @@
 package tarehart.rlbot.integration
 
 import rlbot.cppinterop.RLBotDll
+import rlbot.manager.BotLoopRenderer
 import rlbot.manager.BotManager
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.bots.ReliefBot
@@ -41,7 +42,7 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
     private fun stop() {
         botManager.retireBot(STANDARD_PLAYER_INDEX)
         botManager.shutDown()
-        Thread.sleep(200) // This seems to give ReliefBot a chance to finish its final cycle
+        Thread.sleep(400) // This seems to give ReliefBot a chance to finish its final cycle
     }
 
     fun runTillComplete() {
