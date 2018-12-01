@@ -12,16 +12,17 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
 
     private fun start() {
 
-        botManager.ensureStarted()
         var initialized = false
         while (!initialized) {
             try {
                 RLBotDll.setPlayerInputFlatbuffer(AgentOutput(), STANDARD_PLAYER_INDEX)
                 testCase.setState()
+                botManager.ensureStarted()
                 initialized = true
                 Thread.sleep(100) // Give the state a chance to take hold.
             } catch (e: Error) {
                 e.printStackTrace()
+                Thread.sleep(1000) // Wait a while to give python a chance to phone in.
             }
         }
 
