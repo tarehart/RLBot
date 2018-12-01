@@ -33,7 +33,7 @@ class AccelerationRoutePart(
             return
         }
         val toStartNormal = toStart.normaliseCopy()
-        val raisedEnd = Vector3(end.x, end.y, 2.0)
+        val raisedEnd = end.withZ(2.0)
         val distance = toStart.magnitude()
         var distanceCovered = 4.0
         while (distanceCovered < distance) {

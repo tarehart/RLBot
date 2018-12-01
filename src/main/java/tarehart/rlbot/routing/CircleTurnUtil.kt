@@ -27,11 +27,11 @@ object CircleTurnUtil {
 
         val targetPosition = strikePoint.position
         val targetFacing = strikePoint.facing
-        //val targetNose = targetPosition.plus(targetFacing)
-        //val targetTail = targetPosition.minus(targetFacing)
+        val targetNose = targetPosition.plus(targetFacing)
+        val targetTail = targetPosition.minus(targetFacing)
 
         val flatPosition = car.position.flatten()
-        //val idealCircle = Circle.getCircleFromPoints(targetTail, targetNose, flatPosition)
+        val idealCircle = Circle.getCircleFromPoints(targetTail, targetNose, flatPosition)
 
         val clockwise = Circle.isClockwise(circle, targetPosition, targetFacing)
 
@@ -40,13 +40,13 @@ object CircleTurnUtil {
         //val idealSpeed = idealSpeedOption ?: 10.0
 
         val lookaheadRadians = Math.PI / 20
-        val centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(circle.center).scaledToMagnitude(circle.radius), lookaheadRadians * if (clockwise) -1 else 1)
-        val steerTarget = circle.center.plus(centerToSteerTarget)
+        val centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(idealCircle.center).scaledToMagnitude(idealCircle.radius), lookaheadRadians * if (clockwise) -1 else 1)
+        val steerTarget = idealCircle.center.plus(centerToSteerTarget)
         val timeAtTarget = car.time + getTurnDuration(circle, flatPosition, steerTarget, clockwise, desiredSpeed)
 
-        val output = SteerUtil.getThereOnTime(car, SpaceTime(steerTarget.toVector3(), timeAtTarget)).withSlide(false)
+        val output = SteerUtil.getThereOnTime(car, SpaceTime(steerTarget.toVector3(), timeAtTarget))
 
-        val turnDuration = getTurnDuration(circle, flatPosition, targetPosition, clockwise, (currentSpeed + desiredSpeed) / 2)
+        val turnDuration = getTurnDuration(idealCircle, flatPosition, targetPosition, clockwise, (currentSpeed + desiredSpeed) / 2)
 
         // TODO: sometimes this turn duration gets really big at the end of a circle turn that seems to be going fine.
         val route = Route()
@@ -54,7 +54,7 @@ object CircleTurnUtil {
                         start = flatPosition,
                         end = targetPosition,
                         duration = turnDuration,
-                        circle = circle,
+                        circle = idealCircle,
                         clockwise = clockwise))
 
         return SteerPlan(output, route)

@@ -93,7 +93,10 @@ object DirectedKickUtil {
 
         when (intercept.strikeProfile.style) {
             StrikeProfile.Style.CHIP -> {
-                launchPosition = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(3.2)
+
+                val carCornerSpacing = Math.abs(estimatedApproachToKickForce) * 6
+
+                launchPosition = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(3.4 + carCornerSpacing)
                 launchPad = getStandardWaypoint(car, launchPosition, toInterceptNorm, intercept)
             }
             StrikeProfile.Style.DIAGONAL_HIT -> {
@@ -110,7 +113,7 @@ object DirectedKickUtil {
                 val useFrontCorner = Math.abs(toKickForce) < Math.PI * .45
 
                 if (useFrontCorner) {
-                    val angled = getAngledWaypoint(intercept, arrivalSpeed, flatForce, estimatedApproachToKickForce, flatPosition)
+                    val angled = getAngledWaypoint(intercept, arrivalSpeed, flatForce, estimatedApproachToKickForce, flatPosition, car.renderer)
                     if (angled == null) {
                         BotLog.println("Failed to calculate side hit waypoint", car.playerIndex)
                         return null
