@@ -72,6 +72,7 @@ class ReliefBotTestRunner(val test: Class<*>) : Runner() {
                     notifier.fireTestFailure(Failure(description, assertFail))
                 } finally {
                     cleanupRunnerBindings(this)
+                    cleanupTestCases()
                 }
             }
         } catch (ex: Exception) {
@@ -86,6 +87,10 @@ class ReliefBotTestRunner(val test: Class<*>) : Runner() {
 
     fun addTestCase(testCase: StateSettingTestCase) {
         testCases.add(testCase)
+    }
+
+    fun cleanupTestCases() {
+        testCases.clear()
     }
 
     companion object {
