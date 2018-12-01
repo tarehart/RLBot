@@ -57,7 +57,8 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
         stop()
         // Spit out the metrics, would be nice to log these to a file so we can compare them over time.
         testCase.conditions.filter { !it.metrics.isEmpty() }.forEach {
-            println("Condition ${it.javaClass.name} met with metrics")
+            val metNotMet = if (it.status == AssertStatus.SUCCEEDED) "met" else "NOT MET"
+            println("Condition ${it.javaClass.simpleName} ${metNotMet} with metrics")
             it.metrics.forEach {
                 println("\t${it.toString()}")
             }
