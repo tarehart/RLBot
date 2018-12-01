@@ -6,6 +6,10 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.bots.ReliefBot
 import tarehart.rlbot.bots.TacticalBot
 import tarehart.rlbot.bots.Team
+import tarehart.rlbot.integration.asserts.AssertStatus
+import tarehart.rlbot.integration.metrics.TimeMetric
+import tarehart.rlbot.time.Duration
+import java.lang.AssertionError
 
 class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
 
@@ -63,6 +67,12 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
             println("Condition ${it.javaClass.simpleName} ${metNotMet} with metrics")
             it.metrics.forEach {
                 println("\t${it.toString()}")
+            }
+
+            // TODO Trying to catch a bug where sometimes this assertion passes in 0 ms
+            // I suspect persistent information hanging around, noticed in BallTouchAssert
+            if ((it.metrics.find { it is TimeMetric && it.name.equals("Elapsed Time") }!!.value as Duration).millis < 5L) {
+                throw AssertionError("Instant success bug detected!")
             }
         }
     }
