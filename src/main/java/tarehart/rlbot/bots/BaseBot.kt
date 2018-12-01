@@ -38,6 +38,8 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     private val planRenderer = NamedRenderer("baseBotPlanRenderer$playerIndex")
     private var isGameModeInitialized = false
 
+    private var selfDestruct = false
+
     val debugWindow: JFrame
         get() {
             val frame = JFrame("Debug - " + team.name)
@@ -49,6 +51,8 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 
     override fun processInput(request: GameTickPacket?): AgentOutput {
 
+        if (selfDestruct) throw ThreadDeath()
+        
         val timeBefore = Instant.now()
 
         request ?: return AgentOutput()
@@ -99,6 +103,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     }
 
     override fun retire() {
+        selfDestruct = true
     }
 
 
