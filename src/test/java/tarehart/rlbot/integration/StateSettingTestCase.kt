@@ -29,13 +29,13 @@ class StateSettingTestCase(private val initialState: GameState, val conditions: 
 
         for (packetAssert: PacketAssert in conditions.filter { it.status == AssertStatus.PENDING }) {
 
-            val duration = bundle.agentInput.time - startTime
-            if (packetAssert.timeLimit < duration) {
+            if (packetAssert.hasExpired(bundle, startTime)) {
                 packetAssert.status = AssertStatus.FAILED
                 packetAssert.message = "Timed out!"
             } else {
                 packetAssert.checkBundle(bundle, previousBundle)
                 if (packetAssert.status == AssertStatus.SUCCEEDED) {
+                    val duration = bundle.agentInput.time - startTime
                     packetAssert.addMetric(ElapsedTimeMetric(duration))
                 }
             }
