@@ -10,7 +10,7 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.time.Duration
 
-class PlaneBreakAssert(val plane: Plane, val extent: Double, timeLimit: Duration): PacketAssert(timeLimit) {
+class PlaneBreakAssert(val plane: Plane, val extent: Double, timeLimit: Duration, delayWhenBallFloating: Boolean = false): PacketAssert(timeLimit, delayWhenBallFloating) {
     override fun checkBundle(bundle: TacticalBundle, previousBundle: TacticalBundle?) {
         val prevBallLoc = previousBundle?.agentInput?.ballPosition ?: return
         val ballLoc = bundle.agentInput.ballPosition

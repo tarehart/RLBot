@@ -7,7 +7,7 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
-abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: Boolean = true) {
+abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: Boolean) {
 
     open var status: AssertStatus = AssertStatus.PENDING
     open var message: String? = null
