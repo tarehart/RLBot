@@ -1,6 +1,6 @@
 package tarehart.rlbot.integration.metrics
 
-abstract class IntegrationMetric<T: Comparable<*>, U>(val name: String, val value: U) : kotlin.Comparable<IntegrationMetric<T, U>> {
+abstract class IntegrationMetric<T: Comparable<*>, U>(var name: String, val value: U) : kotlin.Comparable<IntegrationMetric<T, U>> {
 
     /**
      * Quantifies a value so that it may be displayed on a chart.

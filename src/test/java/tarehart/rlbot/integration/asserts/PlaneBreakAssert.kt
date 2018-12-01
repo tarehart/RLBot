@@ -4,6 +4,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.integration.metrics.DistanceMetric
 import tarehart.rlbot.integration.metrics.ElapsedTimeMetric
+import tarehart.rlbot.integration.metrics.VelocityMetric
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.planning.GoalUtil
@@ -21,6 +22,8 @@ class PlaneBreakAssert(val plane: Plane, val extent: Double, timeLimit: Duration
             if (distance <= extent) {
                 status = AssertStatus.SUCCEEDED
                 addMetric(DistanceMetric(distance))
+                val velocityMetric = VelocityMetric(bundle.agentInput.ballVelocity.magnitude(), "Ball Velocity")
+                addMetric(velocityMetric)
             }
         }
     }
