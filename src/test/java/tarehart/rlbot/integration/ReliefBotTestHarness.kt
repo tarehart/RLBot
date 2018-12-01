@@ -1,15 +1,16 @@
 package tarehart.rlbot.integration
 
 import rlbot.cppinterop.RLBotDll
-import rlbot.manager.BotLoopRenderer
 import rlbot.manager.BotManager
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.bots.ReliefBot
+import tarehart.rlbot.bots.TacticalBot
 import tarehart.rlbot.bots.Team
 
 class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
 
     private val botManager = BotManager()
+    private lateinit var botInstance: TacticalBot
 
     private fun start() {
 
@@ -34,12 +35,15 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
             }
         }
 
-        val reliefBot = ReliefBot(Team.BLUE, STANDARD_PLAYER_INDEX)
-        botManager.ensureBotRegistered(STANDARD_PLAYER_INDEX) { reliefBot }
-        reliefBot.registerBundleListener(testCase)
+        botInstance = ReliefBot(Team.BLUE, STANDARD_PLAYER_INDEX)
+        botManager.ensureBotRegistered(STANDARD_PLAYER_INDEX) { botInstance }
+        botInstance.registerBundleListener(testCase)
     }
 
     private fun stop() {
+        if ( ::botInstance.isInitialized ) {
+            botInstance.retire()
+        }
         botManager.retireBot(STANDARD_PLAYER_INDEX)
         botManager.shutDown()
         Thread.sleep(400) // This seems to give ReliefBot a chance to finish its final cycle
