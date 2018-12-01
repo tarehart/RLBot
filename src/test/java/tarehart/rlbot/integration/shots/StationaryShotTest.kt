@@ -32,7 +32,8 @@ class StationaryShotTest: StateSettingAbstractTest() {
                 hashSetOf(PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(5.0))))
+                        timeLimit = Duration.ofSeconds(2.0),
+                        delayWhenBallFloating = true)))
 
         runTestCase(testCase)
     }
@@ -56,7 +57,8 @@ class StationaryShotTest: StateSettingAbstractTest() {
                 hashSetOf(PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(5.0))))
+                        timeLimit = Duration.ofSeconds(2.5),
+                        delayWhenBallFloating = true)))
 
         runTestCase(testCase)
     }
