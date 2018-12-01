@@ -25,7 +25,7 @@ abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: 
 
     abstract fun checkBundle(bundle: TacticalBundle, previousBundle: TacticalBundle?)
 
-    fun hasExpired(bundle: TacticalBundle, startTime: GameTime) : Boolean {
+    open fun hasExpired(bundle: TacticalBundle, startTime: GameTime) : Boolean {
         val duration = bundle.agentInput.time - startTime
         if (duration < timeLimit) return false
         if (delayWhenBallFloating) {
