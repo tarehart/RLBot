@@ -22,7 +22,7 @@ class PlaneBreakAssert(val plane: Plane, val extent: Double, timeLimit: Duration
     }
 
     companion object {
-        val ENEMY_GOAL_PLANE = marchPlane(GoalUtil.getEnemyGoal(Team.BLUE).scorePlane, 2.0)
+        val ENEMY_GOAL_PLANE = marchPlane(GoalUtil.getEnemyGoal(Team.BLUE).scorePlane, 1.0)
 
         fun marchPlane(plane: Plane, distance: Double): Plane {
             return Plane(plane.normal,plane.position + plane.normal.scaled(distance))
