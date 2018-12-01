@@ -14,7 +14,7 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
     private fun start() {
 
         var initialized = false
-        var warningCounter = 10
+        var warningCounter = 50
         println("Starting ReliefBot Test Harness.")
 
         while (!initialized) {
@@ -25,9 +25,8 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
             } catch (e: java.lang.UnsatisfiedLinkError) {
                 if (warningCounter-- == 0) {
                     println("Still waiting for the framework to be ready...")
-                    warningCounter = 10
+                    warningCounter = 50
                 }
-                Thread.sleep(900)
             } catch (e: Error) {
                 // Since we capsure the unsatisfied link separately
                 // It may be worth just dying at this point.
@@ -38,7 +37,7 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
             }
         }
 
-        warningCounter = 10
+        warningCounter = 50
         println("Python Framework is ready, waiting for game to start...")
         while (true) {
             try {
@@ -47,9 +46,9 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
             } catch (e: java.io.IOException) {
                 if (warningCounter-- == 0) {
                     println("Still waiting for the game to be start...")
-                    warningCounter = 10
+                    warningCounter = 50
                 }
-                Thread.sleep(1000)
+                Thread.sleep(100)
             }
         }
 
