@@ -19,6 +19,7 @@ class PyAdapterManager {
         if (!initialized) {
             initialized = true
             Thread(Runnable {
+                Thread.currentThread().name = "PyAdapter"
                 while (!shutdown) {
                     try {
                         val packet = RLBotDll.getFlatbufferPacket()
