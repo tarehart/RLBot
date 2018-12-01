@@ -5,8 +5,6 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
-import java.util.Optional
-
 object StrikePlanner {
 
     // This is the approximate angle a car needs to boost at to not accelerate up or down.
@@ -59,7 +57,7 @@ object StrikePlanner {
                 BotLog.println("Performing DiagonalHit!", car.playerIndex)
                 val toIntercept = intercept.space.flatten() - car.position.flatten()
                 val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
-                return SetPieces.diagonalFlip(left, Duration.ofSeconds(intercept.strikeProfile.hangTime))
+                return SetPieces.diagonalKick(left, Duration.ofSeconds(intercept.strikeProfile.hangTime))
             }
             return null
         }

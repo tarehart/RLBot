@@ -4,6 +4,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.routing.PositionFacing
 
 import java.util.Optional
 
@@ -82,6 +83,21 @@ object ManeuverMath {
         }
 
         return toPad.magnitude() < 2 || approachError > Math.PI * 11 / 12
+    }
+
+    fun estimateApproachVector(currentFacing: PositionFacing, target: Vector2): Vector2 {
+        // When we are close to the target, the current orientation matters, and is probably taking some offset
+        // into account if we have been approaching few frames, so currentFacing
+        // is most accurate.
+
+        // When we are far from the target, we should bias for the approach angle because it guards us against the
+        // situation where we just found out about the circle and the car is pointed the completely wrong way. Also
+        // the approach angle is a pretty good approximation when we are far away.
+
+        // This summation leads to a weighted average of the two vectors depending on distance.
+        val toTarget = target - currentFacing.position
+        val estimatedEntryAngle = currentFacing.facing + toTarget.scaled(0.03)
+        return estimatedEntryAngle.normalized()
     }
 
 }

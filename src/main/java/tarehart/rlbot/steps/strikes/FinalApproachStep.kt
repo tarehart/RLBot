@@ -7,6 +7,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.StrikePlanner
+import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
@@ -17,7 +18,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
     private var strikeStarted = false
 
     override fun getLocalSituation(): String {
-        return "Final approach"
+        return "Final approach toward %s %s".format(kickPlan.launchPad.expectedTime, kickPlan.launchPad.position)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -27,7 +28,11 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
         }
 
         if (!readyForFinalApproach(bundle.agentInput.myCarData, kickPlan.launchPad)) {
-            BotLog.println("Failed final approach!", bundle.agentInput.playerIndex)
+            if (kickPlan.intercept.strikeProfile.style == StrikeProfile.Style.CHIP) {
+                BotLog.println("Probably chipped successfully!", bundle.agentInput.playerIndex)
+            } else {
+                BotLog.println("Failed final approach!", bundle.agentInput.playerIndex)
+            }
             return null
         }
 
@@ -35,6 +40,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
         StrikePlanner.planImmediateLaunch(car, kickPlan.intercept)?.let {
             strikeStarted = true
+            BotLog.println("Launched at %s %s".format(bundle.agentInput.time, car.position), car.playerIndex)
             return startPlan(it, bundle)
         }
 

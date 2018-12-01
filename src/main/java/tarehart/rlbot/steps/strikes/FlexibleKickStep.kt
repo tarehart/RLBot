@@ -11,13 +11,16 @@ import tarehart.rlbot.intercept.AirTouchPlanner
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
+import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.CircleRoutePart
+import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.PrecisionPlan
 import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.steps.NestedPlanStep
@@ -25,6 +28,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 import java.awt.Graphics2D
 
@@ -39,6 +43,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private var recentCar: CarData? = null
     //private var earliestIntercept: GameTime? = null
     private val disruptionMeter = BallPathDisruptionMeter()
+    private var strikeHint: StrikeProfile.Style? = null
 
     override fun doInitialComputation(bundle: TacticalBundle) {
         recentCar = bundle.agentInput.myCarData
@@ -68,7 +73,12 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             return null
         }
 
-        val strikeProfileFn = { intercept:Vector3, approachAngle: Double, car: CarData -> AirTouchPlanner.getStrikeProfile(intercept, approachAngle, car) }
+        val strikeProfileFn = {
+            intercept: Vector3, kickDirection: Vector2, c: CarData ->
+                val approachVec = ManeuverMath.estimateApproachVector(PositionFacing(c), intercept.flatten())
+                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), strikeHint)
+
+        }
         val ballPath = bundle.tacticalSituation.ballPath
 
         val overallPredicate = { cd: CarData, st: SpaceTime, str: StrikeProfile ->
@@ -90,6 +100,12 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         recentPrecisionPlan = precisionPlan
 
+        if (strikeHint == null) {
+            val steerCorrection = SteerUtil.getCorrectionAngleRad(car, precisionPlan.steerPlan.waypoint)
+            if (Math.abs(steerCorrection) < Math.PI / 20) {
+                strikeHint = precisionPlan.kickPlan.intercept.strikeProfile.style
+            }
+        }
 
         if (disruptionMeter.isDisrupted(precisionPlan.kickPlan.ballPath)) {
             BotLog.println("Ball path disrupted during flexible.", car.playerIndex)
@@ -206,6 +222,13 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             graphics.color = Color(138, 164, 200)
             it.steerPlan.drawDebugInfo(graphics, recentCar!!)
             it.kickPlan.drawDebugInfo(graphics)
+        }
+    }
+
+    companion object {
+        fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, styleHint: StrikeProfile.Style?): StrikeProfile {
+            val style = styleHint ?: AirTouchPlanner.computeStrikeStyle(intercept, approachAngleMagnitude)
+            return AirTouchPlanner.getStrikeProfile(style, intercept.z)
         }
     }
 }

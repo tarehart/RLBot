@@ -17,12 +17,12 @@ object AirTouchPlanner {
     private const val SUPER_JUMP_RISE_RATE = 11.0
     const val BOOST_NEEDED_FOR_AERIAL = 20.0
     const val NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT
-    private const val MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD
+    const val MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD
     const val NEEDS_JUMP_HIT_THRESHOLD = 3.2
     const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
     private const val MAX_FLIP_HIT = NEEDS_JUMP_HIT_THRESHOLD
     const val MAX_CHIP_HIT = 2.0
-    val LATENCY_DURATION = Duration.ofMillis(25)
+    val LATENCY_DURATION = Duration.ofMillis(100)
 
 
     fun checkAerialReadiness(car: CarData, intercept: Intercept): AerialChecklist {
@@ -116,60 +116,65 @@ object AirTouchPlanner {
 
     fun getJumpHitStrikeProfile(height: Double): StrikeProfile {
         // If we have time to tilt back, the nose will be higher and we can cheat a little.
-        val requiredHeight = height * .7
+        val requiredHeight = (height - CAR_BASE_HEIGHT) * .7
         val jumpTime = ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8)
         return StrikeProfile(jumpTime, 10.0, .15, StrikeProfile.Style.JUMP_HIT)
     }
 
-    fun getDiagonalJumpHitStrikeProfile(height: Double): StrikeProfile {
-        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS + CAR_BASE_HEIGHT).orElse(.8)
-        return StrikeProfile(jumpTime + 0.04, 10.0, .2, StrikeProfile.Style.DIAGONAL_HIT)
+    private fun getDiagonalJumpHitStrikeProfile(height: Double): StrikeProfile {
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - CAR_BASE_HEIGHT).orElse(.8)
+        return StrikeProfile(jumpTime + 0.07, 10.0, .1, StrikeProfile.Style.DIAGONAL_HIT)
     }
 
-    fun getSideHitStrikeProfile(height: Double): StrikeProfile {
-        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS + CAR_BASE_HEIGHT).orElse(.8)
-        return StrikeProfile(jumpTime, 10.0, .3, StrikeProfile.Style.SIDE_HIT)
+    private fun getSideHitStrikeProfile(height: Double): StrikeProfile {
+        val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - CAR_BASE_HEIGHT).orElse(.8)
+        return StrikeProfile(jumpTime + 0.07, 10.0, .3, StrikeProfile.Style.SIDE_HIT)
     }
 
-    fun getStraightOnStrikeProfile(height: Double): StrikeProfile {
-
-        if (isChipAccessible(height)) {
-            return StrikeProfile(style = StrikeProfile.Style.CHIP)
-        }
-
-        if (isFlipHitAccessible(height)) {
-            return InterceptStep.FLIP_HIT_STRIKE_PROFILE
-        }
-        if (height < MAX_JUMP_HIT) {
-            return getJumpHitStrikeProfile(height)
-        }
-        return getAerialStrikeProfile(height)
-    }
-
-    fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, car: CarData): StrikeProfile {
+    fun computeStrikeStyle(intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
 
         if (approachAngleMagnitude < Math.PI / 16) {
-            return getStraightOnStrikeProfile(intercept.z)
-        }
 
-        if (approachAngleMagnitude < Math.PI / 8 && intercept.z < MAX_CHIP_HIT) {
-            return StrikeProfile(style = StrikeProfile.Style.CHIP)
-        }
-
-        if (intercept.z < MAX_JUMP_HIT) {
-            val isNearGoal = intercept.distance(GoalUtil.getNearestGoal(intercept).center) < 30
-            if (approachAngleMagnitude > Math.PI / 4 && isNearGoal) {
-                return getSideHitStrikeProfile(intercept.z)
+            val height = intercept.z
+            if (AirTouchPlanner.isChipAccessible(height)) {
+                return StrikeProfile.Style.CHIP
             }
-            return getDiagonalJumpHitStrikeProfile(intercept.z)
+
+            if (AirTouchPlanner.isFlipHitAccessible(height)) {
+                return StrikeProfile.Style.FLIP_HIT
+            }
+            if (height < AirTouchPlanner.MAX_JUMP_HIT) {
+                return StrikeProfile.Style.JUMP_HIT
+            }
+        } else if (approachAngleMagnitude < Math.PI / 8 && intercept.z < AirTouchPlanner.MAX_CHIP_HIT) {
+            return StrikeProfile.Style.CHIP
         }
-        return getAerialStrikeProfile(intercept.z)
+
+        if (intercept.z < AirTouchPlanner.MAX_JUMP_HIT) {
+            val isNearGoal = intercept.distance(GoalUtil.getNearestGoal(intercept).center) < 50
+            if (approachAngleMagnitude > Math.PI / 4 && isNearGoal) {
+                return StrikeProfile.Style.SIDE_HIT
+            }
+            return StrikeProfile.Style.DIAGONAL_HIT
+        }
+        return StrikeProfile.Style.AERIAL
     }
 
     fun getAerialStrikeProfile(height: Double): StrikeProfile {
         val hangTime = AerialMath.timeToAir(height)
         val canDodge = hangTime < MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE.seconds
         return StrikeProfile(hangTime, if (canDodge) 10.0 else 0.0, if(canDodge) .25 else 0.0, StrikeProfile.Style.AERIAL)
+    }
+
+    fun getStrikeProfile(style: StrikeProfile.Style, height: Double): StrikeProfile {
+        return when(style) {
+            StrikeProfile.Style.CHIP -> StrikeProfile(style = StrikeProfile.Style.CHIP)
+            StrikeProfile.Style.JUMP_HIT -> getJumpHitStrikeProfile(height)
+            StrikeProfile.Style.FLIP_HIT -> InterceptStep.FLIP_HIT_STRIKE_PROFILE
+            StrikeProfile.Style.DIAGONAL_HIT -> getDiagonalJumpHitStrikeProfile(height)
+            StrikeProfile.Style.SIDE_HIT -> getSideHitStrikeProfile(height)
+            StrikeProfile.Style.AERIAL -> getAerialStrikeProfile(height)
+        }
     }
 
     fun isChipAccessible(height: Double): Boolean {

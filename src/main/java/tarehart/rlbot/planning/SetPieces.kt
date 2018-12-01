@@ -141,7 +141,7 @@ object SetPieces {
                         .withJump(true)
                         .withBoost(hurry)
                         .withThrottle((if (hurry) 1 else 0).toDouble())))
-                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
+                .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
                         .withThrottle(1.0)
                 ))
                 .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
@@ -151,14 +151,16 @@ object SetPieces {
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
 
-    fun diagonalFlip(flipLeft: Boolean, rawJumpTime: Duration): Plan {
+    fun diagonalKick(flipLeft: Boolean, rawJumpTime: Duration): Plan {
 
         val jumpTime = if (rawJumpTime.millis < 0) Duration.ofMillis(0) else rawJumpTime
 
         return Plan()
                 .unstoppable()
-                .withStep(BlindStep(Duration.ofMillis(Math.max(20, jumpTime.millis)), AgentOutput()
-                        .withJump(true)))
+                .withStep(BlindStep(Duration.ofMillis(Math.max(50, jumpTime.millis)), AgentOutput()
+                        .withJump(true)
+                        .withPitch(1.0)
+                        .withRoll(if (flipLeft) 1.0 else -1.0)))
                 .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
                         .withThrottle(1.0)
                 ))

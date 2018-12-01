@@ -11,6 +11,7 @@ import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.ManeuverMath
 
 object CircleTurnUtil {
 
@@ -108,7 +109,7 @@ object CircleTurnUtil {
 
     private fun getIdealCircleSpeed(currentFacing: PositionFacing, targetFacing: PositionFacing): Double {
 
-        val estimatedEntryAngle = estimateApproachVector(currentFacing, targetFacing.position)
+        val estimatedEntryAngle = ManeuverMath.estimateApproachVector(currentFacing, targetFacing.position)
 
         val orientationCorrection = estimatedEntryAngle.correctionAngle(targetFacing.facing)
         val angleAllowingFullSpeed = Math.PI / 6
@@ -116,23 +117,6 @@ object CircleTurnUtil {
         val rawPenalty = speedPenaltyPerRadian * (Math.abs(orientationCorrection) - angleAllowingFullSpeed)
         val correctionPenalty = Math.max(0.0, rawPenalty)
         return Math.max(15.0, AccelerationModel.SUPERSONIC_SPEED - correctionPenalty)
-    }
-
-    fun estimateApproachVector(currentFacing: PositionFacing, target: Vector2): Vector2 {
-        // When we are close to the target, the current orientation matters, and is probably taking the circle
-        // tangent point into account if we have been approaching the circle for a few frames, so currentFacing
-        // is most accurate.
-
-        // When we are far from the target, we should bias for the approach angle because it guards us against the
-        // situation where we just found out about the circle and the car is pointed the completely wrong way. Also
-        // the approach angle is a pretty good approximation when we are far away.
-
-        // This summation leads to a weighted average of the two vectors depending on distance.
-
-        // TODO: make sure this still makes sense in a route-aware planning context
-        val toTarget = target - currentFacing.position
-        val estimatedEntryAngle = currentFacing.facing + toTarget.scaled(0.05)
-        return estimatedEntryAngle.normalized()
     }
 
     private fun circleWaypoint(

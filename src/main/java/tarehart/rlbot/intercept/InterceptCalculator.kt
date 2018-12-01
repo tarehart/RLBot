@@ -15,6 +15,7 @@ import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.tuning.ManeuverMath
 
 object InterceptCalculator {
 
@@ -118,7 +119,7 @@ object InterceptCalculator {
             ballPath: BallPath,
             acceleration: DistancePlot,
             spatialPredicate: (CarData, SpaceTime, StrikeProfile) -> Boolean,
-            strikeProfileFn: (Vector3, Double, CarData) -> StrikeProfile,
+            strikeProfileFn: (Vector3, Vector2, CarData) -> StrikeProfile,
             kickStrategy: KickStrategy): PrecisionPlan? {
 
         val myPosition = carData.position.flatten()
@@ -132,10 +133,8 @@ object InterceptCalculator {
             val spaceTime = SpaceTime(slice.space.plus(interceptModifier), slice.time)
             val interceptFlat = spaceTime.space.flatten()
             val toIntercept = interceptFlat - myPosition
-            val estimatedApproach = CircleTurnUtil.estimateApproachVector(
-                    PositionFacing(myPosition, carData.orientation.noseVector.flatten()), interceptFlat)
 
-            val strikeProfile = strikeProfileFn.invoke(spaceTime.space, Vector2.angle(estimatedApproach, kickDirection.flatten()), carData)
+            val strikeProfile = strikeProfileFn.invoke(spaceTime.space, kickDirection.flatten(), carData)
 
             // If it's a forward strike, it's safe to factor in orient duration now, which is good for efficiency.
             // Otherwise, defer until we have a route because angled strikes are tricky.
@@ -163,7 +162,7 @@ object InterceptCalculator {
                             slice,
                             dts)
 
-                    val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy, estimatedApproach)
+                    val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy)
                             ?: return null // Also consider continuing the loop instead.
                     val steerPlan = kickPlan.launchPad.planRoute(carData, kickPlan.distancePlot)
 //                    val steerPlan = CircleTurnUtil.getPlanForCircleTurn(carData, kickPlan.distancePlot, kickPlan.launchPad)

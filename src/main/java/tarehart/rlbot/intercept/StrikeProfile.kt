@@ -42,12 +42,14 @@ data class StrikeProfile(
 
     val isForward: Boolean = style != Style.SIDE_HIT && style != Style.DIAGONAL_HIT
 
-    data class SpeedupResult(val forwardMagnitude: Double, val sidewaysMagnitude: Double)
+    data class PostDodgeVelocity(val forwardMagnitude: Double, val sidewaysMagnitude: Double) {
+        val speed = Vector2(forwardMagnitude, sidewaysMagnitude).magnitude()
+    }
 
     /**
      * When we are doing either a side dodge or a diagonal dodge, the car will speed up in the forward and horizontal directions.
      */
-    fun getSpeedupResult(arrivalSpeed: Double): SpeedupResult {
+    fun getPostDodgeVelocity(arrivalSpeed: Double): PostDodgeVelocity {
 
         // https://youtu.be/pX950bhGhJE?t=370
         val sidewaysImpulseMagnitude = ManeuverMath.DODGE_SPEED * (1 + 0.9 *  arrivalSpeed / AccelerationModel.SUPERSONIC_SPEED)
@@ -59,10 +61,10 @@ data class StrikeProfile(
         val finalSpeed = tentativeFinalSpeed.magnitude()
         if (finalSpeed > AccelerationModel.SUPERSONIC_SPEED) {
             val scaledSpeed = tentativeFinalSpeed.scaledToMagnitude(AccelerationModel.SUPERSONIC_SPEED)
-            return SpeedupResult(scaledSpeed.x - arrivalSpeed, scaledSpeed.y)
+            return PostDodgeVelocity(scaledSpeed.x, scaledSpeed.y)
         }
 
-        return SpeedupResult(forwardComponent, sidewaysComponent)
+        return PostDodgeVelocity(tentativeFinalSpeed.x, tentativeFinalSpeed.y)
     }
 
     enum class Style {
