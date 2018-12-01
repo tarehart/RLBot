@@ -5,7 +5,6 @@ import rlbot.manager.BotManager
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.bots.ReliefBot
 import tarehart.rlbot.bots.Team
-import java.io.IOException
 
 class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
 
@@ -14,45 +13,26 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
     private fun start() {
 
         var initialized = false
-        var warningCounter = 50
         println("Starting ReliefBot Test Harness.")
 
         while (!initialized) {
             try {
+                RLBotDll.initialize("garbage path to make this thing fail fast until " +
+                        "it gets initialized by another thread.")
                 RLBotDll.setPlayerInputFlatbuffer(AgentOutput(), STANDARD_PLAYER_INDEX)
                 testCase.setState()
+                botManager.ensureStarted()
                 initialized = true
-            } catch (e: java.lang.UnsatisfiedLinkError) {
-                if (warningCounter-- == 0) {
-                    println("Still waiting for the framework to be ready...")
-                    warningCounter = 50
-                }
+                Thread.sleep(100) // Give the state a chance to take hold.
             } catch (e: Error) {
-                // Since we capsure the unsatisfied link separately
-                // It may be worth just dying at this point.
                 e.printStackTrace()
-                Thread.sleep(900)
-            } finally {
-                Thread.sleep(100)
+                Thread.sleep(1000) // Wait a while to give python a chance to phone in.
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Thread.sleep(1000) // Wait a while to give python a chance to phone in.
             }
         }
 
-        warningCounter = 50
-        println("Python Framework is ready, waiting for game to start...")
-        while (true) {
-            try {
-                RLBotDll.getFieldInfo()
-                break
-            } catch (e: java.io.IOException) {
-                if (warningCounter-- == 0) {
-                    println("Still waiting for the game to be start...")
-                    warningCounter = 50
-                }
-                Thread.sleep(100)
-            }
-        }
-
-        botManager.ensureStarted()
         val reliefBot = ReliefBot(Team.BLUE, STANDARD_PLAYER_INDEX)
         botManager.ensureBotRegistered(STANDARD_PLAYER_INDEX) { reliefBot }
         reliefBot.registerBundleListener(testCase)
@@ -61,6 +41,7 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
     private fun stop() {
         botManager.retireBot(STANDARD_PLAYER_INDEX)
         botManager.shutDown()
+        Thread.sleep(200) // This seems to give ReliefBot a chance to finish its final cycle
     }
 
     fun runTillComplete() {

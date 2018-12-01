@@ -1,11 +1,9 @@
 package tarehart.rlbot.integration.shots
 
 import org.junit.Test
-import org.junit.runner.RunWith
 import rlbot.gamestate.*
-import tarehart.rlbot.integration.ReliefBotTestRunner
+import tarehart.rlbot.integration.StateSettingAbstractTest
 import tarehart.rlbot.integration.StateSettingTestCase
-import tarehart.rlbot.integration.assertReliefBotTestCase
 import tarehart.rlbot.integration.asserts.PlaneBreakAssert
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.SoccerGoal
@@ -13,8 +11,7 @@ import tarehart.rlbot.steps.state.StateVector
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
-@RunWith(ReliefBotTestRunner::class)
-class StationaryShotTest {
+class StationaryShotTest: StateSettingAbstractTest() {
 
     @Test
     fun testStraightShot() {
@@ -37,7 +34,7 @@ class StationaryShotTest {
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(5.0))))
 
-        assertReliefBotTestCase(testCase)
+        runTestCase(testCase)
     }
 
     @Test
@@ -61,7 +58,7 @@ class StationaryShotTest {
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(5.0))))
 
-        assertReliefBotTestCase(testCase)
+        runTestCase(testCase)
     }
 
     @Test
@@ -85,7 +82,7 @@ class StationaryShotTest {
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(5.0))))
 
-        assertReliefBotTestCase(testCase)
+        runTestCase(testCase)
     }
 
 }

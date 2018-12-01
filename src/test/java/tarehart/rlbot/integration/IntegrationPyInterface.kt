@@ -26,12 +26,4 @@ class IntegrationPyInterface(botManager: BotManager) : DefaultPythonInterface(bo
             e.printStackTrace()
         }
     }
-
-    override fun retireBot(index: Int) {
-        super.retireBot(index)
-    }
-
-    override fun shutdown() {
-        super.shutdown()
-    }
 }
