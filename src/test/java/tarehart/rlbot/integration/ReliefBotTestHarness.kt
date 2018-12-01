@@ -27,7 +27,14 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
                     println("Still waiting for the framework to be ready...")
                     warningCounter = 10
                 }
-                Thread.sleep(1000) // Give the state a chance to take hold.
+                Thread.sleep(900)
+            } catch (e: Error) {
+                // Since we capsure the unsatisfied link separately
+                // It may be worth just dying at this point.
+                e.printStackTrace()
+                Thread.sleep(900)
+            } finally {
+                Thread.sleep(100)
             }
         }
 
