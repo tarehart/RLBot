@@ -12,7 +12,7 @@ import tarehart.rlbot.steps.state.StateVector
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
-class RollingBallShotTest: StateSettingAbstractTest() {
+class BouncingBallShotTest: StateSettingAbstractTest() {
 
     @Test
     fun testStraightShot() {
@@ -21,7 +21,7 @@ class RollingBallShotTest: StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-50F, 10F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(30F, 0F, 0F))
+                                .withVelocity(StateVector(30F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -49,7 +49,7 @@ class RollingBallShotTest: StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-50F, 30F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(30F, 0F, 0F))
+                                .withVelocity(StateVector(30F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -76,7 +76,7 @@ class RollingBallShotTest: StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-50F, 30F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(30F, 0F, 0F))
+                                .withVelocity(StateVector(30F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -102,7 +102,7 @@ class RollingBallShotTest: StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-60F, 70F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(30F, 0F, 0F))
+                                .withVelocity(StateVector(30F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -125,13 +125,13 @@ class RollingBallShotTest: StateSettingAbstractTest() {
 
 
     @Test
-    fun testSlowRollingShot() {
+    fun testSlowShot() {
 
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-40F, 50F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(10F, 0F, 0F))
+                                .withVelocity(StateVector(10F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -159,7 +159,7 @@ class RollingBallShotTest: StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(40F, 50F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(-22F, 0F, 0F))
+                                .withVelocity(StateVector(-22F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -187,7 +187,7 @@ class RollingBallShotTest: StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(30F, 70F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(-27F, 0F, 0F))
+                                .withVelocity(StateVector(-27F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -209,13 +209,13 @@ class RollingBallShotTest: StateSettingAbstractTest() {
     }
 
     @Test
-    fun testFastRollingShot() {
+    fun testFastShot() {
 
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(40F, 50F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(-32F, 0F, 0F))
+                                .withVelocity(StateVector(-32F, 0F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -237,13 +237,13 @@ class RollingBallShotTest: StateSettingAbstractTest() {
     }
 
     @Test
-    fun testRollingTowardsCarShot() {
+    fun testMovingTowardsCarShot() {
 
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(0F, 50F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(0F, -10F, 0F))
+                                .withVelocity(StateVector(0F, -10F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -265,13 +265,13 @@ class RollingBallShotTest: StateSettingAbstractTest() {
     }
 
     @Test
-    fun testRollingSlowlyTowardsCarShot() {
+    fun testMovingSlowlyTowardsCarShot() {
 
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(0F, 50F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(0F, -5F, 0F))
+                                .withVelocity(StateVector(0F, -5F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -293,13 +293,13 @@ class RollingBallShotTest: StateSettingAbstractTest() {
     }
 
     @Test
-    fun testRollingFastTowardsCarShot() {
+    fun testMovingFastTowardsCarShot() {
 
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(0F, 50F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(0F, -20F, 0F))
+                                .withVelocity(StateVector(0F, -20F, 12.1F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
