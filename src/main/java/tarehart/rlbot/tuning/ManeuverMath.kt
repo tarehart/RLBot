@@ -95,7 +95,11 @@ object ManeuverMath {
         // the approach angle is a pretty good approximation when we are far away.
 
         // This summation leads to a weighted average of the two vectors depending on distance.
+
         val toTarget = target - currentFacing.position
+        if (toTarget.isZero) {
+            return currentFacing.facing
+        }
         val estimatedEntryAngle = currentFacing.facing + toTarget.scaledToMagnitude(2 + toTarget.magnitude())
         return estimatedEntryAngle.normalized()
     }
