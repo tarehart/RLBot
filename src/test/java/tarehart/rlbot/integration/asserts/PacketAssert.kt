@@ -1,5 +1,6 @@
 package tarehart.rlbot.integration.asserts
 
+import com.sun.xml.internal.bind.v2.runtime.reflect.Lister
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.integration.metrics.IntegrationMetric
 import tarehart.rlbot.integration.metrics.TimeMetric
@@ -8,7 +9,7 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
-abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: Boolean) {
+abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: Boolean, var negated: Boolean = false) {
 
     open var status: AssertStatus = AssertStatus.PENDING
     open var message: String? = null
@@ -38,5 +39,10 @@ abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: 
             }
         }
         return true
+    }
+
+    fun negate() : PacketAssert { // TODO: Understand generics better.
+        this.negated = true
+        return this
     }
 }

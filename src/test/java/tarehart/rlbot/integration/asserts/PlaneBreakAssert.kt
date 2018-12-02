@@ -19,16 +19,20 @@ class PlaneBreakAssert(val plane: Plane, val extent: Double, timeLimit: Duration
         planeIntersection?.let {
             val distance = it.distance(plane.position)
             if (distance <= extent) {
-                status = AssertStatus.SUCCEEDED
-                addMetric(DistanceMetric(distance))
-                val velocityMetric = VelocityMetric(bundle.agentInput.ballVelocity.magnitude(), "Ball Velocity")
-                addMetric(velocityMetric)
+                if (negated) status = AssertStatus.FAILED
+                else {
+                    status = AssertStatus.SUCCEEDED
+                    addMetric(DistanceMetric(distance))
+                    val velocityMetric = VelocityMetric(bundle.agentInput.ballVelocity.magnitude(), "Ball Velocity")
+                    addMetric(velocityMetric)
+                }
             }
         }
     }
 
     companion object {
         val ENEMY_GOAL_PLANE = marchPlane(GoalUtil.getEnemyGoal(Team.BLUE).scorePlane, 1.0)
+        val OWN_GOAL_PLANE = marchPlane(GoalUtil.getOwnGoal(Team.BLUE).scorePlane, 1.0)
 
         fun marchPlane(plane: Plane, distance: Double): Plane {
             return Plane(plane.normal,plane.position + plane.normal.scaled(distance))
