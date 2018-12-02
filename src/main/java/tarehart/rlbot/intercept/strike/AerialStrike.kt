@@ -1,14 +1,20 @@
 package tarehart.rlbot.intercept.strike
 
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialChecklist
 import tarehart.rlbot.intercept.AerialMath
+import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.routing.waypoint.PreKickWaypoint
+import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
+import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
@@ -41,6 +47,33 @@ open class AerialStrike(height: Double): StrikeProfile() {
             } else performAerial(tiltBackSeconds)
         }
         return null
+    }
+
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+
+        val secondsTillIntercept = (intercept.time - car.time).seconds
+        val flatPosition = car.position.flatten()
+        val toIntercept = intercept.space.flatten() - flatPosition
+        val distanceToIntercept = toIntercept.magnitude()
+        val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
+        val flatForce = desiredKickForce.flatten()
+
+        val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
+        var lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
+        val lazyLaunchDistance = lazyLaunchToIntercept.magnitude()
+        if (lazyLaunchDistance > distanceToIntercept && distanceToIntercept / lazyLaunchDistance > 0.8) {
+            lazyLaunchToIntercept = lazyLaunchToIntercept.scaled(distanceToIntercept / lazyLaunchDistance)
+        }
+        val launchPosition = intercept.space.flatten() - lazyLaunchToIntercept
+        val facing = lazyLaunchToIntercept.normalized()
+        val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
+        val momentOrNow = if (launchPadMoment.isBefore(car.time)) car.time else launchPadMoment
+        return StrictPreKickWaypoint(
+                position = launchPosition,
+                facing = facing,
+                expectedTime = momentOrNow,
+                waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null
+        )
     }
 
 

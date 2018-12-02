@@ -2,12 +2,17 @@ package tarehart.rlbot.intercept.strike
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
 import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
+import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
@@ -36,6 +41,36 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
     override fun isVerticallyAccessible(car: CarData, intercept: SpaceTime): Boolean {
         return intercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT
+    }
+
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+        val flatForce = desiredKickForce.flatten()
+        val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
+                car, intercept.space.flatten(), flatForce)
+
+        val useFrontCorner = Math.abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
+
+        if (useFrontCorner) {
+            val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed, flatForce,
+                    estimatedApproachDeviationFromKickForce, car.position.flatten(), car.renderer)
+
+            if (angled == null) {
+                BotLog.println("Failed to calculate side hit waypoint", car.playerIndex)
+                return null
+            }
+            return angled
+        } else {
+
+            val facing = VectorUtil.rotateVector(
+                    flatForce,
+                    -Math.signum(estimatedApproachDeviationFromKickForce) * Math.PI / 2)
+
+            // Consider the entire strike duration, not just the hang time.
+            val backoff = intercept.strikeProfile.strikeDuration.seconds * expectedArrivalSpeed
+            val launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(2.0) -
+                    facing.scaledToMagnitude(backoff)
+            return DirectedKickUtil.getStandardWaypoint(launchPosition, facing, intercept)
+        }
     }
 
     private fun checkSideHitReadiness(car: CarData, intercept: SpaceTime): LaunchChecklist {
