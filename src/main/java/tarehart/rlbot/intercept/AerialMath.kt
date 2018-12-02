@@ -4,6 +4,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.ManeuverMath
 
 object AerialMath {
 
@@ -62,7 +63,7 @@ object AerialMath {
     fun timeToAir(height: Double): Double {
         val a = TYPICAL_UPWARD_ACCEL // Upward acceleration
         val b = 10 // Initial upward velocity from jump
-        val c = -(height - AirTouchPlanner.CAR_BASE_HEIGHT)
+        val c = -(height - ManeuverMath.BASE_CAR_Z)
         val liftoffDelay = 0.5
         return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a) + liftoffDelay
     }

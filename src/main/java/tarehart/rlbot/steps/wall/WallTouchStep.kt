@@ -1,19 +1,17 @@
 package tarehart.rlbot.steps.wall
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
-import tarehart.rlbot.intercept.StrikeProfile
+import tarehart.rlbot.intercept.strike.ChipStrike
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
@@ -56,7 +54,7 @@ class WallTouchStep : NestedPlanStep() {
                 fullAcceleration,
                 interceptModifier = Vector3(),
                 spatialPredicate = { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) },
-                strikeProfileFn = { StrikeProfile() },
+                strikeProfileFn = { ChipStrike() },
                 planeNormal = car.orientation.roofVector)
 
         latestIntercept = interceptOpportunity

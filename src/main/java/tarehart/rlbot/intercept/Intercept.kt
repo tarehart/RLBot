@@ -1,5 +1,6 @@
 package tarehart.rlbot.intercept
 
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.SpaceTime

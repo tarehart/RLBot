@@ -1,10 +1,10 @@
 package tarehart.rlbot.carpredict
 
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.strike.ChipStrike
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.time.Duration
 
 object CarInterceptPlanner {
@@ -21,7 +21,7 @@ object CarInterceptPlanner {
         for (i in 0 until enemyPath.path.size) {
             val slice = enemyPath.path[i]
             val spaceTime = SpaceTime(slice.space, slice.time)
-            val strikeProfile = StrikeProfile()
+            val strikeProfile = ChipStrike()
             val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, spaceTime.space)
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - Duration.ofSeconds(orientSeconds), strikeProfile) ?: return null
 

@@ -1,21 +1,18 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.intercept.strike.FlipHitStrike
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
-
-import java.awt.*
+import java.awt.Graphics2D
 
 class DribbleStep : NestedPlanStep() {
 
@@ -86,7 +83,7 @@ class DribbleStep : NestedPlanStep() {
             if (car.boost > 0) {
                 dribble.withThrottle(1.0).withBoost()
             } else {
-                return startPlan(SetPieces.frontFlip(), bundle)
+                return startPlan(FlipHitStrike.frontFlip(), bundle)
             }
         }
         return dribble

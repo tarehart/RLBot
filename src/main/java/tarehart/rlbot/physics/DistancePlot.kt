@@ -1,14 +1,12 @@
 package tarehart.rlbot.physics
 
+import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.time.Duration
-
-import java.util.ArrayList
-import java.util.Optional
+import java.util.*
 
 class DistancePlot(start: DistanceTimeSpeed) {
 
@@ -90,12 +88,12 @@ class DistancePlot(start: DistanceTimeSpeed) {
         val totalSeconds = Math.max(time.seconds, 0.0)
         val secondsSpentAccelerating = totalSeconds
 
-        if (strikeProfile.dodgeSeconds == 0.0 || strikeProfile.speedBoost == 0.0) {
+        if (strikeProfile.postDodgeTime == Duration.ZERO || strikeProfile.speedBoost == 0.0) {
             val motion = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating))
             return motion?.let { DistanceTimeSpeed(it.distance, time, it.speed) }
         }
 
-        val speedupSeconds = strikeProfile.dodgeSeconds
+        val speedupSeconds = strikeProfile.postDodgeTime.seconds
         val speedBoost = strikeProfile.speedBoost
         if (secondsSpentAccelerating < speedupSeconds) {
             // Not enough time for a full strike.

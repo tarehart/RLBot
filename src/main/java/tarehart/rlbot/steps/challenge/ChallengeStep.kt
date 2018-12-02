@@ -1,11 +1,10 @@
 package tarehart.rlbot.steps.challenge
 
 import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.BallTouch
-import tarehart.rlbot.intercept.AirTouchPlanner
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -65,7 +64,7 @@ class ChallengeStep: NestedPlanStep() {
         val enemyContact = tacticalSituation.expectedEnemyContact ?:
             return null
 
-        if (enemyContact.space.z > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) {
+        if (enemyContact.space.z > StrikePlanner.NEEDS_AERIAL_THRESHOLD) {
             return null
         }
 

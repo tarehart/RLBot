@@ -1,76 +1,93 @@
 package tarehart.rlbot.intercept
 
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.intercept.strike.*
+import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
-import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.ManeuverMath
 
 object StrikePlanner {
 
-    // This is the approximate angle a car needs to boost at to not accelerate up or down.
-    private const val UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25
+    const val BOOST_NEEDED_FOR_AERIAL = 20.0
+    const val NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT
+    const val MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD
+    const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
 
-    fun planImmediateLaunch(car: CarData, intercept: Intercept): Plan? {
+    val LATENCY_DURATION = Duration.ofMillis(100)
 
-        val height = intercept.space.z
-        val strikeStyle = intercept.strikeProfile.style
-        if (strikeStyle === StrikeProfile.Style.AERIAL) {
-            val checklist = AirTouchPlanner.checkAerialReadiness(car, intercept)
-            if (checklist.readyToLaunch()) {
-                BotLog.println("Performing Aerial!", car.playerIndex)
+    fun checkLaunchReadiness(checklist: LaunchChecklist, car: CarData, intercept: SpaceTime) {
 
-                val groundDistance = car.position.flatten().distance(intercept.space.flatten())
-                val radiansForTilt = Math.atan2(height, groundDistance) + UPWARD_VELOCITY_MAINTENANCE_ANGLE
+        val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, intercept.space)
+        val secondsTillIntercept = Duration.between(car.time, intercept.time).seconds
 
-                val tiltBackSeconds = 0.2 + radiansForTilt * .1
+        checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 30
+        checklist.closeEnough = secondsTillIntercept < 4
 
-                return if (Duration.between(car.time, intercept.time).seconds > 1.5 && intercept.space.z > 10) {
-                    SetPieces.performDoubleJumpAerial(tiltBackSeconds * .8)
-                } else SetPieces.performAerial(tiltBackSeconds)
-            }
-            return null
+        checklist.upright = car.orientation.roofVector.dotProduct(Vector3(0.0, 0.0, 1.0)) > .85
+        checklist.onTheGround = car.hasWheelContact
+    }
+
+    fun isVerticallyAccessible(carData: CarData, intercept: SpaceTime): Boolean {
+        val secondsTillIntercept = Duration.between(carData.time, intercept.time).seconds
+
+        if (intercept.space.z < NEEDS_AERIAL_THRESHOLD) {
+            val tMinus = secondsTillIntercept - JumpHitStrike(intercept.space.z).strikeDuration.seconds
+            return tMinus >= -0.1
         }
 
-        if (strikeStyle === StrikeProfile.Style.JUMP_HIT) {
-            val checklist = AirTouchPlanner.checkJumpHitReadiness(car, intercept)
-            if (checklist.readyToLaunch()) {
-                BotLog.println("Performing JumpHit!", car.playerIndex)
-                return SetPieces.performJumpHit(intercept.strikeProfile.hangTime)
+        if (carData.boost > BOOST_NEEDED_FOR_AERIAL) {
+            val tMinus = AerialStrike.getAerialLaunchCountdown(intercept.space.z, secondsTillIntercept)
+            return tMinus >= -0.1
+        }
+        return false
+    }
+
+
+
+    fun computeStrikeStyle(intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
+
+        if (approachAngleMagnitude < Math.PI / 16) {
+
+            val height = intercept.z
+            if (height <= ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
+                return StrikeProfile.Style.CHIP
             }
-            return null
+
+            if (FlipHitStrike.isVerticallyAccessible(height)) {
+                return StrikeProfile.Style.FLIP_HIT
+            }
+            if (height < StrikePlanner.MAX_JUMP_HIT) {
+                return StrikeProfile.Style.JUMP_HIT
+            }
+        } else if (approachAngleMagnitude < Math.PI * .2 && intercept.z < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
+            return StrikeProfile.Style.CHIP
         }
 
-        if (strikeStyle === StrikeProfile.Style.SIDE_HIT) {
-            val checklist = AirTouchPlanner.checkSideHitReadiness(car, intercept)
-            if (checklist.readyToLaunch()) {
-                BotLog.println("Performing SideHit!", car.playerIndex)
-                val toIntercept = intercept.space.flatten() - car.position.flatten()
-                val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
-                return SetPieces.jumpSideFlip(left, Duration.ofSeconds(intercept.strikeProfile.hangTime), intercept.spareTime.seconds <= 0)
+        if (intercept.z < StrikePlanner.MAX_JUMP_HIT) {
+            val isNearGoal = intercept.distance(GoalUtil.getNearestGoal(intercept).center) < 50
+            if (approachAngleMagnitude > Math.PI / 4 && isNearGoal) {
+                return StrikeProfile.Style.SIDE_HIT
             }
-            return null
+            return StrikeProfile.Style.DIAGONAL_HIT
         }
+        return StrikeProfile.Style.AERIAL
+    }
 
-        if (strikeStyle === StrikeProfile.Style.DIAGONAL_HIT) {
-            val checklist = AirTouchPlanner.checkDiagonalHitReadiness(car, intercept)
-            if (checklist.readyToLaunch()) {
-                BotLog.println("Performing DiagonalHit!", car.playerIndex)
-                val toIntercept = intercept.space.flatten() - car.position.flatten()
-                val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
-                return SetPieces.diagonalKick(left, Duration.ofSeconds(intercept.strikeProfile.hangTime))
-            }
-            return null
+    fun getStrikeProfile(style: StrikeProfile.Style, height: Double): StrikeProfile {
+        return when(style) {
+            StrikeProfile.Style.CHIP -> ChipStrike()
+            StrikeProfile.Style.JUMP_HIT -> JumpHitStrike(height)
+            StrikeProfile.Style.FLIP_HIT -> FlipHitStrike()
+            StrikeProfile.Style.DIAGONAL_HIT -> DiagonalStrike(height)
+            StrikeProfile.Style.SIDE_HIT -> SideHitStrike(height)
+            StrikeProfile.Style.AERIAL -> AerialStrike(height)
         }
+    }
 
-        if (strikeStyle === StrikeProfile.Style.FLIP_HIT) {
-            val checklist = AirTouchPlanner.checkFlipHitReadiness(car, intercept)
-            if (checklist.readyToLaunch()) {
-                BotLog.println("Performing FlipHit!", car.playerIndex)
-                return SetPieces.frontFlip()
-            }
-            return null
-        }
-
-        return null
+    fun getBoostBudget(carData: CarData): Double {
+        return carData.boost - BOOST_NEEDED_FOR_AERIAL - 5.0
     }
 }

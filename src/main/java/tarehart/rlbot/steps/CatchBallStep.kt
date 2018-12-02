@@ -1,12 +1,10 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.intercept.AirTouchPlanner
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
@@ -22,7 +20,7 @@ class CatchBallStep : StandardStep() {
         val car = bundle.agentInput.myCarData
 
         val ballPath = bundle.tacticalSituation.ballPath
-        val catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, AirTouchPlanner.getBoostBudget(car)) ?: return null
+        val catchOpportunity = SteerUtil.getCatchOpportunity(car, ballPath, StrikePlanner.getBoostBudget(car)) ?: return null
 
         // Weed out any intercepts after a catch opportunity. Should just catch it.
         latestCatchLocation = catchOpportunity

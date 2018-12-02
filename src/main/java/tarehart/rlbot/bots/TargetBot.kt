@@ -5,9 +5,10 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
+import tarehart.rlbot.intercept.strike.AerialStrike
+import tarehart.rlbot.intercept.strike.SideHitStrike
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.steps.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.state.ResetLoop
@@ -213,7 +214,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             }
 
             if (Plan.activePlanKt(currentPlan) == null) {
-                currentPlan = SetPieces.performDoubleJumpAerial(0.3)
+                currentPlan = AerialStrike.performDoubleJumpAerial(0.3)
             }
 
             currentPlan?.let {
@@ -268,7 +269,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             val distance = input.myCarData.position.distance(enemy.position)
 
             if (distance < 50) {
-               currentPlan = SetPieces.jumpSideFlip(false, Duration.ofSeconds(0.2), false)
+               currentPlan = SideHitStrike.jumpSideFlip(false, Duration.ofSeconds(0.2), false)
                 //currentPlan = SetPieces.frontFlip()
 //                currentPlan = Plan().unstoppable()
 //                        .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withJump()))

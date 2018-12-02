@@ -1,9 +1,7 @@
 package tarehart.rlbot.carpredict
 
-import sun.management.Agent
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
@@ -11,7 +9,6 @@ import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
-import java.util.Optional
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min

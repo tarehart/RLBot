@@ -31,6 +31,7 @@ class Duration private constructor(val millis: Long) : Comparable<Duration> {
 
 
     companion object {
+        val ZERO = ofMillis(0)
 
         fun between(first: GameTime, later: GameTime): Duration {
             return Duration(later.toMillis() - first.toMillis())

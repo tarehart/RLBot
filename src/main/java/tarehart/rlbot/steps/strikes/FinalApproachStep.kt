@@ -1,13 +1,11 @@
 package tarehart.rlbot.steps.strikes
 
 import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.StrikePlanner
-import tarehart.rlbot.intercept.StrikeProfile
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
@@ -38,7 +36,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
         val car = bundle.agentInput.myCarData
 
-        StrikePlanner.planImmediateLaunch(car, kickPlan.intercept)?.let {
+        kickPlan.intercept.strikeProfile.getPlan(car, kickPlan.intercept.toSpaceTime())?.let {
             strikeStarted = true
             BotLog.println("Launched at %s %s".format(bundle.agentInput.time, car.position), car.playerIndex)
             return startPlan(it, bundle)

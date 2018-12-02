@@ -1,10 +1,9 @@
 package tarehart.rlbot.routing
 
 import rlbot.render.Renderer
-import tarehart.rlbot.intercept.StrikeProfile
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.time.Duration
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D

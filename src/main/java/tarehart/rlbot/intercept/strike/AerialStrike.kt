@@ -1,0 +1,94 @@
+package tarehart.rlbot.intercept.strike
+
+import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.AerialChecklist
+import tarehart.rlbot.intercept.AerialMath
+import tarehart.rlbot.intercept.StrikePlanner
+import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.landing.LandGracefullyStep
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
+import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.ManeuverMath
+
+open class AerialStrike(height: Double): StrikeProfile() {
+    override val preDodgeTime = Duration.ofSeconds(AerialMath.timeToAir(height))
+
+    private val canDodge = preDodgeTime < MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE
+    override val speedBoost = if (canDodge) 10.0 else 0.0
+    override val postDodgeTime = if (canDodge) Duration.ofMillis(250) else Duration.ZERO
+    override val style = Style.AERIAL
+
+    override fun isVerticallyAccessible(car: CarData, intercept: SpaceTime): Boolean {
+        return StrikePlanner.isVerticallyAccessible(car, intercept)
+    }
+
+    override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {
+        val checklist = checkAerialReadiness(car, intercept)
+        if (checklist.readyToLaunch()) {
+            BotLog.println("Performing Aerial!", car.playerIndex)
+
+            val groundDistance = car.position.flatten().distance(intercept.space.flatten())
+            val radiansForTilt = Math.atan2(intercept.space.z, groundDistance) + UPWARD_VELOCITY_MAINTENANCE_ANGLE
+
+            val tiltBackSeconds = 0.2 + radiansForTilt * .1
+
+            return if (Duration.between(car.time, intercept.time).seconds > 1.5 && intercept.space.z > 10) {
+                performDoubleJumpAerial(tiltBackSeconds * .8)
+            } else performAerial(tiltBackSeconds)
+        }
+        return null
+    }
+
+
+    companion object {
+        private const val UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25
+
+        fun checkAerialReadiness(car: CarData, intercept: SpaceTime): AerialChecklist {
+
+            val checklist = AerialChecklist()
+            StrikePlanner.checkLaunchReadiness(checklist, car, intercept)
+            val secondsTillIntercept = Duration.between(car.time, intercept.time).seconds
+            val tMinus = getAerialLaunchCountdown(intercept.space.z, secondsTillIntercept)
+            checklist.timeForIgnition = tMinus < 0.1
+            checklist.notSkidding = !ManeuverMath.isSkidding(car)
+            checklist.hasBoost = car.boost >= StrikePlanner.BOOST_NEEDED_FOR_AERIAL
+
+            return checklist
+        }
+
+        fun getAerialLaunchCountdown(height: Double, secondsTillIntercept: Double): Double {
+            val expectedAerialSeconds = AerialMath.timeToAir(height)
+            return secondsTillIntercept - expectedAerialSeconds
+        }
+
+        fun performAerial(tiltBackSeconds: Double): Plan {
+            val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
+
+            return Plan()
+                    .withStep(BlindStep(tiltBackDuration, AgentOutput().withJump(true).withPitch(1.0)))
+                    .withStep(MidairStrikeStep(tiltBackDuration))
+                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+        }
+
+        fun performDoubleJumpAerial(tiltBackSeconds: Double): Plan {
+            val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
+
+            return Plan()
+                    .withStep(BlindStep(tiltBackDuration, AgentOutput().withJump(true).withPitch(1.0)))
+                    .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()
+                            .withPitch(1.0)
+                            .withBoost(true)
+                    ))
+                    .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()
+                            .withBoost(true)
+                            .withJump(true)
+                    ))
+                    .withStep(MidairStrikeStep(tiltBackDuration, hasJump = false))
+                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+        }
+    }
+}

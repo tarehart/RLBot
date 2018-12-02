@@ -4,7 +4,7 @@ import rlbot.render.Renderer
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.StrikeProfile
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.Triangle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
@@ -133,14 +133,14 @@ object DirectedKickUtil {
             StrikeProfile.Style.FLIP_HIT -> {
                 facing = flatForce.normalized()
                 val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, arrivalSpeed + intercept.strikeProfile.speedBoost)
-                val strikeTravel = intercept.strikeProfile.hangTime * arrivalSpeed + intercept.strikeProfile.dodgeSeconds * postDodgeSpeed
+                val strikeTravel = intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed + intercept.strikeProfile.postDodgeTime.seconds * postDodgeSpeed
                 launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
                 launchPad = getStandardWaypoint(launchPosition, facing, intercept)
             }
             StrikeProfile.Style.JUMP_HIT -> {
                 facing = flatForce.normalized()
                 val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, arrivalSpeed + intercept.strikeProfile.speedBoost)
-                val strikeTravel = intercept.strikeProfile.hangTime * arrivalSpeed + intercept.strikeProfile.dodgeSeconds * postDodgeSpeed
+                val strikeTravel = intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed + intercept.strikeProfile.postDodgeTime.seconds * postDodgeSpeed
                 launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
                 launchPad = getStandardWaypoint(launchPosition, facing, intercept)
             }
@@ -218,7 +218,7 @@ object DirectedKickUtil {
     private fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, kickForce: Vector2,
                                   approachVsKickForceAngle:Double, carPosition: Vector2, renderer: Renderer): PreKickWaypoint? {
 
-        val carStrikeRadius = 1.5
+        val carStrikeRadius = 2.4
         val carPositionAtContact = intercept.ballSlice.space.flatten() - kickForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
 
         val postDodgeVelocity = intercept.strikeProfile.getPostDodgeVelocity(arrivalSpeed)
@@ -229,7 +229,7 @@ object DirectedKickUtil {
             return null
         }
 
-        val strikeTravel = intercept.strikeProfile.dodgeSeconds * postDodgeVelocity.speed
+        val strikeTravel = intercept.strikeProfile.postDodgeTime.seconds * postDodgeVelocity.speed
 
         val dodgePosition = dodgePosition(carPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
 
@@ -240,7 +240,7 @@ object DirectedKickUtil {
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
 
-        val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.hangTime * arrivalSpeed)
+        val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
 
         return AnyFacingPreKickWaypoint(
                 position = dodgePosition + dodgePositionToHop,

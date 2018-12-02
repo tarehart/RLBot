@@ -2,10 +2,10 @@ package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.input.BoostData
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.StrikeProfile
-import tarehart.rlbot.math.*
+import tarehart.rlbot.intercept.strike.ChipStrike
+import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -14,8 +14,7 @@ import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
-
-import java.util.Optional
+import java.util.*
 
 object SteerUtil {
 
@@ -53,7 +52,7 @@ object SteerUtil {
     private fun canGetUnder(carData: CarData, spaceTime: SpaceTime, boostBudget: Double): Boolean {
         val plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), boostBudget, carData.position.distance(spaceTime.space))
 
-        val strikeProfile = StrikeProfile()
+        val strikeProfile = ChipStrike()
         val orientDuration = AccelerationModel.getOrientDuration(carData, spaceTime.space)
         val dts = plot.getMotionAfterDuration(
                 Duration.between(carData.time, spaceTime.time) - orientDuration,
@@ -219,7 +218,7 @@ object SteerUtil {
             val slideAngle = facing.correctionAngle(car.velocity.flatten())
 
             if (Math.abs(facingCorrection) < GOOD_ENOUGH_ANGLE && Math.abs(slideAngle) < GOOD_ENOUGH_ANGLE) {
-                return SetPieces.frontFlip()
+                return SetPieces.speedupFlip()
             }
         }
 

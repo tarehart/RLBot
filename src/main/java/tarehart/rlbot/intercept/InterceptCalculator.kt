@@ -2,6 +2,9 @@ package tarehart.rlbot.intercept
 
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.strike.ChipStrike
+import tarehart.rlbot.intercept.strike.CustomStrike
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
@@ -9,13 +12,13 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.routing.*
+import tarehart.rlbot.routing.PrecisionPlan
+import tarehart.rlbot.routing.StrikeRoutePart
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
-import tarehart.rlbot.tuning.ManeuverMath
 
 object InterceptCalculator {
 
@@ -36,7 +39,7 @@ object InterceptCalculator {
             acceleration: DistancePlot,
             interceptModifier: Vector3,
             predicate: (CarData, SpaceTime) -> Boolean,
-            strikeProfileFn: (Double) -> StrikeProfile = { StrikeProfile() }): Intercept? {
+            strikeProfileFn: (Double) -> StrikeProfile = { ChipStrike() }): Intercept? {
 
         val groundNormal = Vector3(0.0, 0.0, 1.0)
         return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, strikeProfileFn, groundNormal)
@@ -189,7 +192,7 @@ object InterceptCalculator {
     }
 
     private fun boostNeededForAerial(height: Double) : Double {
-        return if (height > AirTouchPlanner.NEEDS_AERIAL_THRESHOLD) AirTouchPlanner.BOOST_NEEDED_FOR_AERIAL else 0.0
+        return if (height > StrikePlanner.NEEDS_AERIAL_THRESHOLD) StrikePlanner.BOOST_NEEDED_FOR_AERIAL else 0.0
     }
 
     private fun getTweenedSlice(ballPath: BallPath, currentSlice: BallSlice, currentSliceIndex: Int, currentShortfall: Double, previousShortfall: Double): BallSlice {
@@ -238,10 +241,10 @@ object InterceptCalculator {
 
             // We're already in the air, so don't model any hang time.
             val strikeProfile =
-                    if (duration.compareTo(MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE) < 0 && averageNoseAngle < .5)
-                        StrikeProfile(0.0, 10.0, .15, StrikeProfile.Style.AERIAL)
+                    if (timeSinceLaunch + duration  < MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE && averageNoseAngle < .5)
+                        CustomStrike(Duration.ZERO, Duration.ofMillis(150), 10.0, StrikeProfile.Style.AERIAL)
                     else
-                        StrikeProfile(0.0, 0.0, 0.0, StrikeProfile.Style.AERIAL)
+                        CustomStrike(Duration.ZERO, Duration.ZERO, 0.0, StrikeProfile.Style.AERIAL)
 
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
@@ -251,7 +254,7 @@ object InterceptCalculator {
                         intercept.space,
                         intercept.time,
                         airBoost = 0.0,
-                        strikeProfile = StrikeProfile(),
+                        strikeProfile = ChipStrike(),
                         distancePlot = acceleration,
                         spareTime = Duration.ofMillis(0),
                         ballSlice = slice,
