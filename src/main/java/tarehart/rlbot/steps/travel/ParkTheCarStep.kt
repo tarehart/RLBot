@@ -11,7 +11,7 @@ import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.RoutePlanner
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.time.Duration

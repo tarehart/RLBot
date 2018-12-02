@@ -4,18 +4,19 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.steps.BlindStep
-import tarehart.rlbot.steps.TapStep
+import tarehart.rlbot.steps.blind.BlindSequence
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 
 class JumpHitStrike(height: Double): StrikeProfile() {
@@ -53,7 +54,7 @@ class JumpHitStrike(height: Double): StrikeProfile() {
 
         val checklist = LaunchChecklist()
         StrikePlanner.checkLaunchReadiness(checklist, car, intercept)
-        checklist.timeForIgnition = Duration.between(car.time + StrikePlanner.LATENCY_DURATION, intercept.time) < strikeDuration
+        checklist.timeForIgnition = Duration.between(car.time + LatencyAdvisor.latency, intercept.time) < strikeDuration
         return checklist
     }
 
@@ -66,23 +67,25 @@ class JumpHitStrike(height: Double): StrikeProfile() {
             val pitchBackPortion = Math.min(.36, jumpSeconds)
             val driftUpPortion = jumpSeconds - pitchBackPortion
 
-            val plan = Plan()
-                    .unstoppable()
-                    .withStep(BlindStep(Duration.ofSeconds(pitchBackPortion), AgentOutput()
+            val blindSequence = BlindSequence()
+
+
+
+            blindSequence.withStep(BlindStep(Duration.ofSeconds(pitchBackPortion), AgentOutput()
                             .withJump(true)
                             .withPitch(1.0)
                     ))
 
             if (driftUpPortion > 0) {
-                plan.withStep(BlindStep(Duration.ofSeconds(driftUpPortion), AgentOutput().withJump(true)))
+                blindSequence.withStep(BlindStep(Duration.ofSeconds(driftUpPortion), AgentOutput().withJump(true)))
             }
 
-            return plan
-                    .withStep(TapStep(1, AgentOutput()
+            blindSequence
+                    .withStep(BlindStep(Duration.ofMillis(16), AgentOutput()
                             .withPitch(-1.0)
                             .withJump(false)
                             .withThrottle(1.0)))
-                    .withStep(TapStep(5, AgentOutput()
+                    .withStep(BlindStep(Duration.ofMillis(80), AgentOutput()
                             .withPitch(-1.0)
                             .withJump(true)
                             .withThrottle(1.0)))
@@ -90,7 +93,9 @@ class JumpHitStrike(height: Double): StrikeProfile() {
                             .withThrottle(1.0)
                             .withPitch(-1.0)
                     ))
-                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+
+            val plan = Plan().unstoppable().withStep(blindSequence)
+            return plan.withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
         }
     }
 

@@ -16,8 +16,6 @@ object StrikePlanner {
     const val MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD
     const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
 
-    val LATENCY_DURATION = Duration.ofMillis(100)
-
     fun checkLaunchReadiness(checklist: LaunchChecklist, car: CarData, intercept: SpaceTime) {
 
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, intercept.space)

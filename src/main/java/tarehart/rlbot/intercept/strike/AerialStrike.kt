@@ -1,7 +1,6 @@
 package tarehart.rlbot.intercept.strike
 
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialChecklist
 import tarehart.rlbot.intercept.AerialMath
@@ -12,9 +11,8 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
-import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog

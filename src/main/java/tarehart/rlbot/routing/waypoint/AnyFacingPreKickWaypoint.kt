@@ -11,6 +11,7 @@ import tarehart.rlbot.routing.Route
 import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.tuning.ManeuverMath
 
 class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, waitUntil: GameTime? = null) :
         PreKickWaypoint(position, expectedTime, waitUntil) {
@@ -38,7 +39,14 @@ class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, waitUn
 
     override fun planRoute(car: CarData, distancePlot: DistancePlot): SteerPlan {
         val distance = this.position.distance(car.position.flatten())
-        val waypoint = this.position
+
+        val blewPast = ManeuverMath.hasBlownPast(car, this.position)
+
+        val waypoint = if (blewPast && waitUntil == null) {
+            car.position.flatten() + car.orientation.noseVector.flatten()
+        } else {
+            this.position
+        }
 
         if (this.waitUntil != null) {
             val route = Route().withPart(AccelerationRoutePart(car.position.flatten(), waypoint, this.waitUntil - car.time))

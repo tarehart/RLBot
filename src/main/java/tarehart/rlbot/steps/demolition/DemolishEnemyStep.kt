@@ -1,7 +1,6 @@
 package tarehart.rlbot.steps.demolition
 
 import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -11,7 +10,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime

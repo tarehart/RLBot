@@ -3,30 +3,21 @@ package tarehart.rlbot.hoops.tacticalstate
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
 import rlbot.render.NamedRenderer
-import rlbot.render.Renderer
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.hoops.HoopsZoneTeamless
-import tarehart.rlbot.math.OrientationSolver
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.BoostAdvisor
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.GetBoostStep
-import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.WhileConditionStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
-import tarehart.rlbot.steps.travel.ParkTheCarStep
-import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.time.Duration
 import java.awt.Color
 import java.util.function.Predicate
-import kotlin.math.sin
 
 class KickoffState : TacticalState {
 

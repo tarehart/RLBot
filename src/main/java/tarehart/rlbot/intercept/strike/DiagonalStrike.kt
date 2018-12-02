@@ -10,18 +10,20 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindSequence
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 
 class DiagonalStrike(height: Double): StrikeProfile() {
 
     private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - StrikePlanner.CAR_BASE_HEIGHT).orElse(.8)
-    override val preDodgeTime = Duration.ofSeconds(jumpTime + .07)
-    override val postDodgeTime = Duration.ofMillis(100)
+    override val preDodgeTime = Duration.ofSeconds(jumpTime + .14)
+    override val postDodgeTime = Duration.ofMillis(50)
     override val speedBoost = 10.0
     override val style = Style.DIAGONAL_HIT
     override val isForward = false
@@ -42,11 +44,12 @@ class DiagonalStrike(height: Double): StrikeProfile() {
     }
 
     override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+        val flatForce = desiredKickForce.flatten()
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
-                car, intercept.space.flatten(), desiredKickForce.flatten())
+                car, intercept.space.flatten(), flatForce)
 
-        val carStrikeRadius = 2.4
-        val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+        val carStrikeRadius = if (intercept.space.z > 2) 2.4 else 1.6
+        val carPositionAtContact = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
 
         val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
                 estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, car.renderer)
@@ -63,7 +66,7 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         val checklist = LaunchChecklist()
         StrikePlanner.checkLaunchReadiness(checklist, car, intercept)
         checklist.linedUp = true // TODO: calculate this properly
-        checklist.timeForIgnition = Duration.between(car.time + StrikePlanner.LATENCY_DURATION, intercept.time) < strikeDuration
+        checklist.timeForIgnition = Duration.between(car.time + LatencyAdvisor.latency, intercept.time) < strikeDuration
         return checklist
     }
 
@@ -71,23 +74,26 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         fun diagonalKick(flipLeft: Boolean, rawJumpTime: Duration): Plan {
 
             val jumpTime = if (rawJumpTime.millis < 0) Duration.ofMillis(0) else rawJumpTime
-            val tiltRate = 0.3 / jumpTime.seconds
+            val tiltRate = 1.0 // 0.3 / jumpTime.seconds
 
             return Plan()
                     .unstoppable()
-                    .withStep(BlindStep(Duration.ofMillis(Math.max(50, jumpTime.millis)), AgentOutput()
-                            .withJump(true)
-                            .withPitch(tiltRate)
-                            .withRoll(if (flipLeft) tiltRate else -tiltRate)))
-                    .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
-                            .withThrottle(1.0)
-                    ))
-                    .withStep(BlindStep(Duration.ofMillis(100), AgentOutput()
-                            .withJump(true)
-                            .withThrottle(1.0)
-                            .withPitch(-1.0)
-                            .withYaw((if (flipLeft) -1 else 1).toDouble())))
-                    .withStep(BlindStep(Duration.ofMillis(700), AgentOutput()))
+                    .withStep(BlindSequence()
+                            .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
+                                    .withJump(true)
+                                    .withPitch(tiltRate)
+                                    .withRoll(if (flipLeft) tiltRate else -tiltRate)))
+                            .withStep(BlindStep(jumpTime, AgentOutput()
+                                    .withJump(true)))
+                            .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
+                                    .withThrottle(1.0)
+                            ))
+                            .withStep(BlindStep(Duration.ofMillis(100), AgentOutput()
+                                    .withJump(true)
+                                    .withThrottle(1.0)
+                                    .withPitch(-1.0)
+                                    .withYaw((if (flipLeft) -1 else 1).toDouble())))
+                            .withStep(BlindStep(Duration.ofMillis(700), AgentOutput())))
                     .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
         }
     }

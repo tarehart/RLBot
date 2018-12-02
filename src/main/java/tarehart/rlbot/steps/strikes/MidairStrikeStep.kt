@@ -1,7 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
 import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
@@ -18,13 +17,11 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.HoopsGoal
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
-import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog

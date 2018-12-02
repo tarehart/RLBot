@@ -143,17 +143,19 @@ object DirectedKickUtil {
 
         val dodgePosition = dodgePosition(carPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
 
-        renderer.drawLine3d(Color.ORANGE, dodgePosition.toVector3().toRlbot(), carPositionAtContact.toVector3().toRlbot())
-        renderer.drawLine3d(Color.YELLOW, carPosition.toVector3().toRlbot(), dodgePosition.toVector3().toRlbot())
-        renderer.drawLine3d(Color.CYAN, carPosition.toVector3().toRlbot(), carPositionAtContact.toVector3().toRlbot())
+
 
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
 
         val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
+        val hopPosition = dodgePosition + dodgePositionToHop
+
+        renderer.drawLine3d(Color.ORANGE, dodgePosition.withZ(intercept.space.z).toRlbot(), carPositionAtContact.withZ(intercept.space.z).toRlbot())
+        renderer.drawLine3d(Color.YELLOW, hopPosition.withZ(ManeuverMath.BASE_CAR_Z).toRlbot(), dodgePosition.withZ(intercept.space.z).toRlbot())
 
         return AnyFacingPreKickWaypoint(
-                position = dodgePosition + dodgePositionToHop,
+                position = hopPosition,
                 expectedTime = launchPadMoment,
                 waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
         )

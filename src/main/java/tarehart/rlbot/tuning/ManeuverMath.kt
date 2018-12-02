@@ -85,6 +85,12 @@ object ManeuverMath {
         return toPad.magnitude() < 2 || approachError > Math.PI * 11 / 12
     }
 
+    fun hasBlownPast(car: CarData, position: Vector2): Boolean {
+        val toPad = position - car.position.flatten()
+        val orientationError = Vector2.angle(car.orientation.noseVector.flatten(), toPad)
+        return orientationError > Math.PI * .95 && toPad.magnitude() < 2
+    }
+
     fun estimateApproachVector(currentFacing: PositionFacing, target: Vector2): Vector2 {
         // When we are close to the target, the current orientation matters, and is probably taking some offset
         // into account if we have been approaching few frames, so currentFacing

@@ -16,7 +16,7 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.tactics.GameMode

@@ -2,7 +2,7 @@ package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.travel.LineUpInReverseStep
 import tarehart.rlbot.time.Duration

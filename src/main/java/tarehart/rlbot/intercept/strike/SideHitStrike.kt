@@ -11,18 +11,20 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindSequence
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 
 class SideHitStrike(height: Double): StrikeProfile() {
 
     private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
-    override val preDodgeTime = Duration.ofSeconds(0.07 + jumpTime)
-    override val postDodgeTime = Duration.ofMillis(200)
+    override val preDodgeTime = Duration.ofSeconds(0.14 + jumpTime)
+    override val postDodgeTime = Duration.ofMillis(250)
     override val speedBoost = 10.0
     override val style = Style.SIDE_HIT
     override val isForward = false
@@ -49,10 +51,10 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
         val useFrontCorner = Math.abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
 
-        if (useFrontCorner) {
+        val carStrikeRadius = 1.2
+        val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
 
-            val carStrikeRadius = 1.2
-            val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+        if (useFrontCorner) {
 
             val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
                     estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, car.renderer)
@@ -68,9 +70,12 @@ class SideHitStrike(height: Double): StrikeProfile() {
                     flatForce,
                     -Math.signum(estimatedApproachDeviationFromKickForce) * Math.PI / 2)
 
+            val postDodgeVelocity = intercept.strikeProfile.getPostDodgeVelocity(expectedArrivalSpeed)
+            val lateralTravel = intercept.strikeProfile.postDodgeTime.seconds * postDodgeVelocity.sidewaysMagnitude
+
             // Consider the entire strike duration, not just the hang time.
             val backoff = intercept.strikeProfile.strikeDuration.seconds * expectedArrivalSpeed
-            val launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(2.0) -
+            val launchPosition = carPositionAtContact - flatForce.scaledToMagnitude(lateralTravel) -
                     facing.scaledToMagnitude(backoff)
             return DirectedKickUtil.getStandardWaypoint(launchPosition, facing, intercept)
         }
@@ -81,7 +86,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
         val checklist = LaunchChecklist()
         StrikePlanner.checkLaunchReadiness(checklist, car, intercept)
         checklist.linedUp = true // TODO: calculate this properly
-        checklist.timeForIgnition = Duration.between(car.time + StrikePlanner.LATENCY_DURATION, intercept.time) < strikeDuration
+        checklist.timeForIgnition = Duration.between(car.time + LatencyAdvisor.latency, intercept.time) < strikeDuration
         return checklist
     }
 
@@ -92,17 +97,18 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
             return Plan()
                     .unstoppable()
-                    .withStep(BlindStep(Duration.ofMillis(50 + jumpTime.millis), AgentOutput()
-                            .withJump(true)
-                            .withBoost(hurry)
-                            .withThrottle((if (hurry) 1 else 0).toDouble())))
-                    .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
-                            .withThrottle(1.0)
-                    ))
-                    .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
-                            .withJump(true)
-                            .withThrottle(1.0)
-                            .withYaw((if (flipLeft) -1 else 1).toDouble())))
+                    .withStep(BlindSequence()
+                            .withStep(BlindStep(Duration.ofMillis(20 + jumpTime.millis), AgentOutput()
+                                    .withJump(true)
+                                    .withBoost(hurry)
+                                    .withThrottle((if (hurry) 1 else 0).toDouble())))
+                            .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
+                                    .withThrottle(1.0)
+                            ))
+                            .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
+                                    .withJump(true)
+                                    .withThrottle(1.0)
+                                    .withYaw((if (flipLeft) -1 else 1).toDouble()))))
                     .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
         }
     }

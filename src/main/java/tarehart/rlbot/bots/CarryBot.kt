@@ -1,19 +1,14 @@
 package tarehart.rlbot.bots
 
-import sun.management.Agent
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.*
-import tarehart.rlbot.steps.defense.WhatASaveStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
-import tarehart.rlbot.tuning.BotLog
 import java.util.*
-import kotlin.math.max
 
 class CarryBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
     override fun getOutput(bundle: TacticalBundle): AgentOutput {

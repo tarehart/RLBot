@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
@@ -8,6 +7,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep

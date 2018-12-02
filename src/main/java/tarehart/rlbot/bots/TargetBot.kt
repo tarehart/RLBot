@@ -9,7 +9,7 @@ import tarehart.rlbot.intercept.strike.AerialStrike
 import tarehart.rlbot.intercept.strike.SideHitStrike
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.state.ResetLoop
 import tarehart.rlbot.steps.state.SetStateStep

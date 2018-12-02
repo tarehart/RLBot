@@ -10,11 +10,13 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.steps.BlindStep
+import tarehart.rlbot.steps.blind.BlindSequence
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.LatencyAdvisor
 
 class FlipHitStrike: StrikeProfile() {
 
@@ -47,7 +49,7 @@ class FlipHitStrike: StrikeProfile() {
     private fun checkFlipHitReadiness(car: CarData, intercept: SpaceTime): LaunchChecklist {
         val checklist = LaunchChecklist()
         StrikePlanner.checkLaunchReadiness(checklist, car, intercept)
-        checklist.timeForIgnition = Duration.between(car.time + StrikePlanner.LATENCY_DURATION, intercept.time) <= strikeDuration
+        checklist.timeForIgnition = Duration.between(car.time + LatencyAdvisor.latency, intercept.time) <= strikeDuration
         return checklist
     }
 
@@ -63,26 +65,27 @@ class FlipHitStrike: StrikeProfile() {
 
             return Plan()
                     .unstoppable()
-                    .withStep(BlindStep(Duration.ofSeconds(.15),
-                            AgentOutput()
-                                    .withPitch(-0.3)
-                                    .withJump(true)
-                                    .withThrottle(1.0)))
-                    .withStep(BlindStep(Duration.ofSeconds(.02),
-                            AgentOutput()
-                                    .withPitch(-1.0)
-                                    .withThrottle(1.0)
-                    ))
-                    .withStep(BlindStep(Duration.ofSeconds(.3),
-                            AgentOutput()
-                                    .withJump(true)
-                                    .withThrottle(1.0)
-                                    .withPitch(-1.0)))
-                    .withStep(BlindStep(Duration.ofSeconds(.5),
-                            AgentOutput()
-                                    .withThrottle(1.0)
-                                    .withPitch(-1.0)
-                    ))
+                    .withStep(BlindSequence()
+                            .withStep(BlindStep(Duration.ofSeconds(.15),
+                                    AgentOutput()
+                                            .withPitch(-0.3)
+                                            .withJump(true)
+                                            .withThrottle(1.0)))
+                            .withStep(BlindStep(Duration.ofSeconds(.02),
+                                    AgentOutput()
+                                            .withPitch(-1.0)
+                                            .withThrottle(1.0)
+                            ))
+                            .withStep(BlindStep(Duration.ofSeconds(.3),
+                                    AgentOutput()
+                                            .withJump(true)
+                                            .withThrottle(1.0)
+                                            .withPitch(-1.0)))
+                            .withStep(BlindStep(Duration.ofSeconds(.5),
+                                    AgentOutput()
+                                            .withThrottle(1.0)
+                                            .withPitch(-1.0)
+                            )))
                     .withStep(LandGracefullyStep { it.agentInput.myCarData.velocity.flatten() })
         }
     }
