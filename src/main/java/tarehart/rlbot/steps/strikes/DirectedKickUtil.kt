@@ -4,6 +4,7 @@ import rlbot.render.Renderer
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.Triangle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
@@ -30,7 +31,7 @@ object DirectedKickUtil {
         val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
         val currentSpeed = car.velocity.flatten().magnitude()
         val anticipatedSpeed = if (intercept.spareTime.millis > 0) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
-        val closenessRatio = Math.min(1.0, 1 / secondsTillIntercept)
+        val closenessRatio = Clamper.clamp(0.0, 1.0, .7 / secondsTillIntercept)
         val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * anticipatedSpeed
         val interceptModifier = intercept.space - intercept.ballSlice.space
 

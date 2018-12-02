@@ -48,7 +48,7 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), flatForce)
 
-        val carStrikeRadius = if (intercept.space.z > 2) 2.4 else 1.6
+        val carStrikeRadius = 2.5
         val carPositionAtContact = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
 
         val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
@@ -76,14 +76,17 @@ class DiagonalStrike(height: Double): StrikeProfile() {
             val jumpTime = if (rawJumpTime.millis < 0) Duration.ofMillis(0) else rawJumpTime
             val tiltRate = 1.0 // 0.3 / jumpTime.seconds
 
+            val tiltSeconds = Math.min(jumpTime.seconds, 0.1)
+
             return Plan()
                     .unstoppable()
                     .withStep(BlindSequence()
-                            .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
+                            .withStep(BlindStep(Duration.ofSeconds(tiltSeconds), AgentOutput()
                                     .withJump(true)
                                     .withPitch(tiltRate)
+                                    .withYaw(if (flipLeft) -tiltRate else tiltRate)
                                     .withRoll(if (flipLeft) tiltRate else -tiltRate)))
-                            .withStep(BlindStep(jumpTime, AgentOutput()
+                            .withStep(BlindStep(jumpTime - Duration.ofSeconds(tiltSeconds), AgentOutput()
                                     .withJump(true)))
                             .withStep(BlindStep(Duration.ofMillis(20), AgentOutput()
                                     .withThrottle(1.0)
