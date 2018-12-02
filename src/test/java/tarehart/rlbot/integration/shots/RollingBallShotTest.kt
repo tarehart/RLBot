@@ -123,4 +123,117 @@ class RollingBallShotTest: StateSettingAbstractTest() {
         runTestCase(testCase)
     }
 
+
+    @Test
+    fun testSlowRollingShot() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(-40F, 50F, ArenaModel.BALL_RADIUS))
+                                .withVelocity(StateVector(10F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 30F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(2.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(1.6))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
+    fun testMediumRollingShot() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(40F, 50F, ArenaModel.BALL_RADIUS))
+                                .withVelocity(StateVector(-22F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 30F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(2.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(1.6))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
+    fun testFastRollingShot() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(40F, 50F, ArenaModel.BALL_RADIUS))
+                                .withVelocity(StateVector(-32F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 30F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(2.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(1.6))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
+    fun testRollingTowardsCarShot() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 50F, ArenaModel.BALL_RADIUS))
+                                .withVelocity(StateVector(0F, -10F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 30F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(2.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(1.6))))
+
+        runTestCase(testCase)
+    }
+
 }
