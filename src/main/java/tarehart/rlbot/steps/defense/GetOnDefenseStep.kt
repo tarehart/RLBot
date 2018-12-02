@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.defense
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
@@ -51,7 +52,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
                     -Math.signum(futureBallPosition.x) * CENTER_OFFSET,
                     center.y - Math.signum(center.y) * AWAY_FROM_GOAL)
 
-            val targetFacing = Vector2(Math.signum(futureBallPosition.x), 0.0)
+            val targetFacing = Vector2(BotMath.nonZeroSignum(futureBallPosition.x).toDouble(), 0.0)
             return PositionFacing(targetPosition, targetFacing)
         }
     }
