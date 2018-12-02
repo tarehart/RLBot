@@ -31,7 +31,7 @@ object DirectedKickUtil {
         val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
         val currentSpeed = car.velocity.flatten().magnitude()
         val anticipatedSpeed = if (intercept.spareTime.millis > 0) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
-        val closenessRatio = Clamper.clamp(0.0, 1.0, 1 / secondsTillIntercept)
+        val closenessRatio = Clamper.clamp(1 / secondsTillIntercept, 0.0, 1.0)
         val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * anticipatedSpeed
         val interceptModifier = intercept.space - intercept.ballSlice.space
 
@@ -136,7 +136,7 @@ object DirectedKickUtil {
 
         val deflectionAngle = Math.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * Math.signum(approachVsKickForceAngle)
 
-        if (Math.abs(approachVsKickForceAngle - deflectionAngle) > Math.PI * .45) {
+        if (Math.abs(approachVsKickForceAngle - deflectionAngle) > Math.PI * .4) {
             return null
         }
 
