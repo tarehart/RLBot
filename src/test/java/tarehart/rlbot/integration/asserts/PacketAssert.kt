@@ -1,6 +1,5 @@
 package tarehart.rlbot.integration.asserts
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.integration.metrics.IntegrationMetric
 import tarehart.rlbot.integration.metrics.TimeMetric
