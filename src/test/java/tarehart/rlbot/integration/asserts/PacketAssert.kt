@@ -33,7 +33,7 @@ abstract class PacketAssert(val timeLimit: Duration, val delayWhenBallFloating: 
             // Floor plane
             // Ball radius is 92.75, hence the ball is very close to touching the ground.
             if (nearestPlane.normal != Vector3.UP ||
-                nearestPlane.distance(bundle.agentInput.ballPosition) > 93 / 50.0) {
+                nearestPlane.distance(bundle.agentInput.ballPosition) > 95 / 50.0) {
                 return false
             }
         }
