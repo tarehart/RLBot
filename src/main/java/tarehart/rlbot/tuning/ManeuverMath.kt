@@ -96,7 +96,7 @@ object ManeuverMath {
 
         // This summation leads to a weighted average of the two vectors depending on distance.
         val toTarget = target - currentFacing.position
-        val estimatedEntryAngle = currentFacing.facing + toTarget.scaled(0.03)
+        val estimatedEntryAngle = currentFacing.facing + toTarget.scaledToMagnitude(2 + toTarget.magnitude())
         return estimatedEntryAngle.normalized()
     }
 

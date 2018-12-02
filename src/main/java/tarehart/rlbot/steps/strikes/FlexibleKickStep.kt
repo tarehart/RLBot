@@ -1,6 +1,7 @@
 package tarehart.rlbot.steps.strikes
 
 import rlbot.manager.BotLoopRenderer
+import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -122,11 +123,15 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         val badCirclePart = precisionPlan.steerPlan.route.parts.firstOrNull {
             part -> if (part is CircleRoutePart)
-                Math.abs(part.sweepRadians) > Math.PI / 2
+                Math.abs(part.sweepRadians) > Math.PI / 2 || part.circle.radius < 20
             else false
         }
 
         if (badCirclePart != null) {
+            //val renderer = NamedRenderer("badRoute")
+            //renderer.startPacket()
+            //precisionPlan.steerPlan.route.renderDebugInfo(renderer)
+            //renderer.finishAndSend()
             BotLog.println("Bad circle part during flexible.", car.playerIndex)
             return null
         }

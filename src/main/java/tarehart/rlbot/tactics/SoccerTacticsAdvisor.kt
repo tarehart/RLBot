@@ -123,7 +123,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
             return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
-                    .withStep(FlexibleKickStep(WallPass()))
                     .withStep(CatchBallStep())
                     .withStep(GetOnOffenseStep())
                     .withStep(GetBoostStep())

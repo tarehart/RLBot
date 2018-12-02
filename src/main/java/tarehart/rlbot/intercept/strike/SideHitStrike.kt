@@ -8,6 +8,7 @@ import tarehart.rlbot.intercept.LaunchChecklist
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.BlindStep
@@ -19,11 +20,9 @@ import tarehart.rlbot.tuning.ManeuverMath
 
 class SideHitStrike(height: Double): StrikeProfile() {
 
-    // If we have time to tilt back, the nose will be higher and we can cheat a little.
-    private val requiredHeight = height - StrikePlanner.CAR_BASE_HEIGHT
-
-    override val preDodgeTime = Duration.ofSeconds(0.07 + ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8))
-    override val postDodgeTime = Duration.ofMillis(300)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
+    override val preDodgeTime = Duration.ofSeconds(0.07 + jumpTime)
+    override val postDodgeTime = Duration.ofMillis(200)
     override val speedBoost = 10.0
     override val style = Style.SIDE_HIT
     override val isForward = false
@@ -34,7 +33,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
             BotLog.println("Performing SideHit!", car.playerIndex)
             val toIntercept = intercept.space.flatten() - car.position.flatten()
             val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
-            return jumpSideFlip(left, preDodgeTime)
+            return jumpSideFlip(left, Duration.ofSeconds(jumpTime))
         }
         return null
     }
@@ -51,8 +50,12 @@ class SideHitStrike(height: Double): StrikeProfile() {
         val useFrontCorner = Math.abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
 
         if (useFrontCorner) {
-            val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed, flatForce,
-                    estimatedApproachDeviationFromKickForce, car.position.flatten(), car.renderer)
+
+            val carStrikeRadius = 1.2
+            val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+
+            val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
+                    estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, car.renderer)
 
             if (angled == null) {
                 BotLog.println("Failed to calculate side hit waypoint", car.playerIndex)

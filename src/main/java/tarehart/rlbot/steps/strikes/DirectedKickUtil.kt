@@ -128,11 +128,8 @@ object DirectedKickUtil {
      * dodgePosition: The place in midair where the car initiates a dodge with the second jump
      * strikeTravel: The distance between the dodgePosition to the car's position at the moment of ball contact
      */
-    fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, kickForce: Vector2,
-                                  approachVsKickForceAngle:Double, carPosition: Vector2, renderer: Renderer): PreKickWaypoint? {
-
-        val carStrikeRadius = 2.4
-        val carPositionAtContact = intercept.ballSlice.space.flatten() - kickForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+    fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, approachVsKickForceAngle:Double,
+                          carPosition: Vector2, carPositionAtContact: Vector2, renderer: Renderer): PreKickWaypoint? {
 
         val postDodgeVelocity = intercept.strikeProfile.getPostDodgeVelocity(arrivalSpeed)
 

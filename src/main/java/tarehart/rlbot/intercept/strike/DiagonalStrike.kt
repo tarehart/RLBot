@@ -7,6 +7,7 @@ import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.BlindStep
@@ -44,8 +45,11 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), desiredKickForce.flatten())
 
-        val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed, desiredKickForce.flatten(),
-                estimatedApproachDeviationFromKickForce, car.position.flatten(), car.renderer)
+        val carStrikeRadius = 2.4
+        val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+
+        val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
+                estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, car.renderer)
 
         if (angled == null) {
             BotLog.println("Failed to calculate diagonal waypoint", car.playerIndex)
