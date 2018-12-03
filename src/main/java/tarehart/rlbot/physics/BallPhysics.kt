@@ -40,6 +40,7 @@ object BallPhysics {
     }
 
     // https://gist.github.com/nevercast/407cc224d5017622dbbd92e70f7c9823
+    // TODO: It may be worth tidying this up, I've kept it close to source for validation sake
     fun calculateScriptBallImpactForce(carPosition: Vector3,
                                        carVelocity: Vector3,
                                        ballPosition: Vector3,
@@ -64,7 +65,6 @@ object BallPhysics {
             HitDir = (HitDir - ForwardAdjustment).normaliseCopy()
             // EndIf
 
-            val HitDirXY = HitDir.withZ(0.0)
             val pushFactor = ballPushFactorCurve(RelSpeed)
             val Impulse = (HitDir * RelSpeed) * pushFactor //  * (float(1) + Ball.ReplicatedAddedCarBounceScale)) + (HitDirXY * Ball.AdditionalCarGroundBounceScaleXY);
             // Impulse += (Impulse * AddedBallForceMultiplier)
@@ -80,9 +80,9 @@ object BallPhysics {
     fun calculateCarBallCollisionImpulse( carPosition: Vector3, carVelocity: Vector3, ballPosition: Vector3, ballVelocity: Vector3): Vector3 {
         // J = (m1 * m2 / (m1 + m2)) * (v2 - v1)
         // val resistution = 0.0
-        val normal = (ballPosition - carPosition).normaliseCopy()
+        val normal = (carPosition - ballPosition).normaliseCopy()
         val carVelCollision = carVelocity.dotProduct(normal)
-        val ballVelCollision = ballPosition.dotProduct(normal)
+        val ballVelCollision = ballVelocity.dotProduct(normal)
         val impulse = (carVelCollision - ballVelCollision) * (CAR_MASS * BALL_MASS / (CAR_MASS + BALL_MASS))
         return normal * impulse
     }
