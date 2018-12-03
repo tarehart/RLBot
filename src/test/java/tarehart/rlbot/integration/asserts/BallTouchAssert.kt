@@ -6,6 +6,7 @@ import tarehart.rlbot.integration.metrics.DistanceMetric
 import tarehart.rlbot.integration.metrics.VelocityMetric
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -29,13 +30,24 @@ class BallTouchAssert(timeLimit: Duration): PacketAssert(timeLimit, false) {
             val car_before = previousBundle.agentInput.myCarData.velocity
             val ball_before = previousBundle.agentInput.ballVelocity
             val car_after = bundle.agentInput.myCarData.velocity
-            val ball_after = bundle.agentInput.ballVelocity
+            var ball_after = bundle.agentInput.ballVelocity
+
+            val impulse = BallPhysics.calculateBallImpactForce(
+                    previousBundle.agentInput.myCarData.position,
+                    previousBundle.agentInput.myCarData.velocity,
+                    previousBundle.agentInput.ballPosition,
+                    previousBundle.agentInput.ballVelocity,
+                    previousBundle.agentInput.myCarData.orientation.noseVector)
+
+            ball_after -= impulse
 
             // ball_mass = car_mass * (car_vel_after - car_vel_before) / (ball_vel_after - ball_vel_before)
             val ball_mass = ((car_after - car_before) / (ball_after - ball_before)) * CAR_MASS
             println("Ball mass; ${ball_mass}")
             println("Car rotation before: ${previousBundle.agentInput.myCarData.spin.angularVelGlobal}")
             println("Car rotation after: ${bundle.agentInput.myCarData.spin.angularVelGlobal}")
+
+            println("Ball Impulse: ${impulse}")
             status = AssertStatus.SUCCEEDED
         }
 
