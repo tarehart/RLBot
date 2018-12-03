@@ -47,9 +47,8 @@ class StateSettingTestCase(private val initialState: GameState, val conditions: 
             }
 
             hasPendingAsserts = hasPendingAsserts || packetAssert.status == AssertStatus.PENDING
-            previousBundle = bundle
         }
-
+        previousBundle = bundle
         isComplete = !hasPendingAsserts
     }
 
