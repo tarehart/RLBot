@@ -29,6 +29,10 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         return Vector3(x * value, y * value, z * value)
     }
 
+    operator fun times(value: Vector3): Vector3 {
+        return Vector3(x * value.x, y * value.y, z * value.z)
+    }
+
     operator fun get(index: Int): Double {
         return when(index) {
             0 -> x
