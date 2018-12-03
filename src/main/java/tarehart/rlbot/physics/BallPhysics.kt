@@ -8,18 +8,35 @@ object BallPhysics {
     val BALL_MASS = 30.0
     val CAR_MASS = 180.0
 
+    val UU_CONST = Vector3.PACKET_DISTANCE_TO_CLASSIC
+    val pushFactorCurve = mapOf(
+            0    / UU_CONST to 0.65,
+            500  / UU_CONST to 0.6,
+            1400 / UU_CONST to 0.55,
+            2300 / UU_CONST to 0.5,
+            4600 / UU_CONST to 0.3)
+
     fun getGroundBounceEnergy(height: Double, verticalVelocity: Double): Double {
         val potentialEnergy = (height - ArenaModel.BALL_RADIUS) * ArenaModel.GRAVITY
         val verticalKineticEnergy = 0.5 * verticalVelocity * verticalVelocity
         return potentialEnergy + verticalKineticEnergy
     }
 
-    // Calculated with polynominal fitting on 4 test data points
-    // R² value was greater when everything below 500 was assumed to be 0.65
     private fun ballPushFactorCurve(relativeSpeed: Double): Double {
-        val relativeSpeedUU = relativeSpeed * Vector3.PACKET_DISTANCE_TO_CLASSIC
-        if (relativeSpeedUU <= 500.0) return 0.65
-        return -0.662 + -2.26E-5 * relativeSpeedUU + -1.22E-8 * relativeSpeedUU * relativeSpeedUU
+        if (relativeSpeed in pushFactorCurve) {
+            return pushFactorCurve[relativeSpeed]!!
+        }
+        val keys = pushFactorCurve.keys.map { it }
+        for (i in 1..pushFactorCurve.size) {
+            val lower = keys[i - 1]
+            val higher = keys[i]
+            if (lower < relativeSpeed && higher > relativeSpeed ) {
+                val difference = higher - lower
+                val relativeSpeedScale = (relativeSpeed - lower) / difference
+                return pushFactorCurve[lower]!! + relativeSpeedScale * (pushFactorCurve[higher]!! - pushFactorCurve[lower]!!)
+            }
+        }
+        return 0.65
     }
 
     // https://gist.github.com/nevercast/407cc224d5017622dbbd92e70f7c9823
