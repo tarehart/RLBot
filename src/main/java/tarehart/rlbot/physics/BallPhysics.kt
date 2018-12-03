@@ -73,11 +73,17 @@ object BallPhysics {
         return Vector3.ZERO
     }
 
-    fun calculatePhysicsBallImpactForce(carPosition: Vector3,
-                                       carVelocity: Vector3,
-                                       ballPosition: Vector3,
-                                       ballVelocity: Vector3,
-                                       carForwardDirectionNormal: Vector3): Vector3 {
-        throw NotImplementedError()
+    // This is an elastic collision, we could also calculate the car change in velocity
+    // Note: If you added a car version, it would not work for suspension damping
+    // TODO: This needs slip velocity (rotation)
+    // Note: Rocket League's collision model is perfectly inelastic, but then the script impulse above is applied
+    fun calculateCarBallCollisionImpulse( carPosition: Vector3, carVelocity: Vector3, ballPosition: Vector3, ballVelocity: Vector3): Vector3 {
+        // J = (m1 * m2 / (m1 + m2)) * (v2 - v1)
+        // val resistution = 0.0
+        val normal = (ballPosition - carPosition).normaliseCopy()
+        val carVelCollision = carVelocity.dotProduct(normal)
+        val ballVelCollision = ballPosition.dotProduct(normal)
+        val impulse = (carVelCollision - ballVelCollision) * (CAR_MASS * BALL_MASS / (CAR_MASS + BALL_MASS))
+        return normal * impulse
     }
 }
