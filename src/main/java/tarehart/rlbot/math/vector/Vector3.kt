@@ -21,6 +21,10 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         return Vector3(x / value, y / value, z / value)
     }
 
+    operator fun div(value: Vector3): Vector3 {
+        return Vector3(x / value.x, y / value.y, z / value.z)
+    }
+
     operator fun times(value: Double): Vector3 {
         return Vector3(x * value, y * value, z * value)
     }
@@ -36,6 +40,18 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
 
     fun scaled(scale: Double): Vector3 {
         return Vector3(x * scale, y * scale, z * scale)
+    }
+
+    fun withX(x: Double): Vector3 {
+        return Vector3(x, y, z)
+    }
+
+    fun withY(y: Double): Vector3 {
+        return Vector3(x, y, z)
+    }
+
+    fun withZ(z: Double): Vector3 {
+        return Vector3(x, y, z)
     }
 
     /**
