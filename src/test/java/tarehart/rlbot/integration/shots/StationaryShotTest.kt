@@ -20,13 +20,13 @@ class StationaryShotTest: StateSettingAbstractTest() {
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
-                                .withLocation(StateVector(0F, 10F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector.ZERO)
+                                .withLocation(StateVector(0F, 10F, ArenaModel.BALL_RADIUS + 10F))
+                                .withVelocity(StateVector(0F, 10F, 0F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
-                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
-                                .withLocation(StateVector(0F, -20F, ManeuverMath.BASE_CAR_Z.toFloat()))
-                                .withVelocity(StateVector(0F, 0F, 0F))
+                        .withCarState(0, CarState().withBoostAmount(0F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, -20F, ManeuverMath.BASE_CAR_Z.toFloat() + 10F))
+                                .withVelocity(StateVector(0F, 20F, 0F))
                                 .withAngularVelocity(StateVector.ZERO)
                                 .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
                         )),
@@ -34,10 +34,10 @@ class StationaryShotTest: StateSettingAbstractTest() {
                         PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(2.0),
+                        timeLimit = Duration.ofSeconds(5.0),
                         delayWhenBallFloating = true),
 
-                        BallTouchAssert(Duration.ofSeconds(1.6))))
+                        BallTouchAssert(Duration.ofSeconds(3.0))))
 
         runTestCase(testCase)
     }

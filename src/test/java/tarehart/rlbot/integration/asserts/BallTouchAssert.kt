@@ -23,7 +23,21 @@ class BallTouchAssert(timeLimit: Duration): PacketAssert(timeLimit, false) {
         val touch = bundle.agentInput.latestBallTouch
 
         if (touch?.playerIndex == bundle.agentInput.playerIndex && touch?.time > firstCheckTime) {
+            val CAR_MASS = 180.0
+            println("Before velocity; Car: ${previousBundle!!.agentInput.myCarData.velocity}, Ball: ${previousBundle.agentInput.ballVelocity}")
+            println("After velocity; Car: ${bundle.agentInput.myCarData.velocity}, Ball: ${bundle.agentInput.ballVelocity}")
+            val car_before = previousBundle.agentInput.myCarData.velocity
+            val ball_before = previousBundle.agentInput.ballVelocity
+            val car_after = bundle.agentInput.myCarData.velocity
+            val ball_after = bundle.agentInput.ballVelocity
+
+            // ball_mass = car_mass * (car_vel_after - car_vel_before) / (ball_vel_after - ball_vel_before)
+            val ball_mass = ((car_after - car_before) / (ball_after - ball_before)) * CAR_MASS
+            println("Ball mass; ${ball_mass}")
+            println("Car rotation before: ${previousBundle.agentInput.myCarData.spin.angularVelGlobal}")
+            println("Car rotation after: ${bundle.agentInput.myCarData.spin.angularVelGlobal}")
             status = AssertStatus.SUCCEEDED
         }
+
     }
 }
