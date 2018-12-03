@@ -4,6 +4,10 @@ import tarehart.rlbot.math.vector.Vector3
 import kotlin.math.min
 
 object BallPhysics {
+
+    val BALL_MASS = 30.0
+    val CAR_MASS = 180.0
+
     fun getGroundBounceEnergy(height: Double, verticalVelocity: Double): Double {
         val potentialEnergy = (height - ArenaModel.BALL_RADIUS) * ArenaModel.GRAVITY
         val verticalKineticEnergy = 0.5 * verticalVelocity * verticalVelocity
@@ -16,11 +20,11 @@ object BallPhysics {
     }
 
     // https://gist.github.com/nevercast/407cc224d5017622dbbd92e70f7c9823
-    fun calculateBallImpactForce(carPosition: Vector3,
-                                 carVelocity: Vector3,
-                                 ballPosition: Vector3,
-                                 ballVelocity: Vector3,
-                                 carForwardDirectionNormal: Vector3): Vector3 {
+    fun calculateScriptBallImpactForce(carPosition: Vector3,
+                                       carVelocity: Vector3,
+                                       ballPosition: Vector3,
+                                       ballVelocity: Vector3,
+                                       carForwardDirectionNormal: Vector3): Vector3 {
         val BallInteraction_MaxRelativeSpeed = 4600.0
         val BallInteraction_PushZScale = 0.35
         val BallInteraction_PushForwardScale = 0.65
@@ -47,5 +51,13 @@ object BallPhysics {
             return Impulse
         }
         return Vector3.ZERO
+    }
+
+    fun calculatePhysicsBallImpactForce(carPosition: Vector3,
+                                       carVelocity: Vector3,
+                                       ballPosition: Vector3,
+                                       ballVelocity: Vector3,
+                                       carForwardDirectionNormal: Vector3): Vector3 {
+        throw NotImplementedError()
     }
 }

@@ -1,13 +1,7 @@
 package tarehart.rlbot.integration.asserts
 
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.bots.Team
-import tarehart.rlbot.integration.metrics.DistanceMetric
-import tarehart.rlbot.integration.metrics.VelocityMetric
-import tarehart.rlbot.math.Plane
-import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.physics.BallPhysics
-import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
@@ -32,7 +26,7 @@ class BallTouchAssert(timeLimit: Duration): PacketAssert(timeLimit, false) {
             val car_after = bundle.agentInput.myCarData.velocity
             var ball_after = bundle.agentInput.ballVelocity
 
-            val impulse = BallPhysics.calculateBallImpactForce(
+            val impulse = BallPhysics.calculateScriptBallImpactForce(
                     previousBundle.agentInput.myCarData.position,
                     previousBundle.agentInput.myCarData.velocity,
                     previousBundle.agentInput.ballPosition,
