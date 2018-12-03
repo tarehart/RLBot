@@ -14,9 +14,12 @@ object BallPhysics {
         return potentialEnergy + verticalKineticEnergy
     }
 
+    // Calculated with polynominal fitting on 4 test data points
+    // R² value was greater when everything below 500 was assumed to be 0.65
     private fun ballPushFactorCurve(relativeSpeed: Double): Double {
-        if (relativeSpeed <= 500.0) return 0.65
-        return -0.662 + -2.26E-5 * relativeSpeed + -1.22E-8 * relativeSpeed * relativeSpeed
+        val relativeSpeedUU = relativeSpeed * Vector3.PACKET_DISTANCE_TO_CLASSIC
+        if (relativeSpeedUU <= 500.0) return 0.65
+        return -0.662 + -2.26E-5 * relativeSpeedUU + -1.22E-8 * relativeSpeedUU * relativeSpeedUU
     }
 
     // https://gist.github.com/nevercast/407cc224d5017622dbbd92e70f7c9823
