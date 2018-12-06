@@ -57,7 +57,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
         if (useFrontCorner) {
 
             val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
-                    estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, car.renderer)
+                    estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, Math.PI * .55, car.renderer)
 
             if (angled == null) {
                 BotLog.println("Failed to calculate side hit waypoint", car.playerIndex)

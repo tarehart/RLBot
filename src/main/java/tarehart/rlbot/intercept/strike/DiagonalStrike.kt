@@ -1,14 +1,18 @@
 package tarehart.rlbot.intercept.strike
 
+import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
+import tarehart.rlbot.math.Circle
+import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
@@ -18,6 +22,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
+import java.awt.Color
 
 class DiagonalStrike(height: Double): StrikeProfile() {
 
@@ -48,16 +53,30 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), flatForce)
 
-        val carStrikeRadius = 2.5
+        val carStrikeRadius = 1.5 + 1.2 * Clamper.clamp(Math.cos(estimatedApproachDeviationFromKickForce), 0.0, 1.0)
         val carPositionAtContact = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
 
         val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
-                estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, car.renderer)
+                estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact,
+                Math.PI / 4, car.renderer)
 
         if (angled == null) {
             BotLog.println("Failed to calculate diagonal waypoint", car.playerIndex)
             return null
         }
+
+        RenderUtil.drawCircle(
+                car.renderer,
+                Circle(intercept.ballSlice.space.flatten(), ArenaModel.BALL_RADIUS.toDouble()),
+                intercept.ballSlice.space.z,
+                Color.RED)
+
+        RenderUtil.drawCircle(
+                car.renderer,
+                Circle(carPositionAtContact, carStrikeRadius),
+                intercept.ballSlice.space.z,
+                Color.ORANGE)
+
         return angled
     }
 

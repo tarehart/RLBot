@@ -144,10 +144,10 @@ class RollingBallShotTest: StateSettingAbstractTest() {
                         PlaneBreakAssert(
                                 plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                                 extent = SoccerGoal.EXTENT,
-                                timeLimit = Duration.ofSeconds(3.0),
+                                timeLimit = Duration.ofSeconds(3.5),
                                 delayWhenBallFloating = true),
 
-                        BallTouchAssert(Duration.ofSeconds(1.6))))
+                        BallTouchAssert(Duration.ofSeconds(2.0))))
 
         runTestCase(testCase)
     }

@@ -2,7 +2,10 @@ package tarehart.rlbot.rendering
 
 import rlbot.render.Renderer
 import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Plane
+import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.time.GameTime
@@ -91,6 +94,19 @@ object RenderUtil {
         renderer.drawLine3d(color, (position - d2).toRlbot(), (position + d2).toRlbot())
         renderer.drawLine3d(color, (position - d3).toRlbot(), (position + d3).toRlbot())
         renderer.drawLine3d(color, (position - d4).toRlbot(), (position + d4).toRlbot())
+    }
+
+    fun drawCircle(renderer: Renderer, circle: Circle, height: Double, color: Color) {
+        var cursor = Vector2(circle.radius, 0.0)
+        var radians = 0.0
+
+        while (radians < Math.PI * 2) {
+            radians += Math.PI / 8
+            val nextCursor = VectorUtil.rotateVector(cursor, Math.PI / 8)
+
+            renderer.drawLine3d(color, (circle.center + cursor).withZ(height).toRlbot(), (circle.center + nextCursor).withZ(height).toRlbot())
+            cursor = nextCursor
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.routing.PrecisionPlan
@@ -132,7 +133,7 @@ object InterceptCalculator {
             val slice = ballPath.slices[i]
             val kickDirection = kickStrategy.getKickDirection(carData, slice.space) ?: continue
 
-            val interceptModifier = kickDirection.scaledToMagnitude(-2.5)
+            val interceptModifier = kickDirection.scaledToMagnitude(-1 * (ArenaModel.BALL_RADIUS + 1.5))
             val spaceTime = SpaceTime(slice.space.plus(interceptModifier), slice.time)
             val interceptFlat = spaceTime.space.flatten()
             val toIntercept = interceptFlat - myPosition

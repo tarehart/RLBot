@@ -9,7 +9,6 @@ import tarehart.rlbot.math.Triangle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
@@ -130,25 +129,39 @@ object DirectedKickUtil {
      * strikeTravel: The distance between the dodgePosition to the car's position at the moment of ball contact
      */
     fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, approachVsKickForceAngle:Double,
-                          carPosition: Vector2, carPositionAtContact: Vector2, renderer: Renderer): PreKickWaypoint? {
+                          carPosition: Vector2, carPositionAtContact: Vector2, shallowAngleThreshold: Double, renderer: Renderer): PreKickWaypoint? {
 
         val postDodgeVelocity = intercept.strikeProfile.getPostDodgeVelocity(arrivalSpeed)
 
-        val deflectionAngle = Math.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * Math.signum(approachVsKickForceAngle)
-
-        if (Math.abs(approachVsKickForceAngle - deflectionAngle) > Math.PI * .4) {
-            return null
-        }
-
         val strikeTravel = intercept.strikeProfile.postDodgeTime.seconds * postDodgeVelocity.speed
-
-        val dodgePosition = dodgePosition(carPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
-
-
-
+        val deflectionAngle = Math.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * Math.signum(approachVsKickForceAngle)
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
 
+        val finalApproachVsKickForceAngle = approachVsKickForceAngle - deflectionAngle
+        if (Math.abs(finalApproachVsKickForceAngle) > shallowAngleThreshold) {
+            // The angle is too shallow, we need to curve into it!
+            val force = intercept.ballSlice.space.flatten() - carPositionAtContact
+            val approach = carPositionAtContact - carPosition
+            val approachError = finalApproachVsKickForceAngle - shallowAngleThreshold * Math.signum(deflectionAngle)
+            val allowedApproach = approach.rotateTowards(force, approachError)
+            val wishfulCarPosition = carPositionAtContact - allowedApproach
+            val dodgePosition = dodgePosition(wishfulCarPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
+            val dodgePositionToHop = (wishfulCarPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
+            val hopPosition = dodgePosition + dodgePositionToHop
+
+            renderer.drawLine3d(Color.GREEN, dodgePosition.withZ(intercept.space.z).toRlbot(), carPositionAtContact.withZ(intercept.space.z).toRlbot())
+            renderer.drawLine3d(Color.CYAN, hopPosition.withZ(ManeuverMath.BASE_CAR_Z).toRlbot(), dodgePosition.withZ(intercept.space.z).toRlbot())
+
+            return StrictPreKickWaypoint(
+                    position = hopPosition,
+                    expectedTime = launchPadMoment,
+                    waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null,
+                    facing = allowedApproach
+            )
+        }
+
+        val dodgePosition = dodgePosition(carPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
         val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
         val hopPosition = dodgePosition + dodgePositionToHop
 

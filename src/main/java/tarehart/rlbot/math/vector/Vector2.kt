@@ -97,12 +97,16 @@ data class Vector2(val x: Double, val y: Double) {
         return idealRad - currentRad
     }
 
-    fun rotateTowards(ideal: Vector2, angleTolerance: Double): Vector2 {
+    /**
+     * This vector will be rotated towards the ideal vector, but will move no further than
+     * maxRotation.
+     */
+    fun rotateTowards(ideal: Vector2, maxRotation: Double): Vector2 {
         val correctionAngle = correctionAngle(ideal)
-        if (Math.abs(correctionAngle) < angleTolerance) {
+        if (Math.abs(correctionAngle) < maxRotation) {
             return ideal.scaledToMagnitude(this.magnitude())
         }
-        val tolerantCorrection = Clamper.clamp(correctionAngle, -angleTolerance, angleTolerance)
+        val tolerantCorrection = Clamper.clamp(correctionAngle, -maxRotation, maxRotation)
         return VectorUtil.rotateVector(this, tolerantCorrection)
     }
 
