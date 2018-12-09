@@ -24,7 +24,7 @@ class LongRangeAerialTest: StateSettingAbstractTest() {
                                 .withVelocity(StateVector(10F, 0F, 25F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
-                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                        .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
                                 .withLocation(StateVector(0F, -30F, ManeuverMath.BASE_CAR_Z.toFloat()))
                                 .withVelocity(StateVector(0F, 0F, 0F))
                                 .withAngularVelocity(StateVector.ZERO)
@@ -52,9 +52,37 @@ class LongRangeAerialTest: StateSettingAbstractTest() {
                                 .withVelocity(StateVector(10F, 0F, 25F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
-                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                        .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
                                 .withLocation(StateVector(60F, 20F, ManeuverMath.BASE_CAR_Z.toFloat()))
                                 .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(7.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(4.0))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
+    fun testBackboardHit() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 60F, 10F))
+                                .withVelocity(StateVector(0F, 25F, 25F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(10F, -30F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 20F, 0F))
                                 .withAngularVelocity(StateVector.ZERO)
                                 .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
                         )),

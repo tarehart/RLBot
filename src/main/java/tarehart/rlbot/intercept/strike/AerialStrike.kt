@@ -44,7 +44,7 @@ open class AerialStrike(height: Double): StrikeProfile() {
 
             return if (Duration.between(car.time, intercept.time).seconds > 1.5 && intercept.space.z > 10) {
                 performDoubleJumpAerial(tiltBackSeconds * .8)
-            } else performAerial(tiltBackSeconds)
+            } else performAerial(0.1)
         }
         return null
     }

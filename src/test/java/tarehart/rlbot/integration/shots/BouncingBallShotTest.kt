@@ -256,7 +256,7 @@ class BouncingBallShotTest: StateSettingAbstractTest() {
                         PlaneBreakAssert(
                                 plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                                 extent = SoccerGoal.EXTENT,
-                                timeLimit = Duration.ofSeconds(1.1),
+                                timeLimit = Duration.ofSeconds(3.0),
                                 delayWhenBallFloating = true),
 
                         BallTouchAssert(Duration.ofSeconds(1.0))))
@@ -303,7 +303,7 @@ class BouncingBallShotTest: StateSettingAbstractTest() {
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
-                                .withLocation(StateVector(0F, 30F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withLocation(StateVector(0F, 10F, ManeuverMath.BASE_CAR_Z.toFloat()))
                                 .withVelocity(StateVector(0F, 0F, 0F))
                                 .withAngularVelocity(StateVector.ZERO)
                                 .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))

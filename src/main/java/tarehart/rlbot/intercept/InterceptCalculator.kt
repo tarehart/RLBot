@@ -251,7 +251,7 @@ object InterceptCalculator {
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
-            if (dts.distance > interceptDistance && AerialMath.isViableAerial(carData, intercept, timeSinceLaunch.seconds)) {
+            if (dts.distance > interceptDistance) {
                 return Intercept(
                         intercept.space,
                         intercept.time,
