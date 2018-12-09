@@ -5,7 +5,6 @@ import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.rendering.RenderUtil
-import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 
@@ -13,7 +12,7 @@ object AerialMath {
 
     val EFFECTIVE_AIR_BOOST_ACCELERATION = 18.0
     val JUMP_ASSIST_DURATION = .6
-    val JUMP_ASSIST = 12
+    val JUMP_ASSIST_ACCEL = 12
     val TYPICAL_UPWARD_ACCEL = (EFFECTIVE_AIR_BOOST_ACCELERATION - ArenaModel.GRAVITY) * .5 // Assume a 30 degree upward angle
 
     private const val MINIMUM_JUMP_HEIGHT = 2.0
@@ -24,13 +23,12 @@ object AerialMath {
     /**
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L415-L421
      */
-    fun isViableAerial(car: CarData, target: SpaceTime): Boolean {
+    fun isViableAerial(car: CarData, target: SpaceTime, secondsSinceJump: Double): Boolean {
 
-        val courseResult = calculateAerialCourseCorrection(car, target)
-        val boostFeathering = courseResult.averageAccelerationRequired
+        val courseResult = calculateAerialCourseCorrection(car, target, secondsSinceJump)
+        val accelNeeded = courseResult.averageAccelerationRequired
 
-        return 0 <= boostFeathering && boostFeathering < 0.95 * BOOST_ACCEL_IN_AIR
-
+        return 0 <= accelNeeded && accelNeeded < 0.95 * BOOST_ACCEL_IN_AIR
     }
 
     /**
@@ -41,7 +39,8 @@ object AerialMath {
      *
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L423-L445
      */
-    fun calculateAerialCourseCorrection(car: CarData, target: SpaceTime): AerialCourseCorrection {
+    fun calculateAerialCourseCorrection(car: CarData, target: SpaceTime, secondsSinceJump: Double): AerialCourseCorrection {
+
         var initialPosition = car.position
         var initialVelocity = car.velocity
 
@@ -52,12 +51,19 @@ object AerialMath {
             initialPosition += car.orientation.roofVector * MINIMUM_JUMP_HEIGHT
         }
 
-        val expectedCarPosition = initialPosition + initialVelocity * secondsRemaining - Vector3.UP * 0.5 * ArenaModel.GRAVITY * secondsRemaining * secondsRemaining
+        val assistSeconds = Math.max(0.0, JUMP_ASSIST_DURATION - secondsSinceJump)
+
+        val positionAfterJumpAssist = initialPosition + initialVelocity * assistSeconds -
+                Vector3.UP * 0.5 * (ArenaModel.GRAVITY - JUMP_ASSIST_ACCEL) * assistSeconds * assistSeconds
+
+        val postAssistSeconds = secondsRemaining - assistSeconds
+        val velocityAfterJumpAssist = initialVelocity + Vector3.UP * assistSeconds * (JUMP_ASSIST_ACCEL - ArenaModel.GRAVITY)
+
+        val expectedCarPosition = positionAfterJumpAssist + velocityAfterJumpAssist * postAssistSeconds -
+                Vector3.UP * 0.5 * ArenaModel.GRAVITY * postAssistSeconds * postAssistSeconds
 
         // Displacement from where the car will end up to where we're aiming
         val targetError = target.space - expectedCarPosition
-
-        RenderUtil.drawSphere(car.renderer, expectedCarPosition, 2.0, Color.RED)
 
         val correctionDirection = targetError.normaliseCopy()
 
@@ -70,54 +76,6 @@ object AerialMath {
         val averageAccelerationRequired = 2.0 * targetError.magnitude() / Math.pow(secondsRemaining - secondsNeededForTurn, 2.0)
 
         return AerialCourseCorrection(correctionDirection, averageAccelerationRequired, targetError)
-    }
-
-    fun getDesiredZComponentBasedOnAccel(targetHeight: Double, timeTillIntercept: Duration, timeSinceLaunch: Duration, car: CarData): Double {
-
-        val additionalHeight = targetHeight - car.position.z
-        val secondsTillIntercept = timeTillIntercept.seconds
-        val averageVelNeeded = additionalHeight / secondsTillIntercept
-        val initialVel = car.velocity.z
-        val finalVel = initialVel + (averageVelNeeded - initialVel) * 2
-        val averageAccel = (finalVel - initialVel) / secondsTillIntercept
-
-        val secondsSinceLaunch = timeSinceLaunch.seconds
-        val jumpAssistSecondsRemaining = Math.max(0.0, JUMP_ASSIST_DURATION - secondsSinceLaunch)
-        val proportionAssistedByJump = jumpAssistSecondsRemaining / (jumpAssistSecondsRemaining + secondsTillIntercept)
-
-        val boostAccelToComplementJumpAssist = averageAccel - (JUMP_ASSIST - ArenaModel.GRAVITY)
-        val boostAccelNeededPostJump = averageAccel + ArenaModel.GRAVITY
-
-        val averageBoostAccelNeeded = boostAccelToComplementJumpAssist * proportionAssistedByJump + boostAccelNeededPostJump * (1 - proportionAssistedByJump)
-
-        return Clamper.clamp(averageBoostAccelNeeded / EFFECTIVE_AIR_BOOST_ACCELERATION, -1.0, 1.0)
-    }
-
-    // TODO: add some of this jump assist logic to chips aerial math.
-    fun getProjectedHeight(car: CarData, secondsTillIntercept: Double, secondsSinceLaunch: Double): Double {
-
-        val initialHeight = car.position.z
-        val initialVelocity = car.velocity.z
-        val noseVertical = car.orientation.noseVector.z
-
-        val phase2Height: Double
-        val phase2Velocity: Double
-
-        val tjmp = Math.max(0.0, JUMP_ASSIST_DURATION - secondsSinceLaunch)
-        if (tjmp > 0) {
-            val verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical + JUMP_ASSIST - ArenaModel.GRAVITY
-            phase2Height = initialHeight + initialVelocity * tjmp + .5 * verticalAcceleration * tjmp * tjmp
-            phase2Velocity = initialVelocity + verticalAcceleration * tjmp
-        } else {
-            phase2Height = initialHeight
-            phase2Velocity = initialVelocity
-        }
-
-        val tfly = secondsTillIntercept - tjmp
-
-        val verticalAcceleration = EFFECTIVE_AIR_BOOST_ACCELERATION * noseVertical - ArenaModel.GRAVITY
-
-        return phase2Height + phase2Velocity * tfly + .5 * verticalAcceleration * tfly * tfly
     }
 
     fun timeToAir(height: Double): Double {

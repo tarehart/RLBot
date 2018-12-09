@@ -56,7 +56,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         }
 
         // We hold down the jump button during the aerial for extra upward acceleration, but it wears off.
-        val timeSinceLaunch = Duration.between(beginningOfStep, bundle.agentInput.time)
+        val secondsSinceLaunch = Duration.between(beginningOfStep, bundle.agentInput.time).seconds
 
         val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
@@ -110,12 +110,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return null
         }
 
-        if (!AerialMath.isViableAerial(car, latestIntercept.toSpaceTime())) {
-            BotLog.println("Failed aerial on viability check", bundle.agentInput.playerIndex)
-            return null
-        }
-
-        val courseResult = AerialMath.calculateAerialCourseCorrection(car, latestIntercept.toSpaceTime())
+        val courseResult = AerialMath.calculateAerialCourseCorrection(car, latestIntercept.toSpaceTime(), secondsSinceLaunch)
+        RenderUtil.drawSphere(car.renderer, latestIntercept.space - courseResult.targetError, 1.0, Color.RED)
+        RenderUtil.drawSphere(car.renderer, latestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
 
         var useBoost = 0L
         if (courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > .9) {
@@ -130,7 +127,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
 
         if (courseResult.targetError.magnitude() < 1) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(carToIntercept, car.orientation.roofVector), 1/60.0)
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), 1/60.0)
         }
 
         val up = if (car.orientation.roofVector.z > 0.8)
@@ -140,6 +137,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), 1/60.0)
                 .withBoost(useBoost != 0L)
+                .withJump()
 
     }
 
@@ -156,20 +154,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
     }
 
     companion object {
-        private val SIDE_DODGE_THRESHOLD = Math.PI / 4
+        private const val SIDE_DODGE_THRESHOLD = Math.PI / 4
         private val DODGE_TIME = Duration.ofMillis(400)
-        //private static final double DODGE_DISTANCE = 6;
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
-        private val YAW_OVERCORRECT = 3.0
-        private val NOSE_FINESSE_TIME = Duration.ofMillis(800)
-
-        /**
-         * Return a unit vector with the given z component, and the same flat angle as flatDirection.
-         */
-        private fun convertToVector3WithPitch(flat: Vector2, zComponent: Double): Vector3 {
-            val xyScaler = Math.sqrt((1 - zComponent * zComponent) / (flat.x * flat.x + flat.y * flat.y))
-            return Vector3(flat.x * xyScaler, flat.y * xyScaler, zComponent)
-        }
 
         private fun standardOffset(intercept: Vector3?, team:Team): Vector3 {
             val ownGoal = GoalUtil.getOwnGoal(team).center

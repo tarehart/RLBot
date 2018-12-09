@@ -15,13 +15,13 @@ import tarehart.rlbot.tuning.ManeuverMath
 class LongRangeAerialTest: StateSettingAbstractTest() {
 
     @Test
-    fun testStraightShot() {
+    fun testBallMovingSideways() {
 
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-20F, 60F, 10F))
-                                .withVelocity(StateVector(10F, 0F, 30F))
+                                .withVelocity(StateVector(10F, 0F, 25F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
@@ -34,10 +34,38 @@ class LongRangeAerialTest: StateSettingAbstractTest() {
                         PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(10.0),
+                        timeLimit = Duration.ofSeconds(7.0),
                         delayWhenBallFloating = true),
 
-                        BallTouchAssert(Duration.ofSeconds(10.0))))
+                        BallTouchAssert(Duration.ofSeconds(4.0))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
+    fun testBallMovingSidewaysAndCarAtAngle() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(-20F, 60F, 10F))
+                                .withVelocity(StateVector(10F, 0F, 25F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(60F, 20F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(7.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(4.0))))
 
         runTestCase(testCase)
     }

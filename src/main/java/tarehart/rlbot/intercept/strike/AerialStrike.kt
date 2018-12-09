@@ -7,8 +7,10 @@ import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindStep
@@ -59,19 +61,27 @@ open class AerialStrike(height: Double): StrikeProfile() {
         val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
         var lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
         val lazyLaunchDistance = lazyLaunchToIntercept.magnitude()
+        var useStrict = true
         if (lazyLaunchDistance > distanceToIntercept && distanceToIntercept / lazyLaunchDistance > 0.8) {
-            lazyLaunchToIntercept = lazyLaunchToIntercept.scaled(distanceToIntercept / lazyLaunchDistance)
+            val alignmentError = 10 * Vector2.angle(lazyLaunchToIntercept, car.orientation.noseVector.flatten())
+            lazyLaunchToIntercept = lazyLaunchToIntercept.scaledToMagnitude(distanceToIntercept - alignmentError)
+            useStrict = false
         }
         val launchPosition = intercept.space.flatten() - lazyLaunchToIntercept
         val facing = lazyLaunchToIntercept.normalized()
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
         val momentOrNow = if (launchPadMoment.isBefore(car.time)) car.time else launchPadMoment
-        return StrictPreKickWaypoint(
+        return if (useStrict)
+            StrictPreKickWaypoint(
                 position = launchPosition,
                 facing = facing,
                 expectedTime = momentOrNow,
-                waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null
-        )
+                waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null)
+        else
+            AnyFacingPreKickWaypoint(
+                position = launchPosition,
+                expectedTime = momentOrNow,
+                waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null)
     }
 
 

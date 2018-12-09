@@ -232,7 +232,7 @@ object InterceptCalculator {
 
             val timeSinceLaunch = Duration.between(launchMoment, carData.time)
             val duration = Duration.between(carData.time, slice.time)
-            val aerialCourseCorrection = AerialMath.calculateAerialCourseCorrection(carData, intercept)
+            val aerialCourseCorrection = AerialMath.calculateAerialCourseCorrection(carData, intercept, timeSinceLaunch.seconds)
             val zComponent = aerialCourseCorrection.correctionDirection.z
             val desiredNoseAngle = Math.asin(zComponent)
             val currentNoseAngle = Math.asin(carData.orientation.noseVector.z)
@@ -251,7 +251,7 @@ object InterceptCalculator {
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
-            if (dts.distance > interceptDistance && AerialMath.isViableAerial(carData, intercept)) {
+            if (dts.distance > interceptDistance && AerialMath.isViableAerial(carData, intercept, timeSinceLaunch.seconds)) {
                 return Intercept(
                         intercept.space,
                         intercept.time,
