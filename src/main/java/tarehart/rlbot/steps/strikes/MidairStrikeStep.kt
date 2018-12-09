@@ -6,10 +6,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.InterceptCalculator
-import tarehart.rlbot.math.Mat3
-import tarehart.rlbot.math.OrientationSolver
-import tarehart.rlbot.math.SpaceTime
-import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -36,6 +33,8 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
     private var intercept: SpaceTime? = null
+
+    private var boostCounter = 0.0
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
@@ -111,40 +110,37 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return null
         }
 
-        val projectedHeight = AerialMath.getProjectedHeight(
-                car, Duration.between(car.time, latestIntercept.time).seconds,
-                timeSinceLaunch.seconds
-        )
+        if (!AerialMath.isViableAerial(car, latestIntercept.toSpaceTime())) {
+            BotLog.println("Failed aerial on viability check", bundle.agentInput.playerIndex)
+            return null
+        }
 
-        val heightError = projectedHeight - latestIntercept.space.z
+        val courseResult = AerialMath.calculateAerialCourseCorrection(car, latestIntercept.toSpaceTime())
 
-        val flatToIntercept = carToIntercept.flatten()
+        var useBoost = 0L
+        if (courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > .9) {
+            useBoost -= Math.round(boostCounter)
+            boostCounter += Clamper.clamp(1.25 * (courseResult.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR), 0.0, 1.0)
+            useBoost += Math.round(boostCounter)
+        }
 
-        val currentFlatVelocity = car.velocity.flatten()
+        // TODO: aerials go very bad if we're going too fast on the ground before takeoff
 
-        val leftRightCorrectionAngle = currentFlatVelocity.correctionAngle(flatToIntercept)
-        val desiredFlatOrientation = VectorUtil
-                .rotateVector(currentFlatVelocity, leftRightCorrectionAngle * YAW_OVERCORRECT)
-                .normalized()
+        // BotLog.println("BoostFeathering: ${aerialCourseCorrection.averageAccelerationRequired}", car.playerIndex)
 
-        val desiredNoseVector: Vector3
 
-        // Fly toward intercept
-        val desiredZ = AerialMath.getDesiredZComponentBasedOnAccel(
-                latestIntercept.space.z,
-                Duration.between(car.time, latestIntercept.time),
-                timeSinceLaunch,
-                car)
-        desiredNoseVector = convertToVector3WithPitch(desiredFlatOrientation, desiredZ)
+        if (courseResult.targetError.magnitude() < 1) {
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(carToIntercept, car.orientation.roofVector), 1/60.0)
+        }
 
         val up = if (car.orientation.roofVector.z > 0.8)
             Vector3.UP
         else
             car.orientation.roofVector
 
-        return OrientationSolver.orientCar(car, Mat3.lookingTo(desiredNoseVector, up), 1/60.0)
-                .withBoost(desiredNoseVector.dotProduct(car.orientation.noseVector) > .5)
-                .withJump()
+        return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), 1/60.0)
+                .withBoost(useBoost != 0L)
+
     }
 
     override fun canInterrupt(): Boolean {

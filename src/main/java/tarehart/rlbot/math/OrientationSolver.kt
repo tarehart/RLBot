@@ -13,9 +13,9 @@ import kotlin.math.sin
 
 object OrientationSolver {
 
-    val ALPHA_MAX = 9.0
+    const val ALPHA_MAX = 9.0
 
-    val MOMENT_OF_INERTIA = 10.5
+    private const val MOMENT_OF_INERTIA = 10.5
 
     private fun q(x: Double): Double {
         return 1.0 - (1.0 / (1.0 + 500.0 * x * x))
@@ -113,6 +113,8 @@ object OrientationSolver {
 
         return 0.0
     }
+
+
 
     /**
      * https://github.com/samuelpmish/RLUtilities/blob/27807c2bff64ffdd89ddc943e2aa10d9fbb56901/RLUtilities/Maneuvers.py#L253

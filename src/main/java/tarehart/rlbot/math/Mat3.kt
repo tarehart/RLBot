@@ -3,6 +3,7 @@ package tarehart.rlbot.math
 import org.ejml.simple.SimpleMatrix
 import tarehart.rlbot.math.vector.Vector3
 import kotlin.math.abs
+import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -65,6 +66,15 @@ class Mat3(private val matrix: SimpleMatrix) {
                 this.matrix[1, 2],
                 this.matrix[2, 2]
         )
+    }
+
+    /**
+     * https://github.com/samuelpmish/RLUtilities/blob/f071b4dec24d3389f21727ca2d95b75980cbb5fb/RLUtilities/cpp/inc/linalg.h#L71-L74
+     */
+    fun angleTo(other: Mat3): Double {
+        val dot = this.dot(other.transpose())
+        val trace = dot.trace()
+        return acos(0.5 * (trace - 1))
     }
 
     /* XXX: Broken/untested
