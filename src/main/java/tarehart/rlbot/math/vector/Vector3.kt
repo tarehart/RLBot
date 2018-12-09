@@ -4,10 +4,11 @@ import tarehart.rlbot.math.Plane
 import java.util.*
 import kotlin.math.abs
 
-data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
+data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0): Iterable<Double> {
+    val isZero = (x == 0.0 && y == 0.0 && z == 0.0)
+    private val list =  listOf(x, y, z)
 
-    val isZero: Boolean
-        get() = x == 0.0 && y == 0.0 && z == 0.0
+
 
     operator fun plus(other: Vector3): Vector3 {
         return Vector3(x + other.x, y + other.y, z + other.z)
@@ -34,12 +35,11 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     }
 
     operator fun get(index: Int): Double {
-        return when(index) {
-            0 -> x
-            1 -> y
-            2 -> z
-            else -> throw IndexOutOfBoundsException(String.format("Index %s is out of bounds for a Vector3!", index))
-        }
+        return list[index]
+    }
+
+    override fun iterator(): Iterator<Double> {
+        return list.iterator()
     }
 
     fun scaled(scale: Double): Vector3 {
