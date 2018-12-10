@@ -33,6 +33,7 @@ run {
 
 test {
     systemProperty 'java.library.path', dllDirectory
+	exclude 'tarehart/rlbot/integration/**'
 }
 
 dependencies {
