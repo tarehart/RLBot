@@ -62,8 +62,8 @@ open class AerialStrike(height: Double): StrikeProfile() {
         var lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
         val lazyLaunchDistance = lazyLaunchToIntercept.magnitude()
         var useStrict = true
-        if (lazyLaunchDistance > distanceToIntercept && distanceToIntercept / lazyLaunchDistance > 0.8) {
-            val alignmentError = 10 * Vector2.angle(lazyLaunchToIntercept, car.orientation.noseVector.flatten())
+        if (distanceToIntercept / lazyLaunchDistance > 0.8) {  // We also used to check lazyLaunchDistance > distanceToIntercept
+            val alignmentError = 15 * Vector2.angle(lazyLaunchToIntercept, car.orientation.noseVector.flatten())
             lazyLaunchToIntercept = lazyLaunchToIntercept.scaledToMagnitude(distanceToIntercept - alignmentError)
             useStrict = false
         }

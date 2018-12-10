@@ -184,9 +184,7 @@ class KickoffState : TacticalState {
                         .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(true)))
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(false)))
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
-                        .withStep(MidairStrikeStep(Duration.ofMillis(0), {
-                            vector3, team ->  Vector3(0.0, 0.0, -0.2)
-                        }, hasJump = false))
+                        .withStep(MidairStrikeStep(Duration.ofMillis(0), hasJump = false))
             } else if (kickoffStyle == KickoffStyle.FORWARD_STANDARD) {
                 return Plan(Plan.Posture.KICKOFF)
                         .withStep(BlindStep(Duration.ofMillis(600), SteerUtil.steerTowardGroundPosition(input.myCarData, input.ballPosition).withBoost(false)))

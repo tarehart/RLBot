@@ -10,10 +10,11 @@ import java.awt.Color
 
 object AerialMath {
 
-    val EFFECTIVE_AIR_BOOST_ACCELERATION = 18.0
     val JUMP_ASSIST_DURATION = .6
     val JUMP_ASSIST_ACCEL = 12
-    val TYPICAL_UPWARD_ACCEL = (EFFECTIVE_AIR_BOOST_ACCELERATION - ArenaModel.GRAVITY) * .5 // Assume a 30 degree upward angle
+
+    // This is a constant that we tuned with some testing. No mathematical basis
+    val TYPICAL_UPWARD_ACCEL = 10
 
     private const val MINIMUM_JUMP_HEIGHT = 2.0
     private const val JUMP_VELOCITY = 12.0

@@ -19,6 +19,7 @@ import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
+import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
@@ -27,7 +28,6 @@ import java.awt.Color
 import java.awt.Graphics2D
 
 class MidairStrikeStep(private val timeInAirAtStart: Duration,
-                       private val offsetFn: (Vector3?, Team) -> Vector3 = { intercept, team -> standardOffset(intercept, team) },
                        private val hasJump: Boolean = true) : NestedPlanStep() {
 
     private lateinit var lastMomentForDodge: GameTime
@@ -65,7 +65,8 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
-        val offset = offsetFn(intercept?.space, car.team)
+
+        val offset = standardOffset(intercept?.space, car.team, bundle)
 
         lostWheelContact = lostWheelContact || !car.hasWheelContact
 
@@ -92,9 +93,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         // TODO: might want to make this velocity-based
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, latestIntercept.space)
 
-        val prepForDodge = hasJump && car.time.isBefore(lastMomentForDodge)
-
-        if (prepForDodge && carToIntercept.magnitude() < DODGE_TIME.seconds * car.velocity.flatten().magnitude()
+        if (hasJump && car.time.isBefore(lastMomentForDodge) && carToIntercept.magnitude() < DODGE_TIME.seconds * car.velocity.flatten().magnitude()
                 && latestIntercept.space.z - car.position.z < 2.0) {
             // Let's flip into the ball!
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
@@ -117,7 +116,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
 
 
-        val courseResult = if (prepForDodge)
+        val courseResult = if (canDodge)
             AerialMath.calculateAerialCourseCorrection(
                     car,
                     SpaceTime(latestIntercept.space - carToIntercept.flatten().scaledToMagnitude(2.0).toVector3(), latestIntercept.time - DODGE_TIME),
@@ -154,7 +153,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                     .withJump()
         }
 
-        val up = if (prepForDodge || car.orientation.roofVector.z > 0.8)
+        val up = if (canDodge || car.orientation.roofVector.z > 0.8)
             Vector3.UP
         else
             car.orientation.roofVector
@@ -182,7 +181,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         private val DODGE_TIME = Duration.ofMillis(300)
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
 
-        private fun standardOffset(intercept: Vector3?, team:Team): Vector3 {
+        private fun standardOffset(intercept: Vector3?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
             val ownGoal = GoalUtil.getOwnGoal(team).center
             var offset = ownGoal.scaledToMagnitude(2.0).minus(Vector3(0.0, 0.0, .3))
 
@@ -195,6 +194,11 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
                 val gameMode = GameModeSniffer.getGameMode()
                 if (gameMode == GameMode.SOCCER) {
+
+                    if (tacticalBundle.tacticalSituation.scoredOnThreat != null) {
+                        offset = offset.scaledToMagnitude(3.0)
+                    }
+
                     if (Math.abs(ownGoal.y - intercept.y) > ArenaModel.BACK_WALL * .7 && goalToBall.magnitude() > 110) {
                         offset = Vector3(offset.x, offset.y, -.2)
                     }

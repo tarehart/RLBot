@@ -2,14 +2,12 @@ package tarehart.rlbot.steps.defense
 
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
@@ -19,6 +17,7 @@ import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.BotLog
 
 class WhatASaveStep : NestedPlanStep() {
 
@@ -64,6 +63,7 @@ class WhatASaveStep : NestedPlanStep() {
                     bundle)
         }
 
+        BotLog.println("Flexible kick save... Good luck!", car.playerIndex)
         return startPlan(FirstViableStepPlan(Plan.Posture.SAVE)
                 .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
                 .withStep(GetOnDefenseStep()), bundle)

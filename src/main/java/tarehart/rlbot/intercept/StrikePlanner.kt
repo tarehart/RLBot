@@ -21,7 +21,8 @@ object StrikePlanner {
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, intercept.space)
         val secondsTillIntercept = Duration.between(car.time, intercept.time).seconds
 
-        checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 30
+        checklist.linedUp = Math.abs(correctionAngleRad) < Math.PI / 30 &&
+                Math.abs(car.spin.yawRate) < 2.0
         checklist.closeEnough = secondsTillIntercept < 4
 
         checklist.upright = car.orientation.roofVector.dotProduct(Vector3(0.0, 0.0, 1.0)) > .85
