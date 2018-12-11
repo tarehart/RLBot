@@ -1,5 +1,6 @@
 package tarehart.rlbot.intercept
 
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector3
@@ -24,9 +25,9 @@ object AerialMath {
     /**
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L415-L421
      */
-    fun isViableAerial(car: CarData, target: SpaceTime, secondsSinceJump: Double): Boolean {
+    fun isViableAerial(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): Boolean {
 
-        val courseResult = calculateAerialCourseCorrection(car, target, secondsSinceJump)
+        val courseResult = calculateAerialCourseCorrection(car, target, modelJump, secondsSinceJump)
         val accelNeeded = courseResult.averageAccelerationRequired
 
         return 0 <= accelNeeded && accelNeeded < 0.95 * BOOST_ACCEL_IN_AIR
@@ -40,14 +41,14 @@ object AerialMath {
      *
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L423-L445
      */
-    fun calculateAerialCourseCorrection(car: CarData, target: SpaceTime, secondsSinceJump: Double): AerialCourseCorrection {
+    fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): AerialCourseCorrection {
 
-        var initialPosition = car.position
+        var initialPosition = car.space
         var initialVelocity = car.velocity
 
         val secondsRemaining = (target.time - car.time).seconds
 
-        if (car.hasWheelContact) {
+        if (modelJump) {
             initialVelocity += car.orientation.roofVector * JUMP_VELOCITY
             initialPosition += car.orientation.roofVector * MINIMUM_JUMP_HEIGHT
         }

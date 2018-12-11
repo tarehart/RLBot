@@ -1,6 +1,7 @@
 package tarehart.rlbot.intercept
 
 import tarehart.rlbot.carpredict.AccelerationModel
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.ChipStrike
 import tarehart.rlbot.intercept.strike.CustomStrike
@@ -232,7 +233,7 @@ object InterceptCalculator {
 
             val timeSinceLaunch = Duration.between(launchMoment, carData.time)
             val duration = Duration.between(carData.time, slice.time)
-            val aerialCourseCorrection = AerialMath.calculateAerialCourseCorrection(carData, intercept, timeSinceLaunch.seconds)
+            val aerialCourseCorrection = AerialMath.calculateAerialCourseCorrection(CarSlice(carData), intercept, carData.hasWheelContact, timeSinceLaunch.seconds)
             val zComponent = aerialCourseCorrection.correctionDirection.z
             val desiredNoseAngle = Math.asin(zComponent)
             val currentNoseAngle = Math.asin(carData.orientation.noseVector.z)

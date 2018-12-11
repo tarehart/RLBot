@@ -4,6 +4,7 @@ import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.*
@@ -118,11 +119,12 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         val courseResult = if (canDodge)
             AerialMath.calculateAerialCourseCorrection(
-                    car,
+                    CarSlice(car),
                     SpaceTime(latestIntercept.space - carToIntercept.flatten().scaledToMagnitude(2.0).toVector3(), latestIntercept.time - DODGE_TIME),
-                    secondsSinceLaunch)
+                    modelJump = false,
+                    secondsSinceJump = secondsSinceLaunch)
         else
-            AerialMath.calculateAerialCourseCorrection(car, latestIntercept.toSpaceTime(), secondsSinceLaunch)
+            AerialMath.calculateAerialCourseCorrection(CarSlice(car), latestIntercept.toSpaceTime(), false, secondsSinceLaunch)
 
         if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 &&
                 Vector2.angle(car.velocity.flatten(), carToIntercept.flatten()) > Math.PI / 6 &&
