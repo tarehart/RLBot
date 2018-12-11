@@ -8,6 +8,7 @@ import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
@@ -23,8 +24,6 @@ import java.awt.Graphics2D
 import java.awt.geom.Line2D
 
 class ChallengeStep: NestedPlanStep() {
-
-    private val backoff = 15.0
 
     private var originalTouch: BallTouch? = null
     private var latestDefensiveNode: Vector2? = null
@@ -71,7 +70,8 @@ class ChallengeStep: NestedPlanStep() {
         val enemyShotLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center - enemyContact.space
 
         val flatPosition = car.position.flatten()
-        val defensiveNode = enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(backoff)
+        val defensiveNode = ArenaModel.clampPosition(enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(DEFENSIVE_NODE_DISTANCE), 3.0)
+
         latestDefensiveNode = defensiveNode
 
         val defensiveNodeDistance = flatPosition.distance(defensiveNode)
@@ -83,7 +83,7 @@ class ChallengeStep: NestedPlanStep() {
                     bundle)
         }
 
-        if (defensiveNodeDistance < backoff + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
+        if (defensiveNodeDistance < DEFENSIVE_NODE_DISTANCE + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
             startPlan(
                     Plan(Plan.Posture.DEFENSIVE)
                             .withStep(InterceptStep(enemyShotLine.scaledToMagnitude(1.5))),
@@ -120,6 +120,9 @@ class ChallengeStep: NestedPlanStep() {
     }
 
     companion object {
+
+        const val DEFENSIVE_NODE_DISTANCE = 18.0
+
         fun threatExists(tacticalSituation: TacticalSituation): Boolean {
             return tacticalSituation.ballAdvantage.seconds < 1.0 &&
                     tacticalSituation.enemyOffensiveApproachError?.let { it < Math.PI / 2 } == true

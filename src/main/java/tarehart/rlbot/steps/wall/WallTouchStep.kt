@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.wall
 
+import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -16,11 +17,11 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.tactics.GameMode
-import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.ui.ArenaDisplay
@@ -53,7 +54,7 @@ class WallTouchStep : NestedPlanStep() {
                 ballPath,
                 fullAcceleration,
                 interceptModifier = Vector3(),
-                spatialPredicate = { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) },
+                spatialPredicate = { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) && isAcceptableZoneForWallTouch(bundle, ballPosition.space) },
                 strikeProfileFn = { ChipStrike() },
                 planeNormal = car.orientation.roofVector)
 
@@ -74,6 +75,8 @@ class WallTouchStep : NestedPlanStep() {
         } else {
             confusion = 0
         }
+
+        RenderUtil.drawSphere(car.renderer, motion.space, ArenaModel.BALL_RADIUS.toDouble(), LOVELY_TEAL)
 
         val plane = ArenaModel.getNearestPlane(motion.space)
         if (plane.normal.z == 1.0) {
@@ -99,7 +102,7 @@ class WallTouchStep : NestedPlanStep() {
         super.drawDebugInfo(graphics)
 
         latestIntercept?.let {
-            ArenaDisplay.drawBall(it.space, graphics, Color(16, 194, 140))
+            ArenaDisplay.drawBall(it.space, graphics, LOVELY_TEAL)
         }
     }
 
@@ -107,6 +110,7 @@ class WallTouchStep : NestedPlanStep() {
         val ACCEPTABLE_WALL_DISTANCE = (ArenaModel.BALL_RADIUS + 5).toDouble()
         val WALL_DEPART_SPEED = 10.0
         private val MIN_HEIGHT = 6.0
+        private val LOVELY_TEAL = Color(16, 194, 140)
 
         private fun isBallOnWall(car: CarData, ballPosition: SpaceTime): Boolean {
             return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE
@@ -120,7 +124,7 @@ class WallTouchStep : NestedPlanStep() {
 
             val input = bundle.agentInput
             val car = input.myCarData
-            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .3 || !ArenaModel.isCarOnWall(car)) {
+            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .4 || !ArenaModel.isCarOnWall(car)) {
                 return false // Really close to wall, no need to jump. Just chip it.
             }
             val toPosition = carPositionAtContact.space.minus(car.position)
@@ -129,52 +133,39 @@ class WallTouchStep : NestedPlanStep() {
             val wallDistanceAtIntercept = ArenaModel.getDistanceFromWall(carPositionAtContact.space)
             val tMinus = secondsTillIntercept - wallDistanceAtIntercept / WALL_DEPART_SPEED
             val linedUp = Math.abs(correctionAngleRad) < Math.PI / 20
-//            if (tMinus < 3) {
-//                println("Correction angle: " + correctionAngleRad, input.playerIndex)
-//            }
 
             return tMinus < 0.1 && tMinus > -.4 && linedUp
         }
 
         private fun isAcceptableZoneForWallTouch(bundle: TacticalBundle, ballPosition: Vector3): Boolean {
-            val input = bundle.agentInput
-            // TODO: No! I forbid. Use bundle.
-            val situation = TacticsTelemetry[input.playerIndex] ?: return false
-            val hasTeammate = input.getTeamRoster(input.team).size > 1
-            val allowedYValue = if (hasTeammate) 1.0 else .7
+            val situation = bundle.tacticalSituation
 
-            if (situation.gameMode == GameMode.SOCCER && Math.abs(ballPosition.y) > ArenaModel.BACK_WALL * allowedYValue) {
-                // Don't go for wall touches on the back walls
+            if (situation.gameMode == GameMode.SOCCER && ArenaModel.BACK_WALL - Math.abs(ballPosition.y) < 10) {
+                // In soccer, don't go for touches on the back wall. High danger of accidentally driving
+                // into the goal.
                 return false
             }
 
-            return true
+            val enemyGoal = GoalUtil.getEnemyGoal(bundle.agentInput.team)
+            return (ballPosition.y - bundle.agentInput.myCarData.position.y) * enemyGoal.center.y > 0
         }
 
         fun hasWallTouchOpportunity(bundle: TacticalBundle): Boolean {
 
             val ballPath = bundle.tacticalSituation.ballPath
-            val nearWallOption = ballPath.findSlice { ballPosition: BallSlice ->
+            val ballPredicate = { ballPosition: BallSlice ->
                 isAcceptableZoneForWallTouch(bundle, ballPosition.space) && isBallOnWall(ballPosition) }
 
-            if (nearWallOption != null) {
-                val time = nearWallOption.time
-                if (Duration.between(bundle.agentInput.time, time).seconds > 3) {
-                    return false // Not on wall soon enough
-                }
+            val nearWallOption = ballPath.findSlice(ballPredicate) ?: return false
 
-                val ballLater = ballPath.getMotionAt(time.plusSeconds(1.0))
-                if (ballLater != null) {
-                    val (space) = ballLater
-                    if (ArenaModel.getDistanceFromWall(space) > ACCEPTABLE_WALL_DISTANCE) {
-                        return false
-                    }
-                    val ownGoalCenter = GoalUtil.getOwnGoal(bundle.agentInput.team).center
-                    return space.distance(ownGoalCenter) > bundle.agentInput.myCarData.position.distance(ownGoalCenter)
-                }
-
+            val time = nearWallOption.time
+            if (Duration.between(bundle.agentInput.time, time).seconds > 3) {
+                return false // Not on wall soon enough
             }
 
+            ballPath.getMotionAt(time.plusSeconds(1.0))?.let {
+                return ballPredicate.invoke(it)
+            }
             return false
         }
     }

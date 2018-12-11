@@ -55,7 +55,7 @@ class GetOnOffenseStep : NestedPlanStep() {
             // Get into a backstop position
             val goalToBall = ballFuture.minus(ownGoal.center)
             val goalToBallNormal = goalToBall.normaliseCopy()
-            facing = goalToBallNormal.flatten().scaled(-1.0)
+            facing = goalToBallNormal.flatten().normalized()
             target = ballFuture.minus(goalToBallNormal.scaled(backoff))
         }
 
@@ -91,7 +91,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         }
 
         return startPlan(
-                Plan().withStep(ParkTheCarStep({ latestTarget })),
+                Plan().withStep(ParkTheCarStep { target }),
                 bundle)
     }
 

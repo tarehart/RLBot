@@ -11,8 +11,16 @@ class Plane(normal: Vector3, position: Vector3): Ray(position, normal) {
     private val constant
         get() = normal.dotProduct(position)
 
+    /**
+     * This is direction sensitive. Distance will be negative if the point is
+     * behind the plane!
+     */
     fun distance(point: Vector3): Double {
         return (point - this.position).dotProduct(this.normal)
+    }
+
+    fun projectPoint(point: Vector3): Vector3 {
+        return point - normal.scaled(distance(point))
     }
 
     /**

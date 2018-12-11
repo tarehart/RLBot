@@ -4,7 +4,6 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
-import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
@@ -12,7 +11,6 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.cpp.BallPredictorHelper
-import tarehart.rlbot.planning.Goal
 import tarehart.rlbot.planning.SoccerGoal
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
@@ -21,6 +19,7 @@ import java.lang.Math.*
 import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.stream.Collectors
+import java.util.stream.Stream
 import kotlin.collections.ArrayList
 import kotlin.streams.asStream
 
@@ -174,10 +173,6 @@ class ArenaModel {
             return isInBounds(location.toVector3(), 0.0)
         }
 
-        fun isInBoundsBall(location: Vector3): Boolean {
-            return isInBounds(location, BALL_RADIUS.toDouble())
-        }
-
         fun renderWalls(renderer: Renderer) {
             arenaPlanes.forEach { p ->
                 run {
@@ -252,13 +247,31 @@ class ArenaModel {
             wallIntersectionPoints.addAll(getWallIntersectionPoints())
         }
 
-        fun getNearestPlane(position: Vector3): Plane {
+        fun getNearestPlane(position: Vector3, planes: Collection<Plane> = arenaPlanes): Plane {
 
-            return arenaPlanes.stream().min { p1, p2 ->
+            return planes.stream().min { p1, p2 ->
                 val p1Distance = p1.distance(position)
                 val p2Distance = p2.distance(position)
                 if (p1Distance > p2Distance) 1 else -1
             }.get()
+        }
+
+        fun clampPosition(position: Vector3, buffer: Double): Vector3 {
+            if (isInBounds(position, buffer)) {
+                return position
+            }
+            val nearestPlane = getNearestPlane(position)
+            val pointOnPlane = nearestPlane.projectPoint(position)
+            return pointOnPlane + nearestPlane.normal * buffer
+        }
+
+        fun clampPosition(position: Vector2, buffer: Double): Vector2 {
+            if (isInBounds(position.toVector3(), buffer)) {
+                return position
+            }
+            val nearestPlane = getNearestPlane(position.toVector3(), getWallPlanes())
+            val pointOnPlane = nearestPlane.projectPoint(position.toVector3())
+            return (pointOnPlane + nearestPlane.normal * buffer).flatten()
         }
 
         fun getBouncePlane(origin: Vector3, direction: Vector3): Plane {

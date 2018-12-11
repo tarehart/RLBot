@@ -1,5 +1,3 @@
 package tarehart.rlbot.bots
 
-class ReliefBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
-
-}
+class ReliefBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex)
