@@ -9,11 +9,11 @@ import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.RoutePlanner
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.BasicStroke
@@ -27,14 +27,27 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
     private var backwards: Boolean = false
     private var turnDirection: Int? = null
     private var target: PositionFacing? = null
-    private var shouldHop = false
+    private var shouldManeuver = false
 
     override fun getLocalSituation(): String {
-        return "Parking the car"
+        return "Parking the car - phase $phase"
     }
 
     private fun reasonableToGoBackwards(car: CarData) : Boolean {
         return car.velocity.flatten().dotProduct(car.orientation.noseVector.flatten()) < 15
+    }
+
+    override fun doInitialComputation(bundle: TacticalBundle) {
+        target?.let {
+            val renderer = bundle.agentInput.myCarData.renderer
+            RenderUtil.drawImpact(
+                    renderer,
+                    (it.position + it.facing.scaledToMagnitude(2.0)).withZ(0.4),
+                    it.facing.scaledToMagnitude(4.0).withZ(0.4),
+                    Color.WHITE)
+        }
+
+
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -67,7 +80,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     return null // We're already good
                 }
 
-                phase = HOP
+                phase = MANEUVER
             }
 
 
@@ -77,7 +90,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                 if (backwards) {
                     return SteerUtil.backUpTowardGroundPosition(car, latestTarget.position)
                 }
-                val output = SteerUtil.steerTowardGroundPositionGreedily(car, latestTarget.position)
+                val output = SteerUtil.steerTowardGroundPosition(car, latestTarget.position)
                 if (distance < 20) {
                     output.withBoost(false)
                 }
@@ -88,10 +101,14 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         if (phase == TRAVEL) {
 
 
-            val slideDistance = speed * 1.2 // Speed times seconds spent during hop.
+            val slideDistance =
+                    if (requiresSlide(facingCorrectionRadians))
+                        speed * 1.0
+                    else
+                        speed * 0.2
 
             if (distance < slideDistance) {
-                phase = HOP
+                phase = MANEUVER
             } else {
 
                 if (backwards) {
@@ -105,7 +122,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
                     val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 20.0, distancePlot)
 
-                    val steer = SteerUtil.steerTowardGroundPositionGreedily(car, waypoint).withBoost(car.boost > 50 && distance > 20)
+                    val steer = SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = distance < 50, conserveBoost = car.boost < 50 || distance < 20)
 
                     if (decelerationPeriod.distance >= distance) {
                         steer.withThrottle(-1.0)
@@ -118,26 +135,32 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         }
 
 
-        if (phase == HOP) {
+        if (phase == MANEUVER) {
 
 
             val turnDir = turnDirection ?: BotMath.nonZeroSignum(facingCorrectionRadians)
             turnDirection = turnDir
 
-            shouldHop = shouldHop || Math.abs(facingCorrectionRadians) > Math.PI / 3
+            shouldManeuver = shouldManeuver || requiresSlide(facingCorrectionRadians)
 
-            val futureRadians = facingCorrectionRadians + car.spin.yawRate * .3
-            val steerPolarity = if (backwards) 1 else -1
 
-            if (shouldHop) {
+
+            if (shouldManeuver) {
 
                 phase++
 
                 return startPlan(Plan(Plan.Posture.NEUTRAL)
-                        .unstoppable()
-                        .withStep(BlindStep(Duration.ofSeconds(0.01), AgentOutput().withJump()))
-                        .withStep(LandGracefullyStep { latestTarget.facing }), bundle)
+                        .withStep(BlindStep(Duration.ofSeconds(0.2), AgentOutput()
+                                .withThrottle(1.0)
+                                .withSteer(turnDir.toDouble())))
+                        .withStep(BlindStep(Duration.ofSeconds(0.05), AgentOutput()
+                                .withThrottle(1.0)
+                                .withSteer(-turnDir.toDouble())))
+                        .withStep(SlideTillFacingStep(latestTarget.facing, turnDir)), bundle)
             } else {
+
+                val futureRadians = facingCorrectionRadians + car.spin.yawRate * .3
+                val steerPolarity = if (backwards) 1 else -1
 
                 if (futureRadians * turnDir < 0 && Math.abs(futureRadians) < Math.PI / 4) {
                     return null // Done orienting.
@@ -150,8 +173,14 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
             }
         }
 
-        return null
+        val currentSpeed = ManeuverMath.forwardSpeed(car)
+        if (Math.abs(currentSpeed) < 1) {
+            return null
+        }
+        return AgentOutput().withThrottle(-0.5 * currentSpeed)
     }
+
+    private fun requiresSlide(facingCorrectionRadians: Double) = Math.abs(facingCorrectionRadians) > Math.PI / 3
 
     override fun drawDebugInfo(graphics: Graphics2D) {
         super.drawDebugInfo(graphics)
@@ -170,6 +199,6 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
         private val AIM_AT_TARGET = 0
         private val TRAVEL = 1
-        private val HOP = 2
+        private val MANEUVER = 2
     }
 }

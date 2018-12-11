@@ -20,7 +20,7 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
     }
 
     override fun getOutput(input: AgentInput): AgentOutput {
-        val bundle = assessSituation(input);
+        val bundle = assessSituation(input)
         return getOutput(bundle)
     }
 
@@ -49,7 +49,7 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
                 it.getOutput(bundle)?.let { return it }
             }
         }
-        return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(car.boost > 75)
+        return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.flatten()).withBoost(car.boost > 75)
     }
 
     open fun getNewTacticsAdvisor() : TacticsAdvisor {

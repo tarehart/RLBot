@@ -165,7 +165,7 @@ object CircleTurnUtil {
             val momentToStartTurning = strikePoint.waitUntil - turnDuration
             immediateSteer = SteerUtil.getThereOnTime(car, SpaceTime(tangentPoint.toVector3(), momentToStartTurning))
         } else {
-            immediateSteer = SteerUtil.steerTowardGroundPosition(car, tangentPoint)
+            immediateSteer = SteerUtil.steerTowardGroundPosition(car, tangentPoint, detourForBoost = false)
         }
 
         if (currentSpeed > expectedSpeed && distanceToTangent < 20) {
@@ -202,7 +202,7 @@ object CircleTurnUtil {
         val immediateSteer: AgentOutput = if (strikePoint.waitUntil != null) {
             SteerUtil.getThereOnTime(car, SpaceTime(strikePoint.position.toVector3(), strikePoint.waitUntil))
         } else {
-            SteerUtil.steerTowardGroundPosition(car, strikePoint.position)
+            SteerUtil.steerTowardGroundPosition(car, strikePoint.position, detourForBoost = false)
         }
 
         return SteerPlan(immediateSteer, route)

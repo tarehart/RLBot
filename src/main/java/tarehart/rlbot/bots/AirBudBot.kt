@@ -17,8 +17,6 @@ import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.WallTouchStep
-import tarehart.rlbot.tactics.SoccerTacticsAdvisor
-import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
@@ -45,7 +43,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
             }
         }
 
-        return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
+        return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.flatten(), conserveBoost = true)
     }
 
     private fun makeFreshPlan(bundle: TacticalBundle): Plan {

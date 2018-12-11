@@ -12,8 +12,6 @@ import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
-import tarehart.rlbot.tactics.SoccerTacticsAdvisor
-import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.tuning.BotLog
 
 class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
@@ -39,7 +37,7 @@ class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex
             }
         }
 
-        return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
+        return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.flatten()).withBoost(false)
     }
 
     private fun makeFreshPlan(bundle: TacticalBundle): Plan {

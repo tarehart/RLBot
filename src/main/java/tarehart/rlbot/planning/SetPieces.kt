@@ -28,7 +28,7 @@ object SetPieces {
                         AgentOutput()
                                 .withJump(true)
                                 .withThrottle(1.0)
-                                .withYaw(-1.0)
+                                .withYaw(-0.6)
                                 .withPitch(-1.0)))
                 .withStep(BlindStep(Duration.ofSeconds(.5),
                         AgentOutput()

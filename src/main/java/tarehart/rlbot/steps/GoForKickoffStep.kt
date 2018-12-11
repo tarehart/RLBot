@@ -50,7 +50,7 @@ class GoForKickoffStep : NestedPlanStep() {
             // Steer toward boost
             val ySide = Math.signum(car.position.y)
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
-            return SteerUtil.steerTowardGroundPosition(car, target)
+            return SteerUtil.steerTowardGroundPosition(car, target, detourForBoost = false)
         }
         return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(InterceptStep(Vector3())), bundle)
     }

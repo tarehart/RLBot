@@ -150,7 +150,7 @@ class DemolishEnemyStep : NestedPlanStep() {
             return DemolishTransition(SteerUtil.steerTowardGroundPosition(car, it.space), DemolishPhase.CHASE)
         }
 
-        return DemolishTransition(SteerUtil.steerTowardGroundPositionGreedily(car, enemyCar.position.flatten()), DemolishPhase.CHASE)
+        return DemolishTransition(SteerUtil.steerTowardGroundPosition(car, enemyCar.position.flatten()), DemolishPhase.CHASE)
     }
 
     private fun jump(bundle: TacticalBundle, enemyCar: CarData): DemolishTransition? {

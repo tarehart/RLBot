@@ -72,47 +72,21 @@ object SteerUtil {
         return noseVector.correctionAngle(toTarget)
     }
 
-    fun steerTowardGroundPosition(carData: CarData, position: Vector2): AgentOutput {
-
-        if (ArenaModel.isCarOnWall(carData)) {
-            return steerTowardPositionAcrossSeam(carData, position.toVector3())
-        }
-
-        val correctionAngle = getCorrectionAngleRad(carData, position)
-        val myPositionFlat = carData.position.flatten()
-        val distance = position.distance(myPositionFlat)
-        val speed = carData.velocity.magnitude()
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false)
-    }
-
-    fun steerTowardGroundPosition(carData: CarData, position: Vector2, noBoosting: Boolean): AgentOutput {
-
-        if (ArenaModel.isCarOnWall(carData)) {
-            return steerTowardPositionAcrossSeam(carData, position.toVector3())
-        }
-
-        val correctionAngle = getCorrectionAngleRad(carData, position)
-        val myPositionFlat = carData.position.flatten()
-        val distance = position.distance(myPositionFlat)
-        val speed = carData.velocity.magnitude()
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, noBoosting)
-    }
-
-    fun steerTowardGroundPositionGreedily(carData: CarData, position: Vector2): AgentOutput {
+    fun steerTowardGroundPosition(carData: CarData, position: Vector2, detourForBoost: Boolean = true, conserveBoost: Boolean = false): AgentOutput {
 
         if (ArenaModel.isCarOnWall(carData)) {
             return steerTowardPositionAcrossSeam(carData, position.toVector3())
         }
 
         val adjustedPosition =
-                if (carData.boost > 99.0) position // This keeps us from swerving all around during unlimited boost games
+                if (!detourForBoost || carData.boost > 99.0) position // This keeps us from swerving all around during unlimited boost games
                 else Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, position)).orElse(position)
 
         val correctionAngle = getCorrectionAngleRad(carData, adjustedPosition)
         val myPositionFlat = carData.position.flatten()
         val distance = adjustedPosition.distance(myPositionFlat)
         val speed = carData.velocity.magnitude()
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false)
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, conserveBoost)
     }
 
     fun backUpTowardGroundPosition(car: CarData, position: Vector2): AgentOutput {
@@ -159,14 +133,14 @@ object SteerUtil {
         return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false)
     }
 
-    private fun getSteeringOutput(correctionAngle: Double, distance: Double, speed: Double, isSupersonic: Boolean, noBoosting: Boolean): AgentOutput {
+    private fun getSteeringOutput(correctionAngle: Double, distance: Double, speed: Double, isSupersonic: Boolean, conserveBoost: Boolean): AgentOutput {
         val difference = Math.abs(correctionAngle)
         val turnSharpness = difference * 6 / Math.PI + difference * speed * .1
         //turnSharpness = (1 - DEAD_ZONE) * turnSharpness + Math.signum(turnSharpness) * DEAD_ZONE;
 
         val shouldBrake = distance < 25 && difference > Math.PI / 4 && speed > 25 || speed > 20 && difference > Math.PI / 2
         val shouldSlide = speed < 30 && distance < 15 && difference > Math.PI / 4 || speed < 30 && difference > 3 * Math.PI / 4
-        val shouldBoost = !noBoosting && !shouldBrake && difference < Math.PI / 6 && !isSupersonic
+        val shouldBoost = !conserveBoost && !shouldBrake && difference < Math.PI / 6 && !isSupersonic
 
         return AgentOutput()
                 .withThrottle(if (shouldBrake) -1.0 else 1.0)
@@ -176,7 +150,7 @@ object SteerUtil {
     }
 
     fun steerTowardGroundPosition(carData: CarData, position: Vector3): AgentOutput {
-        return steerTowardGroundPosition(carData, position.flatten())
+        return steerTowardGroundPosition(carData, position.flatten(), detourForBoost = false)
     }
 
     fun getDistanceFromCar(car: CarData, loc: Vector3): Double {
@@ -247,7 +221,7 @@ object SteerUtil {
             waypoint = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(car, waypoint)).orElse(waypoint)
         }
 
-        val agentOutput = SteerUtil.steerTowardGroundPosition(car, waypoint)
+        val agentOutput = SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = false)
 
         if (distanceRatio > 2) {
             agentOutput.withThrottle(-1.0).withBoost(false).withSteer(0.0)

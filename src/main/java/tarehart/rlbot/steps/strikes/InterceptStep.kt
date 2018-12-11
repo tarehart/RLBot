@@ -108,7 +108,9 @@ class InterceptStep(
         val averageSpeedNeeded = distanceToIntercept / timeToIntercept.seconds
         val currentSpeed = car.velocity.magnitude()
 
-        val agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.space.flatten(), car.boost <= intercept.airBoost)
+        val agentOutput = SteerUtil.steerTowardGroundPosition(car, intercept.space.flatten(),
+                detourForBoost = false, conserveBoost = car.boost <= intercept.airBoost)
+
         if (pace > 1.1 && currentSpeed > averageSpeedNeeded) {
             // Slow down
             agentOutput.withThrottle(Math.min(0.0, -pace + 1.5)).withBoost(false) // Hit the brakes, but keep steering!
