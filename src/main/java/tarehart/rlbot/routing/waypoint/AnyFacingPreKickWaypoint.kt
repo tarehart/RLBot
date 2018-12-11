@@ -54,6 +54,11 @@ class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, waitUn
         }
         val duration = distancePlot.getMotionAfterDistance(distance)!!.time
         val route = Route().withPart(AccelerationRoutePart(car.position.flatten(), waypoint, duration))
+
+        if (distance > 50 && car.boost < 50) {
+            return SteerPlan(SteerUtil.steerTowardGroundPositionGreedily(car, waypoint), route)
+        }
+
         return SteerPlan(SteerUtil.steerTowardGroundPosition(car, waypoint), route)
 
     }

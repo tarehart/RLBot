@@ -49,7 +49,7 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
                 it.getOutput(bundle)?.let { return it }
             }
         }
-        return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(false)
+        return SteerUtil.steerTowardGroundPositionGreedily(car, input.ballPosition.flatten()).withBoost(car.boost > 75)
     }
 
     open fun getNewTacticsAdvisor() : TacticsAdvisor {

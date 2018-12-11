@@ -8,17 +8,20 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BoostData
 import tarehart.rlbot.input.BoostPad
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import java.awt.Color
 import java.util.*
 
 object BoostAdvisor {
 
-    private const val TURN_LIMIT = Math.PI / 4
-    private const val FULL_BOOST_TURN_LIMIT = Math.PI / 2
+    private const val TURN_LIMIT = Math.PI * .3
+    private const val FULL_BOOST_TURN_LIMIT = Math.PI * .6
 
     private val orderedBoosts = ArrayList<BoostPad>()
 
@@ -82,7 +85,11 @@ object BoostAdvisor {
 
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
         val closestBoost = getClosestBoost(car, distancePlot, waypoint)
-        return closestBoost?.location?.flatten()
+        closestBoost?.location?.flatten()?.let {
+            RenderUtil.drawCircle(car.renderer, Circle(it, 2.0), 0.0, Color.GREEN)
+            return it
+        }
+        return null
     }
 
     private fun getClosestBoost(car: CarData, distancePlot: DistancePlot, waypoint: Vector2) : BoostPad? {
@@ -101,6 +108,11 @@ object BoostAdvisor {
         val boostPosition = boostPad.location.flatten()
         val carToBoost = boostPosition - carPosition
         val boostToWaypoint = waypoint - boostPosition
+        val detourDistance = carToBoost.magnitude() + boostToWaypoint.magnitude() - (waypoint - carPosition).magnitude()
+        if (detourDistance > 20) {
+            return false
+        }
+
         val detourAngle = Vector2.angle(carToBoost, boostToWaypoint)
         val initialSteerCorrection = Vector2.angle(car.orientation.noseVector.flatten(), carToBoost)
         val turnLimit = if (boostPad.isFullBoost) FULL_BOOST_TURN_LIMIT else TURN_LIMIT
@@ -117,7 +129,7 @@ object BoostAdvisor {
         val realDuration = distancePlot.getMotionAfterDistance(distance)
                 ?.time?.plusSeconds(orientSeconds) ?: Duration.ofSeconds(100.0)
 
-        val greedBonus = if (boostPad.isFullBoost) Duration.ofSeconds(1.0) else Duration.ofMillis(0)
+        val greedBonus = if (boostPad.isFullBoost) Duration.ofSeconds(0.5) else Duration.ofMillis(0)
 
         return realDuration - greedBonus
     }

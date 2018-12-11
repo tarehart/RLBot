@@ -125,7 +125,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(CatchBallStep())
                     .withStep(GetOnOffenseStep())
-                    .withStep(GetBoostStep())
         }
 
         return null

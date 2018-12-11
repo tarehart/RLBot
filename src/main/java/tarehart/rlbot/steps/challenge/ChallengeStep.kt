@@ -10,6 +10,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.rendering.RenderUtil
+import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
@@ -100,7 +101,12 @@ class ChallengeStep: NestedPlanStep() {
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.0, Color(0.8f, 0.0f, 0.8f))
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.5, Color(0.8f, 0.0f, 0.8f))
 
-        return SteerUtil.steerTowardGroundPositionGreedily(car, defensiveNode)
+        // If we're too greedy, we'll be late to kickoffs
+        if (defensiveNodeDistance > 50 && car.boost < 50) {
+            return SteerUtil.steerTowardGroundPositionGreedily(car, defensiveNode)
+        }
+
+        return SteerUtil.steerTowardGroundPosition(car, defensiveNode)
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {

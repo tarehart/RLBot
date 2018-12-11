@@ -5,16 +5,19 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BoostPad
+import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.routing.CircleTurnUtil
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog.println
+import java.awt.Color
 
 class GetBoostStep : NestedPlanStep() {
     private var targetLocation: BoostPad? = null
@@ -45,6 +48,8 @@ class GetBoostStep : NestedPlanStep() {
 
         val car = bundle.agentInput.myCarData
         val targetLoc = targetLocation ?: return null
+
+        RenderUtil.drawCircle(car.renderer, Circle(targetLoc.location.flatten(), 2.0), 0.0, Color.GREEN)
 
         val distance = SteerUtil.getDistanceFromCar(car, targetLoc.location)
 
