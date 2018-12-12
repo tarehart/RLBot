@@ -4,8 +4,10 @@ import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
@@ -29,8 +31,7 @@ import java.awt.geom.Line2D
 import java.util.*
 
 class InterceptStep(
-        private val interceptModifier: Vector3,
-        private val interceptPredicate: (CarData, SpaceTime) -> Boolean = { _, _ -> true }
+        private val interceptModifier: Vector3
 ) : NestedPlanStep() {
     override fun getLocalSituation(): String {
         return  "Working on intercept"
@@ -46,7 +47,7 @@ class InterceptStep(
         val ballPath = bundle.tacticalSituation.ballPath
         val fullAcceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(7.0), carData.boost, 0.0)
 
-        val soonestIntercept = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)
+        val soonestIntercept = getSoonestIntercept(carData, ballPath, fullAcceleration, interceptModifier)
         if (soonestIntercept == null) {
             println("No intercept option found, aborting.", bundle.agentInput.playerIndex)
             return null
@@ -143,37 +144,36 @@ class InterceptStep(
                 carData: CarData,
                 ballPath: BallPath,
                 fullAcceleration: DistancePlot,
-                interceptModifier: Vector3,
-                interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
+                interceptModifier: Vector3): Intercept? {
 
             val interceptOptions = ArrayList<Intercept>()
 
-            getAerialIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { if (it.space.z >= StrikePlanner.NEEDS_AERIAL_THRESHOLD) interceptOptions.add(it) }
-            getJumpHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { interceptOptions.add(it) }
-            getFlipHitIntercept(carData, ballPath, fullAcceleration, interceptModifier, interceptPredicate)?.let { interceptOptions.add(it) }
+            getAerialIntercept(carData, ballPath, fullAcceleration, interceptModifier)?.let { if (it.space.z >= StrikePlanner.NEEDS_AERIAL_THRESHOLD) interceptOptions.add(it) }
+            getJumpHitIntercept(carData, ballPath, fullAcceleration, interceptModifier)?.let { interceptOptions.add(it) }
+            getFlipHitIntercept(carData, ballPath, fullAcceleration, interceptModifier)?.let { interceptOptions.add(it) }
 
             return interceptOptions.asSequence().sortedBy { intercept -> intercept.time }.firstOrNull()
         }
 
-        private fun getAerialIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
+        private fun getAerialIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3): Intercept? {
             if (carData.boost < StrikePlanner.BOOST_NEEDED_FOR_AERIAL) return null
 
             return InterceptCalculator.getFilteredInterceptOpportunity(carData, ballPath, fullAcceleration, interceptModifier,
-                    { cd, st -> interceptPredicate.invoke(cd, st) && StrikePlanner.isVerticallyAccessible(cd, st) },
+                    { cd, st -> AerialMath.isViableAerial(CarSlice(cd), st, true, 0.0) },
                     { height -> AerialStrike(height) })
         }
 
-        private fun getJumpHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
+        private fun getJumpHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3): Intercept? {
             return InterceptCalculator.getFilteredInterceptOpportunity(
                     carData, ballPath, fullAcceleration, interceptModifier,
-                    { cd, st -> interceptPredicate.invoke(cd, st) && st.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT },
+                    { cd, st -> st.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT },
                     { height: Double -> JumpHitStrike(height) })
         }
 
-        private fun getFlipHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3, interceptPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
+        private fun getFlipHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3): Intercept? {
             return InterceptCalculator.getFilteredInterceptOpportunity(
                     carData, ballPath, fullAcceleration, interceptModifier,
-                    { cd, st -> interceptPredicate.invoke(cd, st) && FlipHitStrike.isVerticallyAccessible(st.space.z) },
+                    { cd, st -> FlipHitStrike.isVerticallyAccessible(st.space.z) },
                     { FlipHitStrike() })
         }
     }

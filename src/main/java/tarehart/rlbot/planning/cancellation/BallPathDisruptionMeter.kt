@@ -8,26 +8,34 @@ import tarehart.rlbot.time.Duration
 class BallPathDisruptionMeter(
         private val distanceThreshold: Double = 20.0) {
 
-    private lateinit var trackingSlice: BallSlice
+    private var trackingSlice: BallSlice? = null
 
     fun isDisrupted(path: BallPath): Boolean {
-        if (!::trackingSlice.isInitialized) {
-            trackingSlice = path.getMotionAt(path.startPoint.time.plusSeconds(4.0)) ?: return false
+
+        if (trackingSlice == null) {
+            trackingSlice = path.getMotionAt(path.startPoint.time.plusSeconds(1.0)) ?: return false
             return false
         }
 
-        if (Duration.between(path.startPoint.time, trackingSlice.time) < Duration.ofSeconds(2.0)) {
-            path.getMotionAt(path.startPoint.time.plusSeconds(4.0))?.let {
+        var slice = trackingSlice ?: return false
+
+        if (Duration.between(path.startPoint.time, slice.time) < Duration.ofSeconds(0.5)) {
+            path.getMotionAt(path.startPoint.time.plusSeconds(1.0))?.let {
                 trackingSlice = it
+                slice = it
             }
         }
 
-        val currentSlice = path.getMotionAt(trackingSlice.time) ?: return false
+        val currentSlice = path.getMotionAt(slice.time) ?: return false
 
-        if (currentSlice.space.distance(trackingSlice.space) > distanceThreshold) {
+        if (currentSlice.space.distance(slice.space) > distanceThreshold) {
             return true
         }
 
         return false
+    }
+
+    fun reset() {
+        trackingSlice = null
     }
 }

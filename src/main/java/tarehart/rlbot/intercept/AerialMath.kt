@@ -6,21 +6,23 @@ import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.rendering.RenderUtil
+import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 
 object AerialMath {
 
-    val JUMP_ASSIST_DURATION = .6
+    val JUMP_ASSIST_DURATION = .5
     val JUMP_ASSIST_ACCEL = 12
 
     // This is a constant that we tuned with some testing. No mathematical basis
-    val TYPICAL_UPWARD_ACCEL = 10
+    val TYPICAL_UPWARD_ACCEL = 2.5
 
     private const val MINIMUM_JUMP_HEIGHT = 2.0
     private const val JUMP_VELOCITY = 12.0
     private const val AERIAL_ANGULAR_ACCEL = OrientationSolver.ALPHA_MAX  // maximum aerial angular acceleration
     const val BOOST_ACCEL_IN_AIR = 20.0  // boost acceleration
+    private const val ACCEL_NEEDED_THRESHOLD = 0.95
 
     /**
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L415-L421
@@ -30,7 +32,13 @@ object AerialMath {
         val courseResult = calculateAerialCourseCorrection(car, target, modelJump, secondsSinceJump)
         val accelNeeded = courseResult.averageAccelerationRequired
 
-        return 0 <= accelNeeded && accelNeeded < 0.95 * BOOST_ACCEL_IN_AIR
+        return 0 <= accelNeeded && accelNeeded < ACCEL_NEEDED_THRESHOLD * BOOST_ACCEL_IN_AIR
+    }
+
+    fun calculateAerialTimeNeeded(correction: AerialCourseCorrection): Duration {
+        val errorDistance = correction.targetError.magnitude()
+        val bestTime = correction.timeNeededForTurn.seconds + Math.sqrt(2 * errorDistance / (ACCEL_NEEDED_THRESHOLD * BOOST_ACCEL_IN_AIR))
+        return Duration.ofSeconds(bestTime)
     }
 
     /**
@@ -71,20 +79,21 @@ object AerialMath {
 
         // estimate the time required to turn
         val angleToTurn = car.orientation.matrix.angleTo(Mat3.lookingTo(correctionDirection, car.orientation.roofVector))
-        val secondsNeededForTurn = 0.7 * (2.0 * Math.sqrt(angleToTurn / AERIAL_ANGULAR_ACCEL))
+        val secondsNeededForTurn = 0.85 * (2.0 * Math.sqrt(angleToTurn / AERIAL_ANGULAR_ACCEL))
 
         // see if the boost acceleration needed to reach the target is achievable
         // Assume that we will only be boosting when the car is lined up with the required orientation.
-        val averageAccelerationRequired = 2.0 * targetError.magnitude() / Math.pow(secondsRemaining - secondsNeededForTurn, 2.0)
+        val errorDistance = targetError.magnitude()
+        val averageAccelerationRequired = 2.0 * errorDistance / Math.pow(secondsRemaining - secondsNeededForTurn, 2.0)
 
-        return AerialCourseCorrection(correctionDirection, averageAccelerationRequired, targetError)
+        return AerialCourseCorrection(correctionDirection, averageAccelerationRequired, targetError, Duration.ofSeconds(secondsNeededForTurn))
     }
 
     fun timeToAir(height: Double): Double {
         val a = TYPICAL_UPWARD_ACCEL // Upward acceleration
         val b = 10 // Initial upward velocity from jump
         val c = -(height - ManeuverMath.BASE_CAR_Z)
-        val liftoffDelay = 0.5
+        val liftoffDelay = 0.3
         return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a) + liftoffDelay
     }
 

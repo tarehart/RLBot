@@ -6,6 +6,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.intercept.AerialMath
+import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector2
@@ -15,6 +16,7 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.HoopsGoal
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
@@ -33,10 +35,12 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
-    private var intercept: SpaceTime? = null
+    private var intercept: Intercept? = null
     private var lostWheelContact = false
 
     private var boostCounter = 0.0
+
+    private val ballPathDisruptionMeter = BallPathDisruptionMeter(0.2)
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
@@ -71,22 +75,21 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         lostWheelContact = lostWheelContact || !car.hasWheelContact
 
-        val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
-        if (latestIntercept == null) {
-            if (!car.hasWheelContact && car.position.z > 1) {
-                // Orient toward the ball and hope for an aerial intercept to resume
-                return OrientationSolver
-                        .orientCar(bundle.agentInput.myCarData, Mat3.lookingTo(bundle.agentInput.ballPosition - car.position), 1.0 / 60)
-                        .withThrottle(1.0)
-            }
-            return null
+        if (ballPathDisruptionMeter.isDisrupted(bundle.tacticalSituation.ballPath)) {
+            intercept = null
+            ballPathDisruptionMeter.reset()
         }
+
+        val latestIntercept = intercept
+                ?: InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
+                ?: return null
+
+        intercept = latestIntercept
 
         val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3.0), Color.CYAN)
         RenderUtil.drawBallPath(renderer, ballPath, latestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
 
-        intercept = latestIntercept.toSpaceTime()
         val canDodge = latestIntercept.time < lastMomentForDodge
         val carToIntercept = latestIntercept.space.minus(car.position)
         val millisTillIntercept = Duration.between(bundle.agentInput.time, latestIntercept.time).millis
@@ -103,13 +106,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                         .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
                         .withStep(BlindStep(Duration.ofSeconds(1.0), AgentOutput().withPitch(-1.0).withJump())),
                         bundle)
-            } else {
-                // Dodge to the side
-                BotLog.println("Side flip strike", bundle.agentInput.playerIndex)
-                startPlan(Plan()
-                        .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
-                        .withStep(BlindStep(Duration.ofMillis(30), AgentOutput().withYaw((if (correctionAngleRad < 0) 1 else -1).toDouble()).withJump())),
-                        bundle)
             }
         }
 
@@ -117,7 +113,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
 
 
-        val courseResult = if (canDodge)
+        val courseResult = if (canDodge && carToIntercept.z / carToIntercept.flatten().magnitude() < 0.2)
             AerialMath.calculateAerialCourseCorrection(
                     CarSlice(car),
                     SpaceTime(latestIntercept.space - carToIntercept.flatten().scaledToMagnitude(2.0).toVector3(), latestIntercept.time - DODGE_TIME),
@@ -138,17 +134,12 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         RenderUtil.drawSphere(car.renderer, latestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
 
         var useBoost = 0L
-        val boostThreshold = if (canDodge) .5 else .9
+        val boostThreshold = .9
         if (courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold) {
             useBoost -= Math.round(boostCounter)
             boostCounter += Clamper.clamp(1.25 * (courseResult.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR), 0.0, 1.0)
             useBoost += Math.round(boostCounter)
         }
-
-        // TODO: aerials go very bad if we're going too fast on the ground before takeoff
-
-        // BotLog.println("BoostFeathering: ${aerialCourseCorrection.averageAccelerationRequired}", car.playerIndex)
-
 
         if (courseResult.targetError.magnitude() < 1) {
             return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), 1/60.0)

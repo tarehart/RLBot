@@ -1,6 +1,7 @@
 package tarehart.rlbot.physics
 
 import tarehart.rlbot.carpredict.AccelerationModel
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
@@ -65,6 +66,32 @@ class DistancePlot(start: DistanceTimeSpeed) {
                 return DistanceTimeSpeed(distance, moment, speed)
             }
         }
+        return null
+    }
+
+    /**
+     * Only applies to forward acceleration. Will return null if we're already going faster than
+     * the target speed, or if the target speed is impossible to attain.
+     */
+    fun getMotionUponSpeed(targetSpeed: Double): DistanceTimeSpeed? {
+
+        val currentSpeed = plot[0].speed
+        if (currentSpeed > targetSpeed) return null
+
+
+        for (i in 0 until plot.size - 1) {
+            val current = plot[i]
+            val next = plot[i + 1]
+            if (next.speed > targetSpeed) {
+
+                val simulationStepSeconds = next.time.seconds - current.time.seconds
+                val tweenPoint = (targetSpeed - current.speed) / (next.speed - current.speed)
+                val distance = (1 - tweenPoint) * current.distance + tweenPoint * next.distance
+                val time = current.time.plusSeconds(simulationStepSeconds * tweenPoint)
+                return DistanceTimeSpeed(distance, time, targetSpeed)
+            }
+        }
+
         return null
     }
 

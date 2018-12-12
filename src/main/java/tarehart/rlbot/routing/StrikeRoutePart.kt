@@ -1,17 +1,16 @@
 package tarehart.rlbot.routing
 
 import rlbot.render.Renderer
-import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.time.Duration
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Line2D
 
 
-class StrikeRoutePart(override val start: Vector2, val intercept: Vector3, strikeProfile: StrikeProfile) : RoutePart {
-    override val duration = strikeProfile.strikeDuration
+class StrikeRoutePart(override val start: Vector2, val intercept: Vector3, override val duration: Duration) : RoutePart {
 
     override val end = intercept.flatten()
     override val waypoint = end

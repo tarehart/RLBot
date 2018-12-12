@@ -52,7 +52,7 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
             RenderUtil.drawSquare(renderer, Plane(it.direction, it.position), 5.0, Color.RED)
             if (it.direction.z == 0.0) {
                 // It's a wall!
-                val targetOrientation = Mat3.lookingTo(Vector3(0.0, 0.0, -1.0), it.direction)
+                val targetOrientation = Mat3.lookingTo(car.velocity.projectToPlane(it.direction), it.direction)
                 return OrientationSolver.orientCar(bundle.agentInput.myCarData, targetOrientation, 1.0 / 60).withThrottle(1.0)
             } else {
                 // It's not a wall!

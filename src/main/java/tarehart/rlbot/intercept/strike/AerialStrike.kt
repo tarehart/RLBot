@@ -1,6 +1,7 @@
 package tarehart.rlbot.intercept.strike
 
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialChecklist
 import tarehart.rlbot.intercept.AerialMath
@@ -10,7 +11,8 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
+import tarehart.rlbot.routing.RoutePlanner
+import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindStep
@@ -33,8 +35,7 @@ open class AerialStrike(height: Double): StrikeProfile() {
     }
 
     override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {
-        val checklist = checkAerialReadiness(car, intercept)
-        if (checklist.readyToLaunch()) {
+        if (isReadyForAerial(car, intercept)) {
             BotLog.println("Performing Aerial!", car.playerIndex)
 
             val groundDistance = car.position.flatten().distance(intercept.space.flatten())
@@ -44,8 +45,9 @@ open class AerialStrike(height: Double): StrikeProfile() {
 
             return if (Duration.between(car.time, intercept.time).seconds > 1.5 && intercept.space.z > 10) {
                 performDoubleJumpAerial(tiltBackSeconds * .8)
-            } else performAerial(0.1)
+            } else performAerial(tiltBackSeconds)
         }
+
         return null
     }
 
@@ -57,30 +59,41 @@ open class AerialStrike(height: Double): StrikeProfile() {
         val distanceToIntercept = toIntercept.magnitude()
         val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
         val flatForce = desiredKickForce.flatten()
+        val approachError = Vector2.angle(flatForce, toIntercept)
 
-        val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * averageSpeedNeeded)
-        var lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, Math.PI / 4)
-        val lazyLaunchDistance = lazyLaunchToIntercept.magnitude()
-        var useStrict = true
-        if (distanceToIntercept / lazyLaunchDistance > 0.8) {  // We also used to check lazyLaunchDistance > distanceToIntercept
-            val alignmentError = 15 * Vector2.angle(lazyLaunchToIntercept, car.orientation.noseVector.flatten())
-            lazyLaunchToIntercept = lazyLaunchToIntercept.scaledToMagnitude(distanceToIntercept - alignmentError)
-            useStrict = false
+        val speedForBackoff = Math.max(car.velocity.flatten().magnitude(), averageSpeedNeeded)
+        val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * speedForBackoff)
+        val maxAerialApproachError = Math.PI / 4
+
+        if (approachError < maxAerialApproachError) {
+
+            val desiredSpeedAtLaunch = averageSpeedNeeded * 0.9
+            val orientSeconds = FacingAndSpeedPreKickWaypoint.getOrientDuration(car.orientation.noseVector.flatten(), toIntercept).seconds
+
+            val motionAfterSpeedChange = RoutePlanner.getMotionAfterSpeedChange(
+                    car.velocity.flatten().magnitude(), desiredSpeedAtLaunch, intercept.distancePlot) ?: return null
+
+            return FacingAndSpeedPreKickWaypoint(
+                    position = car.position.flatten(),
+                    facing = toIntercept,
+                    expectedTime = car.time + Duration.ofSeconds(Math.max(orientSeconds, motionAfterSpeedChange.time.seconds)),
+                    speed = desiredSpeedAtLaunch)
         }
+
+        val lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, maxAerialApproachError)
         val launchPosition = intercept.space.flatten() - lazyLaunchToIntercept
         val facing = lazyLaunchToIntercept.normalized()
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
-        val momentOrNow = if (launchPadMoment.isBefore(car.time)) car.time else launchPadMoment
-        return if (useStrict)
-            StrictPreKickWaypoint(
+        val momentOrNow = if (launchPadMoment.isBefore(car.time))
+            car.time
+        else
+            launchPadMoment
+
+        return StrictPreKickWaypoint(
                 position = launchPosition,
                 facing = facing,
                 expectedTime = momentOrNow,
-                waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null)
-        else
-            AnyFacingPreKickWaypoint(
-                position = launchPosition,
-                expectedTime = momentOrNow,
+                expectedSpeed = averageSpeedNeeded,
                 waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null)
     }
 
@@ -88,17 +101,36 @@ open class AerialStrike(height: Double): StrikeProfile() {
     companion object {
         private const val UPWARD_VELOCITY_MAINTENANCE_ANGLE = .25
 
-        fun checkAerialReadiness(car: CarData, intercept: SpaceTime): AerialChecklist {
+        fun isReadyForAerial(car: CarData, intercept: SpaceTime): Boolean {
 
             val checklist = AerialChecklist()
             StrikePlanner.checkLaunchReadiness(checklist, car, intercept)
-            val secondsTillIntercept = Duration.between(car.time, intercept.time).seconds
-            val tMinus = getAerialLaunchCountdown(intercept.space.z, secondsTillIntercept)
-            checklist.timeForIgnition = tMinus < 0.1
+            checklist.timeForIgnition = true
+            checklist.hasBoost = true
             checklist.notSkidding = !ManeuverMath.isSkidding(car)
-            checklist.hasBoost = car.boost >= StrikePlanner.BOOST_NEEDED_FOR_AERIAL
+            if (!checklist.readyToLaunch()) {
+                BotLog.println("Not aerialing yet: $checklist", car.playerIndex)
+                return false
+            }
 
-            return checklist
+            val avgSpeedNeeded = car.position.flatten().distance(intercept.space.flatten()) / (intercept.time - car.time).seconds
+            val speedRatio = car.velocity.magnitude() / avgSpeedNeeded
+
+            if (speedRatio < 0.75) {
+                BotLog.println("Not aerialing yet: Have only sped up to $speedRatio of the average speed needed", car.playerIndex)
+                return false
+            }
+
+            val courseCorrection = AerialMath.calculateAerialCourseCorrection(
+                    CarSlice(car), intercept, true, 0.0)
+            val accelRatio = courseCorrection.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR
+
+            if (accelRatio < 0.4) {
+                BotLog.println("Not aerialing yet: Only need to boost $accelRatio of the time", car.playerIndex)
+                return false
+            }
+
+            return true
         }
 
         fun getAerialLaunchCountdown(height: Double, secondsTillIntercept: Double): Double {

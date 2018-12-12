@@ -83,7 +83,7 @@ interface TacticsAdvisor {
 
         fun getSoonestIntercept(car: CarData, ballPath: BallPath): Intercept? {
             val distancePlot = AccelerationModel.simulateAcceleration(car, PLAN_HORIZON, car.boost)
-            return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, Vector3(), { _, _ -> true })
+            return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, Vector3())
         }
 
         fun getCarWithBestShot(cars: List<CarWithIntercept>): CarWithIntercept {

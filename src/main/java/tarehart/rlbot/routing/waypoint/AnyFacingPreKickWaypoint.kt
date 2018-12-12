@@ -13,8 +13,8 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
 
-class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, waitUntil: GameTime? = null) :
-        PreKickWaypoint(position, expectedTime, waitUntil) {
+class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, expectedSpeed: Double? = null, waitUntil: GameTime? = null) :
+        PreKickWaypoint(position, expectedTime, expectedSpeed, waitUntil) {
 
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
 

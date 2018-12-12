@@ -10,4 +10,8 @@ open class LaunchChecklist {
     open fun readyToLaunch(): Boolean {
         return linedUp && closeEnough && timeForIgnition && upright && onTheGround
     }
+
+    override fun toString(): String {
+        return "LaunchChecklist(linedUp=$linedUp, closeEnough=$closeEnough, timeForIgnition=$timeForIgnition, upright=$upright, onTheGround=$onTheGround)"
+    }
 }

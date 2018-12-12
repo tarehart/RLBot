@@ -1,5 +1,6 @@
 package tarehart.rlbot.routing
 
+import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
@@ -46,5 +47,19 @@ object RoutePlanner{
         val secondsDecelerating = speedDiff / ManeuverMath.BRAKING_DECELERATION
         val avgSpeed = (maxAccelMotion.speed + desiredSpeed) / 2
         return DistanceDuration(avgSpeed * secondsDecelerating, Duration.ofSeconds(secondsDecelerating))
+    }
+
+    fun getMotionAfterSpeedChange(currentSpeed: Double, idealSpeed: Double, forwardAccelPlot: DistancePlot): DistanceTimeSpeed? {
+
+        if (idealSpeed < currentSpeed) {
+            val secondsRequired = (currentSpeed - idealSpeed) / ManeuverMath.BRAKING_DECELERATION
+            val avgSpeed = (currentSpeed + idealSpeed) / 2
+            return DistanceTimeSpeed(
+                    avgSpeed * secondsRequired,
+                    Duration.ofSeconds(secondsRequired),
+                    idealSpeed)
+        }
+
+        return forwardAccelPlot.getMotionUponSpeed(idealSpeed)
     }
 }

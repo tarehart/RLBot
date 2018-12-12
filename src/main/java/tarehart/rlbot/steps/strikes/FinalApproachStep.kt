@@ -16,7 +16,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
     private var strikeStarted = false
 
     override fun getLocalSituation(): String {
-        return "Final approach toward %s %s".format(kickPlan.launchPad.expectedTime, kickPlan.launchPad.position)
+        return "Final approach toward %s".format(kickPlan.launchPad.position)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {

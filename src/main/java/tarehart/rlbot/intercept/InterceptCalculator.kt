@@ -3,6 +3,7 @@ package tarehart.rlbot.intercept
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.input.CarOrientation
 import tarehart.rlbot.intercept.strike.ChipStrike
 import tarehart.rlbot.intercept.strike.CustomStrike
 import tarehart.rlbot.intercept.strike.StrikeProfile
@@ -14,13 +15,18 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.routing.DecelerationRoutePart
 import tarehart.rlbot.routing.PrecisionPlan
 import tarehart.rlbot.routing.StrikeRoutePart
+import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
+import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.ManeuverMath
 
 object InterceptCalculator {
 
@@ -170,17 +176,34 @@ object InterceptCalculator {
                     val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy)
                             ?: return null // Also consider continuing the loop instead.
                     val steerPlan = kickPlan.launchPad.planRoute(carData, kickPlan.distancePlot)
-//                    val steerPlan = CircleTurnUtil.getPlanForCircleTurn(carData, kickPlan.distancePlot, kickPlan.launchPad)
-                    steerPlan.route.withPart(StrikeRoutePart(kickPlan.launchPad.position, kickPlan.intercept.space, kickPlan.intercept.strikeProfile))
+
+
+                    val strikeDuration = if (kickPlan.intercept.strikeProfile.style == StrikeProfile.Style.AERIAL && kickPlan.launchPad.expectedSpeed != null) {
+
+                        val orientation = if (kickPlan.launchPad is FacingAndSpeedPreKickWaypoint) {
+                            CarOrientation(kickPlan.launchPad.facing.toVector3(), Vector3.UP)
+                        } else {
+                            carData.orientation
+                        }
+                        val correction = AerialMath.calculateAerialCourseCorrection(
+                                CarSlice(
+                                        kickPlan.launchPad.position.withZ(ManeuverMath.BASE_CAR_Z),
+                                        kickPlan.launchPad.expectedTime,
+                                        toIntercept.scaledToMagnitude(kickPlan.launchPad.expectedSpeed).toVector3(),
+                                        orientation),
+                                intercept.toSpaceTime(), true, 0.0)
+                        AerialMath.calculateAerialTimeNeeded(correction)
+                    } else
+                        kickPlan.intercept.strikeProfile.strikeDuration
+
+
+                    steerPlan.route.withPart(StrikeRoutePart(kickPlan.launchPad.position, kickPlan.intercept.space, strikeDuration))
 
                     val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration
 
-                    if (postRouteTime.millis >= -30 ||
-                            // If it's an aerial, give some extra leeway. The route is currently not very good at judging how long
-                            // an aerial will take.
-                            strikeProfile.style == StrikeProfile.Style.AERIAL && postRouteTime.seconds > -1.0) {
+                    if (postRouteTime.millis >= -30) {
                         return PrecisionPlan(kickPlan, steerPlan)
-                    } else {
+                    } else if (steerPlan.route.parts.any { it is DecelerationRoutePart }) {
                         // It's not actually in range after we account for routing time.
                         // Walk back the first moment in range.
                         firstMomentInRange = null
@@ -228,6 +251,8 @@ object InterceptCalculator {
 
         val myPosition = carData.position
 
+        var previousFinesseTime: Duration = Duration.ofSeconds(-100.0)
+
         for (slice in ballPath.slices) {
             val intercept = SpaceTime(slice.space.plus(interceptModifier), slice.time)
 
@@ -252,16 +277,29 @@ object InterceptCalculator {
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
+
             if (dts.distance > interceptDistance) {
-                return Intercept(
-                        intercept.space,
-                        intercept.time,
-                        airBoost = 0.0,
-                        strikeProfile = ChipStrike(),
-                        distancePlot = acceleration,
-                        spareTime = Duration.ofMillis(0),
-                        ballSlice = slice,
-                        accelSlice = dts)
+
+                val courseCorrection = AerialMath.calculateAerialCourseCorrection(
+                        CarSlice(carData), intercept, modelJump = false, secondsSinceJump = timeSinceLaunch.seconds)
+
+                val aerialTime = AerialMath.calculateAerialTimeNeeded(courseCorrection)
+                val aerialFinesseTime = intercept.time - carData.time - aerialTime
+                BotLog.println("Aerial finesse time: $aerialFinesseTime", carData.playerIndex)
+                if (aerialFinesseTime.seconds > 0 || aerialFinesseTime < previousFinesseTime) {
+
+                    return Intercept(
+                            intercept.space,
+                            intercept.time,
+                            airBoost = 0.0,
+                            strikeProfile = ChipStrike(),
+                            distancePlot = acceleration,
+                            spareTime = Duration.ofMillis(0),
+                            ballSlice = slice,
+                            accelSlice = dts)
+                }
+
+                previousFinesseTime = aerialFinesseTime
             }
 
         }

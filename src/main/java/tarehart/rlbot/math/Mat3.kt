@@ -101,7 +101,7 @@ class Mat3(private val matrix: SimpleMatrix) {
 
         fun lookingTo(direction: Vector3, up: Vector3 = Vector3.UP): Mat3 {
             val forward = direction.normaliseCopy()
-            val safeUp = if (abs(direction.z) == 1.0) Vector3(x = 1.0) else up
+            val safeUp = if (abs(direction.z) == 1.0 && abs(up.z) == 1.0) Vector3(x = 1.0) else up
             val upward = forward.crossProduct(safeUp.crossProduct(forward)).normaliseCopy()
             val leftward = safeUp.crossProduct(forward).normaliseCopy()
 
