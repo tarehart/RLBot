@@ -16,7 +16,7 @@ import java.util.*
 class CarPathHelper {
 
     fun readRecording(filename: String): CarPath {
-        val streamIn = javaClass.getResourceAsStream("/carrecordings/$filename")
+        val streamIn = javaClass.getResourceAsStream("/tst/carrecordings/$filename")
         val s = Scanner(streamIn).useDelimiter("\\A")
         val content = if (s.hasNext()) s.next() else ""
 
