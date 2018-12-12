@@ -67,6 +67,15 @@ distZip {
     }
 }
 
+installDist {
+    into ('../README') {
+        from 'README_Tournament.md'
+        from fileTree('src/main/python') {
+            exclude '__pycache__'
+        }
+    }
+}
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
