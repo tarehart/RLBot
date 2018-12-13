@@ -178,7 +178,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         } else {
             // Enemy is just gonna hit it for the sake of hitting it, presumably. Let's try to stay on offense if possible.
             // TODO: make sure we don't own-goal it with this
-            Plan(OFFENSIVE).withStep(GetOnOffenseStep())
+            FirstViableStepPlan(NEUTRAL).withStep(GetOnOffenseStep()).withStep(DribbleStep())
         }
 
     }
@@ -194,6 +194,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return FirstViableStepPlan(OFFENSIVE).withStep(WallTouchStep()).withStep(FlexibleKickStep(WallPass()))
         }
 
+        if (DribbleStep.reallyWantsToDribble(bundle)) {
+            return Plan(OFFENSIVE).withStep(DribbleStep())
+        }
+
         if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
             return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
@@ -202,7 +206,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
-            return Plan(OFFENSIVE).withStep(CatchBallStep())
+            return Plan(OFFENSIVE).withStep(CatchBallStep()).withStep(DribbleStep())
         }
 
         if (car.boost < 50) {
