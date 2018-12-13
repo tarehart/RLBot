@@ -43,7 +43,8 @@ class DribbleStep : NestedPlanStep() {
 
         val enemyGoal = GoalUtil.getEnemyGoal(car.team)
         val ballToGoal = enemyGoal.getNearestEntrance(ballPosition, 3.0).minus(ballPosition).flatten()
-        val ballCorrectionRadians = bundle.agentInput.ballVelocity.flatten().correctionAngle(ballToGoal)
+        val ballTrend = bundle.agentInput.ballVelocity.flatten() + ballToGoal.scaledToMagnitude(20.0)
+        val ballCorrectionRadians = ballTrend.correctionAngle(ballToGoal)
         val approachFromLeft = ballCorrectionRadians < 0
 
         val carToIntercept = intercept.space.minus(car.position).flatten()
@@ -102,7 +103,7 @@ class DribbleStep : NestedPlanStep() {
                 return false
             }
 
-            if (car.position.z > 5) {
+            if (car.position.z > 10) {
                 if (log) {
                     BotLog.println("Car too high to dribble", bundle.agentInput.playerIndex)
                 }
@@ -110,6 +111,18 @@ class DribbleStep : NestedPlanStep() {
             }
 
             return true
+        }
+
+        fun reallyWantsToDribble(bundle: TacticalBundle): Boolean {
+            if (!canDribble(bundle, false)) {
+                return false
+            }
+
+            val car = bundle.agentInput.myCarData
+            val distance = car.position.distance(bundle.agentInput.ballPosition)
+            val relativeVel = car.velocity.flatten().distance(bundle.agentInput.ballVelocity.flatten())
+
+            return distance < 15 && relativeVel < 20
         }
     }
 }
