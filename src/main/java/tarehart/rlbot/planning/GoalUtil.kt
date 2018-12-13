@@ -2,7 +2,10 @@ package tarehart.rlbot.planning
 
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.Circle
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 
 object GoalUtil {
@@ -16,6 +19,22 @@ object GoalUtil {
 
     fun getEnemyGoal(team: Team): Goal {
         return if (team == Team.BLUE) ORANGE_GOAL else BLUE_GOAL
+    }
+
+    fun transformNearPost(post: Vector2, ballPosition: Vector2): Vector2 {
+        if (ballPosition.x * post.x < 0) {
+            // It's actually the far post.
+            return post
+        }
+
+        val ballCircle = Circle(ballPosition, ArenaModel.BALL_RADIUS.toDouble())
+
+        ballCircle.calculateTangentPoints(post)?.let {
+            val riskyTangent = it.toList().sortedBy { it.distance(post) }.first()
+            return post + (ballPosition - riskyTangent)
+        }
+
+        return post
     }
 
     fun ballLingersInBox(goal: SoccerGoal, ballPath: BallPath): Boolean {

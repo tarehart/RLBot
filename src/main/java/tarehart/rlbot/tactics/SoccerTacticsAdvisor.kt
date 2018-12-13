@@ -7,6 +7,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
+import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -349,8 +350,12 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         private fun measureShotTriangle(goal: Goal, position: Vector2, playerIndex: Int): Double {
-            val toRightPost = goal.rightPost.flatten().minus(position)
-            val toLeftPost = goal.leftPost.flatten().minus(position)
+
+            val rightPost = GoalUtil.transformNearPost(goal.rightPost.flatten(), position)
+            val leftPost = GoalUtil.transformNearPost(goal.leftPost.flatten(), position)
+
+            val toRightPost = rightPost.minus(position)
+            val toLeftPost = leftPost.minus(position)
 
 // BotLog.println(String.format("Shot angle: %.2f", angle), playerIndex);
 

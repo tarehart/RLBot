@@ -26,13 +26,18 @@ class KickAtEnemyGoal : KickStrategy {
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
         val easyKickFlat = easyKick.flatten()
 
-        val padNearPost = Math.abs(ballPosition.x) > SoccerGoal.EXTENT
-        val leftIsNearPost = padNearPost && GoalUtil.getEnemyGoal(car.team).leftPost.distanceSquared(car.position) <
-                GoalUtil.getEnemyGoal(car.team).rightPost.distanceSquared(car.position)
-        val rightIsNearPost = padNearPost && !leftIsNearPost
+        val ballPositionFlat = ballPosition.flatten()
 
-        val toLeftCorner = GoalUtil.getEnemyGoal(car.team).getLeftPost(if (leftIsNearPost) 10.0 else 6.0).minus(ballPosition).flatten()
-        val toRightCorner = GoalUtil.getEnemyGoal(car.team).getRightPost(if (rightIsNearPost) 10.0 else 6.0).minus(ballPosition).flatten()
+        val leftPost = GoalUtil.transformNearPost(
+                GoalUtil.getEnemyGoal(car.team).getLeftPost(6.0).flatten(),
+                ballPositionFlat)
+
+        val rightPost = GoalUtil.transformNearPost(
+                GoalUtil.getEnemyGoal(car.team).getRightPost(6.0).flatten(),
+                ballPositionFlat)
+
+        val toLeftCorner = leftPost - ballPositionFlat
+        val toRightCorner = rightPost - ballPositionFlat
 
         val rightCornerCorrection = easyKickFlat.correctionAngle(toRightCorner)
         val leftCornerCorrection = easyKickFlat.correctionAngle(toLeftCorner)
