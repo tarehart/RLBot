@@ -29,7 +29,7 @@ object DirectedKickUtil {
         val distanceToIntercept = toIntercept.magnitude()
         val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
         val currentSpeed = car.velocity.flatten().magnitude()
-        val anticipatedSpeed = if (intercept.spareTime.millis > 0) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
+        val anticipatedSpeed = if (intercept.needsPatience) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
         val closenessRatio = Clamper.clamp(1 / secondsTillIntercept, 0.0, 1.0)
         val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * anticipatedSpeed
         val interceptModifier = intercept.space - intercept.ballSlice.space
@@ -102,7 +102,7 @@ object DirectedKickUtil {
                 position = launchPosition,
                 facing = facing,
                 expectedTime = launchPadMoment,
-                waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
+                waitUntil = if (intercept.spatialPredicateFailurePeriod.millis > 0) launchPadMoment else null
         )
 
         return launchPad
@@ -116,7 +116,7 @@ object DirectedKickUtil {
         launchPad = AnyFacingPreKickWaypoint(
                 position = launchPosition,
                 expectedTime = launchPadMoment,
-                waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
+                waitUntil = if (intercept.needsPatience) launchPadMoment else null
         )
 
         return launchPad
@@ -156,7 +156,7 @@ object DirectedKickUtil {
             return StrictPreKickWaypoint(
                     position = hopPosition,
                     expectedTime = launchPadMoment,
-                    waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null,
+                    waitUntil = if (intercept.needsPatience) launchPadMoment else null,
                     facing = allowedApproach
             )
         }
@@ -171,7 +171,7 @@ object DirectedKickUtil {
         return AnyFacingPreKickWaypoint(
                 position = hopPosition,
                 expectedTime = launchPadMoment,
-                waitUntil = if (intercept.spareTime.millis > 0) launchPadMoment else null
+                waitUntil = if (intercept.needsPatience) launchPadMoment else null
         )
     }
 

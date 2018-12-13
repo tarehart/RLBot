@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps.wall
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -62,10 +61,8 @@ class WallTouchStep : NestedPlanStep() {
 
         val motion = interceptOpportunity?.ballSlice
 
-        if (motion == null || disruptionMeter.isDisrupted(motion) || interceptOpportunity.spareTime > Duration.ofSeconds(0.5)) {
-            if (!ArenaModel.isNearFloorEdge(input.ballPosition)) { // The ball simulation screws up when it's rolling up the seam
-                confusion++
-            }
+        if (motion == null || disruptionMeter.isDisrupted(motion) || interceptOpportunity.spatialPredicateFailurePeriod > Duration.ofSeconds(0.5)) {
+            confusion++
             if (confusion > 1) {
                 println("Failed to make the wall touch because the intercept changed", input.playerIndex)
                 cancelPlan = true

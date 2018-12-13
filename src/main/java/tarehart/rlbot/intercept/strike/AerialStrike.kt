@@ -94,7 +94,7 @@ open class AerialStrike(height: Double): StrikeProfile() {
                 facing = facing,
                 expectedTime = momentOrNow,
                 expectedSpeed = averageSpeedNeeded,
-                waitUntil = if (intercept.spareTime.millis > 0) momentOrNow else null)
+                waitUntil = if (intercept.needsPatience) momentOrNow else null)
     }
 
 

@@ -19,7 +19,6 @@ import tarehart.rlbot.routing.DecelerationRoutePart
 import tarehart.rlbot.routing.PrecisionPlan
 import tarehart.rlbot.routing.StrikeRoutePart
 import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
-import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
@@ -135,6 +134,7 @@ object InterceptCalculator {
 
         val myPosition = carData.position.flatten()
         var firstMomentInRange: GameTime? = null
+        var spatialPredicateFailurePeriod: Duration? = null
 
         for (i in 0 until ballPath.slices.size) {
             val slice = ballPath.slices[i]
@@ -160,8 +160,11 @@ object InterceptCalculator {
                 }
                 if (spatialPredicate.invoke(carData, spaceTime, strikeProfile)) {
 
+                    if (spatialPredicateFailurePeriod == null) {
+                        spatialPredicateFailurePeriod = spaceTime.time - firstMomentInRange
+                    }
+
                     val boostNeeded = boostNeededForAerial(spaceTime.space.z)
-                    val spareTime = if (slice.time > firstMomentInRange) slice.time - firstMomentInRange else Duration.ofMillis(0)
 
                     val intercept = Intercept(
                             slice.space + interceptModifier,
@@ -169,7 +172,7 @@ object InterceptCalculator {
                             boostNeeded,
                             strikeProfile,
                             acceleration,
-                            spareTime,
+                            spatialPredicateFailurePeriod,
                             slice,
                             dts)
 
@@ -203,10 +206,6 @@ object InterceptCalculator {
 
                     if (postRouteTime.millis >= -30) {
                         return PrecisionPlan(kickPlan, steerPlan)
-                    } else if (steerPlan.route.parts.any { it is DecelerationRoutePart }) {
-                        // It's not actually in range after we account for routing time.
-                        // Walk back the first moment in range.
-                        firstMomentInRange = null
                     }
                 }
             }
@@ -294,7 +293,7 @@ object InterceptCalculator {
                             airBoost = 0.0,
                             strikeProfile = ChipStrike(),
                             distancePlot = acceleration,
-                            spareTime = Duration.ofMillis(0),
+                            spatialPredicateFailurePeriod = Duration.ofMillis(0),
                             ballSlice = slice,
                             accelSlice = dts)
                 }

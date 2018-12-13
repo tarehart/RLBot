@@ -15,11 +15,22 @@ data class Intercept(
         val airBoost: Double,
         val strikeProfile: StrikeProfile, // TODO: consider removing this. Sometimes we want to defer the strikeProfile selection until later.
         val distancePlot: DistancePlot,
-        val spareTime: Duration,
+
+        /**
+         * When we compute an intercept, once we find ball slices that are in horizontal range of the car,
+         * we start testing each ball slice by additional criteria (the spatial predicate). The exact
+         * logic is up to the caller, but common examples are checking whether the ball is too high, or
+         * whether it is too far to the side of the goal for a shot, etc. If there are spatial predicate
+         * failures before we finally found a good intercept, this is an indication that you probably
+         * don't want to arrive early.
+         */
+        val spatialPredicateFailurePeriod: Duration,
         val ballSlice: BallSlice,
         val accelSlice: DistanceTimeSpeed) {
 
     fun toSpaceTime(): SpaceTime {
         return SpaceTime(space, time)
     }
+
+    val needsPatience = spatialPredicateFailurePeriod.millis > 0
 }
