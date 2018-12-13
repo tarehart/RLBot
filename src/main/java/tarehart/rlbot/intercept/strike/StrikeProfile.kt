@@ -71,6 +71,7 @@ abstract class StrikeProfile {
         SIDE_HIT,
         DIAGONAL_HIT,
         JUMP_HIT,
-        AERIAL
+        AERIAL,
+        DRIBBLE
     }
 }

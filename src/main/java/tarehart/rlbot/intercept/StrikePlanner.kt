@@ -83,6 +83,7 @@ object StrikePlanner {
             StrikeProfile.Style.DIAGONAL_HIT -> DiagonalStrike(height)
             StrikeProfile.Style.SIDE_HIT -> SideHitStrike(height)
             StrikeProfile.Style.AERIAL -> AerialStrike(height)
+            StrikeProfile.Style.DRIBBLE -> DribbleStrike()
         }
     }
 

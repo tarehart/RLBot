@@ -14,8 +14,7 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
-import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
+import tarehart.rlbot.planning.Plan.Posture.*
 import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
@@ -191,11 +190,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val ballPath = situation.ballPath
         val car = input.myCarData
 
-        if (DribbleStep.canDribble(bundle, false) && input.ballVelocity.magnitude() > 15) {
-            println("Beginning dribble", input.playerIndex)
-            return Plan(OFFENSIVE).withStep(DribbleStep())
-        }
-
         if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
             return FirstViableStepPlan(OFFENSIVE).withStep(WallTouchStep()).withStep(FlexibleKickStep(WallPass()))
         }
@@ -218,6 +212,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         if (getYAxisWrongSidedness(input) > 0) {
             println("Getting behind the ball", input.playerIndex)
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
+        }
+
+        if (DribbleStep.canDribble(bundle, false)) {
+            return Plan(OFFENSIVE).withStep(DribbleStep())
         }
 
         return FirstViableStepPlan(NEUTRAL)

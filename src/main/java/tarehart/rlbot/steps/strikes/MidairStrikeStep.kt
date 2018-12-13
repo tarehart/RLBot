@@ -129,6 +129,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return null
         }
 
+        if (car.boost == 0.0 && courseResult.targetError.magnitude() > 5) {
+            return null
+        }
 
         RenderUtil.drawSphere(car.renderer, latestIntercept.space - courseResult.targetError, 1.0, Color.RED)
         RenderUtil.drawSphere(car.renderer, latestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
