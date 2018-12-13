@@ -15,7 +15,6 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.routing.DecelerationRoutePart
 import tarehart.rlbot.routing.PrecisionPlan
 import tarehart.rlbot.routing.StrikeRoutePart
 import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
@@ -93,7 +92,9 @@ object InterceptCalculator {
 
                     val tweenedSlice = getTweenedSlice(ballPath, slice, i, rangeDeficiency, previousRangeDeficiency)
                     val boostNeeded = boostNeededForAerial(spaceTime.space.z)
-                    val spareTime = if (tweenedSlice.time > firstMomentInRange) tweenedSlice.time - firstMomentInRange else Duration.ofMillis(0)
+                    val spatialPredicateFailurePeriod =
+                            if (tweenedSlice.time > firstMomentInRange) tweenedSlice.time - firstMomentInRange
+                            else Duration.ofMillis(0)
 
                     return Intercept(
                             tweenedSlice.space + interceptModifier,
@@ -101,7 +102,7 @@ object InterceptCalculator {
                             boostNeeded,
                             strikeProfile,
                             acceleration,
-                            spareTime,
+                            spatialPredicateFailurePeriod,
                             tweenedSlice,
                             dts)
                 }
