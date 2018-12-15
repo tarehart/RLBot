@@ -7,14 +7,14 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.planning.Plan.Posture.*
+import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
+import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
 import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
@@ -105,7 +105,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
             return FirstViableStepPlan(Plan.Posture.CLEAR)
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
-                    .withStep(EscapeTheGoalStep())
                     .withStep(GetOnDefenseStep())
         }
 

@@ -4,6 +4,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.ChipStrike
+import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
@@ -11,9 +12,13 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.BallPhysics
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.BoostAdvisor
+import tarehart.rlbot.tactics.GameMode
+import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
+import java.awt.Color
 import java.util.*
 
 object SteerUtil {
@@ -72,21 +77,49 @@ object SteerUtil {
         return noseVector.correctionAngle(toTarget)
     }
 
-    fun steerTowardGroundPosition(carData: CarData, position: Vector2, detourForBoost: Boolean = true, conserveBoost: Boolean = false): AgentOutput {
+    fun steerTowardGroundPosition(car: CarData, position: Vector2,
+                                  detourForBoost: Boolean = true, conserveBoost: Boolean = false): AgentOutput {
 
-        if (ArenaModel.isCarOnWall(carData)) {
-            return steerTowardPositionAcrossSeam(carData, position.toVector3())
+        if (ArenaModel.isCarOnWall(car)) {
+            return steerTowardPositionAcrossSeam(car, position.toVector3())
         }
 
-        val adjustedPosition =
-                if (!detourForBoost || carData.boost > 99.0) position // This keeps us from swerving all around during unlimited boost games
-                else Optional.ofNullable(BoostAdvisor.getBoostWaypoint(carData, position)).orElse(position)
+        val myPositionFlat = car.position.flatten()
+        val adjustedPosition: Vector2
 
-        val correctionAngle = getCorrectionAngleRad(carData, adjustedPosition)
-        val myPositionFlat = carData.position.flatten()
+        if (TacticsTelemetry[car.playerIndex]?.gameMode == GameMode.SOCCER &&
+                crossesSoccerGoalLine(position, myPositionFlat)) {
+
+            adjustedPosition = getAdjustedSoccerGoalCrossing(position, myPositionFlat)
+            RenderUtil.drawSquare(car.renderer, Plane(Vector3.UP, adjustedPosition.toVector3()), 1.0, Color.RED)
+
+        } else {
+            adjustedPosition =
+                    if (!detourForBoost || car.boost > 99.0) position // This keeps us from swerving all around during unlimited boost games
+                    else Optional.ofNullable(BoostAdvisor.getBoostWaypoint(car, position)).orElse(position)
+        }
+
+        val correctionAngle = getCorrectionAngleRad(car, adjustedPosition)
         val distance = adjustedPosition.distance(myPositionFlat)
-        val speed = carData.velocity.magnitude()
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, conserveBoost)
+        val speed = car.velocity.magnitude()
+        return getSteeringOutput(correctionAngle, distance, speed, car.isSupersonic, conserveBoost)
+    }
+
+    private fun crossesSoccerGoalLine(p1: Vector2, p2: Vector2): Boolean {
+        return Math.abs(p1.y) > ArenaModel.BACK_WALL || Math.abs(p2.y) > ArenaModel.BACK_WALL &&  // Something is past the goal line
+                (Math.abs(p1.y) < ArenaModel.BACK_WALL || Math.abs(p2.y) < ArenaModel.BACK_WALL) // Something is not past the goal line
+    }
+
+    /**
+     * Assumes that the two positions are on opposite sides of a goal line.
+     */
+    private fun getAdjustedSoccerGoalCrossing(p1: Vector2, p2: Vector2): Vector2 {
+        val toTarget = p1 - p2
+        val yLine = Math.signum(p1.y + p2.y) * ArenaModel.BACK_WALL
+        val crossingFactor = (yLine - p2.y) / (p1.y - p2.y)
+        val desiredExit = p2 + toTarget * crossingFactor
+        val nearestGoal = GoalUtil.getNearestGoal(desiredExit.toVector3())
+        return nearestGoal.getNearestEntrance(desiredExit.toVector3(), 2.0).flatten()
     }
 
     fun backUpTowardGroundPosition(car: CarData, position: Vector2): AgentOutput {

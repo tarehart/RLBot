@@ -8,7 +8,6 @@ import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.steps.EscapeTheGoalStep
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
@@ -109,8 +108,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
         if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             BotLog.println("Canceling current plan. Going for clear!", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.CLEAR)
-                    .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
-                    .withStep(EscapeTheGoalStep())
+                    .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
                     .withStep(GetOnDefenseStep())
         }
 

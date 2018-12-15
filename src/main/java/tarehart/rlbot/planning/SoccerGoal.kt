@@ -1,6 +1,7 @@
 package tarehart.rlbot.planning
 
 import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.Polygon
 import tarehart.rlbot.math.vector.Vector3
@@ -30,8 +31,8 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
 
         val adjustedExtent = EXTENT - ArenaModel.BALL_RADIUS.toDouble() - padding
         val adjustedHeight = GOAL_HEIGHT - ArenaModel.BALL_RADIUS.toDouble() - padding
-        val x = Math.min(adjustedExtent, Math.max(-adjustedExtent, ballPosition.x))
-        val z = Math.min(adjustedHeight, Math.max(ArenaModel.BALL_RADIUS.toDouble(), ballPosition.z))
+        val x = Clamper.clamp(ballPosition.x, -adjustedExtent, adjustedExtent)
+        val z = Clamper.clamp(ballPosition.z, ArenaModel.BALL_RADIUS.toDouble(), adjustedHeight)
         return Vector3(x, center.y, z)
     }
 

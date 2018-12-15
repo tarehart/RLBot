@@ -16,6 +16,10 @@ data class Vector2(val x: Double, val y: Double) {
         return Vector2(x - other.x, y - other.y)
     }
 
+    operator fun times(value: Double): Vector2 {
+        return Vector2(x * value, y * value)
+    }
+
     fun scaled(scale: Double): Vector2 {
         return Vector2(x * scale, y * scale)
     }
