@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -8,13 +7,10 @@ import tarehart.rlbot.input.BoostPad
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.BoostAdvisor
-import tarehart.rlbot.routing.CircleTurnUtil
-import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog.println
 import java.awt.Color
@@ -58,21 +54,18 @@ class GetBoostStep : NestedPlanStep() {
         } else {
 
             val myPosition = car.position.flatten()
-            val target = targetLoc.location
-            val toBoost = target.flatten().minus(myPosition)
+            val target = targetLoc.location.flatten()
+            val toBoost = target.minus(myPosition)
 
+            val facing = VectorUtil.orthogonal(target) { v -> v.dotProduct(toBoost) > 0 }.normalized()
+            val waypoint = target - facing.scaledToMagnitude(Math.min(toBoost.magnitude() * 0.3, 20.0))
 
-            val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost)
-            val facing = VectorUtil.orthogonal(target.flatten()) { v -> v.dotProduct(toBoost) > 0 }.normalized()
-
-            val planForCircleTurn = CircleTurnUtil.getPlanForCircleTurn(bundle.agentInput.myCarData, distancePlot, StrictPreKickWaypoint(target.flatten(), facing, bundle.agentInput.time))
-
-            SteerUtil.getSensibleFlip(car, planForCircleTurn.waypoint)?.let {
+            SteerUtil.getSensibleFlip(car, waypoint)?.let {
                 println("Flipping toward boost", bundle.agentInput.playerIndex)
                 return startPlan(it, bundle)
             }
 
-            return planForCircleTurn.immediateSteer
+            return SteerUtil.steerTowardGroundPosition(car, waypoint)
         }
     }
 
@@ -99,7 +92,7 @@ class GetBoostStep : NestedPlanStep() {
                 nearestLocation = boost
             }
         }
-        if (minTime < 1.5) {
+        if (minTime < 1.5 || bundle.agentInput.ballVelocity.flatten().isZero) {
             return nearestLocation
         }
 
