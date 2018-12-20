@@ -1,8 +1,11 @@
 package tarehart.rlbot.steps.demolition
 
+import rlbot.cppinterop.RLBotDll
+import rlbot.flat.QuickChatSelection
 import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.bots.AdversityBot
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
@@ -15,8 +18,9 @@ import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.awt.Color
+import java.util.*
 
-class DemolishEnemyStep : NestedPlanStep() {
+class DemolishEnemyStep(val isAdversityBot: Boolean = false) : NestedPlanStep() {
 
     enum class DemolishPhase {
         CHASE,
@@ -24,6 +28,19 @@ class DemolishEnemyStep : NestedPlanStep() {
         JUMP,
         DODGE,
         LAND
+    }
+
+    // Toxic Quick Chats. Only active for `isAdversityBot`
+    enum class ChatProgression {
+        // Lined up and going for a demo
+        Incomming,
+        // Seconds away from demo
+        Demoing,
+        // Demo was a success
+        Quip,
+        // Chat has been blocked for this demo
+        // Controlled by CHAT_ATTENUATION
+        Inhibited
     }
 
     class WheelContactWatcher(val carIndex: Int) {
@@ -56,6 +73,67 @@ class DemolishEnemyStep : NestedPlanStep() {
     private lateinit var selfContactWatcher: WheelContactWatcher
     private lateinit var carPredictor: CarPredictor
     private var enemyWatcher: WheelContactWatcher? = null
+
+    // 0 = chat every time
+    // 0.5 = chat half the time
+    // 1 = chat never
+    private val CHAT_ATTENUATION = 0.3
+    private var chatProgression = ChatProgression.Incomming;
+
+    private fun resetChat() {
+        chatProgression = ChatProgression.Incomming
+    }
+
+    private fun progressChat(playerIndex: Int, targetProgression: ChatProgression) {
+        if (!isAdversityBot) return
+        if (chatProgression == targetProgression) when(chatProgression) {
+            ChatProgression.Incomming -> {
+                if (Random().nextDouble() < CHAT_ATTENUATION) {
+                    chatProgression = ChatProgression.Inhibited
+                } else {
+                    val incomingChatOptions = arrayOf(
+                            QuickChatSelection.Information_InPosition
+                            , QuickChatSelection.Information_Incoming
+                            // , QuickChatSelection.Information_GoForIt
+                            // , QuickChatSelection.Information_TakeTheShot
+                    )
+                    val randomIncoming = incomingChatOptions[Random().nextInt(incomingChatOptions.size)]
+                    RLBotDll.sendQuickChat(playerIndex, false, randomIncoming)
+                    chatProgression = ChatProgression.Demoing
+                }
+            }
+            ChatProgression.Demoing -> {
+                val demoingChatOptions = arrayOf(
+                        QuickChatSelection.Custom_Useful_Demoing
+                        // , QuickChatSelection.Information_NeedBoost
+                        , QuickChatSelection.Apologies_MyFault
+                        , QuickChatSelection.Custom_Toxic_404NoSkill
+                        , QuickChatSelection.Custom_Toxic_DeAlloc
+                )
+                val randomDemoing = demoingChatOptions[Random().nextInt(demoingChatOptions.size)]
+                RLBotDll.sendQuickChat(playerIndex, false, randomDemoing)
+                chatProgression = ChatProgression.Quip
+            }
+            ChatProgression.Quip -> {
+                val quipChatOptions = arrayOf(
+                    QuickChatSelection.Compliments_NiceBlock
+                        , QuickChatSelection.Reactions_Siiiick
+                        , QuickChatSelection.Reactions_Savage
+                        , QuickChatSelection.Reactions_Calculated
+                        , QuickChatSelection.Apologies_Oops
+                        , QuickChatSelection.PostGame_ThatWasFun
+                        , QuickChatSelection.Custom_Toxic_GitGut
+                        , QuickChatSelection.Custom_Toxic_WasteCPU
+                        , QuickChatSelection.PostGame_Gg
+                        , QuickChatSelection.Compliments_WhatAPlay
+                        , QuickChatSelection.PostGame_Rematch
+                )
+                val randomQuip = quipChatOptions[Random().nextInt(quipChatOptions.size)]
+                RLBotDll.sendQuickChat(playerIndex, false, randomQuip)
+                chatProgression = ChatProgression.Incomming
+            }
+        }
+    }
 
 
     override fun doInitialComputation(bundle: TacticalBundle) {
@@ -95,7 +173,13 @@ class DemolishEnemyStep : NestedPlanStep() {
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
         oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) }
 
-        if (enemyCar == null || enemyCar.isDemolished) {
+        if (enemyCar == null) {
+            resetChat()
+            return null
+        }
+
+        if(enemyCar.isDemolished) {
+            progressChat(bundle.agentInput.playerIndex, ChatProgression.Quip)
             return null
         }
 
@@ -104,6 +188,7 @@ class DemolishEnemyStep : NestedPlanStep() {
         }
 
         if (enemyCar.position.distance(car.position) < 30) {
+            progressChat(bundle.agentInput.playerIndex, ChatProgression.Incomming)
             enemyWatcher = WheelContactWatcher(enemyCar.playerIndex) // Commit to demolishing this particular enemy
         }
 
@@ -119,6 +204,7 @@ class DemolishEnemyStep : NestedPlanStep() {
 
             else -> DemolishTransition(AgentOutput().withThrottle(1.0), demolishPhase)
         }
+
 
         demolishPhase = transition.phase
         return transition.output
@@ -142,9 +228,12 @@ class DemolishEnemyStep : NestedPlanStep() {
             RenderUtil.drawSphere(renderer, it.space, 1.0, Color.RED)
 
             val secondsTillContact = Duration.between(car.time, it.time).seconds
-            if (secondsTillContact <= SECONDS_BEFORE_CONTACT_TO_JUMP && !enemyCar.hasWheelContact && it.space.z > NEEDS_JUMP_HEIGHT) {
-                momentJumped = car.time
-                return DemolishTransition(AgentOutput().withBoost().withJump(), DemolishPhase.AWAIT_LIFTOFF)
+            if (secondsTillContact <= SECONDS_BEFORE_CONTACT_TO_JUMP) {
+                progressChat(bundle.agentInput.playerIndex, ChatProgression.Demoing)
+                if (!enemyCar.hasWheelContact && it.space.z > NEEDS_JUMP_HEIGHT) {
+                    momentJumped = car.time
+                    return DemolishTransition(AgentOutput().withBoost().withJump(), DemolishPhase.AWAIT_LIFTOFF)
+                }
             }
 
             return DemolishTransition(SteerUtil.steerTowardGroundPosition(car, it.space), DemolishPhase.CHASE)
