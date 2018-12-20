@@ -97,7 +97,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
         if (Plan.Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
                 car.position.z > 5 && car.boost == 0.0 &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
-            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
         if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {

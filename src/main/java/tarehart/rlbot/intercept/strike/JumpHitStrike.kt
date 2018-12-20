@@ -95,7 +95,7 @@ class JumpHitStrike(height: Double): StrikeProfile() {
                     ))
 
             val plan = Plan().unstoppable().withStep(blindSequence)
-            return plan.withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+            return plan.withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
     }
 

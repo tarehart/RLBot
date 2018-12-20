@@ -55,7 +55,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         if (Plan.Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
                 car.position.z > 5 &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
-            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
         if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
@@ -194,7 +194,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         if (DribbleStep.reallyWantsToDribble(bundle)) {
-            return Plan(OFFENSIVE).withStep(DribbleStep())
+            return Plan(NEUTRAL).withStep(DribbleStep())
         }
 
         if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
@@ -205,7 +205,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
-            return Plan(OFFENSIVE).withStep(CatchBallStep()).withStep(DribbleStep())
+            return Plan(NEUTRAL).withStep(CatchBallStep()).withStep(DribbleStep())
         }
 
         if (car.boost < 50) {
@@ -215,10 +215,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         if (getYAxisWrongSidedness(input) > 0) {
             println("Getting behind the ball", input.playerIndex)
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
-        }
-
-        if (DribbleStep.canDribble(bundle, false)) {
-            return Plan(OFFENSIVE).withStep(DribbleStep())
         }
 
         return FirstViableStepPlan(NEUTRAL)
@@ -341,7 +337,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             val goalCenter = goal.center.flatten()
             val ballToGoal = goalCenter.minus(expectedContact)
             val generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI / 4
-            val generousTriangle = measureShotTriangle(goal, expectedContact, playerIndex) > Math.PI / 12
+            val generousTriangle = measureShotTriangle(goal, expectedContact, playerIndex) > Math.PI / 6
 
             return generousAngle || generousTriangle
         }

@@ -20,6 +20,14 @@ class KickAtEnemyGoal : KickStrategy {
     }
 
     override fun looksViable(car: CarData, ballPosition: Vector3): Boolean {
+
+        if (ballPosition.z > SoccerGoal.GOAL_HEIGHT) {
+            if (Math.abs(ballPosition.y - GoalUtil.getEnemyGoal(car.team).center.y) < ballPosition.z - SoccerGoal.GOAL_HEIGHT) {
+                // Ball is too tight above the crossbar, can't angle it down.
+                return false
+            }
+        }
+
         return SoccerTacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.team), ballPosition.flatten(), car.playerIndex)
     }
 

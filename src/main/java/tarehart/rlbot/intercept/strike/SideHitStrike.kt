@@ -109,7 +109,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
                                     .withJump(true)
                                     .withThrottle(1.0)
                                     .withYaw((if (flipLeft) -1 else 1).toDouble()))))
-                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
     }
 

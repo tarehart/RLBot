@@ -81,7 +81,8 @@ class WallTouchStep : NestedPlanStep() {
             return null
         }
 
-        if (readyToJump(bundle, motion.toSpaceTime())) {
+        val contactPoint = motion.space - plane.normal // Normally we would just use motion.space, but make it a little closer to the wall.
+        if (readyToJump(bundle, SpaceTime(contactPoint, motion.time))) {
             println("Jumping for wall touch.", input.playerIndex)
             // Continue this step until it becomes quite likely that we've hit the ball. Transitioning to
             // midair strike immediately before ball contact is unpleasant.

@@ -45,7 +45,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         val car = input.myCarData
 
         if (!car.hasWheelContact && Plan.Posture.LANDING.canInterrupt(currentPlan) && car.position.z > 5) {
-            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
         GoalUtil.getEnemyGoal(input.team).predictGoalEvent(situation.ballPath)?.let {

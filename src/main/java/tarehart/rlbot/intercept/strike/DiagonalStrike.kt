@@ -116,7 +116,7 @@ class DiagonalStrike(height: Double): StrikeProfile() {
                                     .withPitch(-1.0)
                                     .withYaw((if (flipLeft) -1 else 1).toDouble())))
                             .withStep(BlindStep(Duration.ofMillis(700), AgentOutput())))
-                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
     }
 

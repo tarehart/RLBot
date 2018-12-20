@@ -20,14 +20,10 @@ import kotlin.math.PI
 
 class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : NestedPlanStep() {
 
-
+    var wheelContactFrames = 0
 
     override fun getLocalSituation(): String {
         return "Landing gracefully"
-    }
-
-    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        return bundle.agentInput.myCarData.position.z < NEEDS_LANDING_HEIGHT || ArenaModel.isBehindGoalLine(bundle.agentInput.myCarData.position)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -35,7 +31,10 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
         val car = bundle.agentInput.myCarData
 
         if (car.hasWheelContact) {
-            return null
+            wheelContactFrames++
+            if (wheelContactFrames > 5) {
+                return null
+            }
         }
 
         val carPredictor = CarPredictor(bundle.agentInput.playerIndex, false)
@@ -102,7 +101,6 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
     }
 
     companion object {
-        val NEEDS_LANDING_HEIGHT = .4
         val FACE_BALL = { bundle: TacticalBundle -> faceBall(bundle) }
         val FACE_MOTION = { bundle: TacticalBundle -> faceVelocity(bundle) }
 

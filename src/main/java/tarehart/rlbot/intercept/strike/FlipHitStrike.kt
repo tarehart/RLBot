@@ -86,7 +86,7 @@ class FlipHitStrike: StrikeProfile() {
                                             .withThrottle(1.0)
                                             .withPitch(-1.0)
                             )))
-                    .withStep(LandGracefullyStep { it.agentInput.myCarData.velocity.flatten() })
+                    .withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
     }
 

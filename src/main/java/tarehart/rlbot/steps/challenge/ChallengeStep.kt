@@ -33,8 +33,7 @@ class ChallengeStep: NestedPlanStep() {
     }
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        val tacticalSituation = TacticsTelemetry.get(bundle.agentInput.playerIndex) ?: return false
-        return !threatExists(tacticalSituation)
+        return !threatExists(bundle.tacticalSituation)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
