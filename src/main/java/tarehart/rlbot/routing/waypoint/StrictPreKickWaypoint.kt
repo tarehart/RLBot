@@ -20,7 +20,7 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
         val tminus = Duration.between(car.time, expectedTime).millis
         if (tminus > 200 || tminus < -50) return false
         val distance = car.position.flatten().distance(position)
-        if (distance > 10) return false
+        if (distance > 4) return false
 
         if (distance < 2) {
             // If we're really close, stop caring about whether the car is pointed at the waypoint,
