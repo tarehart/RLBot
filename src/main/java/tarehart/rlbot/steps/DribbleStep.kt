@@ -7,6 +7,7 @@ import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.strike.DribbleStrike
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.GoalUtil
@@ -19,6 +20,10 @@ import java.awt.Graphics2D
 class DribbleStep : NestedPlanStep() {
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
+
+        if (!canDribble(bundle, false)) {
+            return null
+        }
 
         val car = bundle.agentInput.myCarData
         val renderer = car.renderer
@@ -42,12 +47,16 @@ class DribbleStep : NestedPlanStep() {
         renderer.drawLine3d(Color.GREEN, car.position.toRlbot(), intercept.space.toRlbot())
 
         val enemyGoal = GoalUtil.getEnemyGoal(car.team)
-        val ballToGoal = enemyGoal.getNearestEntrance(ballPosition, 3.0).minus(ballPosition).flatten()
+        val goalTarget = enemyGoal.getNearestEntrance(ballPosition, 3.0).flatten()
+        val ballToGoal = goalTarget.minus(ballPosition.flatten())
         val ballTrend = bundle.agentInput.ballVelocity.flatten() + ballToGoal.scaledToMagnitude(20.0)
         val ballCorrectionRadians = ballTrend.correctionAngle(ballToGoal)
-        val approachFromLeft = ballCorrectionRadians < 0
+        // val approachFromLeft = ballCorrectionRadians < 0
 
         val carToIntercept = intercept.space.minus(car.position).flatten()
+        val interceptToGoal = goalTarget - intercept.space.flatten()
+        val approachFromLeft = VectorUtil.orthogonal(carToIntercept, true).dotProduct(interceptToGoal) < 0
+
         val carCorrectionRadians = car.orientation.noseVector.flatten().correctionAngle(carToIntercept)
 
         val distanceToIntercept = carToIntercept.magnitude()
@@ -88,6 +97,10 @@ class DribbleStep : NestedPlanStep() {
             val car = bundle.agentInput.myCarData
             val ballToMe = car.position.minus(bundle.agentInput.ballPosition)
 
+            if (ArenaModel.isCarOnWall(car)) {
+                return false
+            }
+
             if (ballToMe.magnitude() > MAX_DRIBBLE_DISTANCE) {
                 // It got away from us
                 if (log) {
@@ -103,7 +116,7 @@ class DribbleStep : NestedPlanStep() {
                 return false
             }
 
-            if (car.position.z > 10) {
+            if (car.position.z > 6) {
                 if (log) {
                     BotLog.println("Car too high to dribble", bundle.agentInput.playerIndex)
                 }
