@@ -44,5 +44,9 @@ class Duration private constructor(val millis: Long) : Comparable<Duration> {
         fun ofSeconds(seconds: Double): Duration {
             return Duration((seconds * 1000).toLong())
         }
+
+        fun max(d1: Duration, d2: Duration): Duration {
+            return if (d1 > d2) d1 else d2
+        }
     }
 }

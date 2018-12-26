@@ -51,7 +51,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
         val useFrontCorner = Math.abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
 
-        val carStrikeRadius = 1.2
+        val carStrikeRadius = 1.9
         val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
 
         if (useFrontCorner) {

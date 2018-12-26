@@ -30,11 +30,7 @@ class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, expect
             return true
         }
         val angleError = Math.abs(SteerUtil.getCorrectionAngleRad(car, position))
-        val plausibleApproachAngle = angleError < Math.PI / 6 && tminus > 0
-        val plausibleBlowPastAngle = angleError > Math.PI * 11.0 / 12.0
-        if (!(plausibleApproachAngle || plausibleBlowPastAngle)) return false
-
-        return true
+        return angleError < Math.PI / 6 && tminus > 0
     }
 
     override fun planRoute(car: CarData, distancePlot: DistancePlot): SteerPlan {

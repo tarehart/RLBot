@@ -38,7 +38,7 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         if (checklist.readyToLaunch()) {
             BotLog.println("Performing DiagonalHit!", car.playerIndex)
             val toIntercept = intercept.space.flatten() - car.position.flatten()
-            val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
+            val left = car.velocity.flatten().correctionAngle(toIntercept) > 0
             return diagonalKick(left, Duration.ofSeconds(jumpTime))
         }
         return null

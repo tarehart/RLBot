@@ -14,6 +14,8 @@ import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
+import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 
@@ -23,15 +25,16 @@ object DirectedKickUtil {
     fun planKickFromIntercept(intercept: Intercept, ballPath: BallPath, car: CarData, kickStrategy: KickStrategy): DirectedKickPlan? {
 
         val ballAtIntercept = intercept.ballSlice
-        val secondsTillIntercept = (intercept.time - car.time).seconds
-        val flatPosition = car.position.flatten()
-        val toIntercept = intercept.space.flatten() - flatPosition
-        val distanceToIntercept = toIntercept.magnitude()
-        val averageSpeedNeeded = distanceToIntercept / secondsTillIntercept
         val currentSpeed = car.velocity.flatten().magnitude()
-        val anticipatedSpeed = if (intercept.needsPatience) Math.max(currentSpeed, averageSpeedNeeded) else intercept.accelSlice.speed
-        val closenessRatio = Clamper.clamp(1 / secondsTillIntercept, 0.0, 1.0)
-        val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * anticipatedSpeed
+
+        val preStrikeTime = Duration.max(Duration.ZERO, (intercept.time - car.time) - intercept.strikeProfile.strikeDuration)
+        val preStrikeSpeed = intercept.distancePlot.getMotionAfterDuration(preStrikeTime)?.speed
+        if (preStrikeSpeed == null) {
+            BotLog.println("preStrikeSpeed was null.", car.playerIndex)
+            return null
+        }
+        val closenessRatio = Clamper.clamp(0.1 / preStrikeTime.seconds, 0.0, 1.0)
+        val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * preStrikeSpeed
         val interceptModifier = intercept.space - intercept.ballSlice.space
 
         var kickDirection: Vector3

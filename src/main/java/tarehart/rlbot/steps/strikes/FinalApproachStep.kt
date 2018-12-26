@@ -38,7 +38,9 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
         kickPlan.intercept.strikeProfile.getPlan(car, kickPlan.intercept.toSpaceTime())?.let {
             strikeStarted = true
-            BotLog.println("Launched at %s %s".format(bundle.agentInput.time, car.position), car.playerIndex)
+            BotLog.println("Launched at %s %s with speed %s"
+                    .format(bundle.agentInput.time, car.position, car.velocity.magnitude()),
+                    car.playerIndex)
             return startPlan(it, bundle)
         }
 
