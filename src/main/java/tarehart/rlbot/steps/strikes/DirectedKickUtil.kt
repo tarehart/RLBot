@@ -66,9 +66,15 @@ object DirectedKickUtil {
             val orthogonal = VectorUtil.orthogonal(kickDirection.flatten())
             val transverseBallVelocity = VectorUtil.project(ballAtIntercept.velocity.flatten(), orthogonal)
             desiredBallVelocity = kickDirection.normaliseCopy().scaled(impactSpeed * 2)
+
+            val towardIntercept = (intercept.space - car.position).normaliseCopy()
+            val approximateCarVelocityAtContact = towardIntercept.scaled(preStrikeSpeed)
+            val relativeVelocity = intercept.ballSlice.velocity - approximateCarVelocityAtContact
+            val ballVelocityFactor = BALL_VELOCITY_INFLUENCE + Math.max(0.0, 4 - relativeVelocity.magnitude() * 0.12)
+
             plannedKickForce = Vector3(
-                    desiredBallVelocity.x - transverseBallVelocity.x * BALL_VELOCITY_INFLUENCE,
-                    desiredBallVelocity.y - transverseBallVelocity.y * BALL_VELOCITY_INFLUENCE,
+                    desiredBallVelocity.x - transverseBallVelocity.x * ballVelocityFactor,
+                    desiredBallVelocity.y - transverseBallVelocity.y * ballVelocityFactor,
                     desiredBallVelocity.z)
         }
 

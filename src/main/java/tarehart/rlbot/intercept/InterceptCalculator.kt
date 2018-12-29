@@ -205,7 +205,7 @@ object InterceptCalculator {
 
                     val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration
 
-                    if (postRouteTime.millis >= -30) {
+                    if (postRouteTime.millis >= -8) {
                         return PrecisionPlan(kickPlan, steerPlan)
                     }
                 }

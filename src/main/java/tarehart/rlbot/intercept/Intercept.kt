@@ -10,6 +10,9 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
 data class Intercept(
+        /**
+         * space represents the car position at contact. For the ball position, see ballSlice.
+         */
         val space: Vector3,
         val time: GameTime,
         val airBoost: Double,

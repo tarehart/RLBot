@@ -36,7 +36,8 @@ class AnyFacingPreKickWaypoint(position: Vector2, idealFacing: Vector2, private 
         }
 
         val angleError = Math.abs(SteerUtil.getCorrectionAngleRad(car, position))
-        return angleError < Math.PI / 6 && tminus > 0
+        val skidError = Vector2.angle(car.velocity.flatten(), car.orientation.noseVector.flatten())
+        return angleError < Math.PI / 12 && skidError < Math.PI / 12 && tminus > 0
     }
 
     override fun planRoute(car: CarData, distancePlot: DistancePlot): SteerPlan {

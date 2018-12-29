@@ -211,6 +211,34 @@ class BouncingBallShotTest: StateSettingAbstractTest() {
     }
 
     @Test
+    fun chaseTowardThePostShot() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(30F, 10F, 10F))
+                                .withVelocity(StateVector(0F, 27F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(30F, 10F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, 0.5F * Math.PI.toFloat(), 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(5.3),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(5.4))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
     fun testFastShot() {
 
         val testCase = StateSettingTestCase(
