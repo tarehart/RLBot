@@ -29,6 +29,8 @@ class DribbleStrike: StrikeProfile() {
     override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
         return AnyFacingPreKickWaypoint(
                 position = intercept.space.flatten(),
+                idealFacing = desiredKickForce.flatten(),
+                allowableFacingError = Math.PI,
                 expectedTime = intercept.time)
     }
 

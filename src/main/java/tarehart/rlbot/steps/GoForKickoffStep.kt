@@ -9,7 +9,9 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.challenge.ChallengeStep
+import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
+import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -52,7 +54,7 @@ class GoForKickoffStep : NestedPlanStep() {
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
             return SteerUtil.steerTowardGroundPosition(car, target, detourForBoost = false)
         }
-        return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(InterceptStep(Vector3())), bundle)
+        return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAtEnemyGoal())), bundle)
     }
 
     private enum class KickoffType {

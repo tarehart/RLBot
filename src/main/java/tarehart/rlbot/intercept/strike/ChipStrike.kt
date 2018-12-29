@@ -5,6 +5,7 @@ import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
@@ -34,7 +35,16 @@ class ChipStrike: StrikeProfile() {
         val distanceBetweenCentersAtContact = desiredKickForce.flatten().scaledToMagnitude(3.2 + carCornerSpacing)
 
         val launchPosition = intercept.ballSlice.space.flatten() - distanceBetweenCentersAtContact
-        return DirectedKickUtil.getAnyFacingWaypoint(launchPosition, intercept)
+
+        // Time is chosen with a bias toward hurrying
+        val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
+        return AnyFacingPreKickWaypoint(
+                position = launchPosition,
+                idealFacing = desiredKickForce.flatten(),
+                allowableFacingError = Math.PI,
+                expectedTime = launchPadMoment,
+                waitUntil = if (intercept.needsPatience) launchPadMoment else null
+        )
     }
 
     companion object {

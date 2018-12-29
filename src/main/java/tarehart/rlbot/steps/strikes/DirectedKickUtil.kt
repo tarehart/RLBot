@@ -111,20 +111,6 @@ object DirectedKickUtil {
         return launchPad
     }
 
-    fun getAnyFacingWaypoint(launchPosition: Vector2, intercept: Intercept): PreKickWaypoint {
-        val launchPad: PreKickWaypoint
-
-        // Time is chosen with a bias toward hurrying
-        val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
-        launchPad = AnyFacingPreKickWaypoint(
-                position = launchPosition,
-                expectedTime = launchPadMoment,
-                waitUntil = if (intercept.needsPatience) launchPadMoment else null
-        )
-
-        return launchPad
-    }
-
     /**
      * Definitions:
      * hopPosition: Where the car first jumps off the ground
@@ -173,6 +159,8 @@ object DirectedKickUtil {
 
         return AnyFacingPreKickWaypoint(
                 position = hopPosition,
+                idealFacing = dodgePosition - carPosition,
+                allowableFacingError = Math.PI / 8,
                 expectedTime = launchPadMoment,
                 waitUntil = if (intercept.needsPatience) launchPadMoment else null
         )

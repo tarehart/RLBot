@@ -13,8 +13,8 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
 
-class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, expectedSpeed: Double? = null, waitUntil: GameTime? = null) :
-        PreKickWaypoint(position, expectedTime, expectedSpeed, waitUntil) {
+class AnyFacingPreKickWaypoint(position: Vector2, idealFacing: Vector2, private val allowableFacingError: Double, expectedTime: GameTime, expectedSpeed: Double? = null, waitUntil: GameTime? = null) :
+        PreKickWaypoint(position, idealFacing, expectedTime, expectedSpeed, waitUntil) {
 
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
 
@@ -29,6 +29,12 @@ class AnyFacingPreKickWaypoint(position: Vector2, expectedTime: GameTime, expect
             // thrash as it passes by. Ignore this thrash when the car is super close to the waypoint.
             return true
         }
+
+        val facingError = Vector2.angle(car.orientation.noseVector.flatten(), facing)
+        if (facingError > allowableFacingError) {
+            return false
+        }
+
         val angleError = Math.abs(SteerUtil.getCorrectionAngleRad(car, position))
         return angleError < Math.PI / 6 && tminus > 0
     }

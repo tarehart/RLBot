@@ -1,19 +1,24 @@
 package tarehart.rlbot.routing.waypoint
 
+import rlbot.render.Renderer
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.*
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
+import java.awt.Color
 
 class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: GameTime, expectedSpeed: Double? = null, waitUntil: GameTime? = null) :
-        PreKickWaypoint(position, expectedTime, expectedSpeed, waitUntil) {
+        PreKickWaypoint(position, facing, expectedTime, expectedSpeed, waitUntil) {
 
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
         if (ArenaModel.isCarOnWall(car)) return false
@@ -36,7 +41,6 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
         return true
     }
 
-    val facing: Vector2 = facing.normalized()
     val positionFacing = PositionFacing(position, facing)
 
     override fun planRoute(car: CarData, distancePlot: DistancePlot): SteerPlan {
@@ -72,5 +76,11 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
         }
 
         return CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, this)
+    }
+
+    override fun renderDebugInfo(renderer: Renderer) {
+        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, position.toVector3()), 2.0, Color.ORANGE)
+        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, position.toVector3()), 1.0, Color.ORANGE)
+        RenderUtil.drawImpact(renderer, (position + facing).toVector3(), facing.toVector3().scaledToMagnitude(2.0), Color.ORANGE)
     }
 }

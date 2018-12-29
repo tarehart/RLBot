@@ -11,9 +11,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 
 class FacingAndSpeedPreKickWaypoint(position: Vector2, expectedTime: GameTime, facing: Vector2, val speed: Double) :
-        PreKickWaypoint(position, expectedTime, speed) {
-
-    val facing = facing.normalized()
+        PreKickWaypoint(position, facing, expectedTime, speed) {
 
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
 

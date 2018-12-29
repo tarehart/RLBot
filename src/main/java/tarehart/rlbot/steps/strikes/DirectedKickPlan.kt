@@ -46,8 +46,7 @@ class DirectedKickPlan (
     }
 
     fun renderDebugInfo(renderer: Renderer) {
-        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, launchPad.position.toVector3()), 2.0, Color.WHITE)
-        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, launchPad.position.toVector3()), 1.0, Color.WHITE)
+        launchPad.renderDebugInfo(renderer)
 
         RenderUtil.drawImpact(renderer, intercept.space, plannedKickForce.scaled(0.1), Color(1.0f, 0.4f, 0.4f))
         RenderUtil.drawBallPath(renderer, ballPath, intercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
