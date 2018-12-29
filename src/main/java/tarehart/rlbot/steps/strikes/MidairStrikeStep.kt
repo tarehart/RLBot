@@ -5,9 +5,11 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.carpredict.CarSlice
+import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -31,7 +33,8 @@ import java.awt.Color
 import java.awt.Graphics2D
 
 class MidairStrikeStep(private val timeInAirAtStart: Duration,
-                       private val hasJump: Boolean = true) : NestedPlanStep() {
+                       private val hasJump: Boolean = true,
+                       private val kickStrategy: KickStrategy? = null) : NestedPlanStep() {
 
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
@@ -80,8 +83,12 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             ballPathDisruptionMeter.reset()
         }
 
+        val spatialPredicate = { cd: CarData, st: SpaceTime ->
+            kickStrategy?.looksViable(cd, st.space) ?: true
+        }
+
         val latestIntercept = intercept
-                ?: InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep)
+                ?: InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
                 ?: return null
 
         intercept = latestIntercept

@@ -48,11 +48,11 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
         val steerPlan = kickPlan.launchPad.planRoute(car, distancePlot)
 
-        val renderer = NamedRenderer("finalApproach${car.playerIndex}")
-        renderer.startPacket()
-        kickPlan.renderDebugInfo(renderer)
-        steerPlan.route.renderDebugInfo(renderer)
-        renderer.finishAndSend()
+//        val renderer = NamedRenderer("finalApproach${car.playerIndex}")
+//        renderer.startPacket()
+//        kickPlan.renderDebugInfo(renderer)
+//        steerPlan.route.renderDebugInfo(renderer)
+//        renderer.finishAndSend()
 
         return steerPlan.immediateSteer
     }

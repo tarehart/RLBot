@@ -17,12 +17,14 @@ import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
+import tarehart.rlbot.steps.strikes.DirectedKickPlan
+import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
 
-open class AerialStrike(height: Double): StrikeProfile() {
+open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?): StrikeProfile() {
     override val preDodgeTime = Duration.ofSeconds(AerialMath.timeToAir(height))
 
     private val canDodge = preDodgeTime < MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE
@@ -44,8 +46,8 @@ open class AerialStrike(height: Double): StrikeProfile() {
             val tiltBackSeconds = 0.2 + radiansForTilt * .1
 
             return if (Duration.between(car.time, intercept.time).seconds > 1.5 && intercept.space.z > 10) {
-                performDoubleJumpAerial(tiltBackSeconds * .8)
-            } else performAerial(tiltBackSeconds)
+                performDoubleJumpAerial(tiltBackSeconds * .8, kickStrategy)
+            } else performAerial(tiltBackSeconds, kickStrategy)
         }
 
         return null
@@ -138,16 +140,16 @@ open class AerialStrike(height: Double): StrikeProfile() {
             return secondsTillIntercept - expectedAerialSeconds
         }
 
-        fun performAerial(tiltBackSeconds: Double): Plan {
+        fun performAerial(tiltBackSeconds: Double, kickStrategy: KickStrategy?): Plan {
             val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
 
             return Plan()
                     .withStep(BlindStep(tiltBackDuration, AgentOutput().withJump(true).withPitch(1.0)))
-                    .withStep(MidairStrikeStep(tiltBackDuration))
+                    .withStep(MidairStrikeStep(tiltBackDuration, kickStrategy = kickStrategy))
                     .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
         }
 
-        fun performDoubleJumpAerial(tiltBackSeconds: Double): Plan {
+        fun performDoubleJumpAerial(tiltBackSeconds: Double, kickStrategy: KickStrategy?): Plan {
             val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
 
             return Plan()
@@ -160,7 +162,7 @@ open class AerialStrike(height: Double): StrikeProfile() {
                             .withBoost(true)
                             .withJump(true)
                     ))
-                    .withStep(MidairStrikeStep(tiltBackDuration, hasJump = false))
+                    .withStep(MidairStrikeStep(tiltBackDuration, hasJump = false, kickStrategy = kickStrategy))
                     .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
         }
     }

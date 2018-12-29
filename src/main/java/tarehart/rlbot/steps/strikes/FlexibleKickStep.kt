@@ -72,7 +72,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         val strikeProfileFn = {
             intercept: Vector3, kickDirection: Vector2, c: CarData ->
                 val approachVec = intercept.flatten() - c.position.flatten()
-                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), strikeHint)
+                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), kickStrategy, strikeHint)
 
         }
         val ballPath = bundle.tacticalSituation.ballPath
@@ -178,9 +178,9 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     }
 
     companion object {
-        fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, styleHint: StrikeProfile.Style?): StrikeProfile {
+        fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, kickStrategy: KickStrategy, styleHint: StrikeProfile.Style?): StrikeProfile {
             val style = styleHint ?: StrikePlanner.computeStrikeStyle(intercept, approachAngleMagnitude)
-            return StrikePlanner.getStrikeProfile(style, intercept.z)
+            return StrikePlanner.getStrikeProfile(style, intercept.z, kickStrategy)
         }
     }
 }

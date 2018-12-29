@@ -160,7 +160,7 @@ class InterceptStep(
 
             return InterceptCalculator.getFilteredInterceptOpportunity(carData, ballPath, fullAcceleration, interceptModifier,
                     { cd, st -> AerialMath.isViableAerial(CarSlice(cd), st, true, 0.0) },
-                    { height -> AerialStrike(height) })
+                    { height -> AerialStrike(height, null) })
         }
 
         private fun getJumpHitIntercept(carData: CarData, ballPath: BallPath, fullAcceleration: DistancePlot, interceptModifier: Vector3): Intercept? {

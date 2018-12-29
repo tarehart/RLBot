@@ -6,6 +6,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
@@ -75,14 +76,14 @@ object StrikePlanner {
         return StrikeProfile.Style.AERIAL
     }
 
-    fun getStrikeProfile(style: StrikeProfile.Style, height: Double): StrikeProfile {
+    fun getStrikeProfile(style: StrikeProfile.Style, height: Double, kickStrategy: KickStrategy): StrikeProfile {
         return when(style) {
             StrikeProfile.Style.CHIP -> ChipStrike()
             StrikeProfile.Style.JUMP_HIT -> JumpHitStrike(height)
             StrikeProfile.Style.FLIP_HIT -> FlipHitStrike()
             StrikeProfile.Style.DIAGONAL_HIT -> DiagonalStrike(height)
             StrikeProfile.Style.SIDE_HIT -> SideHitStrike(height)
-            StrikeProfile.Style.AERIAL -> AerialStrike(height)
+            StrikeProfile.Style.AERIAL -> AerialStrike(height, kickStrategy)
             StrikeProfile.Style.DRIBBLE -> DribbleStrike()
         }
     }

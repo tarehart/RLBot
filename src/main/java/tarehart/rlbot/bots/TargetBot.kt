@@ -214,7 +214,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             }
 
             if (Plan.activePlanKt(currentPlan) == null) {
-                currentPlan = AerialStrike.performDoubleJumpAerial(0.3)
+                currentPlan = AerialStrike.performDoubleJumpAerial(0.3, null)
             }
 
             currentPlan?.let {

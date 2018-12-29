@@ -247,7 +247,8 @@ object InterceptCalculator {
             carData: CarData,
             ballPath: BallPath,
             interceptModifier: Vector3,
-            launchMoment: GameTime): Intercept? {
+            launchMoment: GameTime,
+            spatialPredicate: (CarData, SpaceTime) -> Boolean): Intercept? {
 
         val myPosition = carData.position
 
@@ -278,7 +279,7 @@ object InterceptCalculator {
 
             val interceptDistance = VectorUtil.flatDistance(myPosition, intercept.space)
 
-            if (dts.distance > interceptDistance) {
+            if (dts.distance > interceptDistance && spatialPredicate.invoke(carData, intercept)) {
 
                 val courseCorrection = AerialMath.calculateAerialCourseCorrection(
                         CarSlice(carData), intercept, modelJump = false, secondsSinceJump = timeSinceLaunch.seconds)
