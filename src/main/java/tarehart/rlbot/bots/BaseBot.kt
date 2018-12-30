@@ -116,8 +116,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             ballPath = Optional.of(ArenaModel.predictBallPath(input))
             val zonePlan = ZonePlan(input)
             ZoneTelemetry.set(zonePlan, input.playerIndex)
-            val teamPlan = TeamPlan(input)
-            TeamTelemetry.set(teamPlan, input.playerIndex)
 
             //        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
             //        if (input.ballVelocity.magnitudeSquared() > 0) {

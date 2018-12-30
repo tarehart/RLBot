@@ -100,8 +100,6 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
 
-        val teamPlan = TeamTelemetry.get(input.playerIndex)
-
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
                 expectedEnemyContact = enemyIntercept,
@@ -115,6 +113,8 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 shotOnGoalAvailable = true,
                 goForKickoff = false, // getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,
+                teamIntercepts = teamIntercepts,
+                enemyIntercepts = enemyIntercepts,
                 enemyPlayerWithInitiative = enemyGoGetter,
                 teamPlayerWithInitiative = teamIntercepts.first(),
                 teamPlayerWithBestShot = TacticsAdvisor.getCarWithBestShot(teamIntercepts),
@@ -123,9 +123,10 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         )
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
-
-        // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry[situation] = input.playerIndex
+
+        val teamPlan = TeamPlan(input, situation)
+        TeamTelemetry[teamPlan] = input.playerIndex
 
         return TacticalBundle(input, situation, teamPlan, zonePlan)
     }

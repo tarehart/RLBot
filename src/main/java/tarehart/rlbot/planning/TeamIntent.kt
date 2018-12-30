@@ -1,17 +1,18 @@
 package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentInput
-import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.tactics.TacticalSituation
 
-class TeamIntent(val car: CarData, input: AgentInput) {
+class TeamIntent(val car: CarData, input: AgentInput, situation: TacticalSituation) {
     var certainty: Int = 0
     var action: TeamAction = TeamAction.WTF
-    val hasPossession: Boolean = ZoneUtil.carHasPossession(input.ballPosition, car, input.getAllOtherCars(car.playerIndex))
+    val hasPossession: Boolean = ZoneUtil.carHasPossession(car, situation)
 
     init {
         val teamCars = input.getTeamRoster(car.team)
         val carZone = ZonePlan.getZone(car.position)
+        val ownGoal = GoalUtil.getOwnGoal(car.team)
 
         //1s logic (kinda need teammates for a team plan)
         if (teamCars.count() == 1) {
@@ -57,8 +58,8 @@ class TeamIntent(val car: CarData, input: AgentInput) {
             }
             else
             {
-                //if they are the furthest from the ball on their team, they are probably defending
-                if(certainty < 90 && ZoneUtil.carIsFurthestFromBall(input.ballPosition, car, input.getTeamRoster(car.team))) {
+                //if they are closest to the goal on their team, they are probably defending
+                if(certainty < 90 && teamCars.sortedBy { it.position.distance(GoalUtil.getOwnGoal(input.team).center) }.first() == car) {
                     action = TeamAction.DEFENDING
                     certainty = 90
                 }
@@ -66,6 +67,12 @@ class TeamIntent(val car: CarData, input: AgentInput) {
                 //they are probably waiting for the pass
                 if(certainty < 80 && Zone.isInOffensiveThird(carZone, car.team) && Zone.isInCenterLane(carZone, car.team)) {
                     action = TeamAction.RECEIVING_PASS
+                    certainty = 80
+                }
+
+                val toOwnGoal = ownGoal.center - car.position
+                if (certainty < 80 && !Zone.isInDefensiveThird(carZone, car.team) && toOwnGoal.dotProduct(car.orientation.noseVector) > 0) {
+                    action = TeamAction.ROTATING_OUT
                     certainty = 80
                 }
             }

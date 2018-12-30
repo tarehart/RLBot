@@ -110,7 +110,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val totalThreat = threatAssessor.measureThreat(bundle, situation.enemyPlayerWithInitiative)
 
-        if (totalThreat > 3 &&  situation.ballAdvantage.seconds < 1 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+        if (totalThreat > 3 &&  situation.ballAdvantage.seconds < 1 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
+                && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             println("Canceling current plan due to threat level.", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.DEFENSIVE)
                     .withStep(ChallengeStep())
@@ -118,7 +119,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
         }
 
-        if (situation.shotOnGoalAvailable && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
+        if (situation.shotOnGoalAvailable && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
+                && situation.teamPlayerWithBestShot?.car == input.myCarData) {
+
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
             return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
@@ -241,8 +244,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
         val enemyGoalY = GoalUtil.getEnemyGoal(input.team).center.y
 
-        val teamPlan = TeamTelemetry.get(input.playerIndex)
-
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
                 expectedEnemyContact = enemyIntercept,
@@ -256,6 +257,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, enemyCar, input.ballPosition, ourIntercept, ballPath),
                 goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,
+                teamIntercepts = teamIntercepts,
+                enemyIntercepts = enemyIntercepts,
                 enemyPlayerWithInitiative = enemyGoGetter,
                 teamPlayerWithInitiative = teamIntercepts.first(),
                 teamPlayerWithBestShot = TacticsAdvisor.getCarWithBestShot(teamIntercepts),
@@ -265,6 +268,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         // Store current TacticalSituation in TacticalTelemetry for Readout display
         TacticsTelemetry[situation] = input.playerIndex
+
+        val teamPlan = TeamPlan(input, situation)
+        TeamTelemetry[teamPlan] = input.playerIndex
 
         return TacticalBundle(input, situation, teamPlan, zonePlan)
     }

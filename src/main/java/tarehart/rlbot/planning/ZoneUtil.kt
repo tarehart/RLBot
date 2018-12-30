@@ -5,6 +5,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Polygon
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.tactics.TacticalSituation
 
 object ZoneUtil {
 
@@ -36,35 +37,24 @@ object ZoneUtil {
         }
     }
 
-    // Checks to see if the given car is the closest to the ball for the given list of cars
-    //TODO: Make this check more complex. Look at ball speed, ball direction, car speed, and car direction
-    fun carHasPossession(ballPosition: Vector3, car: CarData, otherCars: List<CarData>): Boolean {
-        if(otherCars.count() == 0)
-            return true
-
-        val ballDistance = ballPosition.distance(car.position)
-        var filteredOtherCars = otherCars.filter { it.playerIndex != car.playerIndex }
-        filteredOtherCars.forEach {
-            val otherBallDistance = ballPosition.distance(it.position)
-            if (otherBallDistance < ballDistance)
-                return false
-        }
-        return true
+    //
+    /**
+     * Checks to see if the given car is the closest to the ball for its team.
+     *
+     * TODO: make this team-aware instead of checking both teams.
+     */
+    fun carHasPossession(car: CarData, situation: TacticalSituation): Boolean {
+        return situation.teamPlayerWithBestShot?.car == car || situation.enemyPlayerWithInitiative?.car == car
     }
 
-    // Checks to see if the given car is the furthest from the ball for the given list of cars
-    fun carIsFurthestFromBall(ballPosition: Vector3, car: CarData, otherCars: List<CarData>): Boolean {
-        if(otherCars.count() == 0)
-            return false
-
-        val ballDistance = ballPosition.distance(car.position)
-        var filteredOtherCars = otherCars.filter { it.playerIndex != car.playerIndex }
-        filteredOtherCars.forEach {
-            val otherBallDistance = ballPosition.distance(it.position)
-            if (otherBallDistance > ballDistance)
-                return false
-        }
-        return true
+    /**
+     * Checks to see if the given car is the furthest from the ball among the cars on its team.
+     *
+     * TODO: make this team-aware instead of checking both teams.
+     */
+    fun carIsFurthestFromBall(car: CarData, situation: TacticalSituation): Boolean {
+        return situation.enemyIntercepts.lastOrNull()?.car == car ||
+                situation.teamIntercepts.lastOrNull()?.car == car
     }
 
     fun getShotDefenseZone(ballPosition: Vector3, goalCenter: Vector2): Polygon {
