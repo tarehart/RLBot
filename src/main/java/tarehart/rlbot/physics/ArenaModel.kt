@@ -54,7 +54,7 @@ class ArenaModel {
         val SIDE_WALL = 81.92f
         val BACK_WALL = 102.4f
         val CEILING = 40.88f
-        const val GRAVITY = 13.0
+        var GRAVITY = 13.0
         val BALL_RADIUS = 1.8555f
 
         val CORNER_BEVEL = 11.8 // 45 degree angle walls come in this far from where the rectangular corner would be.
@@ -66,6 +66,10 @@ class ArenaModel {
 
         init {
             setSoccerWalls()
+        }
+
+        fun isMicroGravity(): Boolean {
+            return Math.abs(GRAVITY) < 5
         }
 
         fun setSoccerWalls() {

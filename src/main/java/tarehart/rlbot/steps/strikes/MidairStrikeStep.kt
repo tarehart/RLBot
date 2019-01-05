@@ -87,11 +87,14 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             kickStrategy?.looksViable(cd, st.space) ?: true
         }
 
-        val latestIntercept = intercept
-                ?: InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
+        val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
                 ?: return null
 
         intercept = latestIntercept
+
+        if (latestIntercept.time < car.time) {
+            return null // We missed the intercept
+        }
 
         val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
         RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3.0), Color.CYAN)

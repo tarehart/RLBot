@@ -26,6 +26,7 @@ import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
+import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
 
@@ -53,8 +54,12 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         if (Plan.Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
-                car.position.z > 5 &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
+
+            if (ArenaModel.isMicroGravity() && situation.distanceBallIsBehindUs < 0) {
+                return Plan().withStep(MidairStrikeStep(Duration.ofMillis(0)))
+            }
+
             return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 

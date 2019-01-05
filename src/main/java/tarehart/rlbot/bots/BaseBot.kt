@@ -6,9 +6,13 @@ import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.Chronometer
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.ZonePlan
+import tarehart.rlbot.planning.ZoneTelemetry
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
@@ -64,6 +68,10 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
                 initializeGameMode()
                 isGameModeInitialized = true
             }
+
+            ArenaModel.GRAVITY = -request.gameInfo().worldGravityZ() / Vector3.PACKET_DISTANCE_TO_CLASSIC
+
+            // RLBotDll.setGameState(GameState().withGameInfoState(GameInfoState().withWorldGravityZ(0.0001F)).buildPacket())
 
             val translatedInput = AgentInput(request, playerIndex, chronometer, frameCount++, this)
             val output = processInput(translatedInput)

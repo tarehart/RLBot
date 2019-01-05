@@ -201,6 +201,10 @@ object SteerUtil {
             return null
         }
 
+        if (ArenaModel.isMicroGravity()) {
+            return null // Flipping in microgravity is a bad idea!
+        }
+
         val toTarget = target.minus(car.position.flatten())
         if (toTarget.magnitude() > 40 &&
                 Vector2.angle(car.orientation.noseVector.flatten(), toTarget) > 3 * Math.PI / 4 &&
