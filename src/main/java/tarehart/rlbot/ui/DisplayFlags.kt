@@ -11,6 +11,8 @@ object DisplayFlags {
         val fileIn = javaClass.getResourceAsStream("/src/reliefbot.properties")
         props.load(fileIn)
         fileIn.close()
+
+        flags[SIMPLE_PLAN] = Integer.parseInt(props.getProperty("flags.$SIMPLE_PLAN"))
     }
 
     operator fun set(flag: String, value: Int) {
@@ -20,4 +22,10 @@ object DisplayFlags {
     operator fun get(flag: String): Int? {
         return flags[flag]
     }
+
+    // Shows posture and short situation near the middle of the screen
+    // Modes:
+    // 0 : Hide
+    // 1 : Show
+    val SIMPLE_PLAN = "simplePlan"
 }
