@@ -2,6 +2,7 @@ package tarehart.rlbot
 
 import rlbot.manager.BotManager
 import rlbot.pyinterop.PythonServer
+import tarehart.rlbot.ui.DisplayFlags
 import tarehart.rlbot.ui.ScreenResolution
 import tarehart.rlbot.ui.StatusSummary
 import java.awt.Dimension
@@ -24,6 +25,7 @@ fun main(args: Array<String>) {
     }
 
     ScreenResolution.init()
+    DisplayFlags.init()
 
     // Scenario: you finished your bot and submitted it to a tournament. Your opponent hard-coded the same
     // as you, and the match can't start because of the conflict. Because of this line, you can ask the
