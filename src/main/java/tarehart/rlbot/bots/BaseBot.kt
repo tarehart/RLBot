@@ -23,7 +23,8 @@ import java.awt.Color
 import java.awt.Point
 import java.time.Instant
 import java.util.*
-import javax.swing.JFrame
+import javax.swing.*
+
 
 abstract class BaseBot(private val team: Team, protected val playerIndex: Int) : Bot {
     internal var currentPlan: Plan? = null
@@ -46,9 +47,29 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             val frame = JFrame("Debug - " + team.name)
             frame.contentPane = readout.rootPanel
             frame.defaultCloseOperation = JFrame.HIDE_ON_CLOSE
+            frame.jMenuBar = createMenuBar()
             frame.pack()
             return frame
         }
+
+    private fun createMenuBar() : JMenuBar {
+        val menuBar = JMenuBar()
+        val menu = JMenu("View")
+        val group = ButtonGroup()
+
+        val defaultViewOption = JRadioButtonMenuItem("Default")
+        defaultViewOption.isSelected = true
+        group.add(defaultViewOption)
+        menu.add(defaultViewOption)
+
+        val performanceViewOption = JRadioButtonMenuItem("Performance")
+        group.add(performanceViewOption)
+        menu.add(performanceViewOption)
+
+        menuBar.add(menu)
+        return menuBar
+    }
+
 
     override fun processInput(request: GameTickPacket?): AgentOutput {
 
