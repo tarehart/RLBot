@@ -3,6 +3,7 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.steps.Step
+import java.awt.Color
 import java.util.*
 
 open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL) {
@@ -45,6 +46,24 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
 
         fun canInterrupt(plan: Plan?): Boolean {
             return plan?.let { it.isComplete() || it.posture.lessUrgentThan(this) && it.canInterrupt() } ?: true
+        }
+    }
+
+    enum class PostureColor constructor(private val color: Color) {
+        NEUTRAL(Color.WHITE),
+        OFFENSIVE(Color.RED),
+        DEFENSIVE(Color.GREEN),
+        WAITTOCLEAR(Color.CYAN),
+        CLEAR(Color.CYAN),
+        ESCAPEGOAL(Color.WHITE),
+        SAVE(Color.CYAN),
+        LANDING(Color.WHITE),
+        KICKOFF(Color.RED),
+        MENU(Color.GRAY),
+        OVERRIDE(Color.BLUE);
+
+        companion object {
+            fun fromPosture(posture: Posture): Color = valueOf(posture.name).color
         }
     }
 

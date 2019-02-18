@@ -18,7 +18,9 @@ import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.ui.DisplayFlags
 import tarehart.rlbot.ui.PlainReadout
+import tarehart.rlbot.ui.ScreenResolution
 import java.awt.Color
 import java.awt.Point
 import java.time.Instant
@@ -170,6 +172,16 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         if (situation != previousSituation) {
             planRenderer.startPacket()
             planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3 + 15 * playerIndex), 1, 1)
+
+            if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) {
+                val screenX = ScreenResolution.getX()
+                val screenY = ScreenResolution.getY()
+                val postureColor = Plan.PostureColor.fromPosture(posture)
+                planRenderer.drawString2d(posture.name, postureColor,
+                        Point((0.3 * screenX).toInt(), (0.65 * screenY + (15 * playerIndex)).toInt()),
+                        1, 1)
+            }
+
             planRenderer.finishAndSend()
             println("[Sitch] " + situation, input.playerIndex)
         }
