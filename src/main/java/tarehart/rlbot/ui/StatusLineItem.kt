@@ -24,6 +24,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         this.layout = FlowLayout()
         this.isEnabled = false
 
+        // Add all of the buttons to the line for this bot
         this.add(botDescription)
         this.add(detailsButton)
         this.add(flagSimplePlan)
@@ -32,6 +33,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         this.add(flagCarPath)
         this.add(flagDribbleIntercept)
 
+        // Setup the names of all of the buttons
         botDescription.text = "Player " + playerIndex + " - " + team.name.toLowerCase()
         detailsButton.text = "Details"
         flagSimplePlan.text = "Simple Plan"
@@ -40,6 +42,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagCarPath.text = "Car Path"
         flagDribbleIntercept.text = "Dribble Intercept"
 
+        // Make sure that the coloring logic for toggle buttons will show properly in windows look and feel
         flagSimplePlan.isContentAreaFilled = false
         flagSimplePlan.isOpaque = true
         flagDetailedPlan.isContentAreaFilled = false
@@ -51,6 +54,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagDribbleIntercept.isContentAreaFilled = false
         flagDribbleIntercept.isOpaque = true
 
+        // Set the button colors based on the pre-loaded states of the display flags
         flagSimplePlan.background = if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) enabledColor else disabledColor
         flagDetailedPlan.background = if(DisplayFlags[DisplayFlags.DETAILED_PLAN] == 1) enabledColor else disabledColor
         flagBallPath.background = if(DisplayFlags[DisplayFlags.BALL_PATH] == 1) enabledColor else disabledColor
@@ -58,6 +62,8 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagDribbleIntercept.background = if(DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] == 1) enabledColor else disabledColor
 
         this.background = if (team === Team.BLUE) Color(187, 212, 255) else Color(250, 222, 191)
+
+        // Add action listeners for all of the buttons
         detailsButton.addActionListener { showDebugForm() }
         flagSimplePlan.addActionListener { toggleSimplePlan() }
         flagDetailedPlan.addActionListener { toggleDetailedPlan() }
