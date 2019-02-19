@@ -18,6 +18,7 @@ import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
+import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
 import java.util.*
 
@@ -91,7 +92,9 @@ object SteerUtil {
                 crossesSoccerGoalLine(position, myPositionFlat)) {
 
             adjustedPosition = getAdjustedSoccerGoalCrossing(position, myPositionFlat)
-            RenderUtil.drawSquare(car.renderer, Plane(Vector3.UP, adjustedPosition.toVector3()), 1.0, Color.RED)
+            if(DisplayFlags[DisplayFlags.GOAL_CROSSING] == 1) {
+                RenderUtil.drawSquare(car.renderer, Plane(Vector3.UP, adjustedPosition.toVector3()), 1.0, Color.RED)
+            }
 
         } else {
             adjustedPosition =

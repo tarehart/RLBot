@@ -18,6 +18,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
     private val flagDribbleIntercept = JButton()
     private val flagHoopsKickoff = JButton()
     private val flagHoopsGoalPrediction = JButton()
+    private val flagGoalCrossing = JButton()
     private val enabledColor = Color(152,251,152)
     private val disabledColor = JButton().background
 
@@ -36,6 +37,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         this.add(flagDribbleIntercept)
         this.add(flagHoopsKickoff)
         this.add(flagHoopsGoalPrediction)
+        this.add(flagGoalCrossing)
 
         // Setup the names of all of the buttons
         botDescription.text = "Player " + playerIndex + " - " + team.name.toLowerCase()
@@ -47,6 +49,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagDribbleIntercept.text = "Dribble Intercept"
         flagHoopsKickoff.text = "Hoops Kickoff"
         flagHoopsGoalPrediction.text = "Hoops Goal Prediction"
+        flagGoalCrossing.text = "Goal Crossing"
 
         // Make sure that the coloring logic for toggle buttons will show properly in windows look and feel
         flagSimplePlan.isContentAreaFilled = false
@@ -63,6 +66,8 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagHoopsKickoff.isOpaque = true
         flagHoopsGoalPrediction.isContentAreaFilled = false
         flagHoopsGoalPrediction.isOpaque = true
+        flagGoalCrossing.isContentAreaFilled = false
+        flagGoalCrossing.isOpaque = true
 
         // Set the button colors based on the pre-loaded states of the display flags
         flagSimplePlan.background = if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) enabledColor else disabledColor
@@ -72,6 +77,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagDribbleIntercept.background = if(DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] == 1) enabledColor else disabledColor
         flagHoopsKickoff.background = if(DisplayFlags[DisplayFlags.HOOPS_KICKOFF] == 1) enabledColor else disabledColor
         flagHoopsGoalPrediction.background = if(DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] == 1) enabledColor else disabledColor
+        flagGoalCrossing.background = if(DisplayFlags[DisplayFlags.GOAL_CROSSING] == 1) enabledColor else disabledColor
 
         this.background = if (team === Team.BLUE) Color(187, 212, 255) else Color(250, 222, 191)
 
@@ -84,6 +90,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagDribbleIntercept.addActionListener { toggleDribbleIntercept() }
         flagHoopsKickoff.addActionListener { toggleHoopsKickoff() }
         flagHoopsGoalPrediction.addActionListener { toggleHoopsGoalPrediction() }
+        flagGoalCrossing.addActionListener { toggleGoalCrossing() }
     }
 
     private fun showDebugForm() {
@@ -131,5 +138,11 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         val flagVal = DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION]
         DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] = if(flagVal == 1) 0 else 1
         flagHoopsGoalPrediction.background = if(flagVal == 1) enabledColor else disabledColor
+    }
+
+    private fun toggleGoalCrossing() {
+        val flagVal = DisplayFlags[DisplayFlags.GOAL_CROSSING]
+        DisplayFlags[DisplayFlags.GOAL_CROSSING] = if(flagVal == 1) 0 else 1
+        flagGoalCrossing.background = if(flagVal == 1) enabledColor else disabledColor
     }
 }
