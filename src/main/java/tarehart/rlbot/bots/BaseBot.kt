@@ -18,9 +18,7 @@ import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
-import tarehart.rlbot.ui.DisplayFlags
-import tarehart.rlbot.ui.PlainReadout
-import tarehart.rlbot.ui.ScreenResolution
+import tarehart.rlbot.ui.*
 import java.awt.Color
 import java.awt.Point
 import java.time.Instant
@@ -33,6 +31,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     private var previousPlan: Plan? = null
     internal var currentZonePlan: ZonePlan? = null
     private val readout: PlainReadout = PlainReadout()
+    private val displayFlagsWindow: DisplayFlagsWindow = DisplayFlagsWindow()
     private var previousSituation: String? = null
     internal var previousZonePlan: ZonePlan? = null
 
@@ -50,6 +49,15 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             frame.contentPane = readout.rootPanel
             frame.defaultCloseOperation = JFrame.HIDE_ON_CLOSE
             frame.jMenuBar = createMenuBar()
+            frame.pack()
+            return frame
+        }
+
+    val detailFlagsPanel: DisplayFlagsFrame
+        get() {
+            val frame = DisplayFlagsFrame(displayFlagsWindow, "DisplayFlags - " + team.name)
+            frame.contentPane = displayFlagsWindow
+            frame.defaultCloseOperation = JFrame.HIDE_ON_CLOSE
             frame.pack()
             return frame
         }
