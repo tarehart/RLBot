@@ -177,6 +177,7 @@ class ArenaModel {
             return isInBounds(location.toVector3(), 0.0)
         }
 
+        // Used for guess and check when setting the wall positions
         fun renderWalls(renderer: Renderer) {
             arenaPlanes.forEach { p ->
                 run {

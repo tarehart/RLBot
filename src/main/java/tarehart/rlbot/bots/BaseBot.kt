@@ -171,7 +171,10 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         val situation = currentPlan?.situation ?: ""
         if (situation != previousSituation) {
             planRenderer.startPacket()
-            planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3 + 15 * playerIndex), 1, 1)
+
+            if(DisplayFlags[DisplayFlags.DETAILED_PLAN] == 1) {
+                planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3 + 15 * playerIndex), 1, 1)
+            }
 
             if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) {
                 val screenX = ScreenResolution.getX()

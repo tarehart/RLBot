@@ -16,6 +16,7 @@ import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.WhileConditionStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
 import java.util.function.Predicate
 
@@ -77,10 +78,10 @@ class KickoffState : TacticalState {
             } else {
                 kickoffRenderer!!.startPacket()
                 for (zone in HoopsZone.values()) {
-                    if (zone.toString().contains("ORANGE")) {
-                        kickoffRenderer!!.drawRectangle3d(Color.ORANGE, zone.center.toRlbot(), 10, 10, true)
-                    } else {
-                        if (zone == HoopsZone.KICKOFF_BLUE_FORWARD_LEFT) {
+                    if(DisplayFlags[DisplayFlags.HOOPS_KICKOFF] == 1) {
+                        if (zone.toString().contains("ORANGE")) {
+                            kickoffRenderer!!.drawRectangle3d(Color.ORANGE, zone.center.toRlbot(), 10, 10, true)
+                        } else if (zone == HoopsZone.KICKOFF_BLUE_FORWARD_LEFT) {
                             kickoffRenderer!!.drawRectangle3d(Color.BLUE, zone.center.toRlbot(), 10, 10, true)
                         }
                     }
@@ -194,10 +195,14 @@ class KickoffState : TacticalState {
                         .withStep(MidairStrikeStep(Duration.ofMillis(0), hasJump = false))
             } else if (kickoffStyle == KickoffStyle.WIDE_KICKOFF) {
                 val closestSmallBoost = BoostAdvisor.boostData.smallBoosts.sortedBy { it.location.distance(input.myCarData.position) }.first()
-                val boostRenderer = NamedRenderer("kickoffTargetRenderer")
-                boostRenderer.startPacket()
-                boostRenderer.drawRectangle3d(Color.WHITE, closestSmallBoost.location.toRlbot(), 15, 15, true)
-                boostRenderer.finishAndSend()
+
+                if(DisplayFlags[DisplayFlags.HOOPS_KICKOFF] == 1) {
+                    val boostRenderer = NamedRenderer("kickoffTargetRenderer")
+                    boostRenderer.startPacket()
+                    boostRenderer.drawRectangle3d(Color.WHITE, closestSmallBoost.location.toRlbot(), 15, 15, true)
+                    boostRenderer.finishAndSend()
+                }
+
                 return Plan()
                         .withStep(WhileConditionStep(Predicate {
                             closestSmallBoost.location.distance(it.agentInput.myCarData.position) > 2.5
