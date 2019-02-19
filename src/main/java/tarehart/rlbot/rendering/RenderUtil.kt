@@ -74,8 +74,10 @@ object RenderUtil {
             return
         }
 
-        for (i in 1 until points.size) {
-            renderer.drawLine3d(color, points[i-1].toRlbot(), points[i].toRlbot())
+        if(DisplayFlags[DisplayFlags.CAR_PATH] == 1) {
+            for (i in 1 until points.size) {
+                renderer.drawLine3d(color, points[i - 1].toRlbot(), points[i].toRlbot())
+            }
         }
     }
 
