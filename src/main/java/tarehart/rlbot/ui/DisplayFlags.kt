@@ -49,4 +49,10 @@ object DisplayFlags {
     // 0 : Hide
     // 1 : Show
     val CAR_PATH = "carPath"
+
+    // Shows dribble intercept info projected in 3d
+    // Modes:
+    // 0 : Hide
+    // 1 : Show
+    val DRIBBLE_INTERCEPT = "dribbleIntercept"
 }

@@ -14,6 +14,7 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
 import java.awt.Graphics2D
 
@@ -43,8 +44,10 @@ class DribbleStep : NestedPlanStep() {
                 predicate =  {_, st -> st.space.z < 2},
                 strikeProfileFn =  { DribbleStrike() }) ?: return null
 
-        renderer.drawCenteredRectangle3d(Color.CYAN, intercept.space.toRlbot(), 4, 4, true)
-        renderer.drawLine3d(Color.GREEN, car.position.toRlbot(), intercept.space.toRlbot())
+        if(DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] == 1) {
+            renderer.drawCenteredRectangle3d(Color.CYAN, intercept.space.toRlbot(), 4, 4, true)
+            renderer.drawLine3d(Color.GREEN, car.position.toRlbot(), intercept.space.toRlbot())
+        }
 
         val enemyGoal = GoalUtil.getEnemyGoal(car.team)
         val goalTarget = enemyGoal.getNearestEntrance(ballPosition, 3.0).flatten()
@@ -72,9 +75,11 @@ class DribbleStep : NestedPlanStep() {
                 .plus(approachBasis.withZ(0.0))
                 .minus(carToIntercept.scaledToMagnitude(ballHeightFallback).withZ(0.0))
 
-        renderer.drawLine3d(Color.ORANGE, intercept.space.toRlbot(), basisTip.toRlbot())
+        if(DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] == 1) {
+            renderer.drawLine3d(Color.ORANGE, intercept.space.toRlbot(), basisTip.toRlbot())
+            renderer.drawCenteredRectangle3d(Color.RED, basisTip.toRlbot(), 8, 8, true)
+        }
 
-        renderer.drawCenteredRectangle3d(Color.RED, basisTip.toRlbot(), 8, 8, true)
         val speedupMillis = if (distanceToIntercept > 5) 100L else 0
         return SteerUtil.getThereOnTime(car, SpaceTime(basisTip, intercept.time - Duration.ofMillis(speedupMillis)))
     }
