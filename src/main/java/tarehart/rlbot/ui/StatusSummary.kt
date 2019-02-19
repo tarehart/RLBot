@@ -12,9 +12,9 @@ class StatusSummary {
         setupUI()
     }
 
-    fun markTeamRunning(team: Team, playerIndex: Int, debugPanel: JFrame) {
+    fun markTeamRunning(team: Team, playerIndex: Int, debugPanel: JFrame, displayFlagsPanel: DisplayFlagsFrame) {
 
-        val lineItem = StatusLineItem(team, playerIndex, debugPanel)
+        val lineItem = StatusLineItem(team, playerIndex, debugPanel, displayFlagsPanel)
 
         var i = 0
         while (i < playerPane.componentCount) {

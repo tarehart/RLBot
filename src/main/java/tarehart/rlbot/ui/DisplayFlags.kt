@@ -31,53 +31,67 @@ object DisplayFlags {
         return flags[flag]
     }
 
-    val ALL = "allFlags"
+    fun toggleAllFlags() {
+        var flagVal = DisplayFlags[DisplayFlags.ALL]
+        flagVal = if(flagVal == 1) 0 else 1
+        DisplayFlags[DisplayFlags.ALL] = flagVal
+        DisplayFlags[DisplayFlags.SIMPLE_PLAN] = flagVal
+        DisplayFlags[DisplayFlags.DETAILED_PLAN] = flagVal
+        DisplayFlags[DisplayFlags.BALL_PATH] = flagVal
+        DisplayFlags[DisplayFlags.CAR_PATH] = flagVal
+        DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] = flagVal
+        DisplayFlags[DisplayFlags.HOOPS_KICKOFF] = flagVal
+        DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] = flagVal
+        DisplayFlags[DisplayFlags.GOAL_CROSSING] = flagVal
+    }
+
+    const val ALL = "allFlags"
 
     // Shows posture and short situation near the middle of the screen
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val SIMPLE_PLAN = "simplePlan"
+    const val SIMPLE_PLAN = "simplePlan"
 
     // Shows full plan details in the top left of the screen
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val DETAILED_PLAN = "detailedPlan"
+    const val DETAILED_PLAN = "detailedPlan"
 
     // Shows ball path projected in 3d
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val BALL_PATH = "ballPath"
+    const val BALL_PATH = "ballPath"
 
     // Shows car path projected in 3d
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val CAR_PATH = "carPath"
+    const val CAR_PATH = "carPath"
 
     // Shows dribble intercept info projected in 3d
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val DRIBBLE_INTERCEPT = "dribbleIntercept"
+    const val DRIBBLE_INTERCEPT = "dribbleIntercept"
 
     // Shows hoops kickoff related debug info projected in 3d
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val HOOPS_KICKOFF = "hoopsKickoff"
+    const val HOOPS_KICKOFF = "hoopsKickoff"
 
     // Shows hoops goal prediction related debug info projected in 3d
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val HOOPS_GOAL_PREDICTION = "hoopsGoalPrediction"
+    const val HOOPS_GOAL_PREDICTION = "hoopsGoalPrediction"
 
     // Shows the adjusted position for crossing the goal line when driving (projected in 3d)
     // Modes:
     // 0 : Hide
     // 1 : Show
-    val GOAL_CROSSING = "goalCrossing"
+    const val GOAL_CROSSING = "goalCrossing"
 }

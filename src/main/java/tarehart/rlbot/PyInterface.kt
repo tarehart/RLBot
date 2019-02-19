@@ -31,7 +31,7 @@ class PyInterface(private val botManager: BotManager, private val statusSummary:
         } else {
             newBot = ReliefBot(teamEnum, index)
         }
-        statusSummary.markTeamRunning(teamEnum, index, newBot.debugWindow)
+        statusSummary.markTeamRunning(teamEnum, index, newBot.debugWindow, newBot.detailFlagsPanel)
 
         return newBot
     }
