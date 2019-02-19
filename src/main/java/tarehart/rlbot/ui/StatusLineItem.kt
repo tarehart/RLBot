@@ -12,6 +12,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
     private val botDescription = JLabel()
     private val detailsButton = JButton()
     private val flagSimplePlan = JButton()
+    private val flagDetailedPlan = JButton()
     private val enabledColor = Color(152,251,152)
     private val disabledColor = JButton().background
 
@@ -23,19 +24,25 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         this.add(botDescription)
         this.add(detailsButton)
         this.add(flagSimplePlan)
+        this.add(flagDetailedPlan)
 
         botDescription.text = "Player " + playerIndex + " - " + team.name.toLowerCase()
         detailsButton.text = "Details"
         flagSimplePlan.text = "Simple Plan"
+        flagDetailedPlan.text = "Detailed Plan"
 
         flagSimplePlan.isContentAreaFilled = false
         flagSimplePlan.isOpaque = true
+        flagDetailedPlan.isContentAreaFilled = false
+        flagDetailedPlan.isOpaque = true
 
         flagSimplePlan.background = if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) enabledColor else disabledColor
+        flagDetailedPlan.background = if(DisplayFlags[DisplayFlags.DETAILED_PLAN] == 1) enabledColor else disabledColor
 
         this.background = if (team === Team.BLUE) Color(187, 212, 255) else Color(250, 222, 191)
         detailsButton.addActionListener { showDebugForm() }
         flagSimplePlan.addActionListener { toggleSimplePlan() }
+        flagDetailedPlan.addActionListener { toggleDetailedPlan() }
     }
 
     private fun showDebugForm() {
@@ -47,5 +54,11 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         val flagVal = DisplayFlags[DisplayFlags.SIMPLE_PLAN]
         DisplayFlags[DisplayFlags.SIMPLE_PLAN] = if(flagVal == 1) 0 else 1
         flagSimplePlan.background = if(flagVal == 1) enabledColor else disabledColor
+    }
+
+    private fun toggleDetailedPlan() {
+        val flagVal = DisplayFlags[DisplayFlags.DETAILED_PLAN]
+        DisplayFlags[DisplayFlags.DETAILED_PLAN] = if(flagVal == 1) 0 else 1
+        flagDetailedPlan.background = if(flagVal == 1) enabledColor else disabledColor
     }
 }

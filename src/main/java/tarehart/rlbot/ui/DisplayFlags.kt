@@ -13,6 +13,7 @@ object DisplayFlags {
         fileIn.close()
 
         flags[SIMPLE_PLAN] = Integer.parseInt(props.getProperty("flags.$SIMPLE_PLAN"))
+        flags[DETAILED_PLAN] = Integer.parseInt(props.getProperty("flags.$DETAILED_PLAN"))
     }
 
     operator fun set(flag: String, value: Int) {
@@ -28,4 +29,10 @@ object DisplayFlags {
     // 0 : Hide
     // 1 : Show
     val SIMPLE_PLAN = "simplePlan"
+
+    // Shows full plan details in the top left of the screen
+    // Modes:
+    // 0 : Hide
+    // 1 : Show
+    val DETAILED_PLAN = "detailedPlan"
 }
