@@ -14,6 +14,7 @@ object DisplayFlags {
 
         flags[SIMPLE_PLAN] = Integer.parseInt(props.getProperty("flags.$SIMPLE_PLAN"))
         flags[DETAILED_PLAN] = Integer.parseInt(props.getProperty("flags.$DETAILED_PLAN"))
+        flags[BALL_PATH] = Integer.parseInt(props.getProperty("flags.$BALL_PATH"))
     }
 
     operator fun set(flag: String, value: Int) {
@@ -35,4 +36,10 @@ object DisplayFlags {
     // 0 : Hide
     // 1 : Show
     val DETAILED_PLAN = "detailedPlan"
+
+    // Shows ball path projected in 3d
+    // Modes:
+    // 0 : Hide
+    // 1 : Show
+    val BALL_PATH = "ballPath"
 }

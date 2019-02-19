@@ -9,6 +9,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
 
 
@@ -54,15 +55,17 @@ object RenderUtil {
     }
 
     fun drawBallPath(renderer: Renderer, ballPath: BallPath, endTime: GameTime, color: Color) {
-        var prevSlice = ballPath.startPoint
-        var slice: BallSlice
-        var i = 1
-        while (prevSlice.time < endTime && i < ballPath.slices.size) {
-            slice = ballPath.slices[i]
+        if(DisplayFlags[DisplayFlags.BALL_PATH] == 1) {
+            var prevSlice = ballPath.startPoint
+            var slice: BallSlice
+            var i = 1
+            while (prevSlice.time < endTime && i < ballPath.slices.size) {
+                slice = ballPath.slices[i]
 
-            renderer.drawLine3d(color, prevSlice.space.toRlbot(), slice.space.toRlbot())
-            i += 1
-            prevSlice = slice
+                renderer.drawLine3d(color, prevSlice.space.toRlbot(), slice.space.toRlbot())
+                i += 1
+                prevSlice = slice
+            }
         }
     }
 
