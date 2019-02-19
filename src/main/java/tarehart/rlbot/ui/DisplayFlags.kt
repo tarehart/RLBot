@@ -16,6 +16,9 @@ object DisplayFlags {
         flags[DETAILED_PLAN] = Integer.parseInt(props.getProperty("flags.$DETAILED_PLAN"))
         flags[BALL_PATH] = Integer.parseInt(props.getProperty("flags.$BALL_PATH"))
         flags[CAR_PATH] = Integer.parseInt(props.getProperty("flags.$CAR_PATH"))
+        flags[DRIBBLE_INTERCEPT] = Integer.parseInt(props.getProperty("flags.$DRIBBLE_INTERCEPT"))
+        flags[HOOPS_KICKOFF] = Integer.parseInt(props.getProperty("flags.$HOOPS_KICKOFF"))
+        flags[HOOPS_GOAL_PREDICTION] = Integer.parseInt(props.getProperty("flags.$HOOPS_GOAL_PREDICTION"))
         flags[GOAL_CROSSING] = Integer.parseInt(props.getProperty("flags.$GOAL_CROSSING"))
     }
 
