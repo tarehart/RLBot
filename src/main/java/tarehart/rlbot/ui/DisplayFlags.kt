@@ -12,6 +12,7 @@ object DisplayFlags {
         props.load(fileIn)
         fileIn.close()
 
+        flags[ALL] = 1 // Used for keeping track of the toggle all button for toggling the display of all flags
         flags[SIMPLE_PLAN] = Integer.parseInt(props.getProperty("flags.$SIMPLE_PLAN"))
         flags[DETAILED_PLAN] = Integer.parseInt(props.getProperty("flags.$DETAILED_PLAN"))
         flags[BALL_PATH] = Integer.parseInt(props.getProperty("flags.$BALL_PATH"))
@@ -29,6 +30,8 @@ object DisplayFlags {
     operator fun get(flag: String): Int? {
         return flags[flag]
     }
+
+    val ALL = "allFlags"
 
     // Shows posture and short situation near the middle of the screen
     // Modes:

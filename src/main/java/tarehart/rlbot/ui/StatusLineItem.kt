@@ -11,6 +11,7 @@ import javax.swing.JPanel
 class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel: JFrame) : JPanel() {
     private val botDescription = JLabel()
     private val detailsButton = JButton()
+    private val flagAll = JButton()
     private val flagSimplePlan = JButton()
     private val flagDetailedPlan = JButton()
     private val flagBallPath = JButton()
@@ -30,6 +31,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         // Add all of the buttons to the line for this bot
         this.add(botDescription)
         this.add(detailsButton)
+        this.add(flagAll)
         this.add(flagSimplePlan)
         this.add(flagDetailedPlan)
         this.add(flagBallPath)
@@ -42,6 +44,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         // Setup the names of all of the buttons
         botDescription.text = "Player " + playerIndex + " - " + team.name.toLowerCase()
         detailsButton.text = "Details"
+        flagAll.text = "Toggle All"
         flagSimplePlan.text = "Simple Plan"
         flagDetailedPlan.text = "Detailed Plan"
         flagBallPath.text = "Ball Path"
@@ -83,6 +86,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
 
         // Add action listeners for all of the buttons
         detailsButton.addActionListener { showDebugForm() }
+        flagAll.addActionListener { toggleAllFlags() }
         flagSimplePlan.addActionListener { toggleSimplePlan() }
         flagDetailedPlan.addActionListener { toggleDetailedPlan() }
         flagBallPath.addActionListener { toggleBallPath() }
@@ -96,6 +100,29 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
     private fun showDebugForm() {
         detailsPanel.pack()
         detailsPanel.isVisible = true
+    }
+
+    private fun toggleAllFlags() {
+        var flagVal = DisplayFlags[DisplayFlags.ALL]
+        flagVal = if(flagVal == 1) 0 else 1
+        val color = if(flagVal == 1) enabledColor else disabledColor
+        DisplayFlags[DisplayFlags.ALL] = flagVal
+        DisplayFlags[DisplayFlags.SIMPLE_PLAN] = flagVal
+        DisplayFlags[DisplayFlags.DETAILED_PLAN] = flagVal
+        DisplayFlags[DisplayFlags.BALL_PATH] = flagVal
+        DisplayFlags[DisplayFlags.CAR_PATH] = flagVal
+        DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] = flagVal
+        DisplayFlags[DisplayFlags.HOOPS_KICKOFF] = flagVal
+        DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] = flagVal
+        DisplayFlags[DisplayFlags.GOAL_CROSSING] = flagVal
+        flagSimplePlan.background = color
+        flagDetailedPlan.background = color
+        flagBallPath.background = color
+        flagCarPath.background = color
+        flagDribbleIntercept.background = color
+        flagHoopsKickoff.background = color
+        flagHoopsGoalPrediction.background = color
+        flagGoalCrossing.background = color
     }
 
     private fun toggleSimplePlan() {
