@@ -55,4 +55,10 @@ object DisplayFlags {
     // 0 : Hide
     // 1 : Show
     val DRIBBLE_INTERCEPT = "dribbleIntercept"
+
+    // Shows hoops kickoff related debug info projected in 3d
+    // Modes:
+    // 0 : Hide
+    // 1 : Show
+    val HOOPS_KICKOFF = "hoopsKickoff"
 }

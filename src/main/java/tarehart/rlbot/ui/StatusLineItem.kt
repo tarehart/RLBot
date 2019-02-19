@@ -16,6 +16,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
     private val flagBallPath = JButton()
     private val flagCarPath = JButton()
     private val flagDribbleIntercept = JButton()
+    private val flagHoopsKickoff = JButton()
     private val enabledColor = Color(152,251,152)
     private val disabledColor = JButton().background
 
@@ -32,6 +33,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         this.add(flagBallPath)
         this.add(flagCarPath)
         this.add(flagDribbleIntercept)
+        this.add(flagHoopsKickoff)
 
         // Setup the names of all of the buttons
         botDescription.text = "Player " + playerIndex + " - " + team.name.toLowerCase()
@@ -41,6 +43,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagBallPath.text = "Ball Path"
         flagCarPath.text = "Car Path"
         flagDribbleIntercept.text = "Dribble Intercept"
+        flagHoopsKickoff.text = "Hoops Kickoff"
 
         // Make sure that the coloring logic for toggle buttons will show properly in windows look and feel
         flagSimplePlan.isContentAreaFilled = false
@@ -53,6 +56,8 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagCarPath.isOpaque = true
         flagDribbleIntercept.isContentAreaFilled = false
         flagDribbleIntercept.isOpaque = true
+        flagHoopsKickoff.isContentAreaFilled = false
+        flagHoopsKickoff.isOpaque = true
 
         // Set the button colors based on the pre-loaded states of the display flags
         flagSimplePlan.background = if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) enabledColor else disabledColor
@@ -60,6 +65,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagBallPath.background = if(DisplayFlags[DisplayFlags.BALL_PATH] == 1) enabledColor else disabledColor
         flagCarPath.background = if(DisplayFlags[DisplayFlags.CAR_PATH] == 1) enabledColor else disabledColor
         flagDribbleIntercept.background = if(DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] == 1) enabledColor else disabledColor
+        flagHoopsKickoff.background = if(DisplayFlags[DisplayFlags.HOOPS_KICKOFF] == 1) enabledColor else disabledColor
 
         this.background = if (team === Team.BLUE) Color(187, 212, 255) else Color(250, 222, 191)
 
@@ -70,6 +76,7 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         flagBallPath.addActionListener { toggleBallPath() }
         flagCarPath.addActionListener { toggleCarPath() }
         flagDribbleIntercept.addActionListener { toggleDribbleIntercept() }
+        flagHoopsKickoff.addActionListener { toggleHoopsKickoff() }
     }
 
     private fun showDebugForm() {
@@ -105,5 +112,11 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
         val flagVal = DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT]
         DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] = if(flagVal == 1) 0 else 1
         flagDribbleIntercept.background = if(flagVal == 1) enabledColor else disabledColor
+    }
+
+    private fun toggleHoopsKickoff() {
+        val flagVal = DisplayFlags[DisplayFlags.HOOPS_KICKOFF]
+        DisplayFlags[DisplayFlags.HOOPS_KICKOFF] = if(flagVal == 1) 0 else 1
+        flagHoopsKickoff.background = if(flagVal == 1) enabledColor else disabledColor
     }
 }
