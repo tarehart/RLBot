@@ -21,6 +21,7 @@ import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.tactics.TacticsAdvisor
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
 
 abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
@@ -49,7 +50,9 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         }
 
         GoalUtil.getEnemyGoal(input.team).predictGoalEvent(situation.ballPath)?.let {
-            RenderUtil.drawSquare(car.renderer, GoalUtil.getEnemyGoal(input.team).scorePlane, HoopsGoal.RADIUS, Color.PINK)
+            if(DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] == 1) {
+                RenderUtil.drawSquare(car.renderer, GoalUtil.getEnemyGoal(input.team).scorePlane, HoopsGoal.RADIUS, Color.PINK)
+            }
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
                     .withStep(DemolishEnemyStep())
                     .withStep(GetBoostStep())

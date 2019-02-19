@@ -61,4 +61,10 @@ object DisplayFlags {
     // 0 : Hide
     // 1 : Show
     val HOOPS_KICKOFF = "hoopsKickoff"
+
+    // Shows hoops goal prediction related debug info projected in 3d
+    // Modes:
+    // 0 : Hide
+    // 1 : Show
+    val HOOPS_GOAL_PREDICTION = "hoopsGoalPrediction"
 }
