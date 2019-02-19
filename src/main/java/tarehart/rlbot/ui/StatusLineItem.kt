@@ -46,6 +46,6 @@ class StatusLineItem(team: Team, val playerIndex: Int, private val detailsPanel:
     private fun toggleSimplePlan() {
         val flagVal = DisplayFlags[DisplayFlags.SIMPLE_PLAN]
         DisplayFlags[DisplayFlags.SIMPLE_PLAN] = if(flagVal == 1) 0 else 1
-        flagSimplePlan.background = if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) enabledColor else disabledColor
+        flagSimplePlan.background = if(flagVal == 1) enabledColor else disabledColor
     }
 }
