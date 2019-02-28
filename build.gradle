@@ -23,9 +23,17 @@ def dllDirectory = 'build/dll'
 applicationDefaultJvmArgs = [
         "-Djna.library.path=" + dllDirectory,
         "-Djava.library.path=" + dllDirectory,
+        "-Duser.dir=MY_WORKING_DIR",
         "-XX:+UseG1GC",
         "-Xms256m"
 ]
+
+// https://www.mkyong.com/gradle/gradle-application-plugin-app_home-in-applicationdefaultjvmargs/
+startScripts {
+    doLast {
+        windowsScript.text = windowsScript.text.replace('MY_WORKING_DIR', "%~dp0.")
+    }
+}
 
 run {
     systemProperty 'java.library.path', dllDirectory
