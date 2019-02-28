@@ -105,7 +105,7 @@ object SteerUtil {
         val correctionAngle = getCorrectionAngleRad(car, adjustedPosition)
         val distance = adjustedPosition.distance(myPositionFlat)
         val speed = car.velocity.magnitude()
-        return getSteeringOutput(correctionAngle, distance, speed, car.isSupersonic, conserveBoost)
+        return getSteeringOutput(correctionAngle, distance, speed, car.isSupersonic, conserveBoost, car.spin.yawRate)
     }
 
     private fun crossesSoccerGoalLine(p1: Vector2, p2: Vector2): Boolean {
@@ -166,16 +166,19 @@ object SteerUtil {
         val correctionAngle = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toPosition, carData.orientation.roofVector)
         val speed = carData.velocity.magnitude()
         val distance = position.distance(carData.position)
-        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false)
+        return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false, carData.spin.yawRate)
     }
 
-    private fun getSteeringOutput(correctionAngle: Double, distance: Double, speed: Double, isSupersonic: Boolean, conserveBoost: Boolean): AgentOutput {
+    private fun getSteeringOutput(correctionAngle: Double, distance: Double, speed: Double, isSupersonic: Boolean, conserveBoost: Boolean, yawRate: Double): AgentOutput {
         val difference = Math.abs(correctionAngle)
         val turnSharpness = difference * 6 / Math.PI + difference * speed * .1
         //turnSharpness = (1 - DEAD_ZONE) * turnSharpness + Math.signum(turnSharpness) * DEAD_ZONE;
 
+        val yawRateVsIntent = yawRate * -Math.signum(correctionAngle)
+
         val shouldBrake = distance < 25 && difference > Math.PI / 4 && speed > 25 || speed > 20 && difference > Math.PI / 2
-        val shouldSlide = speed < 30 && distance < 15 && difference > Math.PI / 4 || speed < 30 && difference > 3 * Math.PI / 4
+        val shouldSlide = yawRateVsIntent > 1 &&
+                (speed < 30 && distance < 15 && difference > Math.PI / 4 || speed < 30 && difference > 3 * Math.PI / 4)
         val shouldBoost = !conserveBoost && !shouldBrake && difference < Math.PI / 6 && !isSupersonic
 
         return AgentOutput()
