@@ -3,9 +3,7 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
-import tarehart.rlbot.math.Polygon
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 
 

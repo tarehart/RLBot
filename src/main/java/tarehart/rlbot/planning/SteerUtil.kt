@@ -209,14 +209,22 @@ object SteerUtil {
         }
 
         val toTarget = target.minus(car.position.flatten())
+        val toTargetAngle = Vector2.angle(car.orientation.noseVector.flatten(), toTarget)
+        val speed = car.velocity.flatten().magnitude()
         if (toTarget.magnitude() > 40 &&
-                Vector2.angle(car.orientation.noseVector.flatten(), toTarget) > 3 * Math.PI / 4 &&
-                (car.velocity.flatten().dotProduct(toTarget) > 0 || car.velocity.magnitude() < 5)) {
+                toTargetAngle > 3 * Math.PI / 4 &&
+                (car.velocity.flatten().dotProduct(toTarget) > 0 || speed < 5)) {
 
             return SetPieces.halfFlip(target)
         }
 
-        val speed = car.velocity.flatten().magnitude()
+        if (toTarget.magnitude() > 20 &&
+                toTargetAngle > Math.PI / 2 &&
+                Vector2.angle(car.velocity.flatten(), toTarget) < Math.PI / 12) {
+
+            return SetPieces.anyDirectionFlip(car, toTarget)
+        }
+
         if (car.isSupersonic || car.boost > 75 || speed < AccelerationModel.FLIP_THRESHOLD_SPEED) {
             return null
         }

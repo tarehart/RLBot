@@ -1,7 +1,9 @@
 package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.FlipHitStrike
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
@@ -68,5 +70,26 @@ object SetPieces {
                         .withBoost(true)
                 ))
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
+    }
+
+    fun anyDirectionFlip(car: CarData, direction: Vector2): Plan {
+
+        val velocityOffset = VectorUtil.project(car.velocity.flatten(), VectorUtil.orthogonal(direction))
+        val realDirection = direction.scaledToMagnitude(10.0) - velocityOffset
+        val correctionAngle = car.orientation.noseVector.flatten().correctionAngle(realDirection)
+
+        val pitch = Math.cos(correctionAngle)
+        val roll = -Math.sin(correctionAngle)
+
+        return Plan()
+                .unstoppable()
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput().withJump(true)))
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()))
+                .withStep(BlindStep(Duration.ofSeconds(.05),
+                        AgentOutput()
+                                .withJump(true)
+                                .withPitch(pitch)
+                                .withRoll(roll)))
+                .withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
     }
 }

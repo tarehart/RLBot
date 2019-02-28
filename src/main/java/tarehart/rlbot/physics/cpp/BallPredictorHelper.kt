@@ -8,6 +8,6 @@ object BallPredictorHelper {
 
     fun predictPath(): BallPath {
         val ballPrediction = RLBotDll.getBallPrediction()
-        return BallPath(ballPrediction)
+        return BallPath(ballPrediction, endAtGoal = true)
     }
 }

@@ -5,6 +5,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
+import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -74,8 +75,6 @@ interface TacticsAdvisor {
         }
 
         fun getCarIntercepts(cars: List<CarData>, ballPath: BallPath): List<CarWithIntercept> {
-
-            // TODO: this is pretty expensive. Consider optimizing
             return cars.asSequence()
                     .map { CarWithIntercept(it, getSoonestIntercept(it, ballPath))  }
                     .sortedBy { it.intercept?.time?.toMillis() ?: Long.MAX_VALUE  }.toList()
@@ -83,7 +82,7 @@ interface TacticsAdvisor {
 
         fun getSoonestIntercept(car: CarData, ballPath: BallPath): Intercept? {
             val distancePlot = AccelerationModel.simulateAcceleration(car, PLAN_HORIZON, car.boost)
-            return InterceptStep.getSoonestIntercept(car, ballPath, distancePlot, Vector3())
+            return InterceptCalculator.getSoonestInterceptCheaply(car, ballPath, distancePlot)
         }
 
         fun getCarWithBestShot(cars: List<CarWithIntercept>): CarWithIntercept {

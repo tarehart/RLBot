@@ -306,4 +306,34 @@ object InterceptCalculator {
         }
         return null
     }
+
+    fun getSoonestInterceptCheaply(carData: CarData, ballPath: BallPath, acceleration: DistancePlot): Intercept? {
+        val myPosition = carData.position
+
+        for (i in 0 until ballPath.slices.size step 4) {
+            val slice = ballPath.slices[i]
+            val spaceTime = SpaceTime(slice.space, slice.time)
+            val strikeProfile = ChipStrike()
+            val orientDuration = AccelerationModel.getOrientDuration(carData, spaceTime.space)
+            val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - orientDuration, strikeProfile) ?: return null
+
+            val interceptDistance = VectorUtil.flatDistance(myPosition, spaceTime.space)
+            val rangeDeficiency = interceptDistance - dts.distance
+            if (rangeDeficiency <= 0) {
+                    return Intercept(
+                            spaceTime.space,
+                            spaceTime.time,
+                            0.0,
+                            strikeProfile,
+                            acceleration,
+                            Duration.ofMillis(0),
+                            slice,
+                            dts)
+
+            }
+        }
+
+        // No slices in the ball slices were in range and satisfied the predicate
+        return null
+    }
 }

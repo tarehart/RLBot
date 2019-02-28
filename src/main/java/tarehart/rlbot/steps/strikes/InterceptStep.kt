@@ -15,10 +15,12 @@ import tarehart.rlbot.intercept.strike.AerialStrike
 import tarehart.rlbot.intercept.strike.FlipHitStrike
 import tarehart.rlbot.intercept.strike.JumpHitStrike
 import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
@@ -99,6 +101,17 @@ class InterceptStep(
             println("Front flip toward intercept", bundle.agentInput.playerIndex)
             startPlan(it, bundle)
         }?.let { return it }
+
+        val toTarget = (intercept.space - car.position).flatten()
+        val toTargetAngle = Vector2.angle(car.orientation.noseVector.flatten(), toTarget)
+        val speed = car.velocity.flatten().magnitude()
+        if (toTarget.magnitude() < 15 &&
+                toTargetAngle > Math.PI / 2 &&
+                (speed < 5 ||
+                Vector2.angle(car.velocity.flatten(), toTarget) < Math.PI / 3)) {
+
+            startPlan(SetPieces.anyDirectionFlip(car, toTarget), bundle)?.let { return it }
+        }
 
         val timeToIntercept = Duration.between(car.time, intercept.time)
         val motionAfterStrike = intercept.accelSlice

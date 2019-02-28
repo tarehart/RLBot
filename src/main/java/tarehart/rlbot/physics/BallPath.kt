@@ -1,11 +1,13 @@
 package tarehart.rlbot.physics
 
 import rlbot.flat.BallPrediction
+import rlbot.flat.Bool
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.util.*
@@ -20,16 +22,45 @@ class BallPath() {
     val endpoint: BallSlice
         get() = this.slices[this.slices.size - 1]
 
-    constructor(prediction: BallPrediction): this() {
+    constructor(prediction: BallPrediction, endAtGoal: Boolean = false): this() {
+
+        var scoreLocation: Vector3? = null
+
         for (i in 0 until prediction.slicesLength()) {
             val slice = prediction.slices(i)
             val physics = slice.physics()
 
+            val location = Vector3.fromRlbot(physics.location())
+
+            if (endAtGoal && i > 0) {
+                val scorePlane = GoalUtil.getNearestGoal(location).scorePlane
+                val planeBreak = getPlaneBreak(slices[i - 1].space, location, scorePlane)
+                if (planeBreak != null) {
+                    // Set the score location to a point that's actually past the plane
+                    // so that the constructed ball path will definitely register
+                    // a plane break again if we query it.
+                    scoreLocation = location
+                }
+            }
+
             slices.add(BallSlice(
-                    Vector3.fromRlbot(physics.location()),
+                    location,
                     GameTime.fromGameSeconds(slice.gameSeconds().toDouble()),
                     Vector3.fromRlbot(physics.velocity()),
                     Vector3.fromRlbot(physics.angularVelocity())))
+
+            if (scoreLocation != null) {
+                break
+            }
+        }
+
+        if (scoreLocation != null) {
+            // Add a dummy slice timed at the end of the prediction.
+            slices.add(BallSlice(
+                    scoreLocation,
+                    GameTime.fromGameSeconds(prediction.slices(prediction.slicesLength() - 1).gameSeconds().toDouble()),
+                    Vector3.ZERO,
+                    Vector3.ZERO))
         }
     }
 
