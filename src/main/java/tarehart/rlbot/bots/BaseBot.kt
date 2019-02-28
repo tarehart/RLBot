@@ -12,7 +12,6 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.ZonePlan
-import tarehart.rlbot.planning.ZoneTelemetry
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
@@ -153,8 +152,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             output = AgentOutput()
         } else {
             ballPath = Optional.of(ArenaModel.predictBallPath(input))
-            val zonePlan = ZonePlan(input)
-            ZoneTelemetry.set(zonePlan, input.playerIndex)
 
             //        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
             //        if (input.ballVelocity.magnitudeSquared() > 0) {

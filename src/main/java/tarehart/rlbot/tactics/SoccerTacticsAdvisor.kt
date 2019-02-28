@@ -82,7 +82,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return Plan(Plan.Posture.WAITTOCLEAR).withStep(RotateAndWaitToClearStep())
         }
 
-        if (zonePlan != null && getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)
+        if (getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)
                 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
 
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex)
@@ -243,7 +243,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val ourIntercept = teamIntercepts.asSequence().filter { it.car == input.myCarData }.first().intercept
 
-        val zonePlan = ZoneTelemetry.get(input.playerIndex)
+        val zonePlan = ZonePlan(input)
         val myCar = input.myCarData
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint

@@ -5,7 +5,6 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.ZoneTelemetry
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
@@ -38,7 +37,6 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
         val tacticalSituation = TacticsTelemetry[bundle.agentInput.myCarData.playerIndex]
-        val zonePlan = ZoneTelemetry[bundle.agentInput.playerIndex]
         return !SoccerTacticsAdvisor.getWaitToClear(bundle, tacticalSituation?.enemyPlayerWithInitiative?.car)
                 || tacticalSituation?.ballAdvantage?.seconds?.let { it > 0.8 } ?: false
     }

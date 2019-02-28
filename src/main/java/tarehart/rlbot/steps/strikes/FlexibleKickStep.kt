@@ -16,6 +16,8 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.Zone
+import tarehart.rlbot.planning.ZoneUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.routing.CircleRoutePart
 import tarehart.rlbot.routing.PrecisionPlan
@@ -95,6 +97,13 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
                 kickStrategy = kickStrategy) ?: return null
 
         recentPrecisionPlan = precisionPlan
+
+        if (kickStrategy is KickAtEnemyGoal &&
+                !precisionPlan.kickPlan.intercept.strikeProfile.isForward &&
+                Zone.isInDefensiveThird(bundle.zonePlan.ballZone, car.team)) {
+            // Don't do long-range diagonal or side dodges, it leaves us open to counter attacks.
+            return null
+        }
 
         if (strikeHint == null) {
             val steerCorrection = SteerUtil.getCorrectionAngleRad(car, precisionPlan.steerPlan.waypoint)

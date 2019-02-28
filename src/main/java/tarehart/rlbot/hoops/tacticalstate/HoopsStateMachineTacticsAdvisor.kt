@@ -99,7 +99,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
 
         val ourIntercept = TacticsAdvisor.getSoonestIntercept(input.myCarData, ballPath)
 
-        val zonePlan = ZoneTelemetry[input.playerIndex]
+        val zonePlan = ZonePlan(input)
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
 

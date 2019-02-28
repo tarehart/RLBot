@@ -117,7 +117,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
 
         val ourIntercept = teamIntercepts.asSequence().filter { it.car == input.myCarData }.first().intercept
 
-        val zonePlan = ZoneTelemetry[input.playerIndex]
+        val zonePlan = ZonePlan(input)
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
 

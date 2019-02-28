@@ -6,7 +6,6 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.ZonePlan
-import tarehart.rlbot.planning.ZoneTelemetry
 import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
@@ -146,8 +145,6 @@ class PlainReadout {
 
     private fun updateOmniText(input: AgentInput, situation: TacticalSituation?) {
 
-        val zonePlan = ZoneTelemetry[input.playerIndex]
-
         val enemy = situation?.enemyPlayerWithInitiative?.car
 
         val text = "" +
@@ -156,9 +153,6 @@ class PlainReadout {
                 "Enemy Pos: " + (enemy?.position ?: Vector3()) + "\n" +
                 "Enemy Vel: " + (enemy?.velocity ?: Vector3()) + "\n" +
                 "Ball Pos: " + input.ballPosition + "\n" +
-                "\n" +
-                "Our Car Zone: " + (if (zonePlan != null) printCarZone(zonePlan) else "Unknown") + "\n" +
-                "Ball Zone: " + (zonePlan?.ballZone?.toString() ?: "Unknown") + "\n" +
                 "\n" +
                 "Ball Spin: " + input.ballSpin + "\n" +
                 "\n" +
