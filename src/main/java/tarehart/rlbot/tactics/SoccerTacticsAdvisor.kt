@@ -115,7 +115,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val totalThreat = threatAssessor.measureThreat(bundle, situation.enemyPlayerWithInitiative)
 
-        if (totalThreat > 3 &&  situation.ballAdvantage.seconds < 1 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
+        if (totalThreat > 3 && situation.ballAdvantage.seconds < 0.5 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             println("Canceling current plan due to threat level.", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.DEFENSIVE)

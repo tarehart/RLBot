@@ -147,7 +147,8 @@ object AccelerationModel {
         val correctionAngleRad = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toTarget, carData.orientation.roofVector)
         val correctionErr = Math.max(0.0, Math.abs(correctionAngleRad) - Math.PI / 6)
 
-        return correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .005
+        val seconds = correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .02
+        return seconds
     }
 
     @JvmOverloads

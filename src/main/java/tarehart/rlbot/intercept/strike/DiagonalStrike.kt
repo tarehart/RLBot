@@ -26,7 +26,8 @@ import java.awt.Color
 
 class DiagonalStrike(height: Double): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - StrikePlanner.CAR_BASE_HEIGHT).orElse(.8)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(
+            height - StrikePlanner.CAR_BASE_HEIGHT - CONTACT_BELOW_BALL).orElse(.8)
     override val preDodgeTime = Duration.ofSeconds(jumpTime + .14)
     override val postDodgeTime = Duration.ofMillis(50)
     override val speedBoost = 10.0
@@ -90,6 +91,9 @@ class DiagonalStrike(height: Double): StrikeProfile() {
     }
 
     companion object {
+
+        private const val CONTACT_BELOW_BALL = 0.8
+
         fun diagonalKick(flipLeft: Boolean, rawJumpTime: Duration): Plan {
 
             val jumpTime = if (rawJumpTime.millis < 0) Duration.ofMillis(0) else rawJumpTime

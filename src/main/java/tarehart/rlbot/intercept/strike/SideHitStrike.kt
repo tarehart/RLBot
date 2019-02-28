@@ -22,7 +22,8 @@ import tarehart.rlbot.tuning.ManeuverMath
 
 class SideHitStrike(height: Double): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS).orElse(.8)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(
+            height - ArenaModel.BALL_RADIUS - CONTACT_BELOW_BALL).orElse(.8)
     override val preDodgeTime = Duration.ofSeconds(0.14 + jumpTime)
     override val postDodgeTime = Duration.ofMillis(250)
     override val speedBoost = 10.0
@@ -91,6 +92,9 @@ class SideHitStrike(height: Double): StrikeProfile() {
     }
 
     companion object {
+
+        private const val CONTACT_BELOW_BALL = 0.8
+
         fun jumpSideFlip(flipLeft: Boolean, rawJumpTime: Duration, hurry: Boolean = false): Plan {
 
             val jumpTime = if (rawJumpTime.millis < 0) Duration.ofMillis(0) else rawJumpTime
