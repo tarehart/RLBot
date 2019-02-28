@@ -91,9 +91,9 @@ class GoForKickoffStep : NestedPlanStep() {
     }
 
     companion object {
-        private val DIAGONAL_KICKOFF_X = 40.98
-        private val DIAGONAL_KICKOFF_Y = 40.98
-        private val CHEATER_KICKOFF_X = 5.09
+        private val DIAGONAL_KICKOFF_X = 40.96
+        private val DIAGONAL_KICKOFF_Y = 51.2
+        private val CHEATER_KICKOFF_X = 5.12
         private val CHEATER_KICKOFF_Y = 76.8
         private val CENTER_KICKOFF_X = 0.0
         private val CENTER_KICKOFF_Y = 92.16
