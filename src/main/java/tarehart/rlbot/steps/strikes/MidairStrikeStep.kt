@@ -9,7 +9,6 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
-import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -24,7 +23,6 @@ import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
-import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
@@ -130,7 +128,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                     SpaceTime(latestIntercept.space - carToIntercept.flatten().scaledToMagnitude(2.0).toVector3(), latestIntercept.time - DODGE_TIME),
                     modelJump = false,
                     secondsSinceJump = secondsSinceLaunch,
-                    wasBoosting = wasBoosting)
+                    assumeResidualBoostAccel = wasBoosting)
         else
             AerialMath.calculateAerialCourseCorrection(
                     CarSlice(car),
@@ -161,7 +159,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             useBoost += Math.round(boostCounter)
         }
 
-        if (courseResult.targetError.magnitude() < 1) {
+        if (courseResult.targetError.magnitude() < 1.5) {
             return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), 1/60.0)
                     .withJump()
         }

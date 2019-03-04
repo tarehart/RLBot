@@ -124,7 +124,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             }
 
             val courseCorrection = AerialMath.calculateAerialCourseCorrection(
-                    CarSlice(car), intercept, true, 0.0)
+                    CarSlice(car), intercept, true, 0.0, false)
             val accelRatio = courseCorrection.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR
 
             if (accelRatio < 0.4) {

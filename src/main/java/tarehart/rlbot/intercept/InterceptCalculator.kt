@@ -195,7 +195,7 @@ object InterceptCalculator {
                                         kickPlan.launchPad.expectedTime,
                                         toIntercept.scaledToMagnitude(kickPlan.launchPad.expectedSpeed).toVector3(),
                                         orientation),
-                                intercept.toSpaceTime(), true, 0.0)
+                                intercept.toSpaceTime(), true, 0.0, false)
                         AerialMath.calculateAerialTimeNeeded(correction)
                     } else
                         kickPlan.intercept.strikeProfile.strikeDuration
@@ -259,7 +259,7 @@ object InterceptCalculator {
 
             val timeSinceLaunch = Duration.between(launchMoment, carData.time)
             val duration = Duration.between(carData.time, slice.time)
-            val aerialCourseCorrection = AerialMath.calculateAerialCourseCorrection(CarSlice(carData), intercept, carData.hasWheelContact, timeSinceLaunch.seconds)
+            val aerialCourseCorrection = AerialMath.calculateAerialCourseCorrection(CarSlice(carData), intercept, carData.hasWheelContact, timeSinceLaunch.seconds, false)
             val zComponent = aerialCourseCorrection.correctionDirection.z
             val desiredNoseAngle = Math.asin(zComponent)
             val currentNoseAngle = Math.asin(carData.orientation.noseVector.z)
@@ -282,7 +282,7 @@ object InterceptCalculator {
             if (dts.distance > interceptDistance && spatialPredicate.invoke(carData, intercept)) {
 
                 val courseCorrection = AerialMath.calculateAerialCourseCorrection(
-                        CarSlice(carData), intercept, modelJump = false, secondsSinceJump = timeSinceLaunch.seconds)
+                        CarSlice(carData), intercept, modelJump = false, secondsSinceJump = timeSinceLaunch.seconds, assumeResidualBoostAccel = false)
 
                 val aerialTime = AerialMath.calculateAerialTimeNeeded(courseCorrection)
                 val aerialFinesseTime = intercept.time - carData.time - aerialTime

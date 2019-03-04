@@ -1,14 +1,11 @@
 package tarehart.rlbot.intercept
 
 import tarehart.rlbot.carpredict.CarSlice
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
-import java.awt.Color
 
 object AerialMath {
 
@@ -50,7 +47,7 @@ object AerialMath {
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L423-L445
      */
     fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double,
-                                        wasBoosting: Boolean): AerialCourseCorrection {
+                                        assumeResidualBoostAccel: Boolean): AerialCourseCorrection {
 
         var initialPosition = car.space
         var initialVelocity = car.velocity
@@ -70,7 +67,7 @@ object AerialMath {
         val postAssistSeconds = secondsRemaining - assistSeconds
         val velocityAfterJumpAssist = initialVelocity + Vector3.UP * assistSeconds * (JUMP_ASSIST_ACCEL - ArenaModel.GRAVITY)
 
-        val residualBoostMotion = if (wasBoosting) car.orientation.noseVector else Vector3.ZERO
+        val residualBoostMotion = if (assumeResidualBoostAccel) car.orientation.noseVector * 2.0 else Vector3.ZERO
 
         val expectedCarPosition = positionAfterJumpAssist + velocityAfterJumpAssist * postAssistSeconds -
                 Vector3.UP * 0.5 * ArenaModel.GRAVITY * postAssistSeconds * postAssistSeconds + residualBoostMotion

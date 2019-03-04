@@ -348,7 +348,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             val goalCenter = goal.center.flatten()
             val ballToGoal = goalCenter.minus(expectedContact)
             val generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI / 4
-            val generousTriangle = measureShotTriangle(goal, expectedContact, playerIndex) > Math.PI / 6
+            val generousTriangle = measureShotTriangle(goal, expectedContact, playerIndex) > Math.PI / 5
 
             return generousAngle || generousTriangle
         }
