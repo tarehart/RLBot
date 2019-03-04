@@ -42,6 +42,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
     private var lostWheelContact = false
 
     private var boostCounter = 0.0
+    private var wasBoosting = false
 
     private val ballPathDisruptionMeter = BallPathDisruptionMeter(0.2)
 
@@ -128,9 +129,15 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                     CarSlice(car),
                     SpaceTime(latestIntercept.space - carToIntercept.flatten().scaledToMagnitude(2.0).toVector3(), latestIntercept.time - DODGE_TIME),
                     modelJump = false,
-                    secondsSinceJump = secondsSinceLaunch)
+                    secondsSinceJump = secondsSinceLaunch,
+                    wasBoosting = wasBoosting)
         else
-            AerialMath.calculateAerialCourseCorrection(CarSlice(car), latestIntercept.toSpaceTime(), false, secondsSinceLaunch)
+            AerialMath.calculateAerialCourseCorrection(
+                    CarSlice(car),
+                    latestIntercept.toSpaceTime(),
+                    false,
+                    secondsSinceLaunch,
+                    wasBoosting)
 
         if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 &&
                 Vector2.angle(car.velocity.flatten(), carToIntercept.flatten()) > Math.PI / 6 &&
@@ -163,6 +170,8 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             Vector3.UP
         else
             car.orientation.roofVector
+
+        wasBoosting = useBoost != 0L
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), 1/60.0)
                 .withBoost(useBoost != 0L)

@@ -29,7 +29,7 @@ object AerialMath {
      */
     fun isViableAerial(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): Boolean {
 
-        val courseResult = calculateAerialCourseCorrection(car, target, modelJump, secondsSinceJump)
+        val courseResult = calculateAerialCourseCorrection(car, target, modelJump, secondsSinceJump, false)
         val accelNeeded = courseResult.averageAccelerationRequired
 
         return 0 <= accelNeeded && accelNeeded < ACCEL_NEEDED_THRESHOLD * BOOST_ACCEL_IN_AIR
@@ -49,7 +49,8 @@ object AerialMath {
      *
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L423-L445
      */
-    fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): AerialCourseCorrection {
+    fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double,
+                                        wasBoosting: Boolean): AerialCourseCorrection {
 
         var initialPosition = car.space
         var initialVelocity = car.velocity
@@ -69,8 +70,11 @@ object AerialMath {
         val postAssistSeconds = secondsRemaining - assistSeconds
         val velocityAfterJumpAssist = initialVelocity + Vector3.UP * assistSeconds * (JUMP_ASSIST_ACCEL - ArenaModel.GRAVITY)
 
+        val residualBoostMotion = if (wasBoosting) car.orientation.noseVector else Vector3.ZERO
+
         val expectedCarPosition = positionAfterJumpAssist + velocityAfterJumpAssist * postAssistSeconds -
-                Vector3.UP * 0.5 * ArenaModel.GRAVITY * postAssistSeconds * postAssistSeconds
+                Vector3.UP * 0.5 * ArenaModel.GRAVITY * postAssistSeconds * postAssistSeconds + residualBoostMotion
+
 
         // Displacement from where the car will end up to where we're aiming
         val targetError = target.space - expectedCarPosition

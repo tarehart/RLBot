@@ -11,6 +11,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 
+
+/**
+ * TODO: This logic has been improved upon in chip's repo. Try to port over the improvements.
+ * https://github.com/samuelpmish/RLUtilities/blob/c5f9d7df95a7f62191bc652328bcc00d7753e629/main/cpp/src/mechanics/AerialTurn.cpp
+ */
 object OrientationSolver {
 
     const val ALPHA_MAX = 9.0
