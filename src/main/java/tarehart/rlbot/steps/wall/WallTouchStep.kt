@@ -118,11 +118,13 @@ class WallTouchStep : NestedPlanStep() {
             return ballPosition.space.z > MIN_HEIGHT && ArenaModel.getDistanceFromWall(ballPosition.space) <= ACCEPTABLE_WALL_DISTANCE
         }
 
+        private val NEEDS_JUMP_THRESHOLD = ArenaModel.BALL_RADIUS + .3
+
         private fun readyToJump(bundle: TacticalBundle, carPositionAtContact: SpaceTime): Boolean {
 
             val input = bundle.agentInput
             val car = input.myCarData
-            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < ArenaModel.BALL_RADIUS + .4 || !ArenaModel.isCarOnWall(car)) {
+            if (ArenaModel.getDistanceFromWall(carPositionAtContact.space) < NEEDS_JUMP_THRESHOLD || !ArenaModel.isCarOnWall(car)) {
                 return false // Really close to wall, no need to jump. Just chip it.
             }
             val toPosition = carPositionAtContact.space.minus(car.position)

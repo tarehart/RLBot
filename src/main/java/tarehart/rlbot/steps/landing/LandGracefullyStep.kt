@@ -63,16 +63,17 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
                 // It's a wall!
                 val targetOrientation = Mat3.lookingTo(car.velocity.projectToPlane(it.direction), it.direction)
                 return OrientationSolver.orientCar(bundle.agentInput.myCarData, targetOrientation, 1.0 / 60).withThrottle(1.0)
-            } else {
-                // It's not a wall!
-                val shouldWavedash = Math.abs(ArenaModel.GRAVITY) > 5 && impact.time != null && it.direction.z == 1.0
-                val time = impact.time
-
-                if (shouldWavedash && time != null) {
-                    val orientation = Mat3.lookingTo(facingFn.invoke(bundle).toVector3())
-                    return getWavedashOutput(bundle.agentInput.myCarData, orientation, time)
-                }
             }
+//            else {
+//                // It's not a wall!
+//                val shouldWavedash = Math.abs(ArenaModel.GRAVITY) > 5 && impact.time != null && it.direction.z == 1.0
+//                val time = impact.time
+//
+//                if (shouldWavedash && time != null) {
+//                    val orientation = Mat3.lookingTo(facingFn.invoke(bundle).toVector3())
+//                    return getWavedashOutput(bundle.agentInput.myCarData, orientation, time)
+//                }
+//            }
         }
 
         return OrientationSolver.orientCar(bundle.agentInput.myCarData, Mat3.lookingTo(facingFn.invoke(bundle).toVector3()), 1.0 / 60).withThrottle(1.0).withSlide(true)

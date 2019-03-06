@@ -160,7 +160,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         }
 
         if (courseResult.targetError.magnitude() < 1.5) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), 1/60.0)
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(latestIntercept.ballSlice.space - car.position, car.orientation.roofVector), 1/60.0)
                     .withJump()
         }
 
