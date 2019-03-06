@@ -152,15 +152,15 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         RenderUtil.drawSphere(car.renderer, latestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
 
         var useBoost = 0L
-        val boostThreshold = .9
+        val boostThreshold = if (secondsSinceLaunch < 1) .8  else .9
         if (courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold) {
             useBoost -= Math.round(boostCounter)
             boostCounter += Clamper.clamp(1.25 * (courseResult.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR), 0.0, 1.0)
             useBoost += Math.round(boostCounter)
         }
 
-        if (courseResult.targetError.magnitude() < 1.5) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(latestIntercept.ballSlice.space - car.position, car.orientation.roofVector), 1/60.0)
+        if (courseResult.targetError.magnitude() < 1) {
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), 1/60.0)
                     .withJump()
         }
 
@@ -203,7 +203,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                 val enemyGoal = GoalUtil.getEnemyGoal(team)
                 val goalToBall = it.minus(enemyGoal.getNearestEntrance(it, 4.0))
 
-                offset = goalToBall.scaledToMagnitude(3.4)
+                offset = goalToBall.scaledToMagnitude(3.37)
 
                 val gameMode = GameModeSniffer.getGameMode()
                 if (gameMode == GameMode.SOCCER) {
