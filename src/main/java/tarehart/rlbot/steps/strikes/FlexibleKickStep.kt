@@ -31,7 +31,6 @@ import java.awt.Color
 import java.awt.Graphics2D
 
 class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
-    private var originalTouch: BallTouch? = null
     private var doneMoment: GameTime? = null
     private var initialized = false
     //private lateinit var interceptModifier: Vector3
@@ -57,7 +56,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         val car = bundle.agentInput.myCarData
 
         if (!initialized) {
-            originalTouch = bundle.agentInput.latestBallTouch
             initialized = true
         }
 
@@ -120,14 +118,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         if (FinalApproachStep.readyForFinalApproach(car, precisionPlan.kickPlan.launchPad)) {
             return startPlan(Plan().withStep(FinalApproachStep(precisionPlan.kickPlan)), bundle)
-        }
-
-
-        if (bundle.agentInput.latestBallTouch?.position ?: Vector3() != originalTouch?.position ?: Vector3()) {
-            // There has been a new ball touch.
-            println("Ball has been touched, quitting flexible hit", bundle.agentInput.playerIndex)
-            cancelPlan = true
-            return null
         }
 
         val badCirclePart = precisionPlan.steerPlan.route.parts.firstOrNull {

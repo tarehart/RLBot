@@ -10,6 +10,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
@@ -27,6 +28,8 @@ class ChallengeStep: NestedPlanStep() {
 
     private var originalTouch: BallTouch? = null
     private var latestDefensiveNode: Vector2? = null
+    private val ballPathDisruptionMeter = BallPathDisruptionMeter()
+
 
     override fun getLocalSituation(): String {
         return  "Working on challenge"
@@ -40,20 +43,12 @@ class ChallengeStep: NestedPlanStep() {
 
         val car = bundle.agentInput.myCarData
 
-        if (originalTouch == null) {
-            originalTouch = bundle.agentInput.latestBallTouch
-        } else {
-
-            if (originalTouch?.position ?: Vector3() != bundle.agentInput.latestBallTouch?.position ?: Vector3()) {
-                // There has been a new ball touch.
-                println("Ball has been touched, quitting challenge", bundle.agentInput.playerIndex)
-                return null
-            }
+        if (ballPathDisruptionMeter.isDisrupted(bundle.tacticalSituation.ballPath)) {
+            println("Ball path disrupted, quitting challenge", bundle.agentInput.playerIndex)
+            return null
         }
 
-        // TODO: Basically, destroy TacticsTelemetry because it shouldn't be needed.
-        // At least don't allow steps to use it, that is bad form.
-        val tacticalSituation = TacticsTelemetry.get(bundle.agentInput.playerIndex) ?: return null
+        val tacticalSituation = bundle.tacticalSituation
         val ballAdvantage = tacticalSituation.ballAdvantage
         if (ballAdvantage.seconds > 1.0) {
             return null // We can probably go for a shot now.

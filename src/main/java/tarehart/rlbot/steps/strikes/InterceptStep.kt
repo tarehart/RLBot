@@ -22,6 +22,8 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
+import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
@@ -42,6 +44,7 @@ class InterceptStep(
     private var originalIntercept: Intercept? = null
     private var chosenIntercept: Intercept? = null
     private var originalTouch: BallTouch? = null
+    private val interceptDisruptionMeter = InterceptDisruptionMeter()
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
@@ -64,22 +67,9 @@ class InterceptStep(
             return startPlan(it, bundle)
         }
 
-        if (originalIntercept == null) {
-            originalIntercept = soonestIntercept
-            originalTouch = bundle.agentInput.latestBallTouch
-
-        } else {
-
-            if (originalIntercept?.let { ballPath.getMotionAt(it.time)?.space?.distance(it.space)?.takeIf { it > 10 } } != null) {
-                println("Ball slices has diverged from expectation, will quit.", bundle.agentInput.playerIndex)
-                zombie = true
-            }
-
-            if (originalTouch?.position ?: Vector3() != bundle.agentInput.latestBallTouch?.position ?: Vector3()) {
-                // There has been a new ball touch.
-                println("Ball has been touched, quitting intercept", bundle.agentInput.playerIndex)
-                return null
-            }
+        if (interceptDisruptionMeter.isDisrupted(soonestIntercept.ballSlice)) {
+            println("Intercept has diverged from expectation, will quit.", bundle.agentInput.playerIndex)
+            zombie = true
         }
 
         val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)

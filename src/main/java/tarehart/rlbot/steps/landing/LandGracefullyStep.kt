@@ -127,7 +127,11 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
         }
 
         private fun faceVelocity(bundle: TacticalBundle): Vector2 {
-            return bundle.agentInput.myCarData.velocity.flatten().normalized()
+            val car = bundle.agentInput.myCarData
+            if (car.velocity.isZero) {
+                return car.orientation.noseVector.flatten()
+            }
+            return car.velocity.flatten().normalized()
         }
     }
 }
