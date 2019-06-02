@@ -20,8 +20,8 @@ class DefensiveAerialTest : StateSettingAbstractTest() {
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
-                                .withLocation(StateVector(-20F, -30F, 8F))
-                                .withVelocity(StateVector(10F, -20F, 23F))
+                                .withLocation(StateVector(-20F, -32F, 2F))
+                                .withVelocity(StateVector(10F, -20F, 25F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
@@ -49,7 +49,7 @@ class DefensiveAerialTest : StateSettingAbstractTest() {
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
-                                .withLocation(StateVector(-20F, -30F, 8F))
+                                .withLocation(StateVector(-20F, -30F, 2F))
                                 .withVelocity(StateVector(10F, -20F, 23F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
@@ -77,7 +77,7 @@ class DefensiveAerialTest : StateSettingAbstractTest() {
         val testCase = StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
-                                .withLocation(StateVector(-20F, -30F, 8F))
+                                .withLocation(StateVector(-20F, -30F, 2F))
                                 .withVelocity(StateVector(10F, -22F, 23F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))

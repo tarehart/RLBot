@@ -160,18 +160,13 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         }
 
         if (courseResult.targetError.magnitude() < 1) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), 1/60.0)
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), ORIENT_DT)
                     .withJump()
         }
 
-        val up = if (canDodge || car.orientation.roofVector.z > 0.8)
-            Vector3.UP
-        else
-            car.orientation.roofVector
-
         wasBoosting = useBoost != 0L
 
-        return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), 1/60.0)
+        return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, car.orientation.roofVector), ORIENT_DT)
                 .withBoost(useBoost != 0L)
                 .withJump()
 
@@ -193,6 +188,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         private const val SIDE_DODGE_THRESHOLD = Math.PI / 4
         private val DODGE_TIME = Duration.ofMillis(300)
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
+        private const val ORIENT_DT = 1/60.0
 
         private fun standardOffset(intercept: Vector3?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
             val ownGoal = GoalUtil.getOwnGoal(team).center

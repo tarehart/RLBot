@@ -5,6 +5,8 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Clamper.clamp
 import tarehart.rlbot.math.vector.Spin
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.rendering.RenderUtil
+import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.cos
@@ -129,7 +131,23 @@ object OrientationSolver {
 
         // Our data about the car lags behind a bit. Extrapolate forward to get a more realistic orientation.
         // Taken from https://github.com/samuelpmish/RLUtilities/blob/27807c2bff64ffdd89ddc943e2aa10d9fbb56901/RLUtilities/cpp/src/Car.cpp#L94-L101
-        val extrapolatedOrientation = axisToRotation(car.spin.angularVelGlobal * dt).dot(car.orientation.matrix)
+        val extrapolatedOrientation = axisToRotation(car.spin.angularVelGlobal * 0.0).dot(car.orientation.matrix)
+
+        val currentTip = (car.position + car.orientation.noseVector.scaledToMagnitude(3.0))
+        val futureTip = (car.position + extrapolatedOrientation.forward().scaledToMagnitude(3.0))
+        car.renderer.drawLine3d(Color.WHITE,
+                car.position.toRlbot(),
+                currentTip.toRlbot())
+        car.renderer.drawLine3d(Color.WHITE,
+                currentTip.toRlbot(),
+                (currentTip + car.orientation.roofVector).toRlbot())
+
+        car.renderer.drawLine3d(Color.GREEN,
+                car.position.toRlbot(),
+                futureTip.toRlbot())
+        car.renderer.drawLine3d(Color.GREEN,
+                futureTip.toRlbot(),
+                (futureTip + extrapolatedOrientation.up()).toRlbot())
 
         val relativeRotation = extrapolatedOrientation.transpose().dot(targetOrientation)
         val geodesicLocal = rotationToAxis(relativeRotation)

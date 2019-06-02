@@ -19,7 +19,7 @@ object AerialMath {
     private const val JUMP_VELOCITY = 12.0
     private const val AERIAL_ANGULAR_ACCEL = OrientationSolver.ALPHA_MAX  // maximum aerial angular acceleration
     const val BOOST_ACCEL_IN_AIR = 20.0  // boost acceleration
-    private const val ACCEL_NEEDED_THRESHOLD = 0.95
+    private const val ACCEL_NEEDED_THRESHOLD = 1
 
     /**
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L415-L421
