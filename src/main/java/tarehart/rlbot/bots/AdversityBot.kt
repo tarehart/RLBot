@@ -45,12 +45,13 @@ class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex
         val car = input.myCarData
         val situation = bundle.tacticalSituation
 
-        val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(DemolishEnemyStep(isAdversityBot = true))
+        val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
 
         if (situation.shotOnGoalAvailable && situation.teamPlayerWithInitiative?.car == car) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
+        plan.withStep(DemolishEnemyStep(isAdversityBot = true))
         plan.withStep(GetBoostStep())
         plan.withStep(GetOnOffenseStep())
         return plan
