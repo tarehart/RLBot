@@ -1,8 +1,11 @@
 package tarehart.rlbot.math
 
+import org.junit.After
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 import rlbot.render.NamedRenderer
+import rlbot.render.Renderer
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.input.CarOrientation
@@ -13,6 +16,19 @@ import java.lang.Math.cos
 import java.lang.Math.sin
 
 class OrientationSolverTest {
+
+    private val renderer = NamedRenderer("test")
+
+    @Before
+    fun setup() {
+        renderer.startPacket()
+    }
+
+    @After
+    fun teardown() {
+        renderer.finishPacket()
+    }
+
 
     @Test
     fun step_shouldPitchUp_whenCarPointingDown() {
@@ -78,7 +94,7 @@ class OrientationSolverTest {
                 hasWheelContact = false,
                 isDemolished = false,
                 name = "testCar",
-                renderer = NamedRenderer("test"))
+                renderer = renderer)
         return car
     }
 }

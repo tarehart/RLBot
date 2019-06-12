@@ -6,7 +6,7 @@ import rlbot.manager.BotManager
 import rlbot.pyinterop.PythonServer
 import tarehart.rlbot.DEFAULT_PORT
 import tarehart.rlbot.integration.asserts.AssertStatus
-import tarehart.rlbot.readPortFromFile
+import tarehart.rlbot.readPortFromArgs
 
 abstract class StateSettingAbstractTest {
 
@@ -29,10 +29,9 @@ abstract class StateSettingAbstractTest {
         @JvmStatic
         fun startListening() {
             if (!isListening) {
-                val port = readPortFromFile().orElse(DEFAULT_PORT)
-                val pythonInterface = IntegrationPyInterface(BotManager())
-                val pythonServer = PythonServer(pythonInterface, port)
-                pythonServer.start()
+                val port = DEFAULT_PORT
+                val pythonInterface = IntegrationPyInterface(port, BotManager())
+                Thread {pythonInterface.start()}.start()
                 isListening = true
             }
         }

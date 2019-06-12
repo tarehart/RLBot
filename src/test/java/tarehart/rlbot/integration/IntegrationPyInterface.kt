@@ -3,13 +3,13 @@ package tarehart.rlbot.integration
 import rlbot.Bot
 import rlbot.cppinterop.RLBotDll
 import rlbot.manager.BotManager
-import rlbot.pyinterop.DefaultPythonInterface
+import rlbot.pyinterop.SocketServer
 import java.io.IOException
 
 /**
  * The public methods of this class will be called directly from the python component of the RLBot framework.
  */
-class IntegrationPyInterface(botManager: BotManager) : DefaultPythonInterface(botManager) {
+class IntegrationPyInterface(port: Int, botManager: BotManager) : SocketServer(port, botManager) {
 
     override fun initBot(index: Int, botType: String, team: Int): Bot {
         throw NotImplementedError()

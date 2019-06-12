@@ -31,30 +31,25 @@ fun main(args: Array<String>) {
     // as you, and the match can't start because of the conflict. Because of this line, you can ask the
     // organizer make a file called "port.txt" in the same directory as your .jar, and put some other number in it.
     // This matches code in JavaAgent.py
-    val port = readPortFromFile().orElse(DEFAULT_PORT)
+    val port = readPortFromArgs(args) ?: DEFAULT_PORT
     val botManager = BotManager()
-    val pythonInterface = PyInterface(botManager, statusSummary)
-    val pythonServer = PythonServer(pythonInterface, port)
-    pythonServer.start()
-
-    println(String.format("Python server started on port %s. Listening for RLBot commands!", port))
-
+    val pythonInterface = PyInterface(port, botManager, statusSummary)
+    Thread {pythonInterface.start()}.start()
     showStatusSummary(port)
 }
 
 
-fun readPortFromFile(): Optional<Int> {
-    try {
-        val lines = Files.lines(Paths.get("reliefbot-port.txt"))
-        val firstLine = lines.findFirst()
-        return firstLine.map{ Integer.parseInt(it) }
-    } catch (e: NumberFormatException) {
-        println("Failed to parse port file! Will proceed with hard-coded port number.")
-        return Optional.empty()
-    } catch (e: Throwable) {
-        return Optional.empty()
-    }
+fun readPortFromArgs(args: Array<String>): Int? {
 
+    if (args.isEmpty()) {
+        return null
+    }
+    return try {
+        Integer.parseInt(args[0])
+    } catch (e: NumberFormatException) {
+        println("Failed to get port from arguments! Will use default.")
+        null
+    }
 }
 
 private fun showStatusSummary(port: Int) {
