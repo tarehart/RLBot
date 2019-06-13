@@ -8,7 +8,6 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.Chronometer
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.ZonePlan
@@ -16,21 +15,21 @@ import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
 import tarehart.rlbot.tuning.BotLog
-import tarehart.rlbot.tuning.BotLog.println
-import tarehart.rlbot.ui.*
+import tarehart.rlbot.ui.DisplayFlags
+import tarehart.rlbot.ui.ScreenResolution
 import java.awt.Color
 import java.awt.Point
 import java.time.Instant
-import java.util.*
-import javax.swing.*
+import javax.swing.ButtonGroup
+import javax.swing.JMenu
+import javax.swing.JMenuBar
+import javax.swing.JRadioButtonMenuItem
 
 
 abstract class BaseBot(private val team: Team, protected val playerIndex: Int) : Bot {
     internal var currentPlan: Plan? = null
     private var previousPlan: Plan? = null
     internal var currentZonePlan: ZonePlan? = null
-    private val readout: PlainReadout = PlainReadout()
-    private val displayFlagsWindow: DisplayFlagsWindow = DisplayFlagsWindow()
     private var previousSituation: String? = null
     internal var previousZonePlan: ZonePlan? = null
 
@@ -42,24 +41,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 
     private var selfDestruct = false
 
-    val debugWindow: JFrame
-        get() {
-            val frame = JFrame("Debug - " + team.name)
-            frame.contentPane = readout.rootPanel
-            frame.defaultCloseOperation = JFrame.HIDE_ON_CLOSE
-            frame.jMenuBar = createMenuBar()
-            frame.pack()
-            return frame
-        }
-
-    val detailFlagsPanel: DisplayFlagsFrame
-        get() {
-            val frame = DisplayFlagsFrame(displayFlagsWindow, "DisplayFlags - " + team.name)
-            frame.contentPane = displayFlagsWindow
-            frame.defaultCloseOperation = JFrame.HIDE_ON_CLOSE
-            frame.pack()
-            return frame
-        }
 
     private fun createMenuBar() : JMenuBar {
         val menuBar = JMenuBar()
@@ -83,7 +64,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     override fun processInput(request: GameTickPacket?): AgentOutput {
 
         if (selfDestruct) throw ThreadDeath()
-        
+
         val timeBefore = Instant.now()
 
         request ?: return AgentOutput()
@@ -145,22 +126,11 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     fun processInput(input: AgentInput): AgentOutput {
         BotLog.setTimeStamp(input.time)
         val output: AgentOutput
-        var ballPath = Optional.empty<BallPath>()
 
         if (input.matchInfo.matchEnded || input.myCarData.isDemolished) {
             currentPlan = Plan(Plan.Posture.MENU).withStep(WaitForActive())
             output = AgentOutput()
         } else {
-            ballPath = Optional.of(ArenaModel.predictBallPath(input))
-
-            //        BallRecorder.recordPosition(new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin));
-            //        if (input.ballVelocity.magnitudeSquared() > 0) {
-            //            Optional<BallSlice> afterBounce = ballPath.getMotionAfterWallBounce(1);
-            //            // Just for data gathering / debugging.
-            //            afterBounce.ifPresent(stv -> BallRecorder.startRecording(
-            //                    new BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin),
-            //                    stv.getTime().plusSeconds(1)));
-            //        }
 
             if (input.matchInfo.roundActive) {
                 output = getOutput(input)
@@ -191,11 +161,10 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             }
 
             planRenderer.finishAndSend()
-            println("[Sitch] " + situation, input.playerIndex)
+            BotLog.println("[Sitch] " + situation, input.playerIndex)
         }
         previousSituation = situation
         previousPlan = currentPlan
-        ballPath.ifPresent { bp -> readout.update(input, posture, situation, BotLog.collect(input.playerIndex), bp) }
 
         return output
     }

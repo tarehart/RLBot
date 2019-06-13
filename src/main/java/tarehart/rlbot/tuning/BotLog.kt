@@ -11,28 +11,22 @@ object BotLog {
 
     fun println(message: String, playerIndex: Int) {
 
-        getLog(playerIndex).append(timeStamp + message).append("\n")
-        println(message)
+        //getLog(playerIndex).append(timeStamp + message).append("\n")
+        println("$timeStamp $message")
     }
 
     private fun getLog(playerIndex: Int): StringBuilder {
-        if (!logMap.containsKey(playerIndex)) {
-            logMap[playerIndex] = StringBuilder()
-        }
-        return logMap[playerIndex]!!
+        return logMap.getOrPut(playerIndex) { StringBuilder() }
     }
 
     fun setTimeStamp(time: GameTime) {
-
-        val minutes = "" + time.toMillis() / 60000
-        val seconds = String.format("%02d", time.toMillis() / 1000 % 60)
-        timeStamp = if (time.toMillis() > 0) "($minutes:$seconds)" else ""
+        timeStamp = "%03d".format(time.toMillis() % 1000)
     }
 
-    fun collect(playerIndex: Int): String {
-        val log = getLog(playerIndex)
-        val contents = log.toString()
-        log.setLength(0)
-        return contents
-    }
+//    fun collect(playerIndex: Int): String {
+//        val log = getLog(playerIndex)
+//        val contents = log.toString()
+//        log.setLength(0)
+//        return contents
+//    }
 }
