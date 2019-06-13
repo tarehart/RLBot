@@ -5,7 +5,9 @@ import rlbot.flat.GameTickPacket
 import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
+import tarehart.rlbot.BotHouse
 import tarehart.rlbot.input.Chronometer
+import tarehart.rlbot.math.RunningAverage
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
@@ -40,6 +42,9 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     private var isGameModeInitialized = false
 
     private var selfDestruct = false
+    var debugMode: Boolean = false
+        get() = BotHouse.debugMode
+    private val runningAverage = RunningAverage()
 
 
     private fun createMenuBar() : JMenuBar {
@@ -88,8 +93,12 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             val output = processInput(translatedInput)
 
             val elapsedMillis = java.time.Duration.between(timeBefore, Instant.now()).toMillis()
-            if (elapsedMillis > 20) {
+            if (elapsedMillis > 10) {
                 BotLog.println("SLOW FRAME took $elapsedMillis ms!", playerIndex)
+            }
+            runningAverage.takeSample(elapsedMillis.toDouble())
+            if (frameCount.rem(100) == 0L) {
+                BotLog.println("Average frame time: %.2fms".format(runningAverage.average), playerIndex)
             }
 
             return output
@@ -144,7 +153,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 
         val posture = currentPlan?.posture ?: Plan.Posture.NEUTRAL
         val situation = currentPlan?.situation ?: ""
-        if (situation != previousSituation) {
+        if (debugMode && situation != previousSituation) {
             planRenderer.startPacket()
 
             if(DisplayFlags[DisplayFlags.DETAILED_PLAN] == 1) {
@@ -162,6 +171,8 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 
             planRenderer.finishAndSend()
             BotLog.println("[Sitch] " + situation, input.playerIndex)
+        } else if (frameCount.rem(100) == 0L) {
+            planRenderer.eraseFromScreen()
         }
         previousSituation = situation
         previousPlan = currentPlan

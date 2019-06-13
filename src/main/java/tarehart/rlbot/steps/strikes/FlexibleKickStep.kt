@@ -1,14 +1,11 @@
 package tarehart.rlbot.steps.strikes
 
-import rlbot.manager.BotLoopRenderer
-import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.InterceptCalculator
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
@@ -17,7 +14,6 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.Zone
-import tarehart.rlbot.planning.ZoneUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.routing.CircleRoutePart
 import tarehart.rlbot.routing.PrecisionPlan
@@ -140,7 +136,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             return null
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
+        val renderer = car.renderer
         precisionPlan.kickPlan.renderDebugInfo(renderer)
         precisionPlan.steerPlan.route.renderDebugInfo(renderer)
 

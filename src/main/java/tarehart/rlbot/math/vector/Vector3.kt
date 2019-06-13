@@ -1,12 +1,10 @@
 package tarehart.rlbot.math.vector
 
 import tarehart.rlbot.math.Plane
-import java.util.*
 import kotlin.math.abs
 
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
     val isZero = (x == 0.0 && y == 0.0 && z == 0.0)
-    val list =  listOf(x, y, z)
 
     operator fun plus(other: Vector3): Vector3 {
         return Vector3(x + other.x, y + other.y, z + other.z)
@@ -33,7 +31,13 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     }
 
     operator fun get(index: Int): Double {
-        return list[index]
+        if (index == 0)
+            return x
+        if (index == 1)
+            return y
+        if (index == 2)
+            return z
+        return 0.0
     }
 
     fun scaled(scale: Double): Vector3 {

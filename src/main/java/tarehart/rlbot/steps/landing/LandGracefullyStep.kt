@@ -1,7 +1,5 @@
 package tarehart.rlbot.steps.landing
 
-import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.CarPredictor
@@ -10,7 +8,6 @@ import tarehart.rlbot.math.Mat3
 import tarehart.rlbot.math.OrientationSolver
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
@@ -44,8 +41,7 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
         val carMotion = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(3.0))
         val impact = carMotion.getFirstPlaneBreak(ArenaModel.getCollisionPlanes())
 
-        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
-        carMotion.renderIn3d(renderer)
+        carMotion.renderIn3d(car.renderer)
 
 
         if (ArenaModel.isMicroGravity() && car.boost > 0 && impact == null ||
@@ -57,7 +53,7 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
         }
 
         impact?.let {
-            RenderUtil.drawSquare(renderer, Plane(it.direction, it.position), 5.0, Color.RED)
+            RenderUtil.drawSquare(car.renderer, Plane(it.direction, it.position), 5.0, Color.RED)
 
             if (it.direction.z == 0.0) {
                 // It's a wall!

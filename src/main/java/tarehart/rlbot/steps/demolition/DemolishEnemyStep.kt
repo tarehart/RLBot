@@ -2,10 +2,8 @@ package tarehart.rlbot.steps.demolition
 
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
-import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.bots.AdversityBot
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
@@ -13,8 +11,8 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
-import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.awt.Color
@@ -150,7 +148,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false) : NestedPlanStep() 
         }
 
         val path = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(SECONDS_TO_PREDICT))
-        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
+        val renderer = car.renderer
         path.renderIn3d(renderer)
 
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(SECONDS_TO_PREDICT), car.boost)
@@ -217,7 +215,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false) : NestedPlanStep() 
             return null
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
+        val renderer = car.renderer
 
         val path = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(SECONDS_TO_PREDICT))
         path.renderIn3d(renderer)
@@ -249,7 +247,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false) : NestedPlanStep() 
         val simulationDuration = Duration.ofSeconds(SECONDS_BEFORE_CONTACT_TO_JUMP * 1.5)
 
         val path = carPredictor.predictCarMotion(bundle, simulationDuration)
-        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
+        val renderer = car.renderer
         path.renderIn3d(renderer)
         val distancePlot = AccelerationModel.simulateAcceleration(car, simulationDuration, car.boost)
         val carIntercept = CarInterceptPlanner.getCarIntercept(car, path, distancePlot)

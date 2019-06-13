@@ -1,7 +1,6 @@
 package tarehart.rlbot.planning
 
 import tarehart.rlbot.bots.Team
-import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -38,7 +37,7 @@ object GoalUtil {
     }
 
     fun ballLingersInBox(goal: SoccerGoal, ballPath: BallPath): Boolean {
-        val firstSlice = ballPath.findSlice { slice -> goal.isInBox(slice.space) }
+        val firstSlice = ballPath.findSlice({ slice -> goal.isInBox(slice.space) }, increment = 4)
         val secondSlice = firstSlice?.let { fs -> ballPath.getMotionAt(fs.time.plusSeconds(2.0)) }
         return secondSlice != null && goal.isInBox(secondSlice.space)
     }

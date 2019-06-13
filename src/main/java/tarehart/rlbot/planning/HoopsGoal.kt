@@ -42,9 +42,8 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
     }
 
     override fun predictGoalEvent(ballPath: BallPath): BallSlice? {
-        return ballPath.getPlaneBreak(ballPath.startPoint.time, scorePlane, true) {
-            v3 -> v3.flatten().distance(center.flatten()) < RADIUS
-        }
+        return ballPath.getPlaneBreak(ballPath.startPoint.time, scorePlane, true,
+                { v3 -> v3.flatten().distance(center.flatten()) < RADIUS }, increment = 4)
     }
 
     companion object {

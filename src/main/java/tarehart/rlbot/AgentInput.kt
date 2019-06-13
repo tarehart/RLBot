@@ -1,13 +1,13 @@
 package tarehart.rlbot
 
 import rlbot.flat.*
-import rlbot.gamestate.BallState
 import rlbot.manager.BotLoopRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.bots.BaseBot
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.*
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.rendering.NullRenderer
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -61,7 +61,10 @@ class AgentInput(
         chronometer.readInput(request.gameInfo().secondsElapsed().toDouble())
         time = chronometer.gameTime
 
-        val renderer = BotLoopRenderer.forBotLoop(bot)
+        val renderer = if (bot.debugMode)
+            BotLoopRenderer.forBotLoop(bot)
+        else
+            NullRenderer()
 
         allCars = ArrayList(request.playersLength())
         for (i in 0 until request.playersLength()) {

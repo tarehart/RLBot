@@ -8,11 +8,11 @@ import tarehart.rlbot.bots.*
 /**
  * The public methods of this class will be called directly from the python component of the RLBot framework.
  */
-class PyInterface(port: Int, botManager: BotManager) :
+class PyInterface(port: Int, botManager: BotManager, private val bots: MutableMap<Int, BaseBot>) :
         SocketServer(port, botManager) {
 
     override fun initBot(index: Int, botType: String, team: Int): Bot {
-        val newBot: tarehart.rlbot.bots.BaseBot
+        val newBot: BaseBot
         val teamEnum = AgentInput.teamFromInt(team)
 
         if (botType.startsWith("JumpingBean")) {
@@ -28,6 +28,8 @@ class PyInterface(port: Int, botManager: BotManager) :
         } else {
             newBot = ReliefBot(teamEnum, index)
         }
+
+        bots[index] = newBot
 
         return newBot
     }

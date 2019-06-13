@@ -1,7 +1,6 @@
 package tarehart.rlbot.physics
 
 import rlbot.flat.BallPrediction
-import rlbot.flat.Bool
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
@@ -180,16 +179,16 @@ class BallPath() {
     }
 
     fun getPlaneBreak(searchStart: GameTime, plane: Plane, directionSensitive: Boolean,
-                      spacePredicate: (Vector3) -> Boolean = { true }): BallSlice? {
+                      spacePredicate: (Vector3) -> Boolean = { true }, increment: Int = 1): BallSlice? {
 
-        for (i in 1 until this.slices.size) {
+        for (i in increment until this.slices.size step increment) {
             val currSlice = this.slices[i]
 
             if (currSlice.time.isBefore(searchStart)) {
                 continue
             }
 
-            val prevSlice = this.slices[i - 1]
+            val prevSlice = this.slices[i - increment]
 
             if (directionSensitive && currSlice.space.minus(prevSlice.space).dotProduct(plane.normal) > 0) {
                 // Moving the same direction as the plane normal. If we're direction sensitive, then we don't care about plane breaks in this direction.
@@ -214,8 +213,16 @@ class BallPath() {
         return VectorUtil.getPlaneIntersection(plane, start, end.minus(start))
     }
 
-    fun findSlice(decider: (BallSlice) -> Boolean): BallSlice? {
-        return this.slices.drop(1).firstOrNull { decider.invoke(it) }
+    fun findSlice(decider: (BallSlice) -> Boolean, increment: Int = 1): BallSlice? {
+        if (increment == 1)
+            return this.slices.drop(1).firstOrNull { decider.invoke(it) }
+
+        for (i in 1 until slices.size step increment) {
+            if (decider.invoke(slices[i])) {
+                return slices[i]
+            }
+        }
+        return null
     }
 
     fun startingFrom(earliestIntercept: GameTime): BallPath? {

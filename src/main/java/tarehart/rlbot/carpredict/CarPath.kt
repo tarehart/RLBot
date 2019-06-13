@@ -1,16 +1,12 @@
 package tarehart.rlbot.carpredict
 
-import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.math.BallSlice
+import rlbot.render.Renderer
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.rendering.RenderUtil
-import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
 import java.awt.Color
-import java.util.ArrayList
+import java.util.*
 
 class CarPath {
 
@@ -26,7 +22,7 @@ class CarPath {
         path.add(slice)
     }
 
-    fun renderIn3d(renderer: BotLoopRenderer) {
+    fun renderIn3d(renderer: Renderer) {
         RenderUtil.drawPath(renderer, path.map { it.space }, Color.CYAN)
     }
 

@@ -1,6 +1,7 @@
 package tarehart.rlbot.routing
 
 import rlbot.render.Renderer
+import tarehart.rlbot.math.Atan
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
@@ -27,7 +28,7 @@ class CircleRoutePart(
         if (start.distance(end) > .01) {
 
             val centerToStart = start - circle.center
-            val startRadians = Math.atan2(centerToStart.y, centerToStart.x)
+            val startRadians = Atan.atan2(centerToStart.y, centerToStart.x)
 
             val startDegrees = -startRadians * 180 / Math.PI
             val sweepDegrees = -sweepRadians * 180 / Math.PI

@@ -1,5 +1,6 @@
 package tarehart.rlbot.math.vector
 
+import tarehart.rlbot.math.Atan
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.VectorUtil
 
@@ -67,19 +68,8 @@ data class Vector2(val x: Double, val y: Double) {
             return 0.0
         }
 
-        var currentRad = Math.atan2(y, x)
-        var idealRad = Math.atan2(ideal.y, ideal.x)
-
-        if (Math.abs(currentRad - idealRad) > Math.PI) {
-            if (currentRad < 0) {
-                currentRad += Math.PI * 2
-            }
-            if (idealRad < 0) {
-                idealRad += Math.PI * 2
-            }
-        }
-
-        return idealRad - currentRad
+        // https://stackoverflow.com/questions/2150050/finding-signed-angle-between-vectors
+        return Atan.atan2( this.x * ideal.y - this.y * ideal.x, this.x * ideal.x + this.y * ideal.y )
     }
 
     fun correctionAngle(ideal: Vector2, clockwise: Boolean): Double {
@@ -88,8 +78,8 @@ data class Vector2(val x: Double, val y: Double) {
             return 0.0
         }
 
-        var currentRad = Math.atan2(y, x)
-        var idealRad = Math.atan2(ideal.y, ideal.x)
+        var currentRad = Atan.atan2(y, x)
+        var idealRad = Atan.atan2(ideal.y, ideal.x)
 
         if ((idealRad - currentRad) > 0 && clockwise) {
             currentRad += Math.PI * 2

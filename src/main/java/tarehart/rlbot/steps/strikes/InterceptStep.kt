@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps.strikes
 
-import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -8,13 +7,12 @@ import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialMath
-import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.strike.AerialStrike
 import tarehart.rlbot.intercept.strike.FlipHitStrike
 import tarehart.rlbot.intercept.strike.JumpHitStrike
-import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -22,7 +20,6 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
@@ -72,7 +69,7 @@ class InterceptStep(
             zombie = true
         }
 
-        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
+        val renderer = carData.renderer
         RenderUtil.drawSphere(renderer, soonestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
         RenderUtil.drawBallPath(renderer, ballPath, soonestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
         if (!interceptModifier.isZero) {

@@ -1,7 +1,6 @@
 package tarehart.rlbot.carpredict
 
-import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.AgentInput
+import rlbot.render.Renderer
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.input.CarOrientation
@@ -48,7 +47,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
 
                 val turningLeft = shortTermVector.correctionAngle(longTermVector) > 0
 
-                carPath = doCirclePrediction(car, circle, turningLeft, duration, BotLoopRenderer.forBotLoop(input.bot))
+                carPath = doCirclePrediction(car, circle, turningLeft, duration, car.renderer)
             }
         } else {
             carPath = doNaivePrediction(car, duration, Vector3())
@@ -57,7 +56,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
         return carPath
     }
 
-    private fun doCirclePrediction(car: CarData, circle: Circle, turningLeft: Boolean, duration: Duration, renderer: BotLoopRenderer?): CarPath {
+    private fun doCirclePrediction(car: CarData, circle: Circle, turningLeft: Boolean, duration: Duration, renderer: Renderer): CarPath {
 
         val radiansForTimeStep = car.velocity.flatten().magnitude() * TIME_STEP / circle.radius
 

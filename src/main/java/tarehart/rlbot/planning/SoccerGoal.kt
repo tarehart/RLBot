@@ -3,7 +3,7 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.Plane
-import tarehart.rlbot.math.Polygon
+import tarehart.rlbot.math.Rectangle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
@@ -13,7 +13,7 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
     override val center: Vector3
     override val scorePlane: Plane
 
-    private val box: Polygon
+    private val box: Rectangle
 
     init {
 
@@ -23,7 +23,10 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
                 Vector3(0.0, (if (negativeSide) 1 else -1).toDouble(), 0.0),
                 Vector3(0.0, (GOAL_DISTANCE + 2) * if (negativeSide) -1 else 1, 0.0))
 
-        box = if (negativeSide) ZoneDefinitions.BLUEBOX else ZoneDefinitions.ORANGEBOX
+        box = if (negativeSide)
+            Rectangle(ZoneDefinitions.BLUEBOX.awtArea.bounds2D)
+        else
+            Rectangle(ZoneDefinitions.ORANGEBOX.awtArea.bounds2D)
     }
 
 
@@ -55,7 +58,7 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
     }
 
     override fun predictGoalEvent(ballPath: BallPath): BallSlice? {
-        return ballPath.getPlaneBreak(ballPath.startPoint.time, scorePlane, true)
+        return ballPath.getPlaneBreak(ballPath.startPoint.time, scorePlane, true, increment = 4)
     }
 
     companion object {

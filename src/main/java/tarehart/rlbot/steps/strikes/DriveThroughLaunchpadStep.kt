@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps.strikes
 
-import rlbot.manager.BotLoopRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -30,7 +29,7 @@ class DriveThroughLaunchpadStep(private val launchPad: PreKickWaypoint) : Standa
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5.0), 0.0)
         val steerPlan = launchPad.planRoute(car, distancePlot)
 
-        val renderer = BotLoopRenderer.forBotLoop(bundle.agentInput.bot)
+        val renderer = car.renderer
         RenderUtil.drawSquare(renderer, Plane(Vector3.UP, launchPad.position.toVector3()), 2.0, Color.WHITE)
         RenderUtil.drawSquare(renderer, Plane(Vector3.UP, launchPad.position.toVector3()), 1.0, Color.WHITE)
         steerPlan.route.renderDebugInfo(renderer)

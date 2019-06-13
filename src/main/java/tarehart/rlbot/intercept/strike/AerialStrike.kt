@@ -7,6 +7,7 @@ import tarehart.rlbot.intercept.AerialChecklist
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikePlanner
+import tarehart.rlbot.math.Atan
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -17,7 +18,6 @@ import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
-import tarehart.rlbot.steps.strikes.DirectedKickPlan
 import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
@@ -41,7 +41,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             BotLog.println("Performing Aerial!", car.playerIndex)
 
             val groundDistance = car.position.flatten().distance(intercept.space.flatten())
-            val radiansForTilt = Math.atan2(intercept.space.z, groundDistance) + UPWARD_VELOCITY_MAINTENANCE_ANGLE
+            val radiansForTilt = Atan.atan2(intercept.space.z, groundDistance) + UPWARD_VELOCITY_MAINTENANCE_ANGLE
 
             val tiltBackSeconds = 0.2 + radiansForTilt * .1
 

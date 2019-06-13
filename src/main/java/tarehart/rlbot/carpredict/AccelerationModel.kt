@@ -3,12 +3,10 @@ package tarehart.rlbot.carpredict
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.DistanceTimeSpeed
-import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
-
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -144,9 +142,7 @@ object AccelerationModel {
 
     fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {
         val toTarget = target.minus(carData.position)
-        val correctionAngleRad = VectorUtil.getCorrectionAngle(carData.orientation.noseVector, toTarget, carData.orientation.roofVector)
-        val correctionErr = Math.max(0.0, Math.abs(correctionAngleRad) - Math.PI / 6)
-
+        val correctionErr = Math.max( 0.0, 0.8 - toTarget.normaliseCopy().dotProduct(carData.orientation.noseVector))
         val seconds = correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .02
         return seconds
     }

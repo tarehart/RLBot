@@ -4,6 +4,7 @@ import rlbot.render.Renderer
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.math.Atan
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.Triangle
 import tarehart.rlbot.math.VectorUtil
@@ -129,7 +130,7 @@ object DirectedKickUtil {
         val postDodgeVelocity = intercept.strikeProfile.getPostDodgeVelocity(arrivalSpeed)
 
         val strikeTravel = intercept.strikeProfile.postDodgeTime.seconds * postDodgeVelocity.speed
-        val deflectionAngle = Math.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * Math.signum(approachVsKickForceAngle)
+        val deflectionAngle = Atan.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * Math.signum(approachVsKickForceAngle)
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
 
@@ -182,7 +183,7 @@ object DirectedKickUtil {
         // carAtContact is at C
 
         // Let's find the absolute angle of side B, by getting the absolute angle of side A and then adding angleC to it.
-        val sideAAngle = Math.atan2(toContact.y, toContact.x)
+        val sideAAngle = Atan.atan2(toContact.y, toContact.x)
         val sideBAngle = sideAAngle + triangle.angleB * Math.signum(-dodgeDeflectionAngle) // TODO: is this inverted?
         val toDodge = Vector2(Math.cos(sideBAngle), Math.sin(sideBAngle)).scaled(triangle.sideC)
         return carPosition + toDodge

@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.Atan
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
@@ -19,7 +20,6 @@ import java.lang.Math.*
 import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.stream.Collectors
-import java.util.stream.Stream
 import kotlin.collections.ArrayList
 import kotlin.streams.asStream
 
@@ -234,7 +234,7 @@ class ArenaModel {
         }
 
         private fun getWallIntersectionPoints(): List<Vector2> {
-            val orderedWalls = getWallPlanes().sortedBy { p -> Math.atan2(p.position.y, p.position.x) }
+            val orderedWalls = getWallPlanes().sortedBy { p -> Atan.atan2(p.position.y, p.position.x) }
             val points = ArrayList<Vector2>(orderedWalls.size)
 
             for (i in 0 until orderedWalls.size - 1) {
