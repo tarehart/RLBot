@@ -44,6 +44,8 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
     private var selfDestruct = false
     var debugMode: Boolean = false
         get() = BotHouse.debugMode
+    open var loaded = false
+        get() = isGameModeInitialized
     private val runningAverage = RunningAverage()
 
 
@@ -64,7 +66,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         menuBar.add(menu)
         return menuBar
     }
-
 
     override fun processInput(request: GameTickPacket?): AgentOutput {
 

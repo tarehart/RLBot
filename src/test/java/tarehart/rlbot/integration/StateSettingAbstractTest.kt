@@ -4,6 +4,7 @@ import org.junit.Assert
 import org.junit.BeforeClass
 import rlbot.manager.BotManager
 import rlbot.pyinterop.PythonServer
+import tarehart.rlbot.BotHouse
 import tarehart.rlbot.DEFAULT_PORT
 import tarehart.rlbot.integration.asserts.AssertStatus
 import tarehart.rlbot.readPortFromArgs
@@ -30,6 +31,7 @@ abstract class StateSettingAbstractTest {
         fun startListening() {
             if (!isListening) {
                 val port = DEFAULT_PORT
+                BotHouse.debugMode = true
                 val pythonInterface = IntegrationPyInterface(port, BotManager())
                 Thread {pythonInterface.start()}.start()
                 isListening = true

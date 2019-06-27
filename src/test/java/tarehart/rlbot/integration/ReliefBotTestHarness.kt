@@ -26,7 +26,6 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
                 RLBotDll.initialize("garbage path to make this thing fail fast until " +
                         "it gets initialized by another thread.")
                 RLBotDll.setPlayerInputFlatbuffer(AgentOutput(), STANDARD_PLAYER_INDEX)
-                testCase.setState()
                 botManager.ensureStarted()
                 initialized = true
                 Thread.sleep(100) // Give the state a chance to take hold.
@@ -39,9 +38,17 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
             }
         }
 
+        System.out.println("Booting up ReliefBot")
         botInstance = ReliefBot(Team.BLUE, STANDARD_PLAYER_INDEX)
         botManager.ensureBotRegistered(STANDARD_PLAYER_INDEX) { botInstance }
+
+        while(!botInstance.loaded) {
+            Thread.sleep(16)
+        }
+
         botInstance.registerBundleListener(testCase)
+        System.out.println("Setting state")
+        testCase.setState()
     }
 
     private fun stop() {

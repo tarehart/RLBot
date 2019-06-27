@@ -25,6 +25,10 @@ class Duration private constructor(val millis: Long) : Comparable<Duration> {
         return Duration.ofMillis(millis + other.millis)
     }
 
+    operator fun times(other: Double): Duration {
+        return Duration.ofMillis((millis * other).toLong())
+    }
+
     override fun toString(): String {
         return "$millis ms"
     }

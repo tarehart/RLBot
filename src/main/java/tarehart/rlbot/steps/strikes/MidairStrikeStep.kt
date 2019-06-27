@@ -8,7 +8,6 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
-import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.Mat3
 import tarehart.rlbot.math.OrientationSolver
 import tarehart.rlbot.math.SpaceTime
@@ -34,17 +33,19 @@ import java.awt.Graphics2D
 
 class MidairStrikeStep(private val timeInAirAtStart: Duration,
                        private val hasJump: Boolean = true,
-                       private val kickStrategy: KickStrategy? = null) : NestedPlanStep() {
+                       private val kickStrategy: KickStrategy? = null,
+                       private val initialIntercept: SpaceTime? = null) : NestedPlanStep() {
 
     private lateinit var lastMomentForDodge: GameTime
     private lateinit var beginningOfStep: GameTime
     private var intercept: Intercept? = null
     private var lostWheelContact = false
 
-    private var boostCounter = 0.0
     private var wasBoosting = false
+    private var finalOrientation = false
 
-    private val ballPathDisruptionMeter = BallPathDisruptionMeter(0.2)
+    private val ballPathDisruptionMeter = BallPathDisruptionMeter(1.0)
+    private var spaceTime = initialIntercept
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
@@ -64,34 +65,40 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        if (! ::lastMomentForDodge.isInitialized) {
-            lastMomentForDodge = bundle.agentInput.time.plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart)
-            beginningOfStep = bundle.agentInput.time
-        }
 
-        // We hold down the jump button during the aerial for extra upward acceleration, but it wears off.
-        val secondsSinceLaunch = Duration.between(beginningOfStep, bundle.agentInput.time).seconds
 
         val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
 
-        val offset = standardOffset(intercept?.space, car.team, bundle)
-
-        lostWheelContact = lostWheelContact || !car.hasWheelContact
-
-        if (ballPathDisruptionMeter.isDisrupted(bundle.tacticalSituation.ballPath)) {
-            intercept = null
-            ballPathDisruptionMeter.reset()
-        }
+        val offset = standardOffset(initialIntercept?.space, car.team, bundle)
 
         val spatialPredicate = { cd: CarData, st: SpaceTime ->
             kickStrategy?.looksViable(cd, st.space) ?: true
         }
 
-        val latestIntercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
-                ?: return null
+        if (! ::lastMomentForDodge.isInitialized) {
+            lastMomentForDodge = bundle.agentInput.time.plus(MAX_TIME_FOR_AIR_DODGE).minus(timeInAirAtStart)
+            beginningOfStep = bundle.agentInput.time
+            intercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
+//            spaceTime = spaceTime ?: intercept?.toSpaceTime()
+            spaceTime = intercept?.toSpaceTime()
+        }
 
-        intercept = latestIntercept
+        // We hold down the jump button during the aerial for extra upward acceleration, but it wears off.
+        val secondsSinceLaunch = Duration.between(beginningOfStep, bundle.agentInput.time).seconds
+
+        lostWheelContact = lostWheelContact || !car.hasWheelContact
+
+        if (ballPathDisruptionMeter.isDisrupted(bundle.tacticalSituation.ballPath)) {
+            BotLog.println("Ball path disrupted!", car.playerIndex)
+            intercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
+            ballPathDisruptionMeter.reset()
+            spaceTime = intercept?.toSpaceTime()
+        }
+
+        // val latestIntercept = intercept?.toSpaceTime() ?: return null
+        val latestIntercept = spaceTime ?: return null
+
 
         if (latestIntercept.time < car.time) {
             return null // We missed the intercept
@@ -120,9 +127,11 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             }
         }
 
+        if (finalOrientation) {
+            return orientForFinalTouch(offset, car)
+        }
+
         val secondsSoFar = Duration.between(beginningOfStep, bundle.agentInput.time).seconds
-
-
 
         val courseResult = if (canDodge && carToIntercept.z / carToIntercept.flatten().magnitude() < 0.2)
             AerialMath.calculateAerialCourseCorrection(
@@ -134,10 +143,16 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         else
             AerialMath.calculateAerialCourseCorrection(
                     CarSlice(car),
-                    latestIntercept.toSpaceTime(),
+                    latestIntercept,
                     false,
                     secondsSinceLaunch,
                     wasBoosting)
+
+        if (courseResult.targetError.magnitude() < 0.1 && !canDodge && !wasBoosting) {
+            finalOrientation = true
+            BotLog.println("Doing final orientation for aerial touch!", car.playerIndex)
+            return orientForFinalTouch(offset, car)
+        }
 
         if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 &&
                 Vector2.angle(car.velocity.flatten(), carToIntercept.flatten()) > Math.PI / 6 &&
@@ -150,28 +165,23 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return null
         }
 
-        RenderUtil.drawSphere(car.renderer, latestIntercept.space - courseResult.targetError, 1.0, Color.RED)
-        RenderUtil.drawSphere(car.renderer, latestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
-
-        var useBoost = 0L
         val boostThreshold = if (secondsSinceLaunch < 1) .8  else .9
-        if (courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold) {
-            useBoost -= Math.round(boostCounter)
-            boostCounter += Clamper.clamp(1.25 * (courseResult.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR), 0.0, 1.0)
-            useBoost += Math.round(boostCounter)
-        }
 
-        if (courseResult.targetError.magnitude() < 1) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(offset * -1.0, car.orientation.roofVector), ORIENT_DT)
-                    .withJump()
-        }
+        RenderUtil.drawSphere(car.renderer, latestIntercept.space - courseResult.targetError, 1.0, Color.RED)
 
-        wasBoosting = useBoost != 0L
+        wasBoosting = courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, car.orientation.roofVector), ORIENT_DT)
-                .withBoost(useBoost != 0L)
+                .withBoost(wasBoosting)
                 .withJump()
 
+    }
+
+    private fun orientForFinalTouch(offset: Vector3, car: CarData): AgentOutput {
+        // If we're facing the wrong way, hit it with the tail!
+        val direction = offset.scaled(offset.dotProduct(car.orientation.noseVector))
+        return OrientationSolver.orientCar(car, Mat3.lookingTo(direction, car.orientation.roofVector), ORIENT_DT)
+                .withJump()
     }
 
     override fun canInterrupt(): Boolean {
@@ -192,9 +202,10 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
         private const val ORIENT_DT = 1/60.0
 
-        private fun standardOffset(intercept: Vector3?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
+        fun standardOffset(intercept: Vector3?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
             val ownGoal = GoalUtil.getOwnGoal(team).center
             var offset = ownGoal.scaledToMagnitude(2.0).minus(Vector3(0.0, 0.0, .3))
+            val car = tacticalBundle.agentInput.myCarData
 
             intercept?.let {
 
@@ -207,7 +218,13 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                 if (gameMode == GameMode.SOCCER) {
 
                     if (tacticalBundle.tacticalSituation.scoredOnThreat != null) {
-                        offset = offset.scaledToMagnitude(3.0)
+                        offset = (offset.scaledToMagnitude(0.5) +
+                                KickAwayFromOwnGoal().getKickDirection(car, it).scaledToMagnitude(-1.0))
+                                .withZ(-1.0)
+                                .scaledToMagnitude(2.8)
+                    } else if (offset.z > .8) {
+                        // We'll be hitting it with our tail probably, so get closer.
+                        offset = offset.scaledToMagnitude(2.6)
                     }
 
                     if (Math.abs(ownGoal.y - intercept.y) > ArenaModel.BACK_WALL * .7 && goalToBall.magnitude() > 110) {

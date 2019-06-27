@@ -10,6 +10,7 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.util.*
+import kotlin.math.min
 
 class BallPath() {
 
@@ -181,8 +182,8 @@ class BallPath() {
     fun getPlaneBreak(searchStart: GameTime, plane: Plane, directionSensitive: Boolean,
                       spacePredicate: (Vector3) -> Boolean = { true }, increment: Int = 1): BallSlice? {
 
-        for (i in increment until this.slices.size step increment) {
-            val currSlice = this.slices[i]
+        for (i in increment until this.slices.size + increment - 1 step increment) {
+            val currSlice = this.slices[min(i, this.slices.size - 1)]
 
             if (currSlice.time.isBefore(searchStart)) {
                 continue

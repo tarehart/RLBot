@@ -7,8 +7,10 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.intercept.strike.AerialStrike
 import tarehart.rlbot.intercept.strike.SideHitStrike
+import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.state.ResetLoop
@@ -214,7 +216,7 @@ class TargetBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             }
 
             if (Plan.activePlanKt(currentPlan) == null) {
-                currentPlan = AerialStrike.performDoubleJumpAerial(0.3, null)
+                currentPlan = SetPieces.jumpSuperHigh(10.0)
             }
 
             currentPlan?.let {

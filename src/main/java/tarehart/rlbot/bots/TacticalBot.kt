@@ -12,6 +12,9 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
     private lateinit var tacticsAdvisor: TacticsAdvisor
     private val bundleListeners = ArrayList<BundleListener>()
 
+    override var loaded = false
+        get() = super.loaded && ::tacticsAdvisor.isInitialized
+
     private fun assessSituation(input: AgentInput): TacticalBundle {
         if (!::tacticsAdvisor.isInitialized) {
             tacticsAdvisor = getNewTacticsAdvisor()

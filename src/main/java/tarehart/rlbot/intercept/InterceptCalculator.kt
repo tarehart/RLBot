@@ -287,7 +287,7 @@ object InterceptCalculator {
                 val aerialTime = AerialMath.calculateAerialTimeNeeded(courseCorrection)
                 val aerialFinesseTime = intercept.time - carData.time - aerialTime
                 BotLog.println("Aerial finesse time: $aerialFinesseTime", carData.playerIndex)
-                if (aerialFinesseTime.seconds > 0 || aerialFinesseTime < previousFinesseTime) {
+                if (aerialFinesseTime.seconds > 0.4 || aerialFinesseTime < previousFinesseTime) {
 
                     return Intercept(
                             intercept.space,

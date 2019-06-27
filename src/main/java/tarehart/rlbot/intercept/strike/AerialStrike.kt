@@ -41,13 +41,13 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             BotLog.println("Performing Aerial!", car.playerIndex)
 
             val groundDistance = car.position.flatten().distance(intercept.space.flatten())
-            val radiansForTilt = Atan.atan2(intercept.space.z, groundDistance) + UPWARD_VELOCITY_MAINTENANCE_ANGLE
+            val radiansForTilt = Atan.atan2(intercept.space.z, groundDistance)
 
-            val tiltBackSeconds = 0.2 + radiansForTilt * .1
+            val tiltBackSeconds = 0.1 + radiansForTilt * .1
 
             return if (Duration.between(car.time, intercept.time).seconds > 1.5 && intercept.space.z > 10) {
-                performDoubleJumpAerial(tiltBackSeconds * .8, kickStrategy)
-            } else performAerial(tiltBackSeconds, kickStrategy)
+                performDoubleJumpAerial(tiltBackSeconds, kickStrategy, intercept)
+            } else performAerial(0.05, kickStrategy, intercept)
         }
 
         return null
@@ -140,16 +140,16 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             return secondsTillIntercept - expectedAerialSeconds
         }
 
-        fun performAerial(tiltBackSeconds: Double, kickStrategy: KickStrategy?): Plan {
+        fun performAerial(tiltBackSeconds: Double, kickStrategy: KickStrategy?, intercept: SpaceTime): Plan {
             val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
 
             return Plan()
                     .withStep(BlindStep(tiltBackDuration, AgentOutput().withJump(true).withPitch(1.0)))
-                    .withStep(MidairStrikeStep(tiltBackDuration, kickStrategy = kickStrategy))
+                    .withStep(MidairStrikeStep(tiltBackDuration, kickStrategy = kickStrategy, initialIntercept = intercept))
                     .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
         }
 
-        fun performDoubleJumpAerial(tiltBackSeconds: Double, kickStrategy: KickStrategy?): Plan {
+        fun performDoubleJumpAerial(tiltBackSeconds: Double, kickStrategy: KickStrategy?, intercept: SpaceTime): Plan {
             val tiltBackDuration = Duration.ofSeconds(tiltBackSeconds)
 
             return Plan()
@@ -162,7 +162,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
                             .withBoost(true)
                             .withJump(true)
                     ))
-                    .withStep(MidairStrikeStep(tiltBackDuration, hasJump = false, kickStrategy = kickStrategy))
+                    .withStep(MidairStrikeStep(tiltBackDuration, hasJump = false, kickStrategy = kickStrategy, initialIntercept = intercept))
                     .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
         }
     }

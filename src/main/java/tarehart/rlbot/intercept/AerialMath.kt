@@ -18,8 +18,8 @@ object AerialMath {
     private const val MINIMUM_JUMP_HEIGHT = 2.0
     private const val JUMP_VELOCITY = 12.0
     private const val AERIAL_ANGULAR_ACCEL = OrientationSolver.ALPHA_MAX  // maximum aerial angular acceleration
-    const val BOOST_ACCEL_IN_AIR = 20.0  // boost acceleration
-    private const val ACCEL_NEEDED_THRESHOLD = 1
+    const val BOOST_ACCEL_IN_AIR = 19.8  // boost acceleration
+    private const val ACCEL_NEEDED_THRESHOLD = 0.9
 
     /**
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L415-L421
@@ -59,6 +59,10 @@ object AerialMath {
             initialPosition += car.orientation.roofVector * MINIMUM_JUMP_HEIGHT
         }
 
+        if (assumeResidualBoostAccel) {
+            initialVelocity += car.orientation.noseVector * 4.0
+        }
+
         val assistSeconds = Math.max(0.0, JUMP_ASSIST_DURATION - secondsSinceJump)
 
         val positionAfterJumpAssist = initialPosition + initialVelocity * assistSeconds -
@@ -67,10 +71,9 @@ object AerialMath {
         val postAssistSeconds = secondsRemaining - assistSeconds
         val velocityAfterJumpAssist = initialVelocity + Vector3.UP * assistSeconds * (JUMP_ASSIST_ACCEL - ArenaModel.GRAVITY)
 
-        val residualBoostMotion = if (assumeResidualBoostAccel) car.orientation.noseVector * 2.0 else Vector3.ZERO
 
         val expectedCarPosition = positionAfterJumpAssist + velocityAfterJumpAssist * postAssistSeconds -
-                Vector3.UP * 0.5 * ArenaModel.GRAVITY * postAssistSeconds * postAssistSeconds + residualBoostMotion
+                Vector3.UP * 0.5 * ArenaModel.GRAVITY * postAssistSeconds * postAssistSeconds
 
 
         // Displacement from where the car will end up to where we're aiming

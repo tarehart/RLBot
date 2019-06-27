@@ -23,6 +23,7 @@ class StateSettingTestCase(private val initialState: GameState, val conditions: 
 
         if (!::startTime.isInitialized) {
             startTime = bundle.agentInput.time
+            System.out.println("Test begins at $startTime")
         }
 
         var hasPendingAsserts = false

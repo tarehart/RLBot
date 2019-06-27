@@ -21,7 +21,7 @@ class DefensiveAerialTest : StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-20F, -32F, 2F))
-                                .withVelocity(StateVector(10F, -20F, 25F))
+                                .withVelocity(StateVector(9F, -21F, 25F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
@@ -34,10 +34,9 @@ class DefensiveAerialTest : StateSettingAbstractTest() {
                         PlaneBreakAssert(
                                 plane = PlaneBreakAssert.OWN_GOAL_PLANE,
                                 extent = SoccerGoal.EXTENT,
-                                timeLimit = Duration.ofSeconds(3.0),
-                                delayWhenBallFloating = true).negate(),
+                                timeLimit = Duration.ofSeconds(6.0)).negate(),
 
-                        BallTouchAssert(Duration.ofSeconds(4.0))))
+                        BallTouchAssert(Duration.ofSeconds(5.0))))
 
         runTestCase(testCase)
     }
@@ -50,7 +49,7 @@ class DefensiveAerialTest : StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-20F, -30F, 2F))
-                                .withVelocity(StateVector(10F, -20F, 23F))
+                                .withVelocity(StateVector(7F, -21F, 23F))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()

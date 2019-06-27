@@ -90,10 +90,38 @@ class LongRangeAerialTest: StateSettingAbstractTest() {
                         PlaneBreakAssert(
                                 plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                                 extent = SoccerGoal.EXTENT,
-                                timeLimit = Duration.ofSeconds(7.0),
-                                delayWhenBallFloating = true),
+                                timeLimit = Duration.ofSeconds(5.0),
+                                delayWhenBallFloating = false),
 
                         BallTouchAssert(Duration.ofSeconds(4.0))))
+
+        runTestCase(testCase)
+    }
+
+    @Test
+    fun testVeryFar() {
+
+        val testCase = StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(0F, 60F, 10F))
+                                .withVelocity(StateVector(0F, 5F, -50F))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(10F, -80F, ManeuverMath.BASE_CAR_Z.toFloat()))
+                                .withVelocity(StateVector(0F, 20F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(7.0),
+                                delayWhenBallFloating = false),
+
+                        BallTouchAssert(Duration.ofSeconds(7.0))))
 
         runTestCase(testCase)
     }
