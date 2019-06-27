@@ -7,4 +7,5 @@ interface KickStrategy {
     fun getKickDirection(car: CarData, ballPosition: Vector3): Vector3?
     fun getKickDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3?
     fun looksViable(car: CarData, ballPosition: Vector3): Boolean
+    fun isShotOnGoal(): Boolean
 }

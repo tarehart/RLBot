@@ -55,7 +55,7 @@ class ArenaModel {
         val BACK_WALL = 102.4f
         val CEILING = 40.88f
         var GRAVITY = 13.0
-        val BALL_RADIUS = 1.8555f
+        const val BALL_RADIUS = 1.8555f
 
         val CORNER_BEVEL = 11.8 // 45 degree angle walls come in this far from where the rectangular corner would be.
         val CORNER_ANGLE_CENTER = Vector2(SIDE_WALL.toDouble(), BACK_WALL.toDouble()).minus(Vector2(CORNER_BEVEL, CORNER_BEVEL))

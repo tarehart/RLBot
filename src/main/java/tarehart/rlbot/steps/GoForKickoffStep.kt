@@ -57,33 +57,11 @@ class GoForKickoffStep : NestedPlanStep() {
         return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAtEnemyGoal())), bundle)
     }
 
-    private enum class KickoffType {
+    enum class KickoffType {
         CENTER,
         CHEATIN,
         SLANTERD,
         UNKNOWN
-    }
-
-    private fun getKickoffType(car: CarData): KickoffType {
-        val xPosition = Math.abs(car.position.x)
-        val yPosition = Math.abs(car.position.y)
-        if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(CENTER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
-            BotLog.println("it be center", car.playerIndex)
-            return KickoffType.CENTER
-        }
-
-        if (getNumberDistance(CHEATER_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(CHEATER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
-            BotLog.println("it be cheatin", car.playerIndex)
-            return KickoffType.CHEATIN
-        }
-
-        if (getNumberDistance(DIAGONAL_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(DIAGONAL_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
-            BotLog.println("it be slanterd", car.playerIndex)
-            return KickoffType.SLANTERD
-        }
-
-        BotLog.println("what on earth", car.playerIndex)
-        return KickoffType.UNKNOWN
     }
 
     override fun canInterrupt(): Boolean {
@@ -102,6 +80,28 @@ class GoForKickoffStep : NestedPlanStep() {
 
         private fun getNumberDistance(first: Double, second: Double): Double {
             return Math.abs(first - second)
+        }
+
+        fun getKickoffType(car: CarData): KickoffType {
+            val xPosition = Math.abs(car.position.x)
+            val yPosition = Math.abs(car.position.y)
+            if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(CENTER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
+                BotLog.println("it be center", car.playerIndex)
+                return KickoffType.CENTER
+            }
+
+            if (getNumberDistance(CHEATER_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(CHEATER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
+                BotLog.println("it be cheatin", car.playerIndex)
+                return KickoffType.CHEATIN
+            }
+
+            if (getNumberDistance(DIAGONAL_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(DIAGONAL_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
+                BotLog.println("it be slanterd", car.playerIndex)
+                return KickoffType.SLANTERD
+            }
+
+            BotLog.println("what on earth", car.playerIndex)
+            return KickoffType.UNKNOWN
         }
     }
 }

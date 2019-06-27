@@ -4,11 +4,14 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
+import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.tuning.ManeuverMath
 
 class ChipStrike: StrikeProfile() {
 
@@ -30,24 +33,24 @@ class ChipStrike: StrikeProfile() {
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), desiredKickForce.flatten())
 
-        val carCornerSpacing = Math.abs(estimatedApproachDeviationFromKickForce) * 1
+        val carCornerSpacing = Math.abs(estimatedApproachDeviationFromKickForce) * 1.1
 
         val distanceBetweenCentersAtContact = desiredKickForce.flatten().scaledToMagnitude(3.2 + carCornerSpacing)
 
         val launchPosition = intercept.ballSlice.space.flatten() - distanceBetweenCentersAtContact
+        val carToLaunch = launchPosition - car.position.flatten()
 
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
-        return AnyFacingPreKickWaypoint(
+        return StrictPreKickWaypoint(
                 position = launchPosition,
-                idealFacing = desiredKickForce.flatten(),
-                allowableFacingError = Math.PI,
+                facing = desiredKickForce.flatten().rotateTowards(carToLaunch, Math.PI * .2),
                 expectedTime = launchPadMoment,
                 waitUntil = if (intercept.needsPatience) launchPadMoment else null
         )
     }
 
     companion object {
-        const val MAX_HEIGHT_OF_BALL_FOR_CHIP = 2.0
+        const val MAX_HEIGHT_OF_BALL_FOR_CHIP = ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z + 0.3
     }
 }

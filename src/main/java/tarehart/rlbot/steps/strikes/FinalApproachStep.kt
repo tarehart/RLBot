@@ -6,6 +6,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
@@ -14,6 +15,7 @@ import tarehart.rlbot.tuning.BotLog
 class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep() {
 
     private var strikeStarted = false
+    private val disruptionMeter = BallPathDisruptionMeter(1.0)
 
     override fun getLocalSituation(): String {
         return "Final approach toward %s".format(kickPlan.launchPad.position)
@@ -23,6 +25,10 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
         if (strikeStarted) {
             return null // If we're here, then we already launched and then finished our strike, so we're totally done.
+        }
+
+        if (disruptionMeter.isDisrupted(bundle.tacticalSituation.ballPath)) {
+            return null
         }
 
         if (!readyForFinalApproach(bundle.agentInput.myCarData, kickPlan.launchPad)) {

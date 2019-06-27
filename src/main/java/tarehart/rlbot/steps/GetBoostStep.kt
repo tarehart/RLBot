@@ -77,7 +77,6 @@ class GetBoostStep : NestedPlanStep() {
         return "Going for boost"
     }
 
-
     private fun getTacticalBoostLocation(bundle: TacticalBundle): BoostPad? {
         var nearestLocation: BoostPad? = null
         var minTime = java.lang.Double.MAX_VALUE
@@ -99,8 +98,16 @@ class GetBoostStep : NestedPlanStep() {
         val ballPath = bundle.tacticalSituation.ballPath
         val endpoint = ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(3.0)) ?: ballPath.endpoint
         // Add a defensive bias.
-        val defensiveBias = 50 * Math.signum(GoalUtil.getOwnGoal(bundle.agentInput.team).center.y)
-        val idealPlaceToGetBoost = Vector3(endpoint.space.x, endpoint.space.y + defensiveBias, 0.0)
+        val defensiveBias = 60 * Math.signum(GoalUtil.getOwnGoal(bundle.agentInput.team).center.y)
+        var idealPlaceToGetBoost = Vector3(endpoint.space.x, endpoint.space.y + defensiveBias, 0.0)
+
+        bundle.agentInput.allCars.forEach {
+            if (it != carData) {
+                val otherToMe = carData.position - it.position
+                idealPlaceToGetBoost += otherToMe.scaledToMagnitude(20.0)
+            }
+        }
+
         return getNearestBoost(BoostAdvisor.boostData.fullBoosts, idealPlaceToGetBoost)
     }
 

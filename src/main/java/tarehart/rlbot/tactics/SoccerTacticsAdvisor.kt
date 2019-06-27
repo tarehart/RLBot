@@ -24,6 +24,7 @@ import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
+import tarehart.rlbot.steps.teamwork.PositionForPassStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
 import tarehart.rlbot.time.Duration
@@ -50,6 +51,11 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             if (situation.teamPlayerWithInitiative?.car == car) {
                 return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
             }
+
+            if (GoForKickoffStep.getKickoffType(car) == GoForKickoffStep.KickoffType.CENTER) {
+                return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
+            }
+
             return Plan(Plan.Posture.KICKOFF).withStep(GetBoostStep())
         }
 
@@ -141,22 +147,14 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val input = bundle.agentInput
         val situation = bundle.tacticalSituation
-        if (situation.teamPlayerWithInitiative?.car != input.myCarData) {
+        if (situation.teamPlayerWithInitiative?.car != input.myCarData &&
+                situation.teamPlayerWithBestShot?.car != input.myCarData) {
 
-            if (GoalUtil.getNearestGoal(situation.futureBallMotion?.space
-                            ?: input.ballPosition).team == input.team) {
-                // Do something vaguely defensive
-                return Plan(NEUTRAL)
-                        .withStep(GetBoostStep())
-                        .withStep(GetOnDefenseStep())
-
-            } else {
-
-                return FirstViableStepPlan(NEUTRAL)
-                        .withStep(GetBoostStep())
-                        .withStep(GetOnOffenseStep())
-                        .withStep(DemolishEnemyStep())
-            }
+            return FirstViableStepPlan(NEUTRAL)
+                    .withStep(GetBoostStep())
+                    .withStep(PositionForPassStep())
+                    .withStep(GetOnOffenseStep())
+                    .withStep(DemolishEnemyStep())
         }
 
         val raceResult = situation.ballAdvantage
@@ -246,7 +244,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val myCar = input.myCarData
 
         val futureBallMotion = ballPath.getMotionAt(input.time.plusSeconds(TacticsAdvisor.LOOKAHEAD_SECONDS)) ?: ballPath.endpoint
-        val enemyGoalY = GoalUtil.getEnemyGoal(input.team).center.y
 
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,

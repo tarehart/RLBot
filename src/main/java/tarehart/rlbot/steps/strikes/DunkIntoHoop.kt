@@ -31,6 +31,10 @@ class DunkIntoHoop : KickStrategy {
         return getDirection(car, ballPosition, toBall) != null
     }
 
+    override fun isShotOnGoal(): Boolean {
+        return true
+    }
+
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3? {
 
         return GoalUtil.getEnemyGoal(car.team).getNearestEntrance(ballPosition, 3.0) - car.position

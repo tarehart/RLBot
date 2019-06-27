@@ -31,6 +31,10 @@ class KickAtEnemyGoal : KickStrategy {
         return SoccerTacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.team), ballPosition.flatten(), car.playerIndex)
     }
 
+    override fun isShotOnGoal(): Boolean {
+        return true
+    }
+
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
         val easyKickFlat = easyKick.flatten()
 

@@ -99,7 +99,7 @@ interface TacticsAdvisor {
             val seconds = intercept.time.toSeconds()
             val radianError = measureApproachError(carWithIntercept.car, intercept.space.flatten())
 
-            return seconds + radianError * 2
+            return seconds + radianError * 4
         }
     }
 

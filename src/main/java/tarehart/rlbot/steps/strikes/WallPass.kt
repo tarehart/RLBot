@@ -24,6 +24,10 @@ class WallPass : KickStrategy {
         return getDirection(car, ballPosition, toBall) != null
     }
 
+    override fun isShotOnGoal(): Boolean {
+        return false
+    }
+
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3? {
 
         val bouncePlane = ArenaModel.getBouncePlane(ballPosition, Vector3(easyKick.x, easyKick.y, 0.0))

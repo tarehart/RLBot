@@ -148,7 +148,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                     secondsSinceLaunch,
                     wasBoosting)
 
-        if (courseResult.targetError.magnitude() < 0.1 && !canDodge && !wasBoosting) {
+        if (courseResult.targetError.magnitude() < 0.1 && !canDodge && !wasBoosting || millisTillIntercept < 500) {
             finalOrientation = true
             BotLog.println("Doing final orientation for aerial touch!", car.playerIndex)
             return orientForFinalTouch(offset, car)

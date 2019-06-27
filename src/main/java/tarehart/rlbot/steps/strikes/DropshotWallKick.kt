@@ -24,6 +24,10 @@ class DropshotWallKick : KickStrategy {
         return true
     }
 
+    override fun isShotOnGoal(): Boolean {
+        return false
+    }
+
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
 
         val wallPlanes = ArenaModel.getWallPlanes()

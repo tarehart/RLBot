@@ -21,6 +21,10 @@ class KickToEnemyHalf : KickStrategy {
         return true
     }
 
+    override fun isShotOnGoal(): Boolean {
+        return false
+    }
+
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
         val easyKickFlat = easyKick.flatten()
         val leftSign = Math.signum(GoalUtil.getOwnGoal(car.team).leftPost.x)

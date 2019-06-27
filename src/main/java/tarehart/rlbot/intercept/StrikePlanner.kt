@@ -47,7 +47,7 @@ object StrikePlanner {
 
 
 
-    fun computeStrikeStyle(intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
+    fun computeStrikeStyle(car: CarData, intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
 
         if (approachAngleMagnitude < Math.PI / 16) {
 
@@ -62,7 +62,7 @@ object StrikePlanner {
             if (height < StrikePlanner.MAX_JUMP_HIT) {
                 return StrikeProfile.Style.JUMP_HIT
             }
-        } else if (approachAngleMagnitude < Math.PI * .2 && intercept.z < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
+        } else if (approachAngleMagnitude < Math.PI * .5 && intercept.z < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
             return StrikeProfile.Style.CHIP
         }
 

@@ -20,6 +20,10 @@ class KickAwayFromOwnGoal : KickStrategy {
         return true
     }
 
+    override fun isShotOnGoal(): Boolean {
+        return false
+    }
+
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
         val easyKickFlat = easyKick.flatten()
         val toLeftPost = GoalUtil.getOwnGoal(car.team).leftPost.minus(ballPosition).flatten()

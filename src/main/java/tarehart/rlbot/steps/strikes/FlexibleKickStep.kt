@@ -68,7 +68,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         val strikeProfileFn = {
             intercept: Vector3, kickDirection: Vector2, c: CarData ->
                 val approachVec = intercept.flatten() - c.position.flatten()
-                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), kickStrategy, strikeHint)
+                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), kickStrategy, strikeHint, car)
 
         }
         val ballPath = bundle.tacticalSituation.ballPath
@@ -89,6 +89,12 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
                 spatialPredicate = overallPredicate,
                 strikeProfileFn = strikeProfileFn,
                 kickStrategy = kickStrategy) ?: return null
+
+        if ((kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithBestShot?.car != car ||
+                        !kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithInitiative?.car != car)  &&
+                (precisionPlan.kickPlan.intercept.time - car.time).seconds > 1.0) {
+            return null // Give up on the shot
+        }
 
         recentPrecisionPlan = precisionPlan
 
@@ -173,8 +179,9 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     }
 
     companion object {
-        fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, kickStrategy: KickStrategy, styleHint: StrikeProfile.Style?): StrikeProfile {
-            val style = styleHint ?: StrikePlanner.computeStrikeStyle(intercept, approachAngleMagnitude)
+        fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, kickStrategy: KickStrategy,
+                             styleHint: StrikeProfile.Style?, car: CarData): StrikeProfile {
+            val style = styleHint ?: StrikePlanner.computeStrikeStyle(car, intercept, approachAngleMagnitude)
             return StrikePlanner.getStrikeProfile(style, intercept.z, kickStrategy)
         }
     }
