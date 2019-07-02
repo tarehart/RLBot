@@ -33,6 +33,9 @@ class AgentOutput : rlbot.ControllerState {
     var slideDepressed: Boolean = false
         private set
 
+    var useItemDepressed: Boolean = false
+        private set
+
     fun withSteer(steeringTilt: Double): AgentOutput {
         this.steer = Clamper.clamp(steeringTilt, -1.0, 1.0)
         return this
@@ -73,6 +76,11 @@ class AgentOutput : rlbot.ControllerState {
         return this
     }
 
+    fun withUseItem(useItemDepressed: Boolean): AgentOutput {
+        this.useItemDepressed = useItemDepressed
+        return this
+    }
+
     fun withJump(): AgentOutput {
         this.jumpDepressed = true
         return this
@@ -85,6 +93,11 @@ class AgentOutput : rlbot.ControllerState {
 
     fun withSlide(): AgentOutput {
         this.slideDepressed = true
+        return this
+    }
+
+    fun withUseItem(): AgentOutput {
+        this.useItemDepressed = true
         return this
     }
 
@@ -148,5 +161,9 @@ class AgentOutput : rlbot.ControllerState {
 
     override fun holdJump(): Boolean {
         return jumpDepressed
+    }
+
+    override fun holdUseItem(): Boolean {
+        return useItemDepressed
     }
 }
