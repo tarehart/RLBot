@@ -23,7 +23,7 @@ class CarPath {
     }
 
     fun renderIn3d(renderer: Renderer) {
-        RenderUtil.drawPath(renderer, path.map { it.space }, Color.CYAN)
+        RenderUtil.drawPath(renderer, path.map { it.space }, Color.CYAN, step = 5)
     }
 
     fun getFirstPlaneBreak(planes: List<Plane>): Impact? {

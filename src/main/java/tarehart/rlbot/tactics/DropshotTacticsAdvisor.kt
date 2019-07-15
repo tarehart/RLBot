@@ -132,7 +132,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = (ballPath.getMotionAt(input.time.plusSeconds(3.0)) ?: ballPath.endpoint).space.y * GoalUtil.getOwnGoal(input.team).center.y > 0,
                 shotOnGoalAvailable = true,
-                goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition),
+                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,
                 enemyIntercepts = enemyIntercepts,
@@ -150,19 +150,5 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         TeamTelemetry[teamPlan] = input.playerIndex
 
         return TacticalBundle(input, situation, teamPlan, zonePlan)
-    }
-
-    // Really only used for avoiding "Disable Goal Reset" own goals
-    private fun getGoForKickoff(zonePlan: ZonePlan?, team: Team, ballPosition: Vector3): Boolean {
-        if (zonePlan != null) {
-            if (ballPosition.flatten().magnitudeSquared() == 0.0) {
-                return if (team == Team.BLUE)
-                    zonePlan.myZone.mainZone == Zone.MainZone.BLUE
-                else
-                    zonePlan.myZone.mainZone == Zone.MainZone.ORANGE
-            }
-        }
-
-        return false
     }
 }

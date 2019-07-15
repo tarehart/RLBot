@@ -281,20 +281,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         return opponentCar?.let { ZoneUtil.isEnemyOffensiveBreakaway(myCar, it, ballPosition) } ?: false
     }
 
-    // Really only used for avoiding "Disable Goal Reset" own goals
-    private fun getGoForKickoff(zonePlan: ZonePlan?, team: Team, ballPosition: Vector3): Boolean {
-        if (zonePlan != null) {
-            if (ballPosition.flatten().magnitudeSquared() == 0.0) {
-                return if (team == Team.BLUE)
-                    zonePlan.myZone.mainZone == Zone.MainZone.BLUE
-                else
-                    zonePlan.myZone.mainZone == Zone.MainZone.ORANGE
-            }
-        }
-
-        return false
-    }
-
     // Checks to see if the ball is in the box for a while or if we have a breakaway
     private fun getShotOnGoalAvailable(team: Team, myCar: CarData, opponentCar: CarData?,
                                        ballPosition: Vector3, soonestIntercept: Intercept?, ballPath: BallPath): Boolean {
@@ -364,6 +350,20 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 // BotLog.println(String.format("Shot angle: %.2f", angle), playerIndex);
 
             return Vector2.angle(toLeftPost, toRightPost)
+        }
+
+        // Really only used for avoiding "Disable Goal Reset" own goals
+        fun getGoForKickoff(zonePlan: ZonePlan?, team: Team, ballPosition: Vector3): Boolean {
+            if (zonePlan != null) {
+                if (ballPosition.flatten().magnitudeSquared() == 0.0) {
+                    return if (team == Team.BLUE)
+                        zonePlan.myZone.mainZone == Zone.MainZone.BLUE
+                    else
+                        zonePlan.myZone.mainZone == Zone.MainZone.ORANGE
+                }
+            }
+
+            return false
         }
     }
 

@@ -71,6 +71,10 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
                 println("Game Mode: Hoops")
                 HoopsTacticsAdvisor()
             }
+            GameMode.SPIKE_RUSH -> {
+                println("Game Mode: Spike Rush")
+                SpikeRushTacticsAdvisor()
+            }
         }
     }
 

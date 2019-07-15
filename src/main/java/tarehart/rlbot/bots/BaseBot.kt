@@ -164,7 +164,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) {
                 val screenX = ScreenResolution.getX()
                 val screenY = ScreenResolution.getY()
-                val postureColor = Plan.PostureColor.fromPosture(posture)
+                val postureColor = posture.color
                 planRenderer.drawString2d(posture.name, postureColor,
                         Point((0.3 * screenX).toInt(), (0.65 * screenY + (15 * playerIndex)).toInt()),
                         1, 1)
@@ -172,8 +172,6 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 
             planRenderer.finishAndSend()
             BotLog.println("[Sitch] " + situation, input.playerIndex)
-        } else if (frameCount.rem(100) == 0L) {
-            planRenderer.eraseFromScreen()
         }
         previousSituation = situation
         previousPlan = currentPlan

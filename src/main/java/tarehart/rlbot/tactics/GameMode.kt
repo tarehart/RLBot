@@ -1,19 +1,17 @@
 package tarehart.rlbot.tactics
 
-import tarehart.rlbot.dropshot.DropshotTileManager
-import tarehart.rlbot.hoops.HoopsManager
+import rlbot.cppinterop.RLBotDll
+import rlbot.flat.RumbleOption
 
 
 enum class GameMode {
     SOCCER,
     DROPSHOT,
-    HOOPS
+    HOOPS,
+    SPIKE_RUSH
 }
 
 object GameModeSniffer {
-
-    val dropshotTileManager = DropshotTileManager()
-    val hoopsManager = HoopsManager()
 
     private var gameMode: GameMode? = null
 
@@ -23,17 +21,22 @@ object GameModeSniffer {
             return it
         }
 
-        if (dropshotTileManager.isDropshotMode()) {
+        val matchSettings = RLBotDll.getMatchSettings()
+        val mode = matchSettings.gameMode()
+
+        if (mode == rlbot.flat.GameMode.Dropshot) {
             gameMode = GameMode.DROPSHOT
-            return GameMode.DROPSHOT
-        }
-
-        if (hoopsManager.isHoopsMode()) {
+        } else if (mode == rlbot.flat.GameMode.Hoops) {
             gameMode = GameMode.HOOPS
-            return GameMode.HOOPS
+        } else {
+            gameMode = GameMode.SOCCER
         }
 
-        return GameMode.SOCCER
+        if (matchSettings.mutatorSettings().rumbleOption() == RumbleOption.Spike_Rush) {
+            gameMode = GameMode.SPIKE_RUSH
+        }
+
+        return gameMode ?: GameMode.SOCCER
     }
 
 }

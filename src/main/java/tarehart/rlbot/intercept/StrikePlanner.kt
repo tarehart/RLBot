@@ -76,6 +76,21 @@ object StrikePlanner {
         return StrikeProfile.Style.AERIAL
     }
 
+    fun computeStrikeProfile(height: Double): StrikeProfile {
+        if (height <= ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
+            return ChipStrike()
+        }
+
+        if (FlipHitStrike.isVerticallyAccessible(height)) {
+            return FlipHitStrike()
+        }
+        if (height < StrikePlanner.MAX_JUMP_HIT) {
+            return JumpHitStrike(height)
+        }
+
+        return AerialStrike(height, null)
+    }
+
     fun getStrikeProfile(style: StrikeProfile.Style, height: Double, kickStrategy: KickStrategy): StrikeProfile {
         return when(style) {
             StrikeProfile.Style.CHIP -> ChipStrike()

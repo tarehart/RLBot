@@ -27,18 +27,19 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
         return isComplete() || !unstoppable && currentStep.canInterrupt()
     }
 
-    enum class Posture constructor(private val urgency: Int) {
-        NEUTRAL(0),
-        OFFENSIVE(1),
-        DEFENSIVE(5),
-        WAITTOCLEAR(7),
-        CLEAR(8),
-        ESCAPEGOAL(8),
-        SAVE(10),
-        LANDING(15),
-        KICKOFF(50),
-        MENU(75),
-        OVERRIDE(100);
+    enum class Posture constructor(private val urgency: Int, val color: Color) {
+        NEUTRAL(0, Color.WHITE),
+        OFFENSIVE(1, Color.RED),
+        DEFENSIVE(5, Color.GREEN),
+        WAITTOCLEAR(7, Color.CYAN),
+        CLEAR(8, Color.CYAN),
+        ESCAPEGOAL(8, Color.WHITE),
+        SAVE(10, Color.CYAN),
+        LANDING(15, Color.WHITE),
+        SPIKE_CARRY(40, Color.RED),
+        KICKOFF(50, Color.RED),
+        MENU(75, Color.GRAY),
+        OVERRIDE(100, Color.BLUE);
 
         fun lessUrgentThan(other: Posture): Boolean {
             return urgency < other.urgency
@@ -46,24 +47,6 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
 
         fun canInterrupt(plan: Plan?): Boolean {
             return plan?.let { it.isComplete() || it.posture.lessUrgentThan(this) && it.canInterrupt() } ?: true
-        }
-    }
-
-    enum class PostureColor constructor(private val color: Color) {
-        NEUTRAL(Color.WHITE),
-        OFFENSIVE(Color.RED),
-        DEFENSIVE(Color.GREEN),
-        WAITTOCLEAR(Color.CYAN),
-        CLEAR(Color.CYAN),
-        ESCAPEGOAL(Color.WHITE),
-        SAVE(Color.CYAN),
-        LANDING(Color.WHITE),
-        KICKOFF(Color.RED),
-        MENU(Color.GRAY),
-        OVERRIDE(Color.BLUE);
-
-        companion object {
-            fun fromPosture(posture: Posture): Color = valueOf(posture.name).color
         }
     }
 

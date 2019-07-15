@@ -18,7 +18,8 @@ import tarehart.rlbot.time.GameTime
 import java.awt.Color
 import java.util.*
 
-class DemolishEnemyStep(val isAdversityBot: Boolean = false) : NestedPlanStep() {
+class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget: CarData? = null,
+                        val requireSupersonic: Boolean = true) : NestedPlanStep() {
 
     enum class DemolishPhase {
         CHASE,
@@ -141,6 +142,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false) : NestedPlanStep() 
         val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
 
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
+            specificTarget ?:
             oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) } ?: return
 
         if (!::carPredictor.isInitialized) {
@@ -211,7 +213,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false) : NestedPlanStep() 
     private fun chase(bundle: TacticalBundle, enemyCar: CarData): DemolishTransition? {
         val car = bundle.agentInput.myCarData
 
-        if (!hasEnoughBoost(car)) {
+        if (!hasEnoughBoost(car) && requireSupersonic) {
             return null
         }
 

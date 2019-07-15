@@ -69,14 +69,14 @@ object RenderUtil {
         }
     }
 
-    fun drawPath(renderer: Renderer, points: List<Vector3>, color: Color) {
+    fun drawPath(renderer: Renderer, points: List<Vector3>, color: Color, step: Int = 1) {
         if (points.size < 2) {
             return
         }
 
         if(DisplayFlags[DisplayFlags.CAR_PATH] == 1) {
-            for (i in 1 until points.size) {
-                renderer.drawLine3d(color, points[i - 1].toRlbot(), points[i].toRlbot())
+            for (i in step until points.size step step) {
+                renderer.drawLine3d(color, points[i - step].toRlbot(), points[i].toRlbot())
             }
         }
     }
