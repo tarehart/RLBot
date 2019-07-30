@@ -3,8 +3,11 @@ package tarehart.rlbot.tactics
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.Ray2
+import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -14,14 +17,16 @@ import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
+import tarehart.rlbot.steps.blind.BlindSequence
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep
 import tarehart.rlbot.steps.defense.ThreatAssessor
-import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.spikerush.SpikeCarryStep
+import tarehart.rlbot.steps.spikerush.SpikedCeilingShotStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.steps.teamwork.PositionForPassStep
@@ -37,10 +42,20 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
         return setOf(GameMode.SPIKE_RUSH)
     }
 
-    private fun getBallCarrier(input: AgentInput): CarData? {
-        return input.allCars
-                .sortedBy { c -> (c.position - input.ballPosition).magnitudeSquared() }
-                .firstOrNull { c -> (c.position - input.ballPosition).magnitudeSquared() < SPIKED_DISTANCE * SPIKED_DISTANCE }
+    fun predictCarBump(car: CarData, otherCar: CarData): SpaceTime? {
+        if (car.position.distance(otherCar.position) > 30) {
+            return null
+        }
+        val intersection = Ray2.getIntersection(Ray2.fromCar(car), Ray2.fromCar(otherCar)) ?: return null
+
+        val ourArrival = car.time + Duration.ofSeconds(car.position.flatten().distance(intersection) / car.velocity.magnitude())
+        val enemyArrival = car.time + Duration.ofSeconds(otherCar.position.flatten().distance(intersection) / otherCar.velocity.magnitude())
+
+        if (Math.abs((ourArrival - enemyArrival).seconds) < 0.5) {
+            return SpaceTime(intersection.withZ(car.position.z), ourArrival)
+        }
+
+        return null
     }
 
     override fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
@@ -50,14 +65,33 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
         val car = input.myCarData
         val ballCarrier = getBallCarrier(bundle.agentInput)
 
-        if (ballCarrier != null) {
-            if (ballCarrier == car && Plan.Posture.SPIKE_CARRY.canInterrupt(currentPlan)) {
+        if (ballCarrier == car) {
+            if ((bundle.agentInput.ballPosition - car.position).dotProduct(car.orientation.roofVector) < ArenaModel.BALL_RADIUS * 0.5) {
+                // Let go of the ball if it's stuck underneath us.
+                return Plan(Plan.Posture.SPIKE_CARRY).withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withUseItem()))
+            }
+
+            if (Plan.Posture.SPIKE_CARRY.canInterrupt(currentPlan)) {
+                if (ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes()).distance(car.position) < 30) {
+                    return Plan(Plan.Posture.SPIKE_CARRY).withStep(SpikedCeilingShotStep())
+                }
+
                 return Plan(Plan.Posture.SPIKE_CARRY).withStep(SpikeCarryStep())
             }
 
-            if (ballCarrier.team != car.team) {
-                return Plan(Plan.Posture.DEFENSIVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false))
+            bundle.agentInput.getTeamRoster(car.team.opposite()).forEach {
+                val bump = predictCarBump(car, it)
+                if (bump != null && (bump.time - car.time).seconds < 0.5) {
+                    return Plan(Plan.Posture.SPIKE_CARRY).withStep(BlindSequence()
+                            .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withJump()))
+                            .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withJump(false)))
+                            .withStep(BlindStep(Duration.ofMillis(100), AgentOutput().withJump(true))))
+                }
             }
+        }
+
+        if (ballCarrier != null && ballCarrier.team != car.team && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+            return Plan(Plan.Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false))
         }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
@@ -83,18 +117,11 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
-        if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+        if (situation.scoredOnThreat != null && ballCarrier == null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
 
             RLBotDll.sendQuickChat(car.playerIndex, false, QuickChatSelection.Reactions_Noooo)
-            if (situation.ballAdvantage.seconds < 0 && ChallengeStep.threatExists(situation) &&
-                    situation.expectedEnemyContact?.time?.isBefore(situation.scoredOnThreat.time) == true &&
-                    situation.distanceBallIsBehindUs < 0) {
-                println("Need to save, but also need to challenge first!", input.playerIndex)
-                return Plan(Plan.Posture.SAVE).withStep(ChallengeStep())
-            }
-
-            println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
+            println("Canceling current plan. Going for intercept save!", input.playerIndex)
+            return Plan(Plan.Posture.SAVE).withStep(InterceptStep(needsChallenge = false))
         }
 
         if (SoccerTacticsAdvisor.getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.WAITTOCLEAR.canInterrupt(currentPlan)) {
@@ -118,7 +145,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             return FirstViableStepPlan(Plan.Posture.DEFENSIVE)
                     .withStep(ChallengeStep())
                     .withStep(GetOnDefenseStep())
-                    .withStep(InterceptStep(Vector3()))
+                    .withStep(InterceptStep(needsChallenge = false))
         }
 
         return null
@@ -145,7 +172,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             return makePlanWithPlentyOfTime(bundle)
         }
 
-        return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
+        return FirstViableStepPlan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep()).withStep(InterceptStep(needsChallenge = false))
     }
 
     private fun makePlanWithPlentyOfTime(bundle: TacticalBundle): Plan {
@@ -220,5 +247,11 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
     companion object {
 
         const val SPIKED_DISTANCE = 4.0
+
+        fun getBallCarrier(input: AgentInput): CarData? {
+            return input.allCars
+                    .sortedBy { c -> (c.position - input.ballPosition).magnitudeSquared() }
+                    .firstOrNull { c -> (c.position - input.ballPosition).magnitudeSquared() < SPIKED_DISTANCE * SPIKED_DISTANCE }
+        }
     }
 }

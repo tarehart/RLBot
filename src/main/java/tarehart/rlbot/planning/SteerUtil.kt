@@ -24,8 +24,7 @@ import java.util.*
 
 object SteerUtil {
 
-    private val GOOD_ENOUGH_ANGLE = Math.PI / 12
-    private val DEAD_ZONE = 0.0
+    private val GOOD_ENOUGH_ANGLE = Math.PI * 0.05
 
     fun getCatchOpportunity(carData: CarData, ballPath: BallPath, boostBudget: Double): SpaceTime? {
 
@@ -212,16 +211,18 @@ object SteerUtil {
         }
 
         val toTarget = target.minus(car.position.flatten())
+        val targetDistance = toTarget.magnitude()
         val toTargetAngle = Vector2.angle(car.orientation.noseVector.flatten(), toTarget)
         val speed = car.velocity.flatten().magnitude()
-        if (toTarget.magnitude() > 40 &&
+
+        if (targetDistance > 40 &&
                 toTargetAngle > 3 * Math.PI / 4 &&
                 (car.velocity.flatten().dotProduct(toTarget) > 0 || speed < 5)) {
 
             return SetPieces.halfFlip(target)
         }
 
-        if (toTarget.magnitude() > 20 &&
+        if (targetDistance > 20 &&
                 toTargetAngle > Math.PI / 2 &&
                 Vector2.angle(car.velocity.flatten(), toTarget) < Math.PI / 12) {
 
@@ -233,21 +234,19 @@ object SteerUtil {
         }
 
         val distanceCovered = AccelerationModel.getFrontFlipDistance(speed)
-
-
-        val distanceToIntercept = toTarget.magnitude()
-        if (distanceToIntercept > distanceCovered + 25) {
-
-            val facing = car.orientation.noseVector.flatten()
-            val facingCorrection = facing.correctionAngle(toTarget)
-            val slideAngle = facing.correctionAngle(car.velocity.flatten())
-
-            if (Math.abs(facingCorrection) < GOOD_ENOUGH_ANGLE && Math.abs(slideAngle) < GOOD_ENOUGH_ANGLE) {
-                return SetPieces.speedupFlip()
-            }
+        if (targetDistance > distanceCovered + 25 && isDrivingOnTarget(car, target)) {
+            return SetPieces.speedupFlip()
         }
 
         return null
+    }
+
+    fun isDrivingOnTarget(car: CarData, target: Vector2): Boolean {
+        val toTarget = target.minus(car.position.flatten())
+        val facing = car.orientation.noseVector.flatten()
+        val facingCorrection = facing.correctionAngle(toTarget)
+        val slideAngle = facing.correctionAngle(car.velocity.flatten())
+        return Math.abs(facingCorrection) < GOOD_ENOUGH_ANGLE && Math.abs(slideAngle) < GOOD_ENOUGH_ANGLE
     }
 
     fun getThereOnTime(car: CarData, groundPositionAndTime: SpaceTime, greedy: Boolean = false): AgentOutput {

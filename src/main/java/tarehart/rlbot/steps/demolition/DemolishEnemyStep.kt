@@ -9,17 +9,19 @@ import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.blind.BlindStep
+import tarehart.rlbot.tactics.SpikeRushTacticsAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.awt.Color
 import java.util.*
 
 class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget: CarData? = null,
-                        val requireSupersonic: Boolean = true) : NestedPlanStep() {
+                        val requireSupersonic: Boolean = true, private val isSpikeRush: Boolean = false) : NestedPlanStep() {
 
     enum class DemolishPhase {
         CHASE,
@@ -183,6 +185,10 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
             return null
         }
 
+        if (isSpikeRush && SpikeRushTacticsAdvisor.getBallCarrier(bundle.agentInput) != enemyCar) {
+            return null
+        }
+
         if (car.hasWheelContact && !(demolishPhase == DemolishPhase.CHASE || demolishPhase == DemolishPhase.AWAIT_LIFTOFF)) {
             return null // We already attempted a midair dodge, and now we've hit the ground. Give up.
         }
@@ -228,6 +234,14 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
             RenderUtil.drawSphere(renderer, it.space, 1.0, Color.RED)
 
             val secondsTillContact = Duration.between(car.time, it.time).seconds
+
+            if (!car.isSupersonic && car.boost == 0.0 && car.velocity.magnitude() > AccelerationModel.MEDIUM_SPEED * .8 &&
+                    SteerUtil.isDrivingOnTarget(car, it.space.flatten())) {
+
+                val output = startPlan(SetPieces.speedupFlip(), bundle) ?: return null
+                return DemolishTransition(output, DemolishPhase.CHASE)
+            }
+
             if (secondsTillContact <= SECONDS_BEFORE_CONTACT_TO_JUMP) {
                 progressChat(bundle.agentInput.playerIndex, ChatProgression.Demoing)
                 if (!enemyCar.hasWheelContact && it.space.z > NEEDS_JUMP_HEIGHT) {

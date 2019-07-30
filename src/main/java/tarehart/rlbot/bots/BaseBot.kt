@@ -46,7 +46,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         get() = BotHouse.debugMode
     open var loaded = false
         get() = isGameModeInitialized
-    private val runningAverage = RunningAverage()
+//    private val runningAverage = RunningAverage()
 
 
     private fun createMenuBar() : JMenuBar {
@@ -97,10 +97,10 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             if (elapsedMillis > 10) {
                 BotLog.println("SLOW FRAME took $elapsedMillis ms!", playerIndex)
             }
-            runningAverage.takeSample(elapsedMillis.toDouble())
-            if (frameCount.rem(100) == 0L) {
-                BotLog.println("Average frame time: %.2fms".format(runningAverage.average), playerIndex)
-            }
+//            runningAverage.takeSample(elapsedMillis.toDouble())
+//            if (frameCount.rem(100) == 0L) {
+//                BotLog.println("Average frame time: %.2fms".format(runningAverage.average), playerIndex)
+//            }
 
             return output
         } catch (e: Exception) {

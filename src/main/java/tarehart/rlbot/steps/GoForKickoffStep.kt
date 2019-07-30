@@ -26,6 +26,10 @@ class GoForKickoffStep : NestedPlanStep() {
     private var counterAttack = false // Math.random() < .3
     private lateinit var startTime: GameTime
 
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
+        return !bundle.tacticalSituation.goForKickoff
+    }
+
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
         if (bundle.agentInput.ballPosition.flatten().magnitudeSquared() > 0) {
             return null
@@ -62,10 +66,6 @@ class GoForKickoffStep : NestedPlanStep() {
         CHEATIN,
         SLANTERD,
         UNKNOWN
-    }
-
-    override fun canInterrupt(): Boolean {
-        return false
     }
 
     companion object {

@@ -9,7 +9,7 @@ import tarehart.rlbot.time.Duration
 
 object CarInterceptPlanner {
 
-    private val CAR_CONTACT_DISTANCE = 5
+    private val CAR_CONTACT_DISTANCE = 2.5
 
     fun getCarIntercept(
             carData: CarData,
