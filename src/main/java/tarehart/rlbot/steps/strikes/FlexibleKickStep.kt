@@ -134,7 +134,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 //            precisionPlan.steerPlan.route.renderDebugInfo(renderer)
 //            renderer.finishAndSend()
             BotLog.println("Bad circle part during flexible.", car.playerIndex)
-            return null
+            return startPlan(Plan().withStep(InterceptStep()), bundle)
         }
 
         if (ArenaModel.getDistanceFromWall(Vector3(precisionPlan.steerPlan.waypoint.x, precisionPlan.steerPlan.waypoint.y, 0.0)) < -1) {

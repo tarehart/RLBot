@@ -27,7 +27,7 @@ class SpikedCeilingShotStep : NestedPlanStep() {
             return null
         }
 
-        if (!car.hasWheelContact && car.velocity.y * GoalUtil.getEnemyGoal(car.team).center.y > 0) {
+        if (!car.hasWheelContact) {
 
             if (ArenaModel.getDistanceFromWall(car.position) > 5 &&
                     ArenaModel.getDistanceFromCeiling(car.position) > 15) {

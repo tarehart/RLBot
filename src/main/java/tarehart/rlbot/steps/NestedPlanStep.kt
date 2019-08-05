@@ -5,6 +5,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.PlanGuidance
+import tarehart.rlbot.tuning.BotLog
 import java.awt.Graphics2D
 
 abstract class NestedPlanStep : Step {
@@ -23,6 +24,7 @@ abstract class NestedPlanStep : Step {
         doInitialComputation(bundle)
 
         if (zombie || shouldCancelPlanAndAbort(bundle) && canAbortPlanInternally()) {
+            BotLog.println("Cancel plan and abort!", bundle.agentInput.playerIndex)
             return null
         }
 

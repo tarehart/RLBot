@@ -256,7 +256,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team) as SoccerGoal, ballPath),
                 shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, enemyCar, input.ballPosition, ourIntercept, ballPath),
-                goForKickoff = getGoForKickoff(zonePlan, input.team, input.ballPosition),
+                goForKickoff = getGoForKickoff(myCar, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,
                 enemyIntercepts = enemyIntercepts,
@@ -350,18 +350,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return Vector2.angle(toLeftPost, toRightPost)
         }
 
-        // Really only used for avoiding "Disable Goal Reset" own goals
-        fun getGoForKickoff(zonePlan: ZonePlan?, team: Team, ballPosition: Vector3): Boolean {
-            if (zonePlan != null) {
-                if (ballPosition.flatten().magnitudeSquared() == 0.0) {
-                    return if (team == Team.BLUE)
-                        zonePlan.myZone.mainZone == Zone.MainZone.BLUE
-                    else
-                        zonePlan.myZone.mainZone == Zone.MainZone.ORANGE
-                }
-            }
-
-            return false
+        fun getGoForKickoff(car: CarData, ballPosition: Vector3): Boolean {
+            return ballPosition.flatten().magnitudeSquared() == 0.0 &&
+                    car.team.ownsPosition(car.position)
         }
     }
 

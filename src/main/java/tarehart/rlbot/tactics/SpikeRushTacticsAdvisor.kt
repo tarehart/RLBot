@@ -262,7 +262,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team) as SoccerGoal, ballPath),
                 shotOnGoalAvailable = SoccerTacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(input.team), input.myCarData.position.flatten()),
-                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(zonePlan, input.team, input.ballPosition),
+                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(input.myCarData, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,
                 enemyIntercepts = enemyIntercepts,

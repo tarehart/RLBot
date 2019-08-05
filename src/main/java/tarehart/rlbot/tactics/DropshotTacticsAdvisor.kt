@@ -132,7 +132,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = (ballPath.getMotionAt(input.time.plusSeconds(3.0)) ?: ballPath.endpoint).space.y * GoalUtil.getOwnGoal(input.team).center.y > 0,
                 shotOnGoalAvailable = true,
-                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(zonePlan, input.team, input.ballPosition),
+                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(input.myCarData, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,
                 enemyIntercepts = enemyIntercepts,

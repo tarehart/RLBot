@@ -130,10 +130,12 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
                 }
                 val space = currentSlice.space.plus(nextVel.scaled(TIME_STEP))
 
-                if ((currentSlice.space.z > ManeuverMath.BASE_CAR_Z || !respectFloor) && !car.hasWheelContact) {
-                    nextVel = Vector3(nextVel.x, nextVel.y, nextVel.z - ArenaModel.GRAVITY * TIME_STEP)
-                } else {
-                    nextVel = Vector3(nextVel.x, nextVel.y, 0.0)
+                if (!car.hasWheelContact) {
+                    nextVel.withZ(nextVel.z - ArenaModel.GRAVITY * TIME_STEP)
+                }
+
+                if (currentSlice.space.z < ManeuverMath.BASE_CAR_Z && respectFloor) {
+                    nextVel.withZ(0.0)
                 }
 
                 val nextSlice = CarSlice(space, car.time.plusSeconds(secondsSoFar), nextVel, currentSlice.orientation)
