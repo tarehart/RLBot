@@ -24,11 +24,12 @@ class SpikeCarryStep : NestedPlanStep() {
         val ballRelative = car.relativePosition(bundle.agentInput.ballPosition).normaliseCopy()
         val scorePosition = GoalUtil.getEnemyGoal(car.team).getNearestEntrance(car.position, 2.0).flatten()
 
-        if (ballRelative.z > .7 && SteerUtil.isDrivingOnTarget(car, scorePosition) && bundle.tacticalSituation.shotOnGoalAvailable) {
+        if (ballRelative.z > .7 && SteerUtil.isDrivingOnTarget(car, scorePosition) && Math.abs(car.spin.yawRate) < 0.1
+                && bundle.tacticalSituation.shotOnGoalAvailable) {
             return startPlan(Plan().withStep(BlindSequence()
                     .withStep(BlindStep(Duration.ofMillis(450), AgentOutput().withJump().withPitch(1.0)))
                     .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()))
-                    .withStep(BlindStep(Duration.ofMillis(100), AgentOutput().withPitch(-1.0).withJump()))
+                    .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withPitch(-1.0).withJump()))
                     .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withUseItem()))), bundle)
         }
 

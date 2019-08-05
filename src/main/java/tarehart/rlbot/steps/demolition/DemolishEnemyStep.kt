@@ -251,10 +251,10 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
                 }
             }
 
-            return DemolishTransition(SteerUtil.steerTowardGroundPosition(car, it.space), DemolishPhase.CHASE)
+            return DemolishTransition(SteerUtil.steerTowardPositionAcrossSeam(car, it.space), DemolishPhase.CHASE)
         }
 
-        return DemolishTransition(SteerUtil.steerTowardGroundPosition(car, enemyCar.position.flatten()), DemolishPhase.CHASE)
+        return DemolishTransition(SteerUtil.steerTowardPositionAcrossSeam(car, enemyCar.position), DemolishPhase.CHASE)
     }
 
     private fun jump(bundle: TacticalBundle, enemyCar: CarData): DemolishTransition? {

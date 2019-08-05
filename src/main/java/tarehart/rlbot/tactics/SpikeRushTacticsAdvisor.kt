@@ -78,7 +78,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
                 val ballRelative = car.relativePosition(bundle.agentInput.ballPosition).normaliseCopy()
 
-                if (ballRelative.x > .7 && ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes(car.team)).distance(car.position) < 35) {
+                if (ballRelative.x > .5 && ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes(car.team)).distance(car.position) < 35) {
                     return Plan(Plan.Posture.SPIKE_CARRY).withStep(SpikedCeilingShotStep())
                 }
 

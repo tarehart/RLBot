@@ -32,7 +32,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
             sliceHistory.removeFirst()
         }
 
-        if (sliceHistory.size >= 3 && car.hasWheelContact) {
+        if (sliceHistory.size >= 3 && car.hasWheelContact && !ArenaModel.isCarOnWall(car)) {
             val p1 = sliceHistory[0].position.flatten()
             val p2 = sliceHistory[1].position.flatten()
             val p3 = sliceHistory[2].position.flatten()
@@ -127,7 +127,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
             }
             val space = currentSlice.space.plus(nextVel.scaled(TIME_STEP))
 
-            if (currentSlice.space.z > ManeuverMath.BASE_CAR_Z || !respectFloor) {
+            if ((currentSlice.space.z > ManeuverMath.BASE_CAR_Z || !respectFloor) && !car.hasWheelContact) {
                 nextVel = Vector3(nextVel.x, nextVel.y, nextVel.z - ArenaModel.GRAVITY * TIME_STEP)
             } else {
                 nextVel = Vector3(nextVel.x, nextVel.y, 0.0)
