@@ -10,8 +10,10 @@ enum class Team {
         return if (this == BLUE) ORANGE else BLUE
     }
 
+    val side: Int
+        get() = if (this == BLUE) -1 else 1
+
     fun ownsPosition(position: Vector3): Boolean {
-        val side = if (this == BLUE) -1 else 1
         return position.y * side > 0
     }
 }

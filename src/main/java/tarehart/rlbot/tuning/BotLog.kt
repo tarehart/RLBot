@@ -12,7 +12,7 @@ object BotLog {
     fun println(message: String, playerIndex: Int) {
 
         //getLog(playerIndex).append(timeStamp + message).append("\n")
-        println("$timeStamp $message")
+        println("$timeStamp $playerIndex $message")
     }
 
     private fun getLog(playerIndex: Int): StringBuilder {

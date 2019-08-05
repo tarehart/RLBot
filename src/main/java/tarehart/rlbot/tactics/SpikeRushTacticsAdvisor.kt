@@ -2,6 +2,7 @@ package tarehart.rlbot.tactics
 
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
+import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
@@ -88,6 +89,22 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             bundle.agentInput.getTeamRoster(car.team.opposite()).forEach {
                 val bump = predictCarBump(car, it)
                 if (bump != null && (bump.time - car.time).seconds < 0.5) {
+
+                    if (bundle.agentInput.getTeamRoster(car.team).size > 1) {
+                        val teammate = bundle.agentInput.getTeamRoster(car.team)
+                                .filter { it != car }
+                                .sortedBy { it.position.distance(car.position) }
+                                .first()
+
+                        if (teammate.hasWheelContact && car.team.opposite().ownsPosition(car.position) &&
+                                car.position.distance(teammate.position) < ArenaModel.BACK_WALL) {
+                            // If teammate is closer to the enemy goal
+                            val passTarget = teammate.position + teammate.velocity * 0.7
+                            return throwToTarget(car, passTarget)
+                        }
+                    }
+
+                    // Try to dodge by double jumping!
                     return Plan(Plan.Posture.SPIKE_CARRY).withStep(BlindSequence()
                             .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withJump()))
                             .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withJump(false)))
@@ -98,7 +115,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
         if (ballCarrier != null && ballCarrier.team != car.team && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
             if (situation.teamPlayerWithInitiative?.car == car) {
-                return Plan(Plan.Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false))
+                return Plan(Plan.Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false, isSpikeRush = true))
             } else {
                 return Plan(Plan.Posture.SAVE).withStep(GetOnDefenseStep())
             }
@@ -159,6 +176,22 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
         }
 
         return null
+    }
+
+    private fun throwToTarget(car: CarData, passTarget: Vector3): Plan {
+        val relativePos = car.relativePosition(passTarget).normaliseCopy()
+
+        return Plan()
+                .unstoppable()
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput().withJump(true)))
+                .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()))
+                .withStep(BlindStep(Duration.ofSeconds(.15),
+                        AgentOutput()
+                                .withJump(true)
+                                .withPitch(-relativePos.x)
+                                .withRoll(-relativePos.y)))
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withUseItem()))
+                .withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
     }
 
     override fun makeFreshPlan(bundle: TacticalBundle): Plan {

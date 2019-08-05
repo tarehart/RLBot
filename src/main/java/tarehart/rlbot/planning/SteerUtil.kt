@@ -139,25 +139,32 @@ object SteerUtil {
                 .withSlide(Math.abs(correctionRadians) > Math.PI / 3)
     }
 
-    fun steerTowardPositionAcrossSeam(carData: CarData, position: Vector3): AgentOutput {
+    fun steerTowardPositionAcrossSeam(car: CarData, position: Vector3): AgentOutput {
 
-        val carPlane = ArenaModel.getNearestPlane(carData.position)
+        val carPlane = ArenaModel.getNearestPlane(car.position)
         val targetPlane = ArenaModel.getNearestPlane(position)
 
-        if (carPlane.normal == targetPlane.normal) {
-            return steerTowardWallPosition(carData, position)
+        if (carPlane.normal.z == 1.0 &&
+                TacticsTelemetry[car.playerIndex]?.gameMode == GameMode.SOCCER &&
+                crossesSoccerGoalLine(position.flatten(), car.position.flatten())) {
+
+            return steerTowardGroundPosition(car, position) // Avoid the goal posts!
         }
 
-        val toPositionOnTargetPlane = (position - carData.position).projectToPlane(targetPlane.normal)
-        val carShadowOnTargetPlane = carData.position.shadowOntoPlane(targetPlane)
-        val distanceFromTargetPlane = targetPlane.distance(carData.position)
+        if (carPlane.normal == targetPlane.normal) {
+            return steerTowardWallPosition(car, position)
+        }
+
+        val toPositionOnTargetPlane = (position - car.position).projectToPlane(targetPlane.normal)
+        val carShadowOnTargetPlane = car.position.shadowOntoPlane(targetPlane)
+        val distanceFromTargetPlane = targetPlane.distance(car.position)
         val targetDistanceFromCarPlane =  carPlane.distance(position)
         val hurryToSeamBias = 1.5 // 1.0 would be neutral
         val carPlaneWeight = distanceFromTargetPlane / (distanceFromTargetPlane + targetDistanceFromCarPlane * hurryToSeamBias)
         val toPositionAlongSeam = toPositionOnTargetPlane.projectToPlane(carPlane.normal)
         val seamPosition = carShadowOnTargetPlane.plus(toPositionAlongSeam.scaled(carPlaneWeight))
 
-        return steerTowardWallPosition(carData, seamPosition)
+        return steerTowardWallPosition(car, seamPosition)
     }
 
     fun steerTowardWallPosition(carData: CarData, position: Vector3): AgentOutput {

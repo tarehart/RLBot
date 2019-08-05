@@ -14,7 +14,7 @@ import java.util.*
 
 class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean = true) {
 
-    private val TIME_STEP = 0.02
+
     private val SECONDS_SPENT_CIRCLING = 0.25
     private var sliceHistory = LinkedList<CarData>()
 
@@ -40,7 +40,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
             val circle = Circle.getCircleFromPoints(p1, p2, p3)
 
             if (circle.radius > 500) {
-                carPath = doNaivePrediction(car, duration, Vector3())
+                carPath = doNaivePrediction(car, duration, Vector3(), respectFloor)
             } else {
                 val shortTermVector = p2 - p1
                 val longTermVector = p3 - p1
@@ -50,7 +50,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
                 carPath = doCirclePrediction(car, circle, turningLeft, duration, car.renderer)
             }
         } else {
-            carPath = doNaivePrediction(car, duration, Vector3())
+            carPath = doNaivePrediction(car, duration, Vector3(), respectFloor)
         }
 
         return carPath
@@ -102,44 +102,48 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
         return carPath
     }
 
-    private fun doNaivePrediction(car: CarData, duration: Duration, acceleration: Vector3): CarPath {
-        val velocity = Vector3(
-                car.velocity.x,
-                car.velocity.y,
-                if (car.hasWheelContact && Math.abs(car.velocity.z) < .2) 0.0 else car.velocity.z)
+    companion object {
+        private val TIME_STEP = 0.02
 
-        val initialSlice = CarSlice(car.position, car.time, velocity, car.orientation)
+        fun doNaivePrediction(car: CarData, duration: Duration, acceleration: Vector3, respectFloor: Boolean = true): CarPath {
+            val velocity = Vector3(
+                    car.velocity.x,
+                    car.velocity.y,
+                    if (car.hasWheelContact && Math.abs(car.velocity.z) < .2) 0.0 else car.velocity.z)
 
-        val carPath = CarPath()
-        carPath.addSlice(initialSlice)
+            val initialSlice = CarSlice(car.position, car.time, velocity, car.orientation)
 
-        var secondsSoFar = 0.0
+            val carPath = CarPath()
+            carPath.addSlice(initialSlice)
 
-        val secondsToSimulate = duration.seconds
+            var secondsSoFar = 0.0
 
-        var currentSlice = initialSlice
+            val secondsToSimulate = duration.seconds
 
-        while (secondsSoFar < secondsToSimulate) {
+            var currentSlice = initialSlice
 
-            var nextVel = currentSlice.velocity
-            if (!acceleration.isZero) {
-                nextVel += acceleration.scaledToMagnitude(TIME_STEP)
+            while (secondsSoFar < secondsToSimulate) {
+
+                var nextVel = currentSlice.velocity
+                if (!acceleration.isZero) {
+                    nextVel += acceleration.scaledToMagnitude(TIME_STEP)
+                }
+                val space = currentSlice.space.plus(nextVel.scaled(TIME_STEP))
+
+                if ((currentSlice.space.z > ManeuverMath.BASE_CAR_Z || !respectFloor) && !car.hasWheelContact) {
+                    nextVel = Vector3(nextVel.x, nextVel.y, nextVel.z - ArenaModel.GRAVITY * TIME_STEP)
+                } else {
+                    nextVel = Vector3(nextVel.x, nextVel.y, 0.0)
+                }
+
+                val nextSlice = CarSlice(space, car.time.plusSeconds(secondsSoFar), nextVel, currentSlice.orientation)
+                carPath.addSlice(nextSlice)
+
+                secondsSoFar += TIME_STEP
+                currentSlice = nextSlice
             }
-            val space = currentSlice.space.plus(nextVel.scaled(TIME_STEP))
-
-            if ((currentSlice.space.z > ManeuverMath.BASE_CAR_Z || !respectFloor) && !car.hasWheelContact) {
-                nextVel = Vector3(nextVel.x, nextVel.y, nextVel.z - ArenaModel.GRAVITY * TIME_STEP)
-            } else {
-                nextVel = Vector3(nextVel.x, nextVel.y, 0.0)
-            }
-
-            val nextSlice = CarSlice(space, car.time.plusSeconds(secondsSoFar), nextVel, currentSlice.orientation)
-            carPath.addSlice(nextSlice)
-
-            secondsSoFar += TIME_STEP
-            currentSlice = nextSlice
+            return carPath
         }
-        return carPath
     }
 
 }

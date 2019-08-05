@@ -3,7 +3,10 @@ package tarehart.rlbot.steps.spikerush
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
+import tarehart.rlbot.math.Mat3
+import tarehart.rlbot.math.OrientationSolver
 import tarehart.rlbot.math.Plane
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
@@ -24,13 +27,22 @@ class SpikedCeilingShotStep : NestedPlanStep() {
             return null
         }
 
-        if (!car.hasWheelContact && car.velocity.y * GoalUtil.getEnemyGoal(car.team).center.y > 0 &&
-                ArenaModel.getDistanceFromWall(car.position) > 10 &&
-                ArenaModel.getDistanceFromCeiling(car.position) > 15) {
-            return startPlan(Plan().withStep(BlindSequence()
-                    .withStep(BlindStep(Duration.ofMillis(300), AgentOutput().withPitch(1.0)))
-                    .withStep(BlindStep(Duration.ofMillis(100), AgentOutput().withPitch(-1.0).withJump()))
-                    .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withUseItem()))), bundle)
+        if (!car.hasWheelContact && car.velocity.y * GoalUtil.getEnemyGoal(car.team).center.y > 0) {
+
+            if (ArenaModel.getDistanceFromWall(car.position) > 5 &&
+                    ArenaModel.getDistanceFromCeiling(car.position) > 15) {
+
+                return startPlan(Plan().withStep(BlindSequence()
+                        .withStep(BlindStep(Duration.ofMillis(300), AgentOutput().withPitch(1.0)))
+                        .withStep(BlindStep(Duration.ofMillis(100), AgentOutput().withPitch(-1.0).withJump()))
+                        .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withUseItem()))), bundle)
+            }
+
+            val carToGoal = GoalUtil.getEnemyGoal(car.team).center - car.position
+
+            return OrientationSolver.orientCar(car,
+                    Mat3.lookingTo(carToGoal.withZ(0.0), Vector3(0.0, 0.0, -1.0)),
+                    1 / 60.0)
         }
 
         val ceiling = ArenaModel.getCollisionPlanes().first { it.normal.z == -1.0 }

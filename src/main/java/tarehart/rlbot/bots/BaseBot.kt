@@ -154,24 +154,27 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 
         val posture = currentPlan?.posture ?: Plan.Posture.NEUTRAL
         val situation = currentPlan?.situation ?: ""
-        if (debugMode && situation != previousSituation) {
-            planRenderer.startPacket()
+        if (situation != previousSituation) {
+            BotLog.println("[Sitch] $situation", input.playerIndex)
 
-            if(DisplayFlags[DisplayFlags.DETAILED_PLAN] == 1) {
-                planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3 + 15 * playerIndex), 1, 1)
+            if (debugMode) {
+                planRenderer.startPacket()
+
+                if (DisplayFlags[DisplayFlags.DETAILED_PLAN] == 1) {
+                    planRenderer.drawString2d(situation, Color.WHITE, Point(3, 3 + 15 * playerIndex), 1, 1)
+                }
+
+                if (DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) {
+                    val screenX = ScreenResolution.getX()
+                    val screenY = ScreenResolution.getY()
+                    val postureColor = posture.color
+                    planRenderer.drawString2d(posture.name, postureColor,
+                            Point((0.3 * screenX).toInt(), (0.65 * screenY + (15 * playerIndex)).toInt()),
+                            1, 1)
+                }
+
+                planRenderer.finishAndSend()
             }
-
-            if(DisplayFlags[DisplayFlags.SIMPLE_PLAN] == 1) {
-                val screenX = ScreenResolution.getX()
-                val screenY = ScreenResolution.getY()
-                val postureColor = posture.color
-                planRenderer.drawString2d(posture.name, postureColor,
-                        Point((0.3 * screenX).toInt(), (0.65 * screenY + (15 * playerIndex)).toInt()),
-                        1, 1)
-            }
-
-            planRenderer.finishAndSend()
-            BotLog.println("[Sitch] " + situation, input.playerIndex)
         }
         previousSituation = situation
         previousPlan = currentPlan

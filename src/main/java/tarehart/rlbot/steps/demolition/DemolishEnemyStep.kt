@@ -8,6 +8,7 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarInterceptPlanner
 import tarehart.rlbot.carpredict.CarPredictor
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SetPieces
 import tarehart.rlbot.planning.SteerUtil
@@ -17,6 +18,7 @@ import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.tactics.SpikeRushTacticsAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.tuning.BotLog
 import java.awt.Color
 import java.util.*
 
@@ -34,7 +36,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
     // Toxic Quick Chats. Only active for `isAdversityBot`
     enum class ChatProgression {
         // Lined up and going for a demo
-        Incomming,
+        Incoming,
         // Seconds away from demo
         Demoing,
         // Demo was a success
@@ -79,16 +81,16 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
     // 0.5 = chat half the time
     // 1 = chat never
     private val CHAT_ATTENUATION = 0.3
-    private var chatProgression = ChatProgression.Incomming;
+    private var chatProgression = ChatProgression.Incoming;
 
     private fun resetChat() {
-        chatProgression = ChatProgression.Incomming
+        chatProgression = ChatProgression.Incoming
     }
 
     private fun progressChat(playerIndex: Int, targetProgression: ChatProgression) {
         if (!isAdversityBot) return
         if (chatProgression == targetProgression) when(chatProgression) {
-            ChatProgression.Incomming -> {
+            ChatProgression.Incoming -> {
                 if (Random().nextDouble() < CHAT_ATTENUATION) {
                     chatProgression = ChatProgression.Inhibited
                 } else {
@@ -131,7 +133,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
                 )
                 val randomQuip = quipChatOptions[Random().nextInt(quipChatOptions.size)]
                 RLBotDll.sendQuickChat(playerIndex, false, randomQuip)
-                chatProgression = ChatProgression.Incomming
+                chatProgression = ChatProgression.Incoming
             }
         }
     }
@@ -185,7 +187,9 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
             return null
         }
 
-        if (isSpikeRush && SpikeRushTacticsAdvisor.getBallCarrier(bundle.agentInput) != enemyCar) {
+        if (isSpikeRush && demolishPhase == DemolishPhase.CHASE &&
+                SpikeRushTacticsAdvisor.getBallCarrier(bundle.agentInput) != enemyCar) {
+            BotLog.println("Ball carrier is not the guy I'm chasing, and this is spike rush! Giving up.", car.playerIndex)
             return null
         }
 
@@ -194,19 +198,21 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         }
 
         if (enemyCar.position.distance(car.position) < 30) {
-            progressChat(bundle.agentInput.playerIndex, ChatProgression.Incomming)
+            progressChat(bundle.agentInput.playerIndex, ChatProgression.Incoming)
             enemyWatcher = WheelContactWatcher(enemyCar.playerIndex) // Commit to demolishing this particular enemy
         }
 
         val transition = when (demolishPhase) {
 
-            DemolishPhase.CHASE -> chase(bundle, enemyCar) ?: return null
+            DemolishPhase.CHASE -> chase(bundle, enemyCar) ?:
+            return null
 
             DemolishPhase.AWAIT_LIFTOFF -> DemolishTransition(
                     AgentOutput().withBoost().withJump(),
                     if (!car.hasWheelContact) DemolishPhase.JUMP else DemolishPhase.AWAIT_LIFTOFF)
 
-            DemolishPhase.JUMP -> jump(bundle, enemyCar) ?: return null
+            DemolishPhase.JUMP -> jump(bundle, enemyCar) ?:
+            return null
 
             else -> DemolishTransition(AgentOutput().withThrottle(1.0), demolishPhase)
         }
@@ -273,15 +279,20 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
             RenderUtil.drawSphere(renderer, carIntercept.space, 1.0, Color.RED)
 
-            val needsDoubleJump = carIntercept.space.z > 5
+            val selfPrediction = CarPredictor.doNaivePrediction(car, Duration.between(car.time, carIntercept.time), Vector3.ZERO)
 
-            val toIntercept = carIntercept.space - car.position
+            val toInterceptNow = carIntercept.space - car.position
+            val toInterceptThen = carIntercept.space - selfPrediction.lastSlice.space
+
+            val needsDoubleJump = carIntercept.space.z > 5 || toInterceptThen.z > 0.5
+
 
             if (needsDoubleJump && canDodge && !car.hasWheelContact) {
+                BotLog.println("Needs double jump...", car.playerIndex)
                 return workTowardDoubleJump(car, bundle)
             }
 
-            val steerCorrection = car.velocity.flatten().correctionAngle(toIntercept.flatten())
+            val steerCorrection = car.velocity.flatten().correctionAngle(toInterceptNow.flatten())
             if (Math.abs(steerCorrection) > Math.PI / 20) {
                 val immediateOutput = startPlan(Plan().unstoppable()
                         .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost()))
@@ -308,7 +319,8 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         canDodge = false
         val immediateOutput = startPlan(Plan().unstoppable()
                 .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost()))
-                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost().withJump())), bundle)
+                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withBoost().withJump()))
+                .withStep(BlindStep(Duration.ofMillis(150), AgentOutput().withBoost().withJump().withPitch(-1.0))), bundle)
                 ?: return null
 
         return DemolishTransition(immediateOutput, DemolishPhase.DODGE)
@@ -316,6 +328,10 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
     override fun getLocalSituation(): String {
         return "Demolishing enemy"
+    }
+
+    override fun canInterrupt(): Boolean {
+        return super.canInterrupt() && demolishPhase == DemolishPhase.CHASE
     }
 
     companion object {
