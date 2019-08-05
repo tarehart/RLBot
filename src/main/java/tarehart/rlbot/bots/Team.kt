@@ -1,7 +1,6 @@
 package tarehart.rlbot.bots
 
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.planning.GoalUtil
 
 enum class Team {
     BLUE,
