@@ -235,7 +235,8 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
             val secondsTillContact = Duration.between(car.time, it.time).seconds
 
-            if (!car.isSupersonic && car.boost == 0.0 && car.velocity.magnitude() > AccelerationModel.MEDIUM_SPEED * .8 &&
+            if (!car.isSupersonic && car.boost == 0.0 && enemyCar.velocity.dotProduct(car.velocity) > 0 &&
+                    car.velocity.magnitude() > AccelerationModel.MEDIUM_SPEED * .8 &&
                     SteerUtil.isDrivingOnTarget(car, it.space.flatten())) {
 
                 val output = startPlan(SetPieces.speedupFlip(), bundle) ?: return null

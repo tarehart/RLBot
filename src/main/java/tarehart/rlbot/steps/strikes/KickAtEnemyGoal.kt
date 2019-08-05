@@ -28,7 +28,7 @@ class KickAtEnemyGoal : KickStrategy {
             }
         }
 
-        return SoccerTacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.team), ballPosition.flatten(), car.playerIndex)
+        return SoccerTacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(car.team), ballPosition.flatten())
     }
 
     override fun isShotOnGoal(): Boolean {

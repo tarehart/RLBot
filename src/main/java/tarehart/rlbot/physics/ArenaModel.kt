@@ -217,6 +217,10 @@ class ArenaModel {
                     .map { it.distance(position) }.min() ?: 0.0
         }
 
+        fun getDistanceFromCeiling(position: Vector3): Double {
+            return arenaPlanes.first { it.normal.z == -1.0 }.distance(position)
+        }
+
         fun isCarOnWall(car: CarData): Boolean {
             return car.hasWheelContact && isCarNearWall(car) && Math.abs(car.orientation.roofVector.z) < 0.05
         }

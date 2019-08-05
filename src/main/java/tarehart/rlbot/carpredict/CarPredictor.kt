@@ -15,7 +15,7 @@ import java.util.*
 class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean = true) {
 
     private val TIME_STEP = 0.02
-    private val SECONDS_SPENT_CIRCLING = 0.5
+    private val SECONDS_SPENT_CIRCLING = 0.25
     private var sliceHistory = LinkedList<CarData>()
 
     fun predictCarMotion(bundle: TacticalBundle, duration: Duration): CarPath {

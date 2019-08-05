@@ -33,6 +33,7 @@ import tarehart.rlbot.steps.teamwork.PositionForPassStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.tuning.ManeuverMath
 
 class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
@@ -43,7 +44,9 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
     }
 
     fun predictCarBump(car: CarData, otherCar: CarData): SpaceTime? {
-        if (car.position.distance(otherCar.position) > 30) {
+        if (car.position.z > ManeuverMath.BASE_CAR_Z * 2 ||
+            otherCar.position.z > ManeuverMath.BASE_CAR_Z * 2 ||
+                car.position.distance(otherCar.position) > 30) {
             return null
         }
         val intersection = Ray2.getIntersection(Ray2.fromCar(car), Ray2.fromCar(otherCar)) ?: return null
@@ -72,7 +75,10 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             }
 
             if (Plan.Posture.SPIKE_CARRY.canInterrupt(currentPlan)) {
-                if (ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes()).distance(car.position) < 30) {
+
+                val ballRelative = car.relativePosition(bundle.agentInput.ballPosition).normaliseCopy()
+
+                if (ballRelative.x > .7 && ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes(car.team)).distance(car.position) < 35) {
                     return Plan(Plan.Posture.SPIKE_CARRY).withStep(SpikedCeilingShotStep())
                 }
 
@@ -91,7 +97,11 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
         }
 
         if (ballCarrier != null && ballCarrier.team != car.team && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
-            return Plan(Plan.Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false))
+            if (situation.teamPlayerWithInitiative?.car == car) {
+                return Plan(Plan.Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false))
+            } else {
+                return Plan(Plan.Posture.SAVE).withStep(GetOnDefenseStep())
+            }
         }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
@@ -218,7 +228,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 futureBallMotion = futureBallMotion,
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team) as SoccerGoal, ballPath),
-                shotOnGoalAvailable = true,
+                shotOnGoalAvailable = SoccerTacticsAdvisor.generousShotAngle(GoalUtil.getEnemyGoal(input.team), input.myCarData.position.flatten()),
                 goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(zonePlan, input.team, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,

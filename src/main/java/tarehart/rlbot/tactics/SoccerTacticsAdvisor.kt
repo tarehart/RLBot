@@ -203,7 +203,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return Plan(NEUTRAL).withStep(DribbleStep())
         }
 
-        if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact, car.playerIndex)) {
+        if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact)) {
             return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(GetOnOffenseStep())
@@ -295,7 +295,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             }
         }
 
-        return generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept, myCar.playerIndex)
+        return generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept)
     }
 
     companion object {
@@ -325,29 +325,27 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         }
 
-        fun generousShotAngle(goal: Goal, expectedContact: Vector2, playerIndex: Int): Boolean {
+        fun generousShotAngle(goal: Goal, expectedContact: Vector2): Boolean {
 
             val goalCenter = goal.center.flatten()
             val ballToGoal = goalCenter.minus(expectedContact)
             val generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI / 4
-            val generousTriangle = measureShotTriangle(goal, expectedContact, playerIndex) > Math.PI / 4
+            val generousTriangle = measureShotTriangle(goal, expectedContact) > Math.PI / 4
 
             return generousAngle || generousTriangle
         }
 
-        private fun generousShotAngle(goal: Goal, expectedContact: Intercept?, playerIndex: Int): Boolean {
-            return expectedContact?.let { generousShotAngle(goal, it.space.flatten(), playerIndex) } ?: false
+        private fun generousShotAngle(goal: Goal, expectedContact: Intercept?): Boolean {
+            return expectedContact?.let { generousShotAngle(goal, it.space.flatten()) } ?: false
         }
 
-        private fun measureShotTriangle(goal: Goal, position: Vector2, playerIndex: Int): Double {
+        private fun measureShotTriangle(goal: Goal, position: Vector2): Double {
 
             val rightPost = GoalUtil.transformNearPost(goal.rightPost.flatten(), position)
             val leftPost = GoalUtil.transformNearPost(goal.leftPost.flatten(), position)
 
             val toRightPost = rightPost.minus(position)
             val toLeftPost = leftPost.minus(position)
-
-// BotLog.println(String.format("Shot angle: %.2f", angle), playerIndex);
 
             return Vector2.angle(toLeftPost, toRightPost)
         }

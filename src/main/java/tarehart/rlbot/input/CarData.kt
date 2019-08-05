@@ -20,4 +20,15 @@ class CarData (
         val isDemolished: Boolean,
         val name: String,
         val renderer: Renderer
-)
+) {
+
+    /**
+     * x is distance forward of the car.
+     * y is distance left of the car.
+     * z is distance above the car.
+     */
+    fun relativePosition(target: Vector3): Vector3 {
+        val toTarget = target - position
+        return orientation.matrix.transpose().dot(toTarget)
+    }
+}
