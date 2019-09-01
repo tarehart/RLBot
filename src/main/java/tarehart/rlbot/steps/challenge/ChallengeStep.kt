@@ -116,8 +116,10 @@ class ChallengeStep: NestedPlanStep() {
 
         const val DEFENSIVE_NODE_DISTANCE = 18.0
 
+        const val SAFETY_TIME = 2.0
+
         fun threatExists(tacticalSituation: TacticalSituation): Boolean {
-            return tacticalSituation.ballAdvantage.seconds < 0.5 &&
+            return tacticalSituation.ballAdvantage.seconds < SAFETY_TIME &&
                     tacticalSituation.enemyOffensiveApproachError?.let { it < Math.PI / 2 } == true
         }
     }

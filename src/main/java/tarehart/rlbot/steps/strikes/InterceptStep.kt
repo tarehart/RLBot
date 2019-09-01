@@ -153,6 +153,6 @@ class InterceptStep(
         }
 
         return InterceptCalculator.getFilteredInterceptOpportunity(
-                carData, ballPath, fullAcceleration, interceptModifier, { _, _ -> true }, strikeProfileFn)
+                carData, ballPath, fullAcceleration, interceptModifier, { cd, spaceTime -> StrikePlanner.isVerticallyAccessible(cd, spaceTime) }, strikeProfileFn)
     }
 }

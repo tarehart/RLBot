@@ -166,7 +166,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         if (raceResult.seconds > -.3) {
 
-            if (situation.enemyOffensiveApproachError?.let { it < Math.PI / 2 } == true) {
+            if (ChallengeStep.threatExists(situation)) {
                 // Enemy is threatening us
                 // Consider this to be a 50-50. Go hard for the intercept
                 return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
@@ -183,7 +183,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         } else {
             // Enemy is just gonna hit it for the sake of hitting it, presumably. Let's try to stay on offense if possible.
             // TODO: make sure we don't own-goal it with this
-            FirstViableStepPlan(NEUTRAL).withStep(GetOnOffenseStep()).withStep(DribbleStep())
+            FirstViableStepPlan(NEUTRAL)
+                    .withStep(GetOnOffenseStep())
+                    .withStep(DribbleStep())
+                    .withStep(GetOnDefenseStep())
         }
 
     }
@@ -196,7 +199,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val car = input.myCarData
 
         if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
-            return FirstViableStepPlan(OFFENSIVE).withStep(WallTouchStep()).withStep(FlexibleKickStep(WallPass()))
+            return FirstViableStepPlan(OFFENSIVE)
+                    .withStep(WallTouchStep())
+                    .withStep(FlexibleKickStep(WallPass()))
         }
 
         if (DribbleStep.reallyWantsToDribble(bundle)) {
@@ -207,6 +212,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(GetOnOffenseStep())
+                    .withStep(FlexibleKickStep(WallPass()))
         }
 
         SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
