@@ -134,10 +134,19 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 && situation.teamPlayerWithBestShot?.car == input.myCarData) {
 
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
-            return FirstViableStepPlan(OFFENSIVE)
-                    .withStep(FlexibleKickStep(KickAtEnemyGoal()))
+
+            val plan = FirstViableStepPlan(OFFENSIVE)
+
+            if (DribbleStep.canDribble(bundle, true) &&
+                    Duration.between(car.time, situation.expectedContact?.time ?: car.time).seconds < 1.0) {
+                plan.withStep(DribbleStep())
+            }
+
+            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
                     .withStep(CatchBallStep())
                     .withStep(GetOnOffenseStep())
+
+            return plan
         }
 
         return null
@@ -215,10 +224,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     .withStep(FlexibleKickStep(WallPass()))
         }
 
-        SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
-            return Plan(NEUTRAL).withStep(CatchBallStep()).withStep(DribbleStep())
-        }
-
         if (car.boost < 50) {
             return Plan().withStep(GetBoostStep())
         }
@@ -226,6 +231,13 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         if (getYAxisWrongSidedness(input) > 0) {
             println("Getting behind the ball", input.playerIndex)
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
+        }
+
+        SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
+            return FirstViableStepPlan(NEUTRAL)
+                    .withStep(CatchBallStep())
+                    .withStep(DribbleStep())
+                    .withStep(GetOnOffenseStep())
         }
 
         return FirstViableStepPlan(NEUTRAL)

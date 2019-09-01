@@ -1,20 +1,9 @@
 package tarehart.rlbot.steps.defense
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.planning.Goal
-import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.planning.CarWithIntercept
-import tarehart.rlbot.time.Duration
-
-import java.util.Optional
+import tarehart.rlbot.planning.GoalUtil
 
 class ThreatAssessor {
 
@@ -24,7 +13,7 @@ class ThreatAssessor {
         val enemyPosture = measureEnemyPosture(bundle, enemyCarOption)
         var ballThreat = measureBallThreat(bundle) * .3
         if (ballThreat < 0) {
-            ballThreat *= .3
+            ballThreat *= .1
         }
 
         val enemyThreat = Math.max(0.0, enemyPosture)

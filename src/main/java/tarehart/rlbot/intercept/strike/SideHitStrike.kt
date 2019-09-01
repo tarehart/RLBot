@@ -24,8 +24,8 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
     private val jumpTime = ManeuverMath.secondsForMashJumpHeight(
             height - ArenaModel.BALL_RADIUS - CONTACT_BELOW_BALL).orElse(.8)
-    override val preDodgeTime = Duration.ofSeconds(0.14 + jumpTime)
-    override val postDodgeTime = Duration.ofMillis(250)
+    override val preDodgeTime = Duration.ofSeconds(0.23 + jumpTime)
+    override val postDodgeTime = Duration.ofMillis(200)
     override val speedBoost = 10.0
     override val style = Style.SIDE_HIT
     override val isForward = false
@@ -52,7 +52,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
         val useFrontCorner = Math.abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
 
-        val carStrikeRadius = 1.9
+        val carStrikeRadius = 1.2
         val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
 
         if (useFrontCorner) {

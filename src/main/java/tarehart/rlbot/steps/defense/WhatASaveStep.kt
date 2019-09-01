@@ -30,7 +30,6 @@ class WhatASaveStep : NestedPlanStep() {
 
         BotLog.println("Flexible kick save... Good luck!", car.playerIndex)
         return startPlan(FirstViableStepPlan(Plan.Posture.SAVE)
-                .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
-                .withStep(GetOnDefenseStep()), bundle)
+                .withStep(FlexibleKickStep(KickAwayFromOwnGoal())), bundle)
     }
 }

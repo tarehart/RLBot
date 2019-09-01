@@ -4,7 +4,7 @@ package tarehart.rlbot.math
 
 object Atan {
 
-    private val Size_Ac = 100000
+    private val Size_Ac = 10000
     private val Size_Ar = Size_Ac + 1
     private val Pi = Math.PI.toFloat()
     private val Pi_H = Pi / 2

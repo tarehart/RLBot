@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
@@ -85,7 +86,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         val precisionPlan = InterceptCalculator.getRouteAwareIntercept(
                 carData = car,
                 ballPath = ballPath,
-                acceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost, 0.0),
                 spatialPredicate = overallPredicate,
                 strikeProfileFn = strikeProfileFn,
                 kickStrategy = kickStrategy) ?: return null
@@ -129,12 +129,12 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
 
         if (badCirclePart != null) {
-//            val renderer = NamedRenderer("badRoute")
-//            renderer.startPacket()
-//            precisionPlan.steerPlan.route.renderDebugInfo(renderer)
-//            renderer.finishAndSend()
+            val renderer = NamedRenderer("badRoute")
+            renderer.startPacket()
+            precisionPlan.steerPlan.route.renderDebugInfo(renderer)
+            renderer.finishAndSend()
             BotLog.println("Bad circle part during flexible.", car.playerIndex)
-            return startPlan(Plan().withStep(InterceptStep()), bundle)
+            return null
         }
 
         if (ArenaModel.getDistanceFromWall(Vector3(precisionPlan.steerPlan.waypoint.x, precisionPlan.steerPlan.waypoint.y, 0.0)) < -1) {
@@ -152,9 +152,11 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private fun getNavigation(bundle: TacticalBundle, circleTurnOption: SteerPlan): AgentOutput? {
         val car = bundle.agentInput.myCarData
 
-        SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)?.let {
-            println("Front flip toward flexible hit", bundle.agentInput.playerIndex)
-            return startPlan(it, bundle)
+        if (car.boost < 1) {
+            SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)?.let {
+                println("Front flip toward flexible hit", bundle.agentInput.playerIndex)
+                return startPlan(it, bundle)
+            }
         }
 
         return circleTurnOption.immediateSteer

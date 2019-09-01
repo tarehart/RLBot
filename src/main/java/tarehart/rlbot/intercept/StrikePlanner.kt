@@ -62,16 +62,19 @@ object StrikePlanner {
             if (height < StrikePlanner.MAX_JUMP_HIT) {
                 return StrikeProfile.Style.JUMP_HIT
             }
-        } else if (approachAngleMagnitude < Math.PI * .5 && intercept.z < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
+        } else if (approachAngleMagnitude < Math.PI * .2 && intercept.z < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
             return StrikeProfile.Style.CHIP
         }
 
         if (intercept.z < StrikePlanner.MAX_JUMP_HIT) {
             val isNearGoal = intercept.distance(GoalUtil.getNearestGoal(intercept).center) < 50
-            if (approachAngleMagnitude > Math.PI / 4 && isNearGoal) {
-                return StrikeProfile.Style.SIDE_HIT
+            if (isNearGoal) {
+                if (approachAngleMagnitude > Math.PI / 4) {
+                    return StrikeProfile.Style.SIDE_HIT
+                }
+                return StrikeProfile.Style.DIAGONAL_HIT
             }
-            return StrikeProfile.Style.DIAGONAL_HIT
+            return StrikeProfile.Style.CHIP
         }
         return StrikeProfile.Style.AERIAL
     }

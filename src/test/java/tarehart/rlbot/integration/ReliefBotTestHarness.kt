@@ -28,6 +28,8 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
                 RLBotDll.setPlayerInputFlatbuffer(AgentOutput(), STANDARD_PLAYER_INDEX)
                 botManager.ensureStarted()
                 initialized = true
+                System.out.println("Setting state")
+                testCase.setState()
                 Thread.sleep(100) // Give the state a chance to take hold.
             } catch (e: Error) {
                 e.printStackTrace()
@@ -47,8 +49,6 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
         }
 
         botInstance.registerBundleListener(testCase)
-        System.out.println("Setting state")
-        testCase.setState()
     }
 
     private fun stop() {

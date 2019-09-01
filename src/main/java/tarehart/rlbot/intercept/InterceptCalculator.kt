@@ -128,7 +128,6 @@ object InterceptCalculator {
     fun getRouteAwareIntercept(
             carData: CarData,
             ballPath: BallPath,
-            acceleration: DistancePlot,
             spatialPredicate: (CarData, SpaceTime, StrikeProfile) -> Boolean,
             strikeProfileFn: (Vector3, Vector2, CarData) -> StrikeProfile,
             kickStrategy: KickStrategy): PrecisionPlan? {
@@ -136,6 +135,10 @@ object InterceptCalculator {
         val myPosition = carData.position.flatten()
         var firstMomentInRange: GameTime? = null
         var spatialPredicateFailurePeriod: Duration? = null
+
+        var acceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(6.0), carData.boost, 0.0)
+        var frontFlipDistance = AccelerationModel.getFrontFlipDistance(carData.velocity.magnitude())
+        var hasUsedHypotheticalFlip = false
 
         for (i in 0 until ballPath.slices.size) {
             val slice = ballPath.slices[i]
@@ -154,6 +157,12 @@ object InterceptCalculator {
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - orientDuration, strikeProfile) ?: return null
 
             val interceptDistance = toIntercept.magnitude()
+
+            if (interceptDistance > frontFlipDistance && !hasUsedHypotheticalFlip) {
+                acceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(6.0), carData.boost)
+                hasUsedHypotheticalFlip = true
+            }
+
             val rangeDeficiency = interceptDistance - dts.distance
             if (rangeDeficiency <= 0) {
                 if (firstMomentInRange == null) {

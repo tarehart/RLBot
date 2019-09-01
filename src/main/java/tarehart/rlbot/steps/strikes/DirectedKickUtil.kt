@@ -43,7 +43,7 @@ object DirectedKickUtil {
         var plannedKickForce = Vector3() // This empty vector will never be used, but the compiler hasn't noticed.
         var desiredBallVelocity = Vector3()
 
-        val impactSpeed = if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else Math.max(10.0, arrivalSpeed)
+        val impactSpeed = if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else 30.0
 
         if (intercept.strikeProfile.isForward) {
 
@@ -55,28 +55,27 @@ object DirectedKickUtil {
                 // The kick strategy is fine with the easy kick.
                 plannedKickForce = easyForce
                 desiredBallVelocity = easyKick
+            } else {
+                // TODO: this is a rough approximation.
+                kickDirection = kickStrategy.getKickDirection(car, ballAtIntercept.space) ?: return null
+                val orthogonal = VectorUtil.orthogonal(kickDirection.flatten())
+                val transverseBallVelocity = VectorUtil.project(ballAtIntercept.velocity.flatten(), orthogonal)
+                desiredBallVelocity = kickDirection.normaliseCopy().scaled(impactSpeed * 2)
+
+                val towardIntercept = (intercept.space - car.position).normaliseCopy()
+                val approximateCarVelocityAtContact = towardIntercept.scaled(preStrikeSpeed)
+                val relativeVelocity = intercept.ballSlice.velocity - approximateCarVelocityAtContact
+                val ballVelocityFactor = BALL_VELOCITY_INFLUENCE + Math.max(0.0, 4 - relativeVelocity.magnitude() * 0.12)
+
+                plannedKickForce = Vector3(
+                        desiredBallVelocity.x - transverseBallVelocity.x * ballVelocityFactor,
+                        desiredBallVelocity.y - transverseBallVelocity.y * ballVelocityFactor,
+                        desiredBallVelocity.z)
             }
         } else {
-            easyKickAllowed = false
-        }
-
-        if (!easyKickAllowed) {
-
-            // TODO: this is a rough approximation.
-            kickDirection = kickStrategy.getKickDirection(car, ballAtIntercept.space) ?: return null
-            val orthogonal = VectorUtil.orthogonal(kickDirection.flatten())
-            val transverseBallVelocity = VectorUtil.project(ballAtIntercept.velocity.flatten(), orthogonal)
-            desiredBallVelocity = kickDirection.normaliseCopy().scaled(impactSpeed * 2)
-
-            val towardIntercept = (intercept.space - car.position).normaliseCopy()
-            val approximateCarVelocityAtContact = towardIntercept.scaled(preStrikeSpeed)
-            val relativeVelocity = intercept.ballSlice.velocity - approximateCarVelocityAtContact
-            val ballVelocityFactor = BALL_VELOCITY_INFLUENCE + Math.max(0.0, 4 - relativeVelocity.magnitude() * 0.12)
-
-            plannedKickForce = Vector3(
-                    desiredBallVelocity.x - transverseBallVelocity.x * ballVelocityFactor,
-                    desiredBallVelocity.y - transverseBallVelocity.y * ballVelocityFactor,
-                    desiredBallVelocity.z)
+            easyKickAllowed = true
+            plannedKickForce = kickStrategy.getKickDirection(car, ballAtIntercept.space) ?: return null
+            desiredBallVelocity = plannedKickForce
         }
 
         val launchPad = intercept.strikeProfile.getPreKickWaypoint(car, intercept, plannedKickForce, arrivalSpeed) ?: return null
