@@ -72,7 +72,7 @@ class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: Ga
             val route = Route()
                     .withPart(OrientRoutePart(flatPosition, orientDuration))
                     .withPart(AccelerationRoutePart(flatPosition, waypoint, duration))
-            return SteerPlan(SteerUtil.steerTowardGroundPosition(car, waypoint + this.facing.scaled(100.0), detourForBoost = false), route)
+            return SteerPlan(SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = false), route)
         }
 
         return CircleTurnUtil.getPlanForCircleTurn(car, distancePlot, this)

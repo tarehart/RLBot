@@ -5,7 +5,9 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SoccerGoal
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
@@ -27,16 +29,16 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
             startTime = bundle.agentInput.time
         }
 
+        val st = startTime ?: bundle.agentInput.time
+        if (Duration.between(st, bundle.agentInput.time).seconds > lifespan) {
+            return null
+        }
+
         val plan = Plan(Plan.Posture.DEFENSIVE).withStep(ParkTheCarStep { inp ->
             calculatePositionFacing(inp)
         })
 
         return startPlan(plan, bundle)
-    }
-
-    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        val st = startTime ?: bundle.agentInput.time
-        return Duration.between(st, bundle.agentInput.time).seconds > lifespan
     }
 
     companion object {

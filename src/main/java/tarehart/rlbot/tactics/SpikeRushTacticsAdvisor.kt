@@ -151,9 +151,9 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             return Plan(Plan.Posture.SAVE).withStep(InterceptStep(needsChallenge = false))
         }
 
-        if (SoccerTacticsAdvisor.getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.WAITTOCLEAR.canInterrupt(currentPlan)) {
+        if (SoccerTacticsAdvisor.getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
-            return Plan(Plan.Posture.WAITTOCLEAR).withStep(RotateAndWaitToClearStep())
+            return Plan(Plan.Posture.DEFENSIVE).withStep(RotateAndWaitToClearStep())
         }
 
         if (getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)

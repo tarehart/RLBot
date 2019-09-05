@@ -68,7 +68,7 @@ class FlipHitStrike: StrikeProfile() {
             return Plan()
                     .unstoppable()
                     .withStep(BlindSequence()
-                            .withStep(BlindStep(Duration.ofSeconds(.08),
+                            .withStep(BlindStep(Duration.ofSeconds(.04),
                                     AgentOutput()
                                             .withPitch(-0.3)
                                             .withJump(true)

@@ -31,7 +31,6 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
         NEUTRAL(0, Color.WHITE),
         OFFENSIVE(1, Color.RED),
         DEFENSIVE(5, Color.GREEN),
-        WAITTOCLEAR(7, Color.CYAN),
         CLEAR(8, Color.CYAN),
         ESCAPEGOAL(8, Color.WHITE),
         SAVE(10, Color.CYAN),

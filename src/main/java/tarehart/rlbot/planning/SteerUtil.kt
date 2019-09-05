@@ -103,7 +103,7 @@ object SteerUtil {
 
         val correctionAngle = getCorrectionAngleRad(car, adjustedPosition)
         val distance = adjustedPosition.distance(myPositionFlat)
-        val speed = car.velocity.magnitude()
+        val speed = ManeuverMath.forwardSpeed(car)
         return getSteeringOutput(correctionAngle, distance, speed, car.isSupersonic, conserveBoost, car.spin.yawRate)
     }
 
@@ -184,7 +184,7 @@ object SteerUtil {
 
         val shouldBrake = distance < 25 && difference > Math.PI / 4 && speed > 25 || speed > 20 && difference > Math.PI / 2
         val shouldSlide = yawRateVsIntent > 1 &&
-                (speed < 30 && distance < 15 && difference > Math.PI / 4 || speed < 30 && difference > 3 * Math.PI / 4)
+                (speed < 30 && distance < 15 && difference > Math.PI / 2 || speed < 30 && difference > 3 * Math.PI / 4)
         val shouldBoost = !conserveBoost && !shouldBrake && difference < Math.PI / 6 && !isSupersonic
 
         return AgentOutput()

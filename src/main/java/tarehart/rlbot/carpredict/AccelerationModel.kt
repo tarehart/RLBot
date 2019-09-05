@@ -141,6 +141,10 @@ object AccelerationModel {
     }
 
     fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {
+        if (!carData.hasWheelContact) {
+            // Might be flipping toward the ball, in that case facing the wrong way is not a problem.
+            return 0.0
+        }
         val toTarget = target.minus(carData.position)
         val correctionErr = Math.max( 0.0, 0.8 - toTarget.normaliseCopy().dotProduct(carData.orientation.noseVector))
         val seconds = correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .02
@@ -150,7 +154,7 @@ object AccelerationModel {
     @JvmOverloads
     fun simulateAcceleration(carData: CarData, duration: Duration, boostBudget: Double, flipCutoffDistance: Double = java.lang.Double.MAX_VALUE): DistancePlot {
 
-        var currentSpeed = ManeuverMath.forwardSpeed(carData)
+        var currentSpeed = carData.velocity.magnitude()
         val plot = DistancePlot(DistanceTimeSpeed(0.0, Duration.ofMillis(0), currentSpeed))
 
         var boostRemaining = boostBudget

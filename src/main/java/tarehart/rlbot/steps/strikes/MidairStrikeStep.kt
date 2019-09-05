@@ -116,7 +116,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, latestIntercept.space)
 
         if (hasJump && car.time.isBefore(lastMomentForDodge) && carToIntercept.magnitude() < DODGE_TIME.seconds * car.velocity.flatten().magnitude()
-                && latestIntercept.space.z - car.position.z < 2.0) {
+                && latestIntercept.space.z - car.position.z < 1.0) {
             // Let's flip into the ball!
             if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
                 BotLog.println("Front flip strike", bundle.agentInput.playerIndex)
@@ -212,7 +212,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                 val enemyGoal = GoalUtil.getEnemyGoal(team)
                 val goalToBall = it.minus(enemyGoal.getNearestEntrance(it, 4.0))
 
-                offset = goalToBall.scaledToMagnitude(3.37)
+                offset = goalToBall.scaledToMagnitude(3.2)
 
                 val gameMode = GameModeSniffer.getGameMode()
                 if (gameMode == GameMode.SOCCER) {

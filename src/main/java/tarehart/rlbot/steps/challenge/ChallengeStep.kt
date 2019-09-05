@@ -49,16 +49,12 @@ class ChallengeStep: NestedPlanStep() {
 
         val tacticalSituation = bundle.tacticalSituation
         val ballAdvantage = tacticalSituation.ballAdvantage
-        if (ballAdvantage.seconds > 1.0) {
+        if (ballAdvantage.seconds > 0.5) {
             return null // We can probably go for a shot now.
         }
 
         val enemyContact = tacticalSituation.expectedEnemyContact ?:
             return null
-
-        if (enemyContact.space.z > StrikePlanner.NEEDS_AERIAL_THRESHOLD) {
-            return null
-        }
 
         val enemyShotLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center - enemyContact.space
 
@@ -92,6 +88,7 @@ class ChallengeStep: NestedPlanStep() {
         val renderer = car.renderer
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.0, Color(0.8f, 0.0f, 0.8f))
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.5, Color(0.8f, 0.0f, 0.8f))
+        RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), defensiveNode.withZ(1.0)), 1.5, Color.MAGENTA)
 
         // If we're too greedy, we'll be late to kickoffs
         return SteerUtil.steerTowardGroundPosition(car, defensiveNode,

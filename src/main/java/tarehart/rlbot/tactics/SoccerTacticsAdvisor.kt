@@ -15,6 +15,7 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
 import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
+import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
@@ -25,6 +26,7 @@ import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.teamwork.PositionForPassStep
+import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
 import tarehart.rlbot.time.Duration
@@ -76,16 +78,19 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     situation.expectedEnemyContact?.time?.isBefore(situation.scoredOnThreat.time) == true &&
                     situation.distanceBallIsBehindUs < 0) {
                 println("Need to save, but also need to challenge first!", input.playerIndex)
-                return Plan(Plan.Posture.SAVE).withStep(ChallengeStep())
+                return FirstViableStepPlan(Plan.Posture.SAVE)
+                        .withStep(ChallengeStep())
+                        .withStep(WhatASaveStep())
+                        .withStep(InterceptStep())
             }
 
             println("Canceling current plan. Need to go for save!", input.playerIndex)
             return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
         }
 
-        if (getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.WAITTOCLEAR.canInterrupt(currentPlan)) {
+        if (getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
-            return Plan(Plan.Posture.WAITTOCLEAR).withStep(RotateAndWaitToClearStep())
+            return Plan(Plan.Posture.DEFENSIVE).withStep(RotateAndWaitToClearStep())
         }
 
         if (getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)
@@ -121,7 +126,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val totalThreat = threatAssessor.measureThreat(bundle, situation.enemyPlayerWithInitiative)
 
-        if (totalThreat > 3 && situation.ballAdvantage.seconds < 0.5 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
+        val scoreAdvantage = input.blueScore - input.orangeScore * if (car.team == Team.BLUE) 1 else -1
+        val goNuts = scoreAdvantage < -1
+
+        if (!goNuts && totalThreat > 3 && situation.ballAdvantage.seconds < 0.5 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             println("Canceling current plan due to threat level.", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.DEFENSIVE)
@@ -130,7 +138,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
         }
 
-        if (situation.shotOnGoalAvailable && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
+        if (situation.shotOnGoalAvailable &&
+                situation.expectedContact?.time?.minusSeconds(2.0)?.isBefore(input.time) == true &&
+                Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithBestShot?.car == input.myCarData) {
 
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
@@ -138,7 +148,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             val plan = FirstViableStepPlan(OFFENSIVE)
 
             if (DribbleStep.canDribble(bundle, true) &&
-                    Duration.between(car.time, situation.expectedContact?.time ?: car.time).seconds < 1.0) {
+                    Duration.between(car.time, situation.expectedContact.time).seconds < 1.0) {
                 plan.withStep(DribbleStep())
             }
 
@@ -168,21 +178,13 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val raceResult = situation.ballAdvantage
 
-        if (raceResult.seconds > 2) {
+        if (!ChallengeStep.threatExists(bundle.tacticalSituation)) {
             // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
             return makePlanWithPlentyOfTime(bundle)
         }
 
         if (raceResult.seconds > -.3) {
-
-            if (ChallengeStep.threatExists(situation)) {
-                // Enemy is threatening us
-                // Consider this to be a 50-50. Go hard for the intercept
-                return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
-            } else {
-                // Doesn't matter if enemy wins the race, they are out of position.
-                return makePlanWithPlentyOfTime(bundle)
-            }
+            return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
         }
 
         // The enemy is probably going to get there first.
@@ -206,6 +208,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val situation = bundle.tacticalSituation
         val ballPath = situation.ballPath
         val car = input.myCarData
+
+        if (car.boost < 10) {
+            return Plan().withStep(GetBoostStep())
+        }
 
         if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
             return FirstViableStepPlan(OFFENSIVE)
@@ -233,11 +239,12 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
         }
 
-        SteerUtil.getCatchOpportunity(car, ballPath, car.boost)?.let {
+        if (SteerUtil.getCatchOpportunity(car, ballPath, car.boost) != null) {
+            val ownGoal = GoalUtil.getOwnGoal(car.team).center
             return FirstViableStepPlan(NEUTRAL)
                     .withStep(CatchBallStep())
                     .withStep(DribbleStep())
-                    .withStep(GetOnOffenseStep())
+                    .withStep(ParkTheCarStep{ PositionFacing(Vector2(0.0, input.ballPosition.y + ownGoal.y * .5), ownGoal.flatten()) })
         }
 
         return FirstViableStepPlan(NEUTRAL)

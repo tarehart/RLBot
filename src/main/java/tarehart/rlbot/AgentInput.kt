@@ -26,8 +26,8 @@ class AgentInput(
     val orangeCars: List<CarData>
     private val ourCar: CarData
 
-    //    private val blueScore: Int
-//    private val orangeScore: Int
+    val blueScore: Int
+    val orangeScore: Int
 //    private val blueDemo: Int
 //    private val orangeDemo: Int
     val ballPosition: Vector3
@@ -78,8 +78,8 @@ class AgentInput(
 //        val blueCarInput = if (this.team == Team.BLUE) self else getSomeCar(allCars, Team.BLUE)
 //        val orangeCarInput = if (this.team == Team.ORANGE) self else getSomeCar(allCars, Team.ORANGE)
 //
-//        blueScore = (blueCarInput?.scoreInfo?.goals ?: 0) + (orangeCarInput?.scoreInfo?.ownGoals ?: 0)
-//        orangeScore = (orangeCarInput?.scoreInfo?.goals ?: 0) + (blueCarInput?.scoreInfo?.goals ?: 0)
+        blueScore = request.teams(0).score()
+        orangeScore = request.teams(1).score()
 //        blueDemo = blueCarInput?.scoreInfo?.demolitions ?: 0
 //        orangeDemo = orangeCarInput?.scoreInfo?.demolitions ?: 0
 

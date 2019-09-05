@@ -29,12 +29,14 @@ class DribbleStep : NestedPlanStep() {
         val car = bundle.agentInput.myCarData
         val renderer = car.renderer
 
-        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(3.0), car.boost)
-
-        val ballPath = bundle.tacticalSituation.ballPath
         val ballPosition = bundle.agentInput.ballPosition
-
         val ballToCar = car.position - ballPosition
+        val ballPath = bundle.tacticalSituation.ballPath
+        if (GoalUtil.getEnemyGoal(car.team).predictGoalEvent(ballPath) != null) {
+            return null  // Ball is on target, use shot taking code to shove it in!
+        }
+
+        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(3.0), car.boost)
 
         val intercept = InterceptCalculator.getFilteredInterceptOpportunity(
                 car,

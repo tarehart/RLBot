@@ -76,7 +76,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
             }
 
             if (distance < 5) {
-                if (Math.abs(facingCorrectionRadians) < .3 && speed < 3) {
+                if (Math.abs(facingCorrectionRadians) < 1 && speed < 5) {
                     return null // We're already good
                 }
 
@@ -120,11 +120,11 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, bundle) }
 
                     val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
-                    val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 20.0, distancePlot)
+                    val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 30.0, distancePlot)
 
-                    val steer = SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = distance < 50, conserveBoost = car.boost < 50 || distance < 20)
+                    val steer = SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = distance > 50, conserveBoost = car.boost < 50 || distance < 20)
 
-                    if (decelerationPeriod.distance >= distance) {
+                    if (decelerationPeriod.distance + slideDistance >= distance && ManeuverMath.forwardSpeed(car) > 30) {
                         steer.withThrottle(-1.0)
                         steer.withBoost(false)
                     }

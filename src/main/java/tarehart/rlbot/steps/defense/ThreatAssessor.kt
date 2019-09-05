@@ -31,9 +31,12 @@ class ThreatAssessor {
         val ballToGoal = myGoal.center.minus(bundle.agentInput.ballPosition)
 
         val carToBall = bundle.agentInput.ballPosition.minus(enemyCar.car.position)
-        val rightSideVector = VectorUtil.project(carToBall.scaledToMagnitude(10.0), ballToGoal)
+        val carToBallNormal = carToBall.normaliseCopy()
+        val rightSideVector = VectorUtil.project(carToBallNormal, ballToGoal)
+        val facingScore = Math.max(0.0, enemyCar.car.orientation.noseVector.dotProduct(carToBallNormal))
+        val boomerScore = (enemyCar.car.velocity - bundle.agentInput.ballVelocity).magnitude() * 1 / 4
 
-        return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal))
+        return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal)) * facingScore * boomerScore
     }
 
 
@@ -43,14 +46,11 @@ class ThreatAssessor {
         val myGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
         val ballToGoal = myGoal.center.minus(bundle.agentInput.ballPosition)
 
-        val ballVelocityTowardGoal = VectorUtil.project(bundle.agentInput.ballVelocity, ballToGoal)
-        val ballSpeedTowardGoal = ballVelocityTowardGoal.magnitude() * Math.signum(ballVelocityTowardGoal.dotProduct(ballToGoal))
-
         val carToBall = bundle.agentInput.ballPosition.minus(car.position)
         val wrongSideVector = VectorUtil.project(carToBall, ballToGoal)
         val wrongSidedness = wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal))
 
-        return ballSpeedTowardGoal + wrongSidedness - ballToGoal.magnitude() * .3
+        return wrongSidedness - ballToGoal.magnitude() * .3
     }
 
 }

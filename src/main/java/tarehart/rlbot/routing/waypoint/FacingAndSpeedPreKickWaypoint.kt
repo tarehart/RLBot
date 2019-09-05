@@ -16,6 +16,9 @@ class FacingAndSpeedPreKickWaypoint(position: Vector2, expectedTime: GameTime, f
     override fun isPlausibleFinalApproach(car: CarData): Boolean {
 
         if (ArenaModel.isCarOnWall(car)) return false
+        if (car.time.isAfter(expectedTime.plusSeconds(0.5))) {
+            return false
+        }
         return Vector2.angle(car.orientation.noseVector.flatten(), facing) < Math.PI / 30 &&
                 Math.abs(speed - car.velocity.magnitude()) < 1
     }
