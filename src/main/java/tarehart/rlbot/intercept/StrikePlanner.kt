@@ -38,13 +38,16 @@ object StrikePlanner {
             return tMinus >= -0.1
         }
 
-        if (carData.boost > BOOST_NEEDED_FOR_AERIAL) {
+        if (carData.boost > boostNeededForAerial(intercept.space.z)) {
             val tMinus = AerialStrike.getAerialLaunchCountdown(intercept.space.z, secondsTillIntercept)
             return tMinus >= -0.1
         }
         return false
     }
 
+    fun boostNeededForAerial(height: Double) : Double {
+        return if (height > StrikePlanner.NEEDS_AERIAL_THRESHOLD) StrikePlanner.BOOST_NEEDED_FOR_AERIAL + height else 0.0
+    }
 
 
     fun computeStrikeStyle(car: CarData, intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {

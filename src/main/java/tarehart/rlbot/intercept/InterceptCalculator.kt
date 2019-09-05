@@ -91,7 +91,7 @@ object InterceptCalculator {
                 if (spatialPredicate.invoke(carData, spaceTime)) {
 
                     val tweenedSlice = getTweenedSlice(ballPath, slice, i, rangeDeficiency, previousRangeDeficiency)
-                    val boostNeeded = boostNeededForAerial(spaceTime.space.z)
+                    val boostNeeded = StrikePlanner.boostNeededForAerial(spaceTime.space.z)
                     val spatialPredicateFailurePeriod =
                             if (tweenedSlice.time > firstMomentInRange) tweenedSlice.time - firstMomentInRange
                             else Duration.ofMillis(0)
@@ -174,7 +174,7 @@ object InterceptCalculator {
                         spatialPredicateFailurePeriod = spaceTime.time - firstMomentInRange
                     }
 
-                    val boostNeeded = boostNeededForAerial(spaceTime.space.z)
+                    val boostNeeded = StrikePlanner.boostNeededForAerial(spaceTime.space.z)
 
                     val intercept = Intercept(
                             slice.space + interceptModifier,
@@ -223,10 +223,6 @@ object InterceptCalculator {
 
         // No slices in the ball slices were in range and satisfied the predicate
         return null
-    }
-
-    private fun boostNeededForAerial(height: Double) : Double {
-        return if (height > StrikePlanner.NEEDS_AERIAL_THRESHOLD) StrikePlanner.BOOST_NEEDED_FOR_AERIAL else 0.0
     }
 
     private fun getTweenedSlice(ballPath: BallPath, currentSlice: BallSlice, currentSliceIndex: Int, currentShortfall: Double, previousShortfall: Double): BallSlice {
@@ -295,8 +291,7 @@ object InterceptCalculator {
 
                 val aerialTime = AerialMath.calculateAerialTimeNeeded(courseCorrection)
                 val aerialFinesseTime = intercept.time - carData.time - aerialTime
-                BotLog.println("Aerial finesse time: $aerialFinesseTime", carData.playerIndex)
-                if (aerialFinesseTime.seconds > 0.4 || aerialFinesseTime < previousFinesseTime) {
+                if (aerialFinesseTime.seconds > 0.2 || aerialFinesseTime < previousFinesseTime) {
 
                     return Intercept(
                             intercept.space,
