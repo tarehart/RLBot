@@ -52,15 +52,15 @@ class DropshotWallKick : KickStrategy {
         return easyKick
     }
 
-    private fun getFirstPlaneBreak(ray: Ray, planes: List<Plane>): Impact? {
+    private fun getFirstPlaneBreak(ray: Ray, planes: List<Plane>): Ray? {
         var closest = Double.MAX_VALUE
-        var impact: Impact? = null
+        var impact: Ray? = null
         for (p in planes) {
             val spot = VectorUtil.getPlaneIntersection(p, ray.position, ray.direction * 10000.0) ?: continue
             val distance = ray.position.distanceSquared(spot)
             if (distance < closest) {
                 closest = distance
-                impact = Impact(spot, p.normal)
+                impact = Ray(spot, p.normal)
             }
         }
 

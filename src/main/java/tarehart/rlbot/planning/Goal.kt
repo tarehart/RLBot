@@ -38,4 +38,6 @@ abstract class Goal( negativeSide: Boolean) {
     abstract fun getRightPost(padding: Double): Vector3
 
     abstract fun predictGoalEvent(ballPath: BallPath): BallSlice?
+
+    abstract fun isGoalEvent(planeBreakLocation: Vector3): Boolean
 }

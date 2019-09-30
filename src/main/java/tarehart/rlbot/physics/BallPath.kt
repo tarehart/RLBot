@@ -33,9 +33,10 @@ class BallPath() {
             val location = Vector3.fromRlbot(physics.location())
 
             if (endAtGoal && i > 0) {
-                val scorePlane = GoalUtil.getNearestGoal(location).scorePlane
+                val nearestGoal = GoalUtil.getNearestGoal(location)
+                val scorePlane = nearestGoal.scorePlane
                 val planeBreak = getPlaneBreak(slices[i - 1].space, location, scorePlane)
-                if (planeBreak != null) {
+                if (planeBreak != null && nearestGoal.isGoalEvent(planeBreak)) {
                     // Set the score location to a point that's actually past the plane
                     // so that the constructed ball path will definitely register
                     // a plane break again if we query it.

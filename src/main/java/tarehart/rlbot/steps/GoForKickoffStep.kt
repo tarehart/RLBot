@@ -5,6 +5,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.blind.BlindStep
@@ -12,6 +13,7 @@ import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -58,13 +60,24 @@ class GoForKickoffStep : NestedPlanStep() {
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
             return SteerUtil.steerTowardGroundPosition(car, target, detourForBoost = false)
         }
-        return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL).withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAtEnemyGoal())), bundle)
+
+        if (kickoffType == KickoffType.SPACE_JAM) {
+            return startPlan(Plan(Plan.Posture.NEUTRAL)
+                    .withStep(BlindStep(Duration.ofSeconds(0.2), AgentOutput().withBoost().withThrottle(1.0)))
+                    .withStep(MidairStrikeStep(Duration.ofMillis(0))), bundle)
+        }
+
+        return startPlan(FirstViableStepPlan(Plan.Posture.NEUTRAL)
+                .withStep(ChallengeStep())
+                .withStep(FlexibleKickStep(KickAtEnemyGoal()))
+                .withStep(MidairStrikeStep(Duration.ofMillis(0))), bundle)
     }
 
     enum class KickoffType {
         CENTER,
         CHEATIN,
         SLANTERD,
+        SPACE_JAM,
         UNKNOWN
     }
 
@@ -98,6 +111,10 @@ class GoForKickoffStep : NestedPlanStep() {
             if (getNumberDistance(DIAGONAL_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(DIAGONAL_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
                 BotLog.println("it be slanterd", car.playerIndex)
                 return KickoffType.SLANTERD
+            }
+
+            if (ArenaModel.isMicroGravity()) {
+                return KickoffType.SPACE_JAM
             }
 
             BotLog.println("what on earth", car.playerIndex)

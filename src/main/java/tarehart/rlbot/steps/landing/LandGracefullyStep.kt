@@ -3,6 +3,7 @@ package tarehart.rlbot.steps.landing
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.CarPredictor
+import tarehart.rlbot.carpredict.Impact
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Mat3
 import tarehart.rlbot.math.OrientationSolver
@@ -36,26 +37,22 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
             }
         }
 
-        val carPredictor = CarPredictor(bundle.agentInput.playerIndex, false)
-
-        val carMotion = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(3.0))
-        val impact = carMotion.getFirstPlaneBreak(ArenaModel.getCollisionPlanes())
-
-        carMotion.renderIn3d(car.renderer)
-
+        val impact = predictImpact(bundle)
 
         if (ArenaModel.isMicroGravity() && car.boost > 0 && impact == null ||
                 impact?.time?.let { (it - car.time > Duration.ofSeconds(2.0)) } == true) {
 
             // If we're drifting in space, boost toward the nearest wall
             val nearestPlane = ArenaModel.getNearestPlane(car.position)
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(nearestPlane.normal * -1.0), 1.0 / 60).withBoost()
+            if (nearestPlane.distance(car.position) > 2) {  // Avoid getting stuck on your nose forever.
+                return OrientationSolver.orientCar(car, Mat3.lookingTo(nearestPlane.normal * -1.0), 1.0 / 60).withBoost()
+            }
         }
 
         impact?.let {
             RenderUtil.drawSquare(car.renderer, Plane(it.direction, it.position), 5.0, Color.RED)
 
-            if (it.direction.z == 0.0) {
+            if (it.direction.z != 1.0) {
                 // It's a wall!
                 val targetOrientation = Mat3.lookingTo(car.velocity.projectToPlane(it.direction), it.direction)
                 return OrientationSolver.orientCar(bundle.agentInput.myCarData, targetOrientation, 1.0 / 60).withThrottle(1.0)
@@ -124,6 +121,12 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
 
         private fun faceVelocity(bundle: TacticalBundle): Vector2 {
             return bundle.agentInput.myCarData.velocity.flatten().normalized()
+        }
+
+        fun predictImpact(bundle: TacticalBundle): Impact? {
+            val carPredictor = CarPredictor(bundle.agentInput.playerIndex, false)
+            val carMotion = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(3.0))
+            return carMotion.getFirstPlaneBreak(ArenaModel.getCollisionPlanes())
         }
     }
 }

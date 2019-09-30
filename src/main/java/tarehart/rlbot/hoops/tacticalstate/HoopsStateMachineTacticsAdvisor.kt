@@ -1,25 +1,26 @@
 package tarehart.rlbot.hoops.tacticalstate
 
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.math.Ray
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.GetBoostStep
-import tarehart.rlbot.steps.challenge.ChallengeStep
+import tarehart.rlbot.steps.GoForKickoffStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
+import tarehart.rlbot.steps.travel.AchieveVelocityStep
+import tarehart.rlbot.steps.travel.FlyToTargetStep
 import tarehart.rlbot.steps.wall.DescendFromWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
-import tarehart.rlbot.tactics.GameMode
-import tarehart.rlbot.tactics.TacticalSituation
-import tarehart.rlbot.tactics.TacticsAdvisor
-import tarehart.rlbot.tactics.TacticsTelemetry
+import tarehart.rlbot.tactics.*
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
@@ -35,18 +36,35 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
     override fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
 
         val input = bundle.agentInput
+        val car = input.myCarData
         val situation = bundle.tacticalSituation
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan)) {
-            val muse = KickoffState().muse(bundle)
-            if (muse is KickoffState) {
-                return muse.newPlan(bundle)
+        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
+            if (situation.teamPlayerWithInitiative?.car == car) {
+                return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
             }
+
+            if (GoForKickoffStep.getKickoffType(car) == GoForKickoffStep.KickoffType.CENTER) {
+                return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
+            }
+
+            return Plan(Plan.Posture.KICKOFF).withStep(GetBoostStep())
         }
 
-        val car = input.myCarData
-
-        if (!car.hasWheelContact && Plan.Posture.LANDING.canInterrupt(currentPlan) && car.position.z > 5) {
+        if (!car.hasWheelContact && Plan.Posture.LANDING.canInterrupt(currentPlan) && !ArenaModel.isMicroGravity()) {
             return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+        }
+
+        if (car.hasWheelContact && ArenaModel.isMicroGravity() && Plan.Posture.LANDING.canInterrupt(currentPlan)) {
+            return Plan(Plan.Posture.LANDING)
+                    .withStep(AchieveVelocityStep((input.ballPosition - car.position).scaledToMagnitude(10.0)))
+//                    .withStep(BlindStep(Duration.ofSeconds(0.05), AgentOutput().withJump()))
+//                    .withStep(BlindStep(Duration.ofSeconds(0.05), AgentOutput()))
+//                    .withStep(BlindStep(Duration.ofSeconds(0.05), AgentOutput().withJump()))
+//                    .withStep(BlindStep(Duration.ofSeconds(0.01), AgentOutput()))
+        }
+
+        if (ArenaModel.isMicroGravity()) {
+            return null
         }
 
         GoalUtil.getEnemyGoal(input.team).predictGoalEvent(situation.ballPath)?.let {
@@ -68,6 +86,29 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
 
     override fun makeFreshPlan(bundle: TacticalBundle): Plan {
         val input = bundle.agentInput
+
+        val car = input.myCarData
+
+        if (!car.hasWheelContact && ArenaModel.isMicroGravity()) {
+
+            val impact = LandGracefullyStep.predictImpact(bundle)
+            if (impact != null && Duration.between(car.time, impact.time).seconds < 1.0) {
+                return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+
+            }
+
+            val goalToBall = input.ballPosition - GoalUtil.getEnemyGoal(car.team).center
+            val ballToCar = car.position - input.ballPosition
+            if (goalToBall.dotProduct(ballToCar) > 0) {
+                return Plan(Plan.Posture.OFFENSIVE)
+                        .withStep(MidairStrikeStep(Duration.ofMillis(0)))
+            }
+
+            return Plan(Plan.Posture.OFFENSIVE)
+                    .withStep(FlyToTargetStep(
+                        ArenaModel.getBounceNormal(Ray(bundle.tacticalSituation.futureBallMotion!!.space, goalToBall)).position))
+
+        }
 
         if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
             return FirstViableStepPlan(Plan.Posture.NEUTRAL)
@@ -114,7 +155,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = false,
                 shotOnGoalAvailable = true,
-                goForKickoff = false, // getGoForKickoff(zonePlan, input.team, input.ballPosition),
+                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(input.myCarData, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,
                 enemyIntercepts = enemyIntercepts,

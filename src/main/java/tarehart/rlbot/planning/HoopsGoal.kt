@@ -2,6 +2,7 @@ package tarehart.rlbot.planning
 
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
 
@@ -21,8 +22,8 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
     override fun getNearestEntrance(ballPosition: Vector3, padding: Double): Vector3 {
 
         val centerToBall = ballPosition - center
-        val newRadius = RADIUS - padding
-        val centerToEntrance = centerToBall.scaledToMagnitude(newRadius).flatten().toVector3()
+        val newRadius = Math.min(RADIUS - padding, centerToBall.flatten().magnitude())
+        val centerToEntrance = centerToBall.flatten().scaledToMagnitude(newRadius).toVector3()
 
         return center + centerToEntrance
     }
@@ -43,7 +44,11 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
 
     override fun predictGoalEvent(ballPath: BallPath): BallSlice? {
         return ballPath.getPlaneBreak(ballPath.startPoint.time, scorePlane, true,
-                { v3 -> v3.flatten().distance(center.flatten()) < RADIUS }, increment = 4)
+                { v3 -> this.isGoalEvent(v3) }, increment = 4)
+    }
+
+    override fun isGoalEvent(planeBreakLocation: Vector3): Boolean {
+        return planeBreakLocation.flatten().distance(center.flatten()) < RADIUS
     }
 
     companion object {

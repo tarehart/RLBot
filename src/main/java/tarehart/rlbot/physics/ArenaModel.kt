@@ -5,10 +5,7 @@ import com.google.common.cache.CacheLoader
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.Atan
-import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.math.Plane
-import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.*
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.cpp.BallPredictorHelper
@@ -292,6 +289,15 @@ class ArenaModel {
                     }))
 
             return intersectionDistances.entries.stream().min(Comparator.comparingDouble{ ent -> ent.value}).get().key
+        }
+
+        fun getBounceNormal(ray: Ray): Ray {
+            val longDirection = ray.direction.scaledToMagnitude(500.0)
+
+            val intersectionDistances = arenaPlanes.asSequence()
+                    .mapNotNull{ plane -> VectorUtil.getPlaneIntersection(plane, ray.position, longDirection)?.let { Ray(it, plane.normal) } }
+
+            return intersectionDistances.minBy { r -> r.position.distance(ray.position) }!!
         }
     }
 }

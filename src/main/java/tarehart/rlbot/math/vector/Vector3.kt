@@ -156,6 +156,7 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
 
         const val PACKET_DISTANCE_TO_CLASSIC = 50.0
         val UP = Vector3(0.0, 0.0, 1.0)
+        val DOWN = Vector3(0.0, 0.0, -1.0)
         val ZERO = Vector3()
 
         fun fromRlbot(v: rlbot.flat.Vector3): Vector3 {

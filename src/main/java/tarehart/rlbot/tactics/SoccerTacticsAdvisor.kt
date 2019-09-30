@@ -48,6 +48,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val car = input.myCarData
         val zonePlan = bundle.zonePlan
 
+        val scoreAdvantage = input.blueScore - input.orangeScore * if (car.team == Team.BLUE) 1 else -1
+        val goNuts = scoreAdvantage < -1
+
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
         if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
             if (situation.teamPlayerWithInitiative?.car == car) {
@@ -88,12 +91,12 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
         }
 
-        if (getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+        if (!goNuts && getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
             return Plan(Plan.Posture.DEFENSIVE).withStep(RotateAndWaitToClearStep())
         }
 
-        if (getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)
+        if (!goNuts && getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)
                 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
 
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex)
@@ -125,9 +128,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         val totalThreat = threatAssessor.measureThreat(bundle, situation.enemyPlayerWithInitiative)
-
-        val scoreAdvantage = input.blueScore - input.orangeScore * if (car.team == Team.BLUE) 1 else -1
-        val goNuts = scoreAdvantage < -1
 
         if (!goNuts && totalThreat > 3 && situation.ballAdvantage.seconds < 0.5 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithInitiative?.car == input.myCarData) {

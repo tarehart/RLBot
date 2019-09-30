@@ -61,6 +61,10 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
         return ballPath.getPlaneBreak(ballPath.startPoint.time, scorePlane, true, increment = 4)
     }
 
+    override fun isGoalEvent(planeBreakLocation: Vector3): Boolean {
+        return true
+    }
+
     companion object {
 
         private const val GOAL_DISTANCE = 102.0

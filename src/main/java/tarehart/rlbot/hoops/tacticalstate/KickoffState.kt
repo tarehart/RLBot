@@ -14,6 +14,7 @@ import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.WhileConditionStep
+import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.ui.DisplayFlags
@@ -54,7 +55,7 @@ class KickoffState : TacticalState {
 
     override fun muse(bundle: TacticalBundle): TacticalState {
         val input = bundle.agentInput
-        if (!input.ballPosition.flatten().isZero) {
+        if (!input.ballPosition.flatten().isZero || input.myCarData.position.z > 5) {
             return IdleState()
         } else if (input.ballPosition.flatten().isZero && input.ballVelocity.isZero && kickoffHasBegun) {
             println("Kickoff restarted")
@@ -227,6 +228,8 @@ class KickoffState : TacticalState {
                             it.ballVelocity.flatten().isZero
                         }), )
                         */
+            } else {
+                return Plan().withStep(InterceptStep())
             }
         }
         return Plan().withStep(BlindStep(Duration.ofMillis(16), AgentOutput()))
