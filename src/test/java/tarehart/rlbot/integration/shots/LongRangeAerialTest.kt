@@ -35,9 +35,7 @@ class LongRangeAerialTest: StateSettingAbstractTest() {
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
                         timeLimit = Duration.ofSeconds(4.0),
-                        delayWhenBallFloating = true),
-
-                        BallTouchAssert(Duration.ofSeconds(3.0))))
+                        delayWhenBallFloating = true)))
 
         runTestCase(testCase)
     }

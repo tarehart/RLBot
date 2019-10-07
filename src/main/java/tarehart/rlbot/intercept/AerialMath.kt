@@ -26,7 +26,7 @@ object AerialMath {
      */
     fun isViableAerial(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): Boolean {
 
-        val courseResult = calculateAerialCourseCorrection(car, target, modelJump, secondsSinceJump, false)
+        val courseResult = calculateAerialCourseCorrection(car, target, modelJump, secondsSinceJump)
         val accelNeeded = courseResult.averageAccelerationRequired
 
         return 0 <= accelNeeded && accelNeeded < ACCEL_NEEDED_THRESHOLD * BOOST_ACCEL_IN_AIR
@@ -46,8 +46,7 @@ object AerialMath {
      *
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L423-L445
      */
-    fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double,
-                                        assumeResidualBoostAccel: Boolean): AerialCourseCorrection {
+    fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): AerialCourseCorrection {
 
         var initialPosition = car.space
         var initialVelocity = car.velocity
@@ -57,10 +56,6 @@ object AerialMath {
         if (modelJump) {
             initialVelocity += car.orientation.roofVector * JUMP_VELOCITY
             initialPosition += car.orientation.roofVector * MINIMUM_JUMP_HEIGHT
-        }
-
-        if (assumeResidualBoostAccel) {
-            initialVelocity += car.orientation.noseVector * 4.0
         }
 
         val assistSeconds = Math.max(0.0, JUMP_ASSIST_DURATION - secondsSinceJump)
@@ -95,7 +90,7 @@ object AerialMath {
 
     fun timeToAir(height: Double): Double {
         val a = TYPICAL_UPWARD_ACCEL // Upward acceleration
-        val b = 10 // Initial upward velocity from jump
+        val b = 7 // Initial upward velocity from jump, less a bit because we'll take a bit to orient and lose some of it.
         val c = -(height - ManeuverMath.BASE_CAR_Z)
         val liftoffDelay = 0.3
         return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a) + liftoffDelay

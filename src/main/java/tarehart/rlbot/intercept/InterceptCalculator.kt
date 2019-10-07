@@ -204,7 +204,7 @@ object InterceptCalculator {
                                         kickPlan.launchPad.expectedTime,
                                         toIntercept.scaledToMagnitude(kickPlan.launchPad.expectedSpeed).toVector3(),
                                         orientation),
-                                intercept.toSpaceTime(), true, 0.0, false)
+                                intercept.toSpaceTime(), true, 0.0)
                         AerialMath.calculateAerialTimeNeeded(correction)
                     } else
                         kickPlan.intercept.strikeProfile.strikeDuration
@@ -264,21 +264,10 @@ object InterceptCalculator {
 
             val timeSinceLaunch = Duration.between(launchMoment, carData.time)
             val duration = Duration.between(carData.time, slice.time)
-            val aerialCourseCorrection = AerialMath.calculateAerialCourseCorrection(CarSlice(carData), intercept, carData.hasWheelContact, timeSinceLaunch.seconds, false)
-            val zComponent = aerialCourseCorrection.correctionDirection.z
-            val desiredNoseAngle = Math.asin(zComponent)
-            val currentNoseAngle = Math.asin(carData.orientation.noseVector.z)
-            val currentAngleFactor = Math.min(1.0, 1 / duration.seconds)
-            val averageNoseAngle = currentNoseAngle * currentAngleFactor + desiredNoseAngle * (1 - currentAngleFactor)
-
-            val acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, Math.cos(averageNoseAngle))
+            val acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, 1.0)
 
             // We're already in the air, so don't model any hang time.
-            val strikeProfile =
-                    if (timeSinceLaunch + duration  < MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE && averageNoseAngle < .5)
-                        CustomStrike(Duration.ZERO, Duration.ofMillis(150), 10.0, StrikeProfile.Style.AERIAL)
-                    else
-                        CustomStrike(Duration.ZERO, Duration.ZERO, 0.0, StrikeProfile.Style.AERIAL)
+            val strikeProfile = CustomStrike(Duration.ZERO, Duration.ZERO, 0.0, StrikeProfile.Style.AERIAL)
 
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
@@ -287,7 +276,7 @@ object InterceptCalculator {
             if (dts.distance > interceptDistance && spatialPredicate.invoke(carData, intercept)) {
 
                 val courseCorrection = AerialMath.calculateAerialCourseCorrection(
-                        CarSlice(carData), intercept, modelJump = false, secondsSinceJump = timeSinceLaunch.seconds, assumeResidualBoostAccel = false)
+                        CarSlice(carData), intercept, modelJump = false, secondsSinceJump = timeSinceLaunch.seconds)
 
                 val aerialTime = AerialMath.calculateAerialTimeNeeded(courseCorrection)
                 val aerialFinesseTime = intercept.time - carData.time - aerialTime

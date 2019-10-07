@@ -32,8 +32,7 @@ class FlyToTargetStep(private val target: Vector3) : NestedPlanStep() {
                 CarSlice(car),
                 SpaceTime(target, bundle.agentInput.time.plusSeconds(1.0)),
                 modelJump = false,
-                secondsSinceJump = 0.0,
-                assumeResidualBoostAccel = false)
+                secondsSinceJump = 0.0)
 
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, car.orientation.roofVector), MidairStrikeStep.ORIENT_DT)

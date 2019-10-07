@@ -69,7 +69,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
 
         if (approachError < maxAerialApproachError) {
 
-            val desiredSpeedAtLaunch = averageSpeedNeeded * 0.9
+            val desiredSpeedAtLaunch = averageSpeedNeeded * 0.8
             val orientSeconds = FacingAndSpeedPreKickWaypoint.getOrientDuration(car.orientation.noseVector.flatten(), toIntercept).seconds
 
             val motionAfterSpeedChange = RoutePlanner.getMotionAfterSpeedChange(
@@ -124,7 +124,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             }
 
             val courseCorrection = AerialMath.calculateAerialCourseCorrection(
-                    CarSlice(car), intercept, true, 0.0, false)
+                    CarSlice(car), intercept, true, 0.0)
             val accelRatio = courseCorrection.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR
 
             if (accelRatio < 0.4) {

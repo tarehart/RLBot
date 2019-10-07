@@ -12,6 +12,7 @@ import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.math.Mat3
 import tarehart.rlbot.math.OrientationSolver
 import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -72,7 +73,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
 
-        val offset = standardOffset(intercept?.space, car.team, bundle)
+        val offset = standardOffset(intercept, car.team, bundle)
 
         val spatialPredicate = { cd: CarData, st: SpaceTime ->
             kickStrategy?.looksViable(cd, st.space) ?: true
@@ -106,7 +107,8 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             ballPathDisruptionMeter.reset()
         }
 
-        intercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
+        if ((car.time - beginningOfStep).seconds < 2)
+            intercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
 
         val latestIntercept = intercept?.toSpaceTime() ?: return null
         // val latestIntercept = spaceTime ?: return null
@@ -152,25 +154,23 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                     CarSlice(car),
                     SpaceTime(latestIntercept.space - carToIntercept.flatten().scaledToMagnitude(2.0).toVector3(), latestIntercept.time - DODGE_TIME),
                     modelJump = false,
-                    secondsSinceJump = secondsSinceLaunch,
-                    assumeResidualBoostAccel = wasBoosting)
+                    secondsSinceJump = secondsSinceLaunch)
         else
             AerialMath.calculateAerialCourseCorrection(
                     CarSlice(car),
                     latestIntercept,
                     false,
-                    secondsSinceLaunch,
-                    wasBoosting)
+                    secondsSinceLaunch)
 
         val acceptableError: Double
-        if (courseResult.targetError.dotProduct(carToIntercept) > 0) {
+        if (courseResult.targetError.dotProduct(carToIntercept) < .5) {
             // If we've overshot
-            acceptableError = 0.4
+            acceptableError = 2.0
         } else {
             acceptableError = 0.1
         }
 
-        if (courseResult.targetError.magnitude() < acceptableError && !canDodge && !wasBoosting && millisTillIntercept < 500) {
+        if (courseResult.targetError.magnitude() < acceptableError && !canDodge) {
             finalOrientation = true
             BotLog.println("Doing final orientation for aerial touch!", car.playerIndex)
             return orientForFinalTouch(offset, car)
@@ -193,9 +193,9 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return null
         }
 
-        val boostThreshold = if (secondsSinceLaunch < 1) .8  else .9
+        val boostThreshold = if (secondsSinceLaunch < 1) .8  else .98
 
-        RenderUtil.drawSphere(car.renderer, latestIntercept.space - courseResult.targetError, 1.0, Color.RED)
+        RenderUtil.drawSphere(car.renderer, latestIntercept.space - courseResult.targetError, 2.0, Color.RED)
 
         wasBoosting = courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold
 
@@ -229,39 +229,41 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
         const val ORIENT_DT = 1/60.0
 
-        fun standardOffset(intercept: Vector3?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
+        fun standardOffset(intercept: Intercept?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
             val ownGoal = GoalUtil.getOwnGoal(team).center
             var offset = ownGoal.scaledToMagnitude(2.0).minus(Vector3(0.0, 0.0, .3))
             val car = tacticalBundle.agentInput.myCarData
 
             intercept?.let {
 
+                val ballPos = it.ballSlice.space
                 val enemyGoal = GoalUtil.getEnemyGoal(team)
-                val goalToBall = it.minus(enemyGoal.getNearestEntrance(it, 4.0))
+                val goalToBall = it.ballSlice.space.minus(enemyGoal.getNearestEntrance(ballPos, 6.0))
 
-                offset = goalToBall.scaledToMagnitude(3.2)
+
+                val orthogonal = VectorUtil.orthogonal(goalToBall.flatten())
+                val transverseBallVelocity = VectorUtil.project(it.ballSlice.velocity.flatten(), orthogonal)
+
+                offset = goalToBall.plus(transverseBallVelocity.withZ(0.0)).scaledToMagnitude(3.3)
 
                 val gameMode = GameModeSniffer.getGameMode()
                 if (gameMode == GameMode.SOCCER) {
 
                     if (tacticalBundle.tacticalSituation.scoredOnThreat != null) {
                         offset = (offset.scaledToMagnitude(0.5) +
-                                KickAwayFromOwnGoal().getKickDirection(car, it).scaledToMagnitude(-1.0))
+                                KickAwayFromOwnGoal().getKickDirection(car, ballPos).scaledToMagnitude(-1.0))
                                 .withZ(-1.0)
                                 .scaledToMagnitude(2.8)
-                    } else if (offset.z > .8) {
-                        // We'll be hitting it with our tail probably, so get closer.
-                        offset = offset.scaledToMagnitude(2.6)
                     }
 
-                    if (Math.abs(ownGoal.y - intercept.y) > ArenaModel.BACK_WALL * .7 && goalToBall.magnitude() > 110) {
+                    if (Math.abs(ownGoal.y - intercept.space.y) > ArenaModel.BACK_WALL * .7 && goalToBall.magnitude() > 110) {
                         offset = Vector3(offset.x, offset.y, -.2)
                     }
                 } else if (gameMode == GameMode.HOOPS) {
 
                     val funnelAngle = if (ArenaModel.isMicroGravity()) 2.0 else 1.0
-                    if (enemyGoal.center.flatten().distance(intercept.flatten()) / funnelAngle
-                            < HoopsGoal.RADIUS + intercept.z - HoopsGoal.GOAL_HEIGHT ) {
+                    if (enemyGoal.center.flatten().distance(ballPos.flatten()) / funnelAngle
+                            < HoopsGoal.RADIUS + ballPos.z - HoopsGoal.GOAL_HEIGHT ) {
                         // Dunk it!
                         if (ArenaModel.isMicroGravity()) {
                             offset = Vector3(offset.x, offset.y, offset.z).scaledToMagnitude(2.8)
@@ -273,7 +275,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                         offset = Vector3(offset.x, offset.y, -0.7)
                     }
                 } else {
-                    if (enemyGoal.center.y * intercept.y > 0 ) {
+                    if (enemyGoal.center.y * ballPos.y > 0 ) {
                         // Dunk it!
                         offset = Vector3(offset.x, offset.y, 0.5)
                     } else {
