@@ -29,6 +29,7 @@ class BotHouse {
         DisplayFlags.init()
 
         val botManager = BotManager()
+        botManager.setRefreshRate(120)
         val pythonInterface = PyInterface(port, botManager, bots)
         Thread { pythonInterface.start() }.start()
 
