@@ -226,8 +226,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         if (generousShotAngle(GoalUtil.getEnemyGoal(car.team), situation.expectedContact)) {
             return FirstViableStepPlan(OFFENSIVE)
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
-                    .withStep(GetOnOffenseStep())
                     .withStep(FlexibleKickStep(WallPass()))
+                    .withStep(GetOnOffenseStep())
         }
 
         if (car.boost < 50) {

@@ -31,35 +31,26 @@ class WallPass : KickStrategy {
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3? {
 
         val bouncePlane = ArenaModel.getBouncePlane(ballPosition, Vector3(easyKick.x, easyKick.y, 0.0))
-        val enemyGoalCenter = GoalUtil.getEnemyGoal(car.team).center
-        val forward = easyKick.y * enemyGoalCenter.y > 0
 
-
-
-        if (forward) {
-            val sideWall = Math.abs(bouncePlane.normal.x) == 1.0
-            val backWall = Math.abs(bouncePlane.normal.y) == 1.0
-            val diagonalWall = !sideWall && !backWall
-
-            if (sideWall) {
-                return easyKick
-            }
-
-            if (diagonalWall && Vector2.angle(easyKick.flatten(), enemyGoalCenter.flatten()) < Math.PI / 8) {
-                return easyKick
-            }
-
-            if (Math.abs(enemyGoalCenter.y - ballPosition.y) < 20) {
-                return null
-            }
-        }
-
-        if (TacticsTelemetry[car.playerIndex]?.gameMode == GameMode.SOCCER && Math.abs(enemyGoalCenter.y - ballPosition.y) < 20) {
+        if (Math.abs(bouncePlane.normal.y) > .99) {
+            // No bouncing off the back wall for a wall pass!
             return null
         }
 
-        // bounce it off the side wall at a slight angle.
-        return Vector2(if (easyKick.x != 0.0) easyKick.x else 1.0, 0.0)
-                .rotateTowards(enemyGoalCenter.flatten(), Math.PI / 6).toVector3()
+        val enemyGoal = GoalUtil.getEnemyGoal(car.team)
+        val enemyGoalCenter = enemyGoal.center
+
+        val goalDistanceFromWall = bouncePlane.distance(enemyGoalCenter)
+        val strikeDistanceFromWall = bouncePlane.distance(ballPosition)
+        val strikeClosenessRatio = strikeDistanceFromWall / (strikeDistanceFromWall + goalDistanceFromWall)
+
+        val strikeShadowOnWall = bouncePlane.projectPoint(ballPosition)
+        val goalShadowOnWall = bouncePlane.projectPoint(enemyGoalCenter)
+
+        val strikeToGoalAlongWall = goalShadowOnWall - strikeShadowOnWall
+
+        val target = strikeShadowOnWall + strikeToGoalAlongWall.scaled(strikeClosenessRatio)
+
+        return target - ballPosition
     }
 }

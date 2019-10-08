@@ -23,6 +23,8 @@ object CircleTurnUtil {
     private val TURN_RADIUS_B = .16
     private val TURN_RADIUS_C = 7.0
 
+    private val ENFORCED_CIRCLE_SPEED = 40.0
+
     private fun planWithinCircle(car: CarData, strikePoint: StrictPreKickWaypoint, currentSpeed: Double, desiredSpeed: Double, circle: Circle): SteerPlan {
 
         val targetPosition = strikePoint.position
@@ -31,23 +33,22 @@ object CircleTurnUtil {
         val targetTail = targetPosition.minus(targetFacing)
 
         val flatPosition = car.position.flatten()
-        val idealCircle = Circle.getCircleFromPoints(targetTail, targetNose, flatPosition)
+//        val idealCircle = Circle.getCircleFromPoints(targetTail, targetNose, flatPosition)
 
         val clockwise = Circle.isClockwise(circle, targetPosition, targetFacing)
 
-        val idealSpeedOption = getSpeedForRadius(idealCircle.radius)
 
-        val idealSpeed = idealSpeedOption ?: 10.0
+        val idealSpeed = ENFORCED_CIRCLE_SPEED
 
-        val lookaheadRadians = Math.PI / 20
-        val centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(idealCircle.center).scaledToMagnitude(idealCircle.radius), lookaheadRadians * if (clockwise) -1 else 1)
-        val steerTarget = idealCircle.center.plus(centerToSteerTarget)
+        val lookaheadRadians = Math.PI / 8
+        val centerToSteerTarget = VectorUtil.rotateVector(flatPosition.minus(circle.center).scaledToMagnitude(circle.radius), lookaheadRadians * if (clockwise) -1 else 1)
+        val steerTarget = circle.center.plus(centerToSteerTarget)
         val predictedAvgSpeed = (idealSpeed * 5 + currentSpeed) / 6
         val timeAtTarget = car.time + getTurnDuration(circle, flatPosition, steerTarget, clockwise, predictedAvgSpeed)
 
         val output = SteerUtil.getThereOnTime(car, SpaceTime(steerTarget.toVector3(), timeAtTarget))
 
-        val turnDuration = getTurnDuration(idealCircle, flatPosition, targetPosition, clockwise, predictedAvgSpeed)
+        val turnDuration = getTurnDuration(circle, flatPosition, targetPosition, clockwise, predictedAvgSpeed)
 
         // TODO: sometimes this turn duration gets really big at the end of a circle turn that seems to be going fine.
         val route = Route()
@@ -55,7 +56,7 @@ object CircleTurnUtil {
                         start = flatPosition,
                         end = targetPosition,
                         duration = turnDuration,
-                        circle = idealCircle,
+                        circle = circle,
                         clockwise = clockwise))
 
         return SteerPlan(output, route)
@@ -140,7 +141,7 @@ object CircleTurnUtil {
 
         val clockwise = toTarget.correctionAngle(targetFacing) < 0
 
-        val turnRadius = getTurnRadius(expectedSpeed)
+        val turnRadius = getTurnRadius(ENFORCED_CIRCLE_SPEED)
         // Make sure the radius vector points from the target position to the center of the turn circle.
         val radiusVector = VectorUtil.rotateVector(targetFacing, Math.PI / 2 * if (clockwise) -1 else 1).scaled(turnRadius)
 
@@ -158,6 +159,11 @@ object CircleTurnUtil {
             tangentPoints.second
 
         val distanceToTangent = tangentPoint.distance(flatPosition)
+
+        if (distanceToTangent < 5) {
+            return planWithinCircle(car, strikePoint, currentSpeed, expectedSpeed, circle)
+        }
+
         val turnDuration = getTurnDuration(circle, tangentPoint, targetPosition, clockwise, expectedSpeed)
 
         val immediateSteer: AgentOutput
@@ -168,7 +174,7 @@ object CircleTurnUtil {
             immediateSteer = SteerUtil.steerTowardGroundPosition(car, tangentPoint, detourForBoost = false)
         }
 
-        if (currentSpeed > expectedSpeed && distanceToTangent < 20) {
+        if (currentSpeed > ENFORCED_CIRCLE_SPEED && distanceToTangent < 20) {
             immediateSteer.withThrottle(-1.0)  // TODO: This is probably out of place, we have more subtle ways of doing this now
         }
 

@@ -5,6 +5,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.FlipHitStrike
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.travel.LineUpInReverseStep
@@ -13,7 +14,30 @@ import tarehart.rlbot.time.Duration
 object SetPieces {
 
     fun speedupFlip(): Plan {
-        return FlipHitStrike.frontFlip()
+        return Plan()
+                .unstoppable()
+                .withStep(BlindSequence()
+                        .withStep(BlindStep(Duration.ofSeconds(.04),
+                                AgentOutput()
+                                        .withPitch(-0.3)
+                                        .withJump(true)
+                                        .withThrottle(1.0)))
+                        .withStep(BlindStep(Duration.ofSeconds(.02),
+                                AgentOutput()
+                                        .withPitch(-1.0)
+                                        .withThrottle(1.0)
+                        ))
+                        .withStep(BlindStep(Duration.ofSeconds(.3),
+                                AgentOutput()
+                                        .withJump(true)
+                                        .withThrottle(1.0)
+                                        .withPitch(-1.0)))
+                        .withStep(BlindStep(Duration.ofSeconds(.5),
+                                AgentOutput()
+                                        .withThrottle(1.0)
+                                        .withPitch(-1.0)
+                        )))
+                .withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
     }
 
     fun halfFlip(waypoint: Vector2): Plan {
