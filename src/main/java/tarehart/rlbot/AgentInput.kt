@@ -99,6 +99,10 @@ class AgentInput(
         return if (team == Team.BLUE) blueCars else orangeCars
     }
 
+    fun getTeamScore(team: Team): Int {
+        return if (team == Team.BLUE) blueScore else orangeScore
+    }
+
     //returns every car in the current match except the one provided
     fun getAllOtherCars(indexFilter: Int): List<CarData> {
         return allCars.filter { it.playerIndex != indexFilter }

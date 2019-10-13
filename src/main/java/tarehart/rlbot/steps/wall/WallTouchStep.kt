@@ -12,9 +12,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.*
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.blind.BlindStep
@@ -142,6 +140,15 @@ class WallTouchStep : NestedPlanStep() {
             if (situation.gameMode == GameMode.SOCCER && ArenaModel.BACK_WALL - Math.abs(ballPosition.y) < 10) {
                 // In soccer, don't go for touches on the back wall. High danger of accidentally driving
                 // into the goal.
+                if (Zone.isInDefensiveThird(bundle.zonePlan.ballZone, bundle.agentInput.team)) {
+                    val car = bundle.agentInput.myCarData
+                    if (Math.abs(car.position.x) > SoccerGoal.EXTENT && Math.abs(ballPosition.x) > SoccerGoal.EXTENT &&
+                            car.position.x * ballPosition.x > 0) {
+                        // Safe to do a wall touch because the car and the touch are both outside the goal frame.
+                        return true
+                    }
+                }
+
                 return false
             }
 

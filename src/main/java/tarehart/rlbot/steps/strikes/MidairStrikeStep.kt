@@ -127,20 +127,20 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         // TODO: might want to make this velocity-based
         val correctionAngleRad = SteerUtil.getCorrectionAngleRad(car, latestIntercept.space)
 
-        if (hasJump && car.time.isBefore(lastMomentForDodge) && carToIntercept.magnitude() < DODGE_TIME.seconds * car.velocity.flatten().magnitude()
-                && latestIntercept.space.z - car.position.z < 1.0) {
-            // Let's flip into the ball!
-            if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
-                BotLog.println("Front flip strike", bundle.agentInput.playerIndex)
-                startPlan(Plan()
-                        .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
-                        .withStep(BlindStep(Duration.ofSeconds(1.0), AgentOutput().withPitch(-1.0).withJump())),
-                        bundle)
-            }
-        }
+//        if (hasJump && car.time.isBefore(lastMomentForDodge) && carToIntercept.magnitude() < DODGE_TIME.seconds * car.velocity.flatten().magnitude()
+//                && latestIntercept.space.z - car.position.z < 1.0) {
+//            // Let's flip into the ball!
+//            if (Math.abs(correctionAngleRad) <= SIDE_DODGE_THRESHOLD) {
+//                BotLog.println("Front flip strike", bundle.agentInput.playerIndex)
+//                startPlan(Plan()
+//                        .withStep(BlindStep(Duration.ofMillis(30), AgentOutput()))
+//                        .withStep(BlindStep(Duration.ofSeconds(1.0), AgentOutput().withPitch(-1.0).withJump())),
+//                        bundle)
+//            }
+//        }
 
         if (finalOrientation && millisTillIntercept < 500) {
-            return orientForFinalTouch(offset, car)
+            return orientForFinalTouch(offset, car).withJump()
         } else {
             finalOrientation = false
         }
@@ -171,13 +171,13 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         if (courseResult.targetError.magnitude() < acceptableError && !canDodge) {
             finalOrientation = true
             BotLog.println("Doing final orientation for aerial touch!", car.playerIndex)
-            return orientForFinalTouch(offset, car)
+            return orientForFinalTouch(offset, car).withJump()
         }
 
         val up = if (offset.z > 0 && secondsSinceLaunch > 1.5) Vector3.DOWN else Vector3.UP
 
         if (courseResult.targetError.magnitude() < acceptableError && !canDodge && !wasBoosting) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT)
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT).withJump()
         }
 
         if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 &&

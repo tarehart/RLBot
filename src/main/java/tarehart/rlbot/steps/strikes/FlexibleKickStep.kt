@@ -129,10 +129,10 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
 
         if (badCirclePart != null) {
-            val renderer = NamedRenderer("badRoute")
-            renderer.startPacket()
-            precisionPlan.steerPlan.route.renderDebugInfo(renderer)
-            renderer.finishAndSend()
+//            val renderer = NamedRenderer("badRoute")
+//            renderer.startPacket()
+//            precisionPlan.steerPlan.route.renderDebugInfo(renderer)
+//            renderer.finishAndSend()
             BotLog.println("Bad circle part during flexible.", car.playerIndex)
             return null
         }

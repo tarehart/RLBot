@@ -5,7 +5,9 @@ data class ThreatReport(
         val enemyShotAligned: Boolean,
         val enemyWinsRace: Boolean,
         val enemyHasBreakaway: Boolean,
-        val ballIsBehindUs: Boolean) {
+        val ballIsBehindUs: Boolean,
+        val enemyDribbling: Boolean,
+        val challengeImminent: Boolean) {
 
 
     fun looksSerious(): Boolean {
@@ -14,6 +16,14 @@ data class ThreatReport(
         }
 
         if (enemyHasBreakaway) {
+            return true
+        }
+
+        if (enemyDribbling && enemyShotAligned) {
+            return true
+        }
+
+        if (challengeImminent) {
             return true
         }
 

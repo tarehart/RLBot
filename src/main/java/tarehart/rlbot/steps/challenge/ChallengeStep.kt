@@ -18,6 +18,7 @@ import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import java.awt.BasicStroke
@@ -55,12 +56,18 @@ class ChallengeStep: NestedPlanStep() {
             return null // We can probably go for a shot now.
         }
 
-        if (ballAdvantage.seconds < -0.5) {
+        if (ballAdvantage.seconds < RISKIEST_CHALLENGE_ADVANTAGE_SECONDS && ThreatAssessor.getThreatReport(bundle).enemyMightBoom) {
             BotLog.println("Can't challenge, we're going to lose by too much!", car.playerIndex)
+            return null
         }
 
         val enemyContact = tacticalSituation.expectedEnemyContact ?:
             return null
+
+        if (enemyContact.space.z > 5) {
+            BotLog.println("Canceling challenge because the enemy probably won't get up for it.", car.playerIndex)
+            return null
+        }
 
         val enemyShotLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center - enemyContact.space
 
@@ -118,13 +125,13 @@ class ChallengeStep: NestedPlanStep() {
     companion object {
 
         const val DEFENSIVE_NODE_DISTANCE = 18.0
+        const val RISKIEST_CHALLENGE_ADVANTAGE_SECONDS = -0.2
 
         const val SAFETY_TIME = 1.0
 
         fun threatExists(bundle: TacticalBundle): Boolean {
             val threatReport = ThreatAssessor.getThreatReport(bundle)
-
-            return bundle.tacticalSituation.ballAdvantage.seconds < SAFETY_TIME && threatReport.enemyShotAligned
+            return bundle.tacticalSituation.ballAdvantage.seconds < SAFETY_TIME || threatReport.challengeImminent
         }
     }
 }

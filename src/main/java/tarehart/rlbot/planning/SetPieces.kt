@@ -102,7 +102,7 @@ object SetPieces {
         val realDirection = direction.scaledToMagnitude(10.0) - velocityOffset
         val correctionAngle = car.orientation.noseVector.flatten().correctionAngle(realDirection)
 
-        val pitch = Math.cos(correctionAngle)
+        val pitch = -Math.cos(correctionAngle)
         val roll = -Math.sin(correctionAngle)
 
         return Plan()

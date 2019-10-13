@@ -4,7 +4,9 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BoostPad
+import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.Circle
+import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.GoalUtil
@@ -58,7 +60,7 @@ class GetBoostStep : NestedPlanStep() {
             val toBoost = target.minus(myPosition)
 
             val facing = VectorUtil.orthogonal(target) { v -> v.dotProduct(toBoost) > 0 }.normalized()
-            val waypoint = target - facing.scaledToMagnitude(Math.min(toBoost.magnitude() * 0.3, 20.0))
+            val waypoint = target - facing.scaledToMagnitude(Clamper.clamp(toBoost.magnitude() * 0.3 - 10, 0.0, 20.0))
 
             SteerUtil.getSensibleFlip(car, waypoint)?.let {
                 println("Flipping toward boost", bundle.agentInput.playerIndex)

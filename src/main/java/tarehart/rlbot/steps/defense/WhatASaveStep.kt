@@ -6,6 +6,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.steps.CatchBallStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
@@ -30,6 +31,7 @@ class WhatASaveStep : NestedPlanStep() {
 
         BotLog.println("Flexible kick save... Good luck!", car.playerIndex)
         return startPlan(FirstViableStepPlan(Plan.Posture.SAVE)
-                .withStep(FlexibleKickStep(KickAwayFromOwnGoal())), bundle)
+                .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+                .withStep(CatchBallStep()), bundle)
     }
 }

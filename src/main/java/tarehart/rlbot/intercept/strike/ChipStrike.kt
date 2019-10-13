@@ -33,7 +33,7 @@ class ChipStrike: StrikeProfile() {
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), desiredKickForce.flatten())
 
-        val carCornerSpacing = Math.abs(estimatedApproachDeviationFromKickForce) * 1.1
+        val carCornerSpacing = Math.abs(estimatedApproachDeviationFromKickForce) * 1.05
 
         val distanceBetweenCentersAtContact = desiredKickForce.flatten().scaledToMagnitude(3.2 + carCornerSpacing)
 

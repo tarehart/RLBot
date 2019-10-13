@@ -12,6 +12,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.RoutePlanner
 import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
@@ -105,11 +106,15 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
 
         fun isReadyForAerial(car: CarData, intercept: SpaceTime): Boolean {
 
+            val toTarget = intercept.space.flatten().minus(car.position.flatten())
+            val velocityCorrectionRad = car.velocity.flatten().correctionAngle(toTarget)
+
             val checklist = AerialChecklist()
             StrikePlanner.checkLaunchReadiness(checklist, car, intercept)
             checklist.timeForIgnition = true
             checklist.hasBoost = true
             checklist.notSkidding = !ManeuverMath.isSkidding(car)
+            checklist.linedUp = car.velocity.magnitude() < 5 || Math.abs(velocityCorrectionRad) < 0.1
             if (!checklist.readyToLaunch()) {
                 BotLog.println("Not aerialing yet: $checklist", car.playerIndex)
                 return false
@@ -118,7 +123,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             val avgSpeedNeeded = car.position.flatten().distance(intercept.space.flatten()) / (intercept.time - car.time).seconds
             val speedRatio = car.velocity.magnitude() / avgSpeedNeeded
 
-            if (speedRatio < 0.75) {
+            if (speedRatio < 0.6 && avgSpeedNeeded > 20) {
                 BotLog.println("Not aerialing yet: Have only sped up to $speedRatio of the average speed needed", car.playerIndex)
                 return false
             }

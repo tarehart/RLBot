@@ -241,7 +241,7 @@ object SteerUtil {
         }
 
         val distanceCovered = AccelerationModel.getFrontFlipDistance(speed)
-        if (targetDistance > distanceCovered + 25 && isDrivingOnTarget(car, target)) {
+        if (targetDistance > distanceCovered + 10 && isDrivingOnTarget(car, target)) {
             return SetPieces.speedupFlip()
         }
 

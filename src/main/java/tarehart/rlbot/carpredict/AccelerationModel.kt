@@ -19,7 +19,7 @@ object AccelerationModel {
 
     private val TIME_STEP = 0.1
     private val FRONT_FLIP_SPEED_BOOST = 10.0
-    private val FRONT_FLIP_SECONDS = 1.5
+    private val FRONT_FLIP_SECONDS = 1.4
 
     private val INCREMENTAL_BOOST_ACCELERATION = 19
     private val AIR_BOOST_ACCELERATION = 19.0 // It's a tiny bit faster, but account for course correction wiggle
@@ -154,7 +154,7 @@ object AccelerationModel {
     @JvmOverloads
     fun simulateAcceleration(carData: CarData, duration: Duration, boostBudget: Double, flipCutoffDistance: Double = java.lang.Double.MAX_VALUE): DistancePlot {
 
-        var currentSpeed = carData.velocity.magnitude()
+        var currentSpeed = ManeuverMath.forwardSpeed(carData)
         val plot = DistancePlot(DistanceTimeSpeed(0.0, Duration.ofMillis(0), currentSpeed))
 
         var boostRemaining = boostBudget
@@ -216,7 +216,7 @@ object AccelerationModel {
     }
 
     fun getFrontFlipDistance(speed: Double): Double {
-        return (speed + FRONT_FLIP_SPEED_BOOST) * FRONT_FLIP_SECONDS
+        return Math.min(SUPERSONIC_SPEED, speed + FRONT_FLIP_SPEED_BOOST) * FRONT_FLIP_SECONDS
     }
 
     fun simulateAirAcceleration(car: CarData, duration: Duration, horizontalPitchComponent: Double): DistancePlot {

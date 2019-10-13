@@ -37,6 +37,7 @@ import tarehart.rlbot.tuning.ManeuverMath
 class SoccerTacticsAdvisor: TacticsAdvisor {
 
     var goNuts = false
+    val kickoffAdvisor = KickoffAdvisor()
 
     override fun suitableGameModes(): Set<GameMode> {
         return setOf(GameMode.SOCCER)
@@ -51,14 +52,18 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val scoreAdvantage = input.blueScore - input.orangeScore * if (car.team == Team.BLUE) 1 else -1
         // goNuts = scoreAdvantage < -1
+        kickoffAdvisor.gradeKickoff(bundle)
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
         if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
             if (situation.teamPlayerWithInitiative?.car == car) {
-                return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+                val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(bundle), bundle)
+                return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep(
+                        dodgeDistance = kickoffAdvice.dodgeRange,
+                        counterAttack = kickoffAdvice.counterAttack))
             }
 
-            if (GoForKickoffStep.getKickoffType(car) == GoForKickoffStep.KickoffType.CENTER) {
+            if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
                 return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
             }
 
@@ -121,8 +126,11 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
 
-        if (!goNuts && threatReport.looksSerious() && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
-                && situation.teamPlayerWithInitiative?.car == input.myCarData) {
+
+
+        if (!goNuts && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan) &&
+                threatReport.looksSerious() &&
+                situation.teamPlayerWithInitiative?.car == input.myCarData) {
             println("Canceling current plan due to threat level: $threatReport", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.DEFENSIVE)
                     .withStep(ChallengeStep())
@@ -130,27 +138,26 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
         }
 
-//        if (situation.shotOnGoalAvailable &&
-//                !threatReport.looksSerious() &&
-//                Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
-//                && situation.teamPlayerWithBestShot?.car == input.myCarData) {
-//
-//            println("Canceling current plan. Shot opportunity!", input.playerIndex)
-//
-//            val plan = FirstViableStepPlan(OFFENSIVE)
-//
-//            if (DribbleStep.canDribble(bundle, true) && situation.expectedContact != null &&
-//                    Duration.between(car.time, situation.expectedContact.time).seconds < 1.0) {
-//                plan.withStep(DribbleStep())
-//            }
-//
-//            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
-//                    .withStep(CatchBallStep())
-//                    .withStep(GetOnOffenseStep())
-//                    .withStep(FlexibleKickStep(WallPass()))
-//
-//            return plan
-//        }
+        if (situation.shotOnGoalAvailable &&
+                !threatReport.looksSerious() && !threatReport.enemyWinsRace &&
+                Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)
+                && situation.teamPlayerWithBestShot?.car == input.myCarData) {
+
+            println("Canceling current plan. Shot opportunity!", input.playerIndex)
+
+            val plan = FirstViableStepPlan(OFFENSIVE)
+
+            if (DribbleStep.canDribble(bundle, true) && situation.expectedContact != null &&
+                    Duration.between(car.time, situation.expectedContact.time).seconds < 1.0) {
+                plan.withStep(DribbleStep())
+            }
+
+            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
+                    .withStep(CatchBallStep())
+                    .withStep(FlexibleKickStep(WallPass()))
+
+            return plan
+        }
 
         return null
     }
@@ -171,12 +178,13 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val raceResult = situation.ballAdvantage
 
-        if (!ThreatAssessor.getThreatReport(bundle).looksSerious()) {
+        val threatReport = ThreatAssessor.getThreatReport(bundle)
+        if (!threatReport.looksSerious()) {
             // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
             return makePlanWithPlentyOfTime(bundle)
         }
 
-        if (raceResult.seconds > -.3) {
+        if (raceResult.seconds > ChallengeStep.RISKIEST_CHALLENGE_ADVANTAGE_SECONDS || !threatReport.enemyMightBoom) {
             return Plan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep())
         }
 
@@ -236,6 +244,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             plan.withStep(FlexibleKickStep(WallPass()))
                     .withStep(GetOnOffenseStep())
                     .withStep(DribbleStep())
+                    .withStep(CatchBallStep())
 
             return plan
         }
@@ -259,7 +268,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             return FirstViableStepPlan(NEUTRAL)
                     .withStep(CatchBallStep())
                     .withStep(DribbleStep())
-                    .withStep(ParkTheCarStep{ PositionFacing(Vector2(0.0, input.ballPosition.y + ownGoal.y * .5), ownGoal.flatten()) })
         }
 
         val plan = FirstViableStepPlan(NEUTRAL)
@@ -319,11 +327,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         TeamTelemetry[teamPlan] = input.playerIndex
 
         return TacticalBundle(input, situation, teamPlan, zonePlan)
-    }
-
-    private fun getForceDefensivePosture(myCar: CarData, opponentCar: CarData?,
-                                         ballPosition: Vector3): Boolean {
-        return opponentCar?.let { ZoneUtil.isEnemyOffensiveBreakaway(myCar, it, ballPosition) } ?: false
     }
 
     // Checks to see if the ball is in the box for a while or if we have a breakaway

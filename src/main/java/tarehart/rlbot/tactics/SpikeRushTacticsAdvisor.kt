@@ -124,7 +124,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
             }
 
-            if (GoForKickoffStep.getKickoffType(car) == GoForKickoffStep.KickoffType.CENTER) {
+            if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
                 return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
             }
 

@@ -15,7 +15,8 @@ class ThreatAssessor {
 
             val myGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
             val ballPosition = bundle.agentInput.ballPosition
-            val ballIsBehindUs = myGoal.center.distanceSquared(ballPosition) < myGoal.center.distanceSquared(bundle.agentInput.myCarData.position)
+            val car = bundle.agentInput.myCarData
+            val ballIsBehindUs = myGoal.center.distanceSquared(ballPosition) < myGoal.center.distanceSquared(car.position)
 
             if (enemyCar == null) {
                 return ThreatReport(
@@ -23,7 +24,9 @@ class ThreatAssessor {
                         enemyShotAligned = false,
                         enemyWinsRace = false,
                         enemyHasBreakaway = false,
-                        ballIsBehindUs = ballIsBehindUs)
+                        ballIsBehindUs = ballIsBehindUs,
+                        enemyDribbling = false,
+                        challengeImminent = false)
             }
 
             val shotAlignment = Vector2.alignment(enemyCar.car.position.flatten(), ballPosition.flatten(), myGoal.center.flatten())
@@ -36,12 +39,35 @@ class ThreatAssessor {
                 impactSpeed = (strikeVelocity - bundle.agentInput.ballVelocity).magnitude()
             }
 
+            val defensiveAlignment = Vector2.alignment(ballPosition.flatten(), car.position.flatten(), myGoal.center.flatten())
+            val enemyDistanceFromGoal = myGoal.center.distance(enemyCar.car.position)
+            val alignmentBreakaway = defensiveAlignment < 0.7 &&
+                    enemyDistanceFromGoal < 100 &&
+                    myGoal.center.distance(car.position) > enemyDistanceFromGoal * .6 &&
+                    shotAlignment > 0.6
+
+            val enemyDribbling = enemyCar.car.position.distance(bundle.agentInput.ballPosition) < 10 &&
+                        enemyCar.car.velocity.flatten().distance(bundle.agentInput.ballVelocity.flatten()) < 10
+
+            var challengeImminent = false
+            val enemyIntercept = enemyCar.intercept
+            val ourIntercept = bundle.tacticalSituation.expectedContact
+            if (enemyIntercept != null && ourIntercept != null) {
+                challengeImminent = ourIntercept.space.z < 5 &&
+                        bundle.tacticalSituation.ballAdvantage.seconds < 0.3 &&
+                        ourIntercept.time.isBefore(car.time.plusSeconds(.5)) &&
+                        enemyIntercept.time.isBefore(car.time.plusSeconds(.5))
+            }
+
+
             return ThreatReport(
-                    enemyMightBoom = impactSpeed > 30 && shotAlignment > 0.3,
-                    enemyShotAligned = shotAlignment > 0.3,
+                    enemyMightBoom = impactSpeed > 30 && shotAlignment > 0.6,
+                    enemyShotAligned = shotAlignment > 0.6,
                     enemyWinsRace = bundle.tacticalSituation.ballAdvantage.millis < 0,
-                    enemyHasBreakaway = ZoneUtil.isEnemyOffensiveBreakaway(bundle.agentInput.myCarData, enemyCar.car, ballPosition),
-                    ballIsBehindUs = ballIsBehindUs
+                    enemyHasBreakaway = ZoneUtil.isEnemyOffensiveBreakaway(car, enemyCar.car, ballPosition) || alignmentBreakaway,
+                    ballIsBehindUs = ballIsBehindUs,
+                    enemyDribbling = enemyDribbling,
+                    challengeImminent = challengeImminent && shotAlignment > 0.6
             )
 
         }
