@@ -4,7 +4,7 @@ apply plugin: 'application'
 
 
 repositories {
-    mavenLocal()
+//    mavenLocal()
     jcenter()
 }
 

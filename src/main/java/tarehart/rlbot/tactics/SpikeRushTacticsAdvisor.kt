@@ -2,7 +2,6 @@ package tarehart.rlbot.tactics
 
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.QuickChatSelection
-import sun.management.Agent
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
@@ -37,8 +36,6 @@ import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
 
 class SpikeRushTacticsAdvisor: TacticsAdvisor {
-
-    private val threatAssessor = ThreatAssessor()
 
     override fun suitableGameModes(): Set<GameMode> {
         return setOf(GameMode.SPIKE_RUSH)
@@ -164,9 +161,9 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
         }
 
-        val totalThreat = threatAssessor.measureThreat(bundle, situation.enemyPlayerWithInitiative)
+        val threatReport = ThreatAssessor.getThreatReport(bundle)
 
-        if (totalThreat > 3 && situation.ballAdvantage.seconds < 0.5 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
+        if (threatReport.looksSerious() && situation.ballAdvantage.seconds < 0.5 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             println("Canceling current plan due to threat level.", input.playerIndex)
             return FirstViableStepPlan(Plan.Posture.DEFENSIVE)

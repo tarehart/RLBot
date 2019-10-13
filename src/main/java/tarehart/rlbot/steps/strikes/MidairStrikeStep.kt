@@ -68,8 +68,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-
-
         val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
 
@@ -176,7 +174,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return orientForFinalTouch(offset, car)
         }
 
-        val up = if (offset.z > 0) Vector3.DOWN else Vector3.UP
+        val up = if (offset.z > 0 && secondsSinceLaunch > 1.5) Vector3.DOWN else Vector3.UP
 
         if (courseResult.targetError.magnitude() < acceptableError && !canDodge && !wasBoosting) {
             return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT)
@@ -200,6 +198,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         wasBoosting = courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT)
+                .withJump()
                 .withBoost(wasBoosting)
 
     }

@@ -124,7 +124,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         val badCirclePart = precisionPlan.steerPlan.route.parts.firstOrNull {
             part -> if (part is CircleRoutePart)
-                Math.abs(part.sweepRadians) > Math.PI / 2 || part.circle.radius < 20
+                Math.abs(part.sweepRadians) > Math.PI / 3 || part.circle.radius < 20
             else false
         }
 

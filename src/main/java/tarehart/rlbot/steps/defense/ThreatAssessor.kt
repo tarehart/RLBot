@@ -1,56 +1,50 @@
 package tarehart.rlbot.steps.defense
 
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.planning.CarWithIntercept
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.ZoneUtil
 
 class ThreatAssessor {
 
 
-    fun measureThreat(bundle: TacticalBundle, enemyCarOption: CarWithIntercept?): Double {
+    companion object {
+        fun getThreatReport(bundle: TacticalBundle): ThreatReport {
 
-        val enemyPosture = measureEnemyPosture(bundle, enemyCarOption)
-        var ballThreat = measureBallThreat(bundle) * .3
-        if (ballThreat < 0) {
-            ballThreat *= .1
+            val enemyCar = bundle.tacticalSituation.enemyPlayerWithInitiative
+
+            val myGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
+            val ballPosition = bundle.agentInput.ballPosition
+            val ballIsBehindUs = myGoal.center.distanceSquared(ballPosition) < myGoal.center.distanceSquared(bundle.agentInput.myCarData.position)
+
+            if (enemyCar == null) {
+                return ThreatReport(
+                        enemyMightBoom = false,
+                        enemyShotAligned = false,
+                        enemyWinsRace = false,
+                        enemyHasBreakaway = false,
+                        ballIsBehindUs = ballIsBehindUs)
+            }
+
+            val shotAlignment = Vector2.alignment(enemyCar.car.position.flatten(), ballPosition.flatten(), myGoal.center.flatten())
+            val intercept = enemyCar.intercept
+
+            var impactSpeed = (enemyCar.car.velocity - bundle.agentInput.ballVelocity).magnitude() + 10 // Fudge it
+            if (intercept != null) {
+                val enemyCarToStrike = intercept.space - enemyCar.car.position
+                val strikeVelocity = enemyCarToStrike.scaledToMagnitude(intercept.accelSlice.speed)
+                impactSpeed = (strikeVelocity - bundle.agentInput.ballVelocity).magnitude()
+            }
+
+            return ThreatReport(
+                    enemyMightBoom = impactSpeed > 30 && shotAlignment > 0.3,
+                    enemyShotAligned = shotAlignment > 0.3,
+                    enemyWinsRace = bundle.tacticalSituation.ballAdvantage.millis < 0,
+                    enemyHasBreakaway = ZoneUtil.isEnemyOffensiveBreakaway(bundle.agentInput.myCarData, enemyCar.car, ballPosition),
+                    ballIsBehindUs = ballIsBehindUs
+            )
+
         }
 
-        val enemyThreat = Math.max(0.0, enemyPosture)
-
-        return enemyThreat + ballThreat
     }
-
-    private fun measureEnemyPosture(bundle: TacticalBundle, enemyCar: CarWithIntercept?): Double {
-
-        if (enemyCar == null) {
-            return 0.0
-        }
-
-        val myGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
-        val ballToGoal = myGoal.center.minus(bundle.agentInput.ballPosition)
-
-        val carToBall = bundle.agentInput.ballPosition.minus(enemyCar.car.position)
-        val carToBallNormal = carToBall.normaliseCopy()
-        val rightSideVector = VectorUtil.project(carToBallNormal, ballToGoal)
-        val facingScore = Math.max(0.0, enemyCar.car.orientation.noseVector.dotProduct(carToBallNormal))
-        val boomerScore = (enemyCar.car.velocity - bundle.agentInput.ballVelocity).magnitude() * 1 / 4
-
-        return rightSideVector.magnitude() * Math.signum(rightSideVector.dotProduct(ballToGoal)) * facingScore * boomerScore
-    }
-
-
-    private fun measureBallThreat(bundle: TacticalBundle): Double {
-
-        val car = bundle.agentInput.myCarData
-        val myGoal = GoalUtil.getOwnGoal(bundle.agentInput.team)
-        val ballToGoal = myGoal.center.minus(bundle.agentInput.ballPosition)
-
-        val carToBall = bundle.agentInput.ballPosition.minus(car.position)
-        val wrongSideVector = VectorUtil.project(carToBall, ballToGoal)
-        val wrongSidedness = wrongSideVector.magnitude() * Math.signum(wrongSideVector.dotProduct(ballToGoal))
-
-        return wrongSidedness - ballToGoal.magnitude() * .3
-    }
-
 }

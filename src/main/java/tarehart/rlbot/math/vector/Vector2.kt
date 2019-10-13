@@ -127,6 +127,12 @@ data class Vector2(val x: Double, val y: Double) {
             return Math.abs(a.correctionAngle(b))
         }
 
+        fun alignment(start: Vector2, middle: Vector2, end: Vector2): Double {
+            val startToMiddle = middle - start
+            val middleToEnd = end - middle
+            return startToMiddle.normalized().dotProduct(middleToEnd.normalized())
+        }
+
         val ZERO = Vector2(0.0, 0.0)
     }
 }

@@ -13,10 +13,12 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.tactics.TacticalSituation
+import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import java.awt.BasicStroke
 import java.awt.Color
@@ -35,7 +37,7 @@ class ChallengeStep: NestedPlanStep() {
     }
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        return !threatExists(bundle.tacticalSituation)
+        return !threatExists(bundle)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -51,6 +53,10 @@ class ChallengeStep: NestedPlanStep() {
         val ballAdvantage = tacticalSituation.ballAdvantage
         if (ballAdvantage.seconds > 0.5) {
             return null // We can probably go for a shot now.
+        }
+
+        if (ballAdvantage.seconds < -0.5) {
+            BotLog.println("Can't challenge, we're going to lose by too much!", car.playerIndex)
         }
 
         val enemyContact = tacticalSituation.expectedEnemyContact ?:
@@ -113,11 +119,12 @@ class ChallengeStep: NestedPlanStep() {
 
         const val DEFENSIVE_NODE_DISTANCE = 18.0
 
-        const val SAFETY_TIME = 2.0
+        const val SAFETY_TIME = 1.0
 
-        fun threatExists(tacticalSituation: TacticalSituation): Boolean {
-            return tacticalSituation.ballAdvantage.seconds < SAFETY_TIME &&
-                    tacticalSituation.enemyOffensiveApproachError?.let { it < Math.PI / 2 } == true
+        fun threatExists(bundle: TacticalBundle): Boolean {
+            val threatReport = ThreatAssessor.getThreatReport(bundle)
+
+            return bundle.tacticalSituation.ballAdvantage.seconds < SAFETY_TIME && threatReport.enemyShotAligned
         }
     }
 }

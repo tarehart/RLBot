@@ -1,11 +1,9 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.tactics.TacticsTelemetry
-
 import tarehart.rlbot.tuning.BotLog.println
 
 class ChaseBallStep : NestedPlanStep() {
@@ -26,7 +24,7 @@ class ChaseBallStep : NestedPlanStep() {
             return startPlan(it, bundle)
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, bundle.agentInput.ballPosition)
+        return SteerUtil.steerTowardGroundPosition(car, bundle.agentInput.ballPosition.flatten(), detourForBoost = true)
     }
 
     override fun getLocalSituation(): String {

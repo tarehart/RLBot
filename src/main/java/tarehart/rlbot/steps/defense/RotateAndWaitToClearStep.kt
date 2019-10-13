@@ -10,14 +10,16 @@ import tarehart.rlbot.tactics.TacticsTelemetry
 
 class RotateAndWaitToClearStep : NestedPlanStep() {
 
-    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
-
-        val tacticalSituation = TacticsTelemetry[bundle.agentInput.myCarData.playerIndex]
-        if (!SoccerTacticsAdvisor.getWaitToClear(bundle, tacticalSituation?.enemyPlayerWithInitiative?.car)
-                || bundle.tacticalSituation.ballAdvantage.seconds > 0.8) {
-            return null
+    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
+        val tacticalSituation = bundle.tacticalSituation
+        if (!SoccerTacticsAdvisor.getWaitToClear(bundle, tacticalSituation.enemyPlayerWithInitiative?.car)
+                || tacticalSituation.ballAdvantage.seconds > 0.8) {
+            return true
         }
+        return false
+    }
 
+    override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
         val plan = Plan(Plan.Posture.DEFENSIVE)
                 .withStep(ParkTheCarStep { inp -> GetOnDefenseStep.calculatePositionFacing(inp) })
 

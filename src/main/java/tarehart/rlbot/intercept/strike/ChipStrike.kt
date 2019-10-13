@@ -44,13 +44,13 @@ class ChipStrike: StrikeProfile() {
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
         return StrictPreKickWaypoint(
                 position = launchPosition,
-                facing = desiredKickForce.flatten().rotateTowards(carToLaunch, Math.PI * .2),
+                facing = desiredKickForce.flatten().rotateTowards(carToLaunch, Math.PI * .15),
                 expectedTime = launchPadMoment,
                 waitUntil = if (intercept.needsPatience) launchPadMoment else null
         )
     }
 
     companion object {
-        const val MAX_HEIGHT_OF_BALL_FOR_CHIP = ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z + 0.3
+        const val MAX_HEIGHT_OF_BALL_FOR_CHIP = ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z + 0.1
     }
 }

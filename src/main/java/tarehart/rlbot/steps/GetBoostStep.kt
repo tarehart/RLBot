@@ -98,7 +98,7 @@ class GetBoostStep : NestedPlanStep() {
         val ballPath = bundle.tacticalSituation.ballPath
         val endpoint = ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(3.0)) ?: ballPath.endpoint
         // Add a defensive bias.
-        val defensiveBias = 60 * Math.signum(GoalUtil.getOwnGoal(bundle.agentInput.team).center.y)
+        val defensiveBias = 80 * Math.signum(GoalUtil.getOwnGoal(bundle.agentInput.team).center.y)
         var idealPlaceToGetBoost = Vector3(endpoint.space.x, endpoint.space.y + defensiveBias, 0.0)
 
         bundle.agentInput.allCars.forEach {
