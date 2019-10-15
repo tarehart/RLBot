@@ -22,10 +22,10 @@ import tarehart.rlbot.tuning.ManeuverMath
 class JumpHitStrike(height: Double): StrikeProfile() {
 
     // If we have time to tilt back, the nose will be higher and we can cheat a little.
-    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) * .7
+    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) * .9
 
-    override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8))
-    override val postDodgeTime = Duration.ofMillis(150)
+    override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(requiredHeight).orElse(.8) + .016)
+    override val postDodgeTime = Duration.ofMillis(50)
     override val speedBoost = 10.0
     override val style = Style.JUMP_HIT
 

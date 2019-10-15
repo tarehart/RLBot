@@ -117,7 +117,9 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
                     val waypoint = latestTarget.position
 
-                    SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, bundle) }
+                    if (waypoint.distance(flatPosition) > 50) {
+                        SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, bundle) }
+                    }
 
                     val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
                     val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 30.0, distancePlot)

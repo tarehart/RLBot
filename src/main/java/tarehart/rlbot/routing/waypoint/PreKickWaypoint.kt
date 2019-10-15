@@ -9,6 +9,7 @@ import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 
 abstract class PreKickWaypoint(
@@ -24,7 +25,8 @@ abstract class PreKickWaypoint(
     abstract fun isPlausibleFinalApproach(car: CarData): Boolean
 
     open fun renderDebugInfo(renderer: Renderer) {
-        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, position.toVector3()), 2.0, Color.WHITE)
-        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, position.toVector3()), 1.0, Color.WHITE)
+        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, position.withZ(1.0)), 2.0, Color.WHITE)
+        RenderUtil.drawSquare(renderer, Plane(Vector3.UP, position.withZ(1.0)), 1.0, Color.WHITE)
+        RenderUtil.drawImpact(renderer, position.withZ(ManeuverMath.BASE_CAR_Z), facing.toVector3(), Color.WHITE)
     }
 }

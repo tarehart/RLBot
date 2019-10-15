@@ -6,6 +6,8 @@ import tarehart.rlbot.math.VectorUtil
 
 data class Vector2(val x: Double, val y: Double) {
 
+    constructor(x: Number, y: Number): this(x.toDouble(), y.toDouble())
+
     val isZero: Boolean
         get() = x == 0.0 && y == 0.0
 

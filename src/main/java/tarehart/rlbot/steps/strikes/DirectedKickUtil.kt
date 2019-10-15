@@ -36,6 +36,8 @@ object DirectedKickUtil {
         }
         val closenessRatio = Clamper.clamp(0.1 / preStrikeTime.seconds, 0.0, 1.0)
         val arrivalSpeed = closenessRatio * currentSpeed + (1 - closenessRatio) * preStrikeSpeed
+//        val arrivalSpeed = currentSpeed
+//        BotLog.println("arrival speed: $arrivalSpeed", car.playerIndex)
         val interceptModifier = intercept.space - intercept.ballSlice.space
 
         var kickDirection: Vector3

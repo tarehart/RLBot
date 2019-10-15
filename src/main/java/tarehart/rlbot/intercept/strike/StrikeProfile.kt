@@ -8,6 +8,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
+import tarehart.rlbot.steps.strikes.DirectedKickPlan
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
@@ -28,6 +29,10 @@ abstract class StrikeProfile {
     abstract val speedBoost: Double
 
     abstract fun getPlan(car: CarData, intercept: SpaceTime): Plan?
+
+    open fun getPlanFancy(car: CarData, kickPlan: DirectedKickPlan): Plan? {
+        return getPlan(car, kickPlan.intercept.toSpaceTime())
+    }
 
     abstract fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint?
 

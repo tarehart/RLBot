@@ -7,6 +7,7 @@ import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.ui.DisplayFlags
@@ -110,6 +111,22 @@ object RenderUtil {
             val nextCursor = VectorUtil.rotateVector(cursor, Math.PI / 8)
 
             renderer.drawLine3d(color, (circle.center + cursor).withZ(height).toRlbot(), (circle.center + nextCursor).withZ(height).toRlbot())
+            cursor = nextCursor
+        }
+    }
+
+    fun drawSphereSlice(renderer: Renderer, center: Vector3, radius: Double, sliceHeight: Double, color: Color) {
+
+        val slice = Circle.getCircleFromSphereSlice(center, radius, sliceHeight) ?: return
+
+        var cursor = Vector2(slice.radius, 0.0)
+        var radians = 0.0
+        val flatCenter = center.flatten()
+
+        while (radians < Math.PI * 2) {
+            radians += Math.PI / 8
+            val nextCursor = VectorUtil.rotateVector(cursor, Math.PI / 8)
+            renderer.drawLine3d(color, (flatCenter + cursor).withZ(sliceHeight).toRlbot(), (flatCenter + nextCursor).withZ(sliceHeight).toRlbot())
             cursor = nextCursor
         }
     }

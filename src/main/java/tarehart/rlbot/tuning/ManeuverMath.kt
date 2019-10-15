@@ -28,6 +28,10 @@ object ManeuverMath {
     private const val MASH_SLOPE = 7.78
     private const val SLOPE_CUTOFF = 3.2
 
+    /**
+     * @param height the raw height that we want the center of the car to achieve.
+     * If the height is less than BASE_CAR_Z, there's nothing to do.
+     */
     fun secondsForMashJumpHeight(height: Double): Optional<Double> {
         if (height > MASH_JUMP_HEIGHT) {
             return Optional.empty()

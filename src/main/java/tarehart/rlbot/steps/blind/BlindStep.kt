@@ -28,7 +28,7 @@ class BlindStep(val duration: Duration, val output: AgentOutput) : StandardStep(
             scheduledEndTime = bundle.agentInput.time.plus(duration)
         }
 
-        if (outputSendCount >= 2 && bundle.agentInput.time.isAfter(scheduledEndTime)) {
+        if (outputSendCount >= 2 && !bundle.agentInput.time.isBefore(scheduledEndTime)) {
             // Exit if we're past the end time, but guarantee that we send the output at least
             // Twice, otherwise the game tends to drop inputs.
             return null

@@ -1,6 +1,7 @@
 package tarehart.rlbot.steps.strikes
 
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Goal
 import tarehart.rlbot.planning.GoalUtil
@@ -53,13 +54,15 @@ class KickAtEnemyGoal : KickStrategy {
 
         val rightCornerCorrection = easyKickFlat.correctionAngle(toRightCorner)
         val leftCornerCorrection = easyKickFlat.correctionAngle(toLeftCorner)
-        return if (rightCornerCorrection < 0 && leftCornerCorrection > 0) {
+        val flatDirection = if (rightCornerCorrection < 0 && leftCornerCorrection > 0) {
             // The easy kick is already on target. Go with the easy kick.
-            Vector3(easyKickFlat.x, easyKickFlat.y, 0.0)
+            Vector2(easyKickFlat.x, easyKickFlat.y)
         } else if (Math.abs(rightCornerCorrection) < Math.abs(leftCornerCorrection)) {
-            Vector3(toRightCorner.x, toRightCorner.y, 0.0)
+            Vector2(toRightCorner.x, toRightCorner.y)
         } else {
-            Vector3(toLeftCorner.x, toLeftCorner.y, 0.0)
+            Vector2(toLeftCorner.x, toLeftCorner.y)
         }
+
+        return flatDirection.normalized().withZ(.4)
     }
 }

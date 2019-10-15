@@ -1,11 +1,13 @@
 package tarehart.rlbot.intercept
 
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.*
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
@@ -50,7 +52,7 @@ object StrikePlanner {
     }
 
 
-    fun computeStrikeStyle(car: CarData, intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
+    fun computeStrikeStyle(bundle: TacticalBundle, intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
 
         if (approachAngleMagnitude < Math.PI / 16) {
 
@@ -77,7 +79,6 @@ object StrikePlanner {
                 }
                 return StrikeProfile.Style.DIAGONAL_HIT
             }
-            return StrikeProfile.Style.CHIP
         }
         return StrikeProfile.Style.AERIAL
     }

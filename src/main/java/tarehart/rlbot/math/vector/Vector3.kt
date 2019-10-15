@@ -6,6 +6,8 @@ import kotlin.math.abs
 data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
     val isZero = (x == 0.0 && y == 0.0 && z == 0.0)
 
+    constructor(x: Number, y: Number, z: Number): this(x.toDouble(), y.toDouble(), z.toDouble())
+
     operator fun plus(other: Vector3): Vector3 {
         return Vector3(x + other.x, y + other.y, z + other.z)
     }

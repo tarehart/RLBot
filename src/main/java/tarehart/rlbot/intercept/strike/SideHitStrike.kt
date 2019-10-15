@@ -5,27 +5,30 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
+import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
+import tarehart.rlbot.steps.strikes.DirectedKickPlan
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
+import java.awt.Color
 
 class SideHitStrike(height: Double): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(
-            height - ArenaModel.BALL_RADIUS - CONTACT_BELOW_BALL).orElse(.8)
-    override val preDodgeTime = Duration.ofSeconds(0.23 + jumpTime)
-    override val postDodgeTime = Duration.ofMillis(200)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height).orElse(.8)
+    override val preDodgeTime = Duration.ofSeconds(jumpTime + .04)
+    override val postDodgeTime = Duration.ofMillis(250)
     override val speedBoost = 10.0
     override val style = Style.SIDE_HIT
     override val isForward = false
@@ -52,13 +55,34 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
         val useFrontCorner = Math.abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
 
-        val carStrikeRadius = 1.2
-        val carPositionAtContact = intercept.ballSlice.space.flatten() - desiredKickForce.flatten().scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+        val carStrikeRadius = 1.0
+        val carPositionAtContact = intercept.ballSlice.space - desiredKickForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+        val anticipatedContactPoint = intercept.ballSlice.space - desiredKickForce.scaledToMagnitude(ArenaModel.BALL_RADIUS)
+        val preKickRenderer = car.renderer
+
+        RenderUtil.drawCircle(
+                preKickRenderer,
+                Circle(intercept.ballSlice.space.flatten(), ArenaModel.BALL_RADIUS),
+                intercept.ballSlice.space.z,
+                Color.RED)
+
+        RenderUtil.drawSphereSlice(
+                preKickRenderer,
+                intercept.ballSlice.space,
+                ArenaModel.BALL_RADIUS,
+                anticipatedContactPoint.z,
+                Color.RED)
+
+        RenderUtil.drawCircle(
+                preKickRenderer,
+                Circle(carPositionAtContact.flatten(), carStrikeRadius),
+                carPositionAtContact.z,
+                Color.ORANGE)
 
         if (useFrontCorner) {
 
             val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
-                    estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact, Math.PI * .55, car.renderer)
+                    estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact.flatten(), Math.PI * .55, car.renderer)
 
             if (angled == null) {
                 BotLog.println("Failed to calculate side hit waypoint", car.playerIndex)
@@ -76,7 +100,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
             // Consider the entire strike duration, not just the hang time.
             val backoff = intercept.strikeProfile.strikeDuration.seconds * expectedArrivalSpeed
-            val launchPosition = carPositionAtContact - flatForce.scaledToMagnitude(lateralTravel) -
+            val launchPosition = carPositionAtContact.flatten() - flatForce.scaledToMagnitude(lateralTravel) -
                     facing.scaledToMagnitude(backoff)
             return DirectedKickUtil.getStandardWaypoint(launchPosition, facing, intercept)
         }
@@ -92,8 +116,6 @@ class SideHitStrike(height: Double): StrikeProfile() {
     }
 
     companion object {
-
-        private const val CONTACT_BELOW_BALL = 0.8
 
         fun jumpSideFlip(flipLeft: Boolean, rawJumpTime: Duration, hurry: Boolean = false): Plan {
 

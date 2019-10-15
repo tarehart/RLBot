@@ -4,6 +4,7 @@ import rlbot.render.Renderer
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.rendering.RenderUtil
@@ -48,7 +49,8 @@ class DirectedKickPlan (
     fun renderDebugInfo(renderer: Renderer) {
         launchPad.renderDebugInfo(renderer)
 
-        RenderUtil.drawImpact(renderer, intercept.space, plannedKickForce.scaled(0.1), Color(1.0f, 0.4f, 0.4f))
+        val anticipatedContactPoint = intercept.ballSlice.space - plannedKickForce.scaledToMagnitude(ArenaModel.BALL_RADIUS)
+        RenderUtil.drawImpact(renderer, anticipatedContactPoint, plannedKickForce.scaled(0.5), Color(1.0f, 0.4f, 0.4f))
         RenderUtil.drawBallPath(renderer, ballPath, intercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
     }
 }

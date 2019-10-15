@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.strikes
 
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.VectorUtil
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.GoalUtil
 
@@ -36,13 +37,15 @@ class KickAwayFromOwnGoal : KickStrategy {
         val rightToLeftCorrection = safeDirectionRight.correctionAngle(safeDirectionLeft, false)
         val safeRightCorrection = easyKickFlat.correctionAngle(safeDirectionRight)
         val safeLeftCorrection = easyKickFlat.correctionAngle(safeDirectionLeft)
-        return if (rightToLeftCorrection < rightToEasyCorrection) {
+        val flatDirection = if (rightToLeftCorrection < rightToEasyCorrection) {
             // The easy kick is already wide. Go with the easy kick.
-            Vector3(easyKickFlat.x, easyKickFlat.y, 0.0)
+            Vector2(easyKickFlat.x, easyKickFlat.y)
         } else if (Math.abs(safeRightCorrection) < Math.abs(safeLeftCorrection)) {
-            Vector3(safeDirectionRight.x, safeDirectionRight.y, 0.0)
+            Vector2(safeDirectionRight.x, safeDirectionRight.y)
         } else {
-            Vector3(safeDirectionLeft.x, safeDirectionLeft.y, 0.0)
+            Vector2(safeDirectionLeft.x, safeDirectionLeft.y)
         }
+
+        return flatDirection.normalized().withZ(.5)
     }
 }

@@ -6,11 +6,17 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.math.Circle
+import tarehart.rlbot.math.Plane
+import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
+import java.awt.Color
 
 class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep() {
 
@@ -19,6 +25,22 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
     override fun getLocalSituation(): String {
         return "Final approach toward %s".format(kickPlan.launchPad.position)
+    }
+
+    override fun doInitialComputation(bundle: TacticalBundle) {
+        val intercept = kickPlan.intercept
+        val car = bundle.agentInput.myCarData
+        RenderUtil.drawCircle(
+                car.renderer,
+                Circle(intercept.ballSlice.space.flatten(), ArenaModel.BALL_RADIUS.toDouble()),
+                intercept.ballSlice.space.z,
+                Color.RED)
+
+        val anticipatedContactPoint = intercept.ballSlice.space - kickPlan.plannedKickForce.scaledToMagnitude(ArenaModel.BALL_RADIUS)
+
+        RenderUtil.drawImpact(car.renderer, anticipatedContactPoint, kickPlan.plannedKickForce, Color.RED)
+
+        RenderUtil.drawSquare(car.renderer, Plane(Vector3.UP, intercept.space), 1.0, Color.WHITE)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -42,7 +64,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 
         val car = bundle.agentInput.myCarData
 
-        kickPlan.intercept.strikeProfile.getPlan(car, kickPlan.intercept.ballSlice.toSpaceTime())?.let {
+        kickPlan.intercept.strikeProfile.getPlanFancy(car, kickPlan)?.let {
             strikeStarted = true
             BotLog.println("Launched at %s %s with speed %s"
                     .format(bundle.agentInput.time, car.position, car.velocity.magnitude()),
@@ -59,6 +81,11 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 //        kickPlan.renderDebugInfo(renderer)
 //        steerPlan.route.renderDebugInfo(renderer)
 //        renderer.finishAndSend()
+
+        if (kickPlan.intercept.strikeProfile.preDodgeTime.millis > 0) {
+            // TODO: this is a hack put in place because the car often slows down too much at the last moment
+            steerPlan.immediateSteer.withThrottle(1.0)
+        }
 
         return steerPlan.immediateSteer
     }

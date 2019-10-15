@@ -4,8 +4,8 @@ import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.SpaceTime
@@ -17,6 +17,7 @@ import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
+import tarehart.rlbot.steps.strikes.DirectedKickPlan
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
@@ -24,12 +25,14 @@ import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 
+/**
+ * @param height the height that the car should be at contact.
+ */
 class DiagonalStrike(height: Double): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(
-            height - StrikePlanner.CAR_BASE_HEIGHT - CONTACT_BELOW_BALL).orElse(.8)
-    override val preDodgeTime = Duration.ofSeconds(jumpTime + .14)
-    override val postDodgeTime = Duration.ofMillis(50)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height).orElse(.8)
+    override val preDodgeTime = Duration.ofSeconds(jumpTime + .02)
+    override val postDodgeTime = Duration.ofMillis(60)
     override val speedBoost = 10.0
     override val style = Style.DIAGONAL_HIT
     override val isForward = false
@@ -45,6 +48,18 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         return null
     }
 
+    override fun getPlanFancy(car: CarData, kickPlan: DirectedKickPlan): Plan? {
+        val checklist = checkDiagonalHitReadiness(car, kickPlan.intercept.toSpaceTime())
+        checklist.linedUp = Math.abs(kickPlan.launchPad.facing.correctionAngle(car.orientation.noseVector.flatten())) < .1
+        if (checklist.readyToLaunch()) {
+            BotLog.println("Performing DiagonalHit!", car.playerIndex)
+            val toIntercept = kickPlan.intercept.space.flatten() - car.position.flatten()
+            val left = car.velocity.flatten().correctionAngle(toIntercept) > 0
+            return diagonalKick(left, Duration.ofSeconds(jumpTime))
+        }
+        return null
+    }
+
     override fun isVerticallyAccessible(car: CarData, intercept: SpaceTime): Boolean {
         return intercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT
     }
@@ -54,12 +69,19 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), flatForce)
 
-        val carStrikeRadius = 1.5 + 1.2 * Clamper.clamp(Math.cos(estimatedApproachDeviationFromKickForce), 0.0, 1.0)
-        val carPositionAtContact = intercept.ballSlice.space.flatten() - flatForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+        val carStrikeRadius = 1.5 + 0.2 * Clamper.clamp(Math.cos(estimatedApproachDeviationFromKickForce), 0.0, 1.0)
+
+        // intercept.space is already supposed to be the car position at contact, BUT it's based on a hard-coded
+        // default value for carStrikeRadius.
+        val carPositionAtContact = intercept.ballSlice.space - desiredKickForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
+        val anticipatedContactPoint = intercept.ballSlice.space - desiredKickForce.scaledToMagnitude(ArenaModel.BALL_RADIUS)
+
+        val preKickRenderer = NamedRenderer("diagonalKick")
+        preKickRenderer.startPacket()
 
         val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
-                estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact,
-                Math.PI / 4, car.renderer)
+                estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact.flatten(),
+                Math.PI / 4, preKickRenderer)
 
         if (angled == null) {
             BotLog.println("Failed to calculate diagonal waypoint", car.playerIndex)
@@ -67,16 +89,25 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         }
 
         RenderUtil.drawCircle(
-                car.renderer,
-                Circle(intercept.ballSlice.space.flatten(), ArenaModel.BALL_RADIUS.toDouble()),
+                preKickRenderer,
+                Circle(intercept.ballSlice.space.flatten(), ArenaModel.BALL_RADIUS),
                 intercept.ballSlice.space.z,
                 Color.RED)
 
+        RenderUtil.drawSphereSlice(
+                preKickRenderer,
+                intercept.ballSlice.space,
+                ArenaModel.BALL_RADIUS,
+                anticipatedContactPoint.z,
+                Color.RED)
+
         RenderUtil.drawCircle(
-                car.renderer,
-                Circle(carPositionAtContact, carStrikeRadius),
-                intercept.ballSlice.space.z,
+                preKickRenderer,
+                Circle(carPositionAtContact.flatten(), carStrikeRadius),
+                carPositionAtContact.z,
                 Color.ORANGE)
+
+        preKickRenderer.finishAndSend()
 
         return angled
     }
@@ -91,8 +122,6 @@ class DiagonalStrike(height: Double): StrikeProfile() {
     }
 
     companion object {
-
-        private const val CONTACT_BELOW_BALL = 0.8
 
         fun diagonalKick(flipLeft: Boolean, rawJumpTime: Duration): Plan {
 

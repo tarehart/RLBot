@@ -8,6 +8,7 @@ import tarehart.rlbot.intercept.strike.ChipStrike
 import tarehart.rlbot.intercept.strike.CustomStrike
 import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
@@ -114,6 +115,10 @@ object InterceptCalculator {
         return null
     }
 
+    // The distance from the car's position to the edge of its hitbox. This number is conservative
+    // to make sure we can make contact even if it's a roof hit.
+    private const val STANDARD_CAR_RADIUS = 1.5
+
     /**
      *
      * @param carData
@@ -144,7 +149,7 @@ object InterceptCalculator {
             val slice = ballPath.slices[i]
             val kickDirection = kickStrategy.getKickDirection(carData, slice.space) ?: continue
 
-            val interceptModifier = kickDirection.scaledToMagnitude(-1 * (ArenaModel.BALL_RADIUS + 1.5))
+            val interceptModifier = kickDirection.scaledToMagnitude(-1 * (ArenaModel.BALL_RADIUS + STANDARD_CAR_RADIUS))
             val spaceTime = SpaceTime(slice.space.plus(interceptModifier), slice.time)
             val interceptFlat = spaceTime.space.flatten()
             val toIntercept = interceptFlat - myPosition

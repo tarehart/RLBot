@@ -69,7 +69,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         val strikeProfileFn = {
             intercept: Vector3, kickDirection: Vector2, c: CarData ->
                 val approachVec = intercept.flatten() - c.position.flatten()
-                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), kickStrategy, strikeHint, car)
+                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), kickStrategy, strikeHint, bundle)
 
         }
         val ballPath = bundle.tacticalSituation.ballPath
@@ -182,14 +182,14 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
     companion object {
         fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, kickStrategy: KickStrategy,
-                             styleHint: StrikeProfile.Style?, car: CarData): StrikeProfile {
+                             styleHint: StrikeProfile.Style?, bundle: TacticalBundle): StrikeProfile {
 
             if (styleHint == StrikeProfile.Style.SIDE_HIT || styleHint == StrikeProfile.Style.DIAGONAL_HIT) {
                 // If we were going for a particular sideways hit, stay committed to it. Sometimes the
                 // angle changes as a natural part of the leadup and we don't want to thrash based on that.
                 return StrikePlanner.getStrikeProfile(styleHint, intercept.z, kickStrategy)
             }
-            val style = StrikePlanner.computeStrikeStyle(car, intercept, approachAngleMagnitude)
+            val style = StrikePlanner.computeStrikeStyle(bundle, intercept, approachAngleMagnitude)
             return StrikePlanner.getStrikeProfile(style, intercept.z, kickStrategy)
         }
     }

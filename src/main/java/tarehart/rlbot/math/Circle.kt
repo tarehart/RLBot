@@ -1,6 +1,7 @@
 package tarehart.rlbot.math
 
 import tarehart.rlbot.math.vector.Vector2
+import tarehart.rlbot.math.vector.Vector3
 
 import java.awt.*
 import java.awt.geom.Ellipse2D
@@ -71,6 +72,19 @@ class Circle(val center: Vector2, val radius: Double) {
         fun isClockwise(circle: Circle, tangentPosition: Vector2, tangentDirection: Vector2): Boolean {
             val tangentToCenter = tangentPosition.minus(circle.center)
             return tangentToCenter.correctionAngle(tangentDirection) < 0
+        }
+
+        fun getCircleFromSphereSlice(center: Vector3, radius: Double, sliceHeight: Double): Circle? {
+            val diff = Math.abs(center.z - sliceHeight)
+            val capHeight = radius - diff
+
+            if (capHeight <= 0) {
+                return null
+            }
+
+            val sliceRadius = Math.sqrt(radius * 2 * capHeight - capHeight * capHeight)
+
+            return Circle(center.flatten(), sliceRadius)
         }
     }
 }

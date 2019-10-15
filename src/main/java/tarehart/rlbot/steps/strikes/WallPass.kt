@@ -51,6 +51,6 @@ class WallPass : KickStrategy {
 
         val target = strikeShadowOnWall + strikeToGoalAlongWall.scaled(strikeClosenessRatio)
 
-        return target - ballPosition
+        return (target - ballPosition).normaliseCopy().withZ(.5)
     }
 }
