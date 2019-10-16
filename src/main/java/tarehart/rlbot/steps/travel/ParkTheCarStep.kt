@@ -117,7 +117,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
                     val waypoint = latestTarget.position
 
-                    if (waypoint.distance(flatPosition) > 50) {
+                    if (waypoint.distance(flatPosition) > 60) {
                         SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, bundle) }
                     }
 
