@@ -27,8 +27,9 @@ class KickAwayFromOwnGoal : KickStrategy {
 
     private fun getDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
         val easyKickFlat = easyKick.flatten()
-        val toLeftPost = GoalUtil.getOwnGoal(car.team).leftPost.minus(ballPosition).flatten()
-        val toRightPost = GoalUtil.getOwnGoal(car.team).rightPost.minus(ballPosition).flatten()
+        val ownGoal = GoalUtil.getOwnGoal(car.team)
+        val toLeftPost = ownGoal.leftPost.minus(ballPosition).flatten()
+        val toRightPost = ownGoal.rightPost.minus(ballPosition).flatten()
 
         val safeDirectionRight = VectorUtil.rotateVector(toRightPost, -Math.PI / 8)
         val safeDirectionLeft = VectorUtil.rotateVector(toLeftPost, Math.PI / 8)
@@ -45,6 +46,8 @@ class KickAwayFromOwnGoal : KickStrategy {
         } else {
             Vector2(safeDirectionLeft.x, safeDirectionLeft.y)
         }
+
+        val isAgainstBackWall = ballPosition.y * ownGoal.center.y > 0 && ballPosition.y / ownGoal.center.y > .95
 
         return flatDirection.normalized().withZ(.5)
     }

@@ -147,7 +147,7 @@ object AccelerationModel {
         }
         val toTarget = target.minus(carData.position)
         val correctionErr = Math.max( 0.0, 0.8 - toTarget.normaliseCopy().dotProduct(carData.orientation.noseVector))
-        val seconds = correctionErr * .1 + correctionErr * carData.velocity.magnitude() * .02
+        val seconds = correctionErr * .12 + correctionErr * carData.velocity.magnitude() * .02
         return seconds
     }
 

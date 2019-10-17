@@ -134,7 +134,7 @@ object InterceptCalculator {
             carData: CarData,
             ballPath: BallPath,
             spatialPredicate: (CarData, SpaceTime, StrikeProfile) -> Boolean,
-            strikeProfileFn: (Vector3, Vector2, CarData) -> StrikeProfile,
+            strikeProfileFn: (BallSlice, Vector3, CarData) -> StrikeProfile,
             kickStrategy: KickStrategy): PrecisionPlan? {
 
         val myPosition = carData.position.flatten()
@@ -154,7 +154,7 @@ object InterceptCalculator {
             val interceptFlat = spaceTime.space.flatten()
             val toIntercept = interceptFlat - myPosition
 
-            val strikeProfile = strikeProfileFn.invoke(spaceTime.space, kickDirection.flatten(), carData)
+            val strikeProfile = strikeProfileFn.invoke(slice, kickDirection, carData)
 
             // If it's a forward strike, it's safe to factor in orient duration now, which is good for efficiency.
             // Otherwise, defer until we have a route because angled strikes are tricky.

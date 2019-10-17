@@ -60,7 +60,7 @@ class GetBoostStep : NestedPlanStep() {
             val toBoost = target.minus(myPosition)
 
             val facing = VectorUtil.orthogonal(target) { v -> v.dotProduct(toBoost) > 0 }.normalized()
-            val waypoint = target - facing.scaledToMagnitude(Clamper.clamp(toBoost.magnitude() * 0.3 - 10, 0.0, 20.0))
+            val waypoint = target - facing.scaledToMagnitude(Clamper.clamp(toBoost.magnitude() * 0.3 - 5, 0.0, 20.0))
 
             SteerUtil.getSensibleFlip(car, waypoint)?.let {
                 println("Flipping toward boost", bundle.agentInput.playerIndex)

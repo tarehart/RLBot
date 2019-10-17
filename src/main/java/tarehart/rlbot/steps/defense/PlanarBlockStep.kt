@@ -31,7 +31,8 @@ class PlanarBlockStep: NestedPlanStep() {
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = bundle.agentInput.myCarData
-        if (launched || Math.abs(car.position.y) > ArenaModel.BACK_WALL + 2) {
+        if (launched || Math.abs(car.position.y) > ArenaModel.BACK_WALL + 2 ||
+                Math.abs(car.position.y) < ArenaModel.BACK_WALL - 10 || Math.abs(car.orientation.noseVector.x) < .8) {
             return null
         }
 

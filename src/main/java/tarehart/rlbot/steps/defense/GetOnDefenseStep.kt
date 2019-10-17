@@ -4,10 +4,13 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.BotMath
+import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SoccerGoal
+import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
@@ -15,6 +18,7 @@ import tarehart.rlbot.tactics.SoccerTacticsAdvisor
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import java.awt.Color
 
 class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = DEFAULT_LIFESPAN // seconds
 ) : NestedPlanStep() {
@@ -30,11 +34,34 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
             startTime = bundle.agentInput.time
         }
 
-        val plan = Plan(Plan.Posture.DEFENSIVE).withStep(ParkTheCarStep { inp ->
-            calculatePositionFacing(inp)
-        })
+//        val threatPosition = bundle.tacticalSituation.expectedEnemyContact?.space ?:
+//        bundle.tacticalSituation.futureBallMotion?.space ?:
+//        bundle.agentInput.ballPosition
 
-        return startPlan(plan, bundle)
+        val car = bundle.agentInput.myCarData
+        val ownGoal = GoalUtil.getOwnGoal(car.team)
+        val toCenter = ownGoal.center.scaledToMagnitude(-AWAY_FROM_GOAL)
+        val anchorPoint = ownGoal.getNearestEntrance(car.position, CENTER_OFFSET) + toCenter
+        val centerToAnchor = anchorPoint - (ownGoal.center + toCenter)
+        val distanceToAnchor = car.position.flatten().distance(anchorPoint.flatten())
+        val waypoint = anchorPoint + centerToAnchor.scaledToMagnitude(Clamper.clamp(distanceToAnchor * .4 - 5, 0.0, 30.0))
+
+        car.renderer.drawLine3d(Color.CYAN, waypoint.toRlbot(), anchorPoint.toRlbot())
+
+        if (distanceToAnchor > 60) {
+            SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, bundle) }
+        }
+
+        if (distanceToAnchor < 5) {
+            val plan = Plan(Plan.Posture.DEFENSIVE).withStep(ParkTheCarStep {
+                val position = (ownGoal.center + toCenter + centerToAnchor.scaledToMagnitude(0.3)).flatten()
+                val facing = centerToAnchor.scaledToMagnitude(-1.0).flatten()
+                PositionFacing(position, facing)
+            })
+            return startPlan(plan, bundle)
+        }
+
+        return SteerUtil.steerTowardGroundPosition(car, waypoint.flatten(), detourForBoost = true)
     }
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
@@ -54,14 +81,13 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
 
         fun calculatePositionFacing(inp: AgentInput): PositionFacing {
             val center = GoalUtil.getOwnGoal(inp.team).center
-            val futureBallPosition = TacticsTelemetry[inp.playerIndex]?.futureBallMotion?.space ?: inp.ballPosition
+            val facing = Vector2(BotMath.nonZeroSignum(inp.myCarData.orientation.noseVector.x), 0.0)
 
             val targetPosition = Vector2(
-                    -Math.signum(futureBallPosition.x) * CENTER_OFFSET,
+                    facing.x * -CENTER_OFFSET,
                     center.y - Math.signum(center.y) * AWAY_FROM_GOAL)
 
-            val targetFacing = Vector2(BotMath.nonZeroSignum(futureBallPosition.x).toDouble(), 0.0)
-            return PositionFacing(targetPosition, targetFacing)
+            return PositionFacing(targetPosition, facing)
         }
     }
 }

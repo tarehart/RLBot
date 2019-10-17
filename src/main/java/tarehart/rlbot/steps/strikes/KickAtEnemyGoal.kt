@@ -63,6 +63,9 @@ class KickAtEnemyGoal : KickStrategy {
             Vector2(toLeftCorner.x, toLeftCorner.y)
         }
 
-        return flatDirection.normalized().withZ(.4)
+        // Kick it high if we're far away from the goal, maybe we can lob the opponent.
+        val loft = if (toLeftCorner.magnitude() > 50) .4 else 0.0
+
+        return flatDirection.normalized().withZ(loft)
     }
 }

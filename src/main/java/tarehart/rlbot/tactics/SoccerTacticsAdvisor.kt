@@ -182,7 +182,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val raceResult = situation.ballAdvantage
 
         val threatReport = ThreatAssessor.getThreatReport(bundle)
-        if (!threatReport.looksSerious()) {
+        if (!threatReport.looksSerious() && (raceResult.seconds > 0 || !threatReport.enemyShotAligned || goNuts)) {
             // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
             return makePlanWithPlentyOfTime(bundle)
         }

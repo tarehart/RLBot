@@ -3,6 +3,7 @@ package tarehart.rlbot.intercept
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.*
+import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.GoalUtil
@@ -52,9 +53,9 @@ object StrikePlanner {
     }
 
 
-    fun computeStrikeStyle(bundle: TacticalBundle, intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
-        val height = intercept.z
-        if (intercept.z > StrikePlanner.MAX_JUMP_HIT) {
+    fun computeStrikeStyle(slice: BallSlice, approachAngleMagnitude: Double): StrikeProfile.Style {
+        val height = slice.space.z
+        if (height > StrikePlanner.MAX_JUMP_HIT) {
             return StrikeProfile.Style.AERIAL
         }
 
@@ -69,7 +70,8 @@ object StrikePlanner {
             if (height < StrikePlanner.MAX_JUMP_HIT) {
                 return StrikeProfile.Style.JUMP_HIT
             }
-        } else if (approachAngleMagnitude < Math.PI * .2 && intercept.z < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
+        } else if (approachAngleMagnitude < Math.PI * .2 &&
+                height < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
             return StrikeProfile.Style.CHIP
         }
 

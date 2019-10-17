@@ -5,11 +5,13 @@ import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.FirstViableStepPlan
+import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.steps.CatchBallStep
+import tarehart.rlbot.steps.DribbleStep
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
-import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
+import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.tuning.BotLog
@@ -23,17 +25,30 @@ class WhatASaveStep : NestedPlanStep() {
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = bundle.agentInput.myCarData
-        val currentThreat = TacticsTelemetry[bundle.agentInput.playerIndex]?.scoredOnThreat
+        val currentThreat = bundle.tacticalSituation.scoredOnThreat
 
         if (currentThreat == null) {
             RLBotDll.sendQuickChat(bundle.agentInput.playerIndex, false, QuickChatSelection.Compliments_WhatASave)
             return null
         }
 
+
         BotLog.println("Flexible kick save... Good luck!", car.playerIndex)
-        return startPlan(FirstViableStepPlan(Plan.Posture.SAVE)
+        val plan = FirstViableStepPlan(Plan.Posture.SAVE)
                 .withStep(PlanarBlockStep())
                 .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
-                .withStep(CatchBallStep()), bundle)
+
+
+        bundle.tacticalSituation.expectedContact?.let {
+            val goalToContact = (it.space - GoalUtil.getOwnGoal(car.team).center).flatten()
+            val contactToBall = (bundle.agentInput.ballPosition - it.space).flatten()
+            if (goalToContact.dotProduct(contactToBall) > 0) {
+                plan.withStep(InterceptStep())
+            }
+        }
+
+        plan.withStep(GetOnDefenseStep())
+
+        return startPlan(plan, bundle)
     }
 }

@@ -1,6 +1,7 @@
 package tarehart.rlbot.tactics
 
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Zone
 import tarehart.rlbot.steps.GoForKickoffStep
 import tarehart.rlbot.steps.defense.ThreatAssessor
@@ -33,7 +34,8 @@ class KickoffAdvisor {
             }
 
             if (bundle.agentInput.time > gradeMoment) {
-                if (Zone.isInOffensiveThird(bundle.zonePlan.ballZone, team) && !ThreatAssessor.getThreatReport(bundle).looksSerious()) {
+                if (bundle.agentInput.ballPosition.y * GoalUtil.getEnemyGoal(team).center.y > 0 &&
+                        !ThreatAssessor.getThreatReport(bundle).looksSerious()) {
                     goodKickoffs[it.kickoffType] = it
                     BotLog.println("Kickoff seems decent, let's keep it", bundle.agentInput.playerIndex)
                 } else {
@@ -47,7 +49,7 @@ class KickoffAdvisor {
     fun giveAdvice(kickoffType: GoForKickoffStep.KickoffType, bundle: TacticalBundle): KickoffAdvice {
 
         return goodKickoffs.getOrElse(kickoffType) {
-            val newAdvice = KickoffAdvice(18 + Math.random() * 4, Math.random() < 0.05, kickoffType)
+            val newAdvice = KickoffAdvice(19 + Math.random() * 2, Math.random() < 0.05, kickoffType)
             BotLog.println("##################### Trying kickoff $newAdvice", bundle.agentInput.playerIndex)
             adviceUnderScrutiny = newAdvice
             gradeMoment = bundle.agentInput.time.plusSeconds(6.0)

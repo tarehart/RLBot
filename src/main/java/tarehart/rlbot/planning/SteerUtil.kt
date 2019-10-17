@@ -262,30 +262,19 @@ object SteerUtil {
         if (timeToIntercept.millis < 0) {
             timeToIntercept = Duration.ofMillis(1)
         }
-        val distancePlot = AccelerationModel.simulateAcceleration(
-                car, timeToIntercept, 0.0, 0.0)
-        val dts = distancePlot.getEndPoint()
-        val maxDistance = dts.distance
 
         var waypoint = groundPositionAndTime.space.flatten()
         val distanceToIntercept = car.position.flatten().distance(waypoint)
-        val distanceRatio = maxDistance / distanceToIntercept
         val averageSpeedNeeded = distanceToIntercept / timeToIntercept.seconds
-        val currentSpeed = ManeuverMath.forwardSpeed(car)
-
 
         if (greedy && distanceToIntercept > 40 && car.boost < 75) {
             waypoint = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(car, waypoint)).orElse(waypoint)
         }
 
         val agentOutput = SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = false)
+                .withBoost(false)
+                .withThrottle(AccelerationModel.getThrottleForDesiredSpeed(averageSpeedNeeded, car))
 
-        if (distanceRatio > 2) {
-            agentOutput.withThrottle(-1.0).withBoost(false).withSteer(0.0)
-        } else {
-            agentOutput.withBoost(distanceRatio < 0.7 && averageSpeedNeeded > currentSpeed)
-            agentOutput.withThrottle(averageSpeedNeeded - currentSpeed)
-        }
         return agentOutput
     }
 

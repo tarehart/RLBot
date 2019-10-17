@@ -8,6 +8,8 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -17,6 +19,7 @@ import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.Zone
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.CircleRoutePart
 import tarehart.rlbot.routing.PrecisionPlan
 import tarehart.rlbot.routing.SteerPlan
@@ -68,9 +71,9 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
 
         val strikeProfileFn = {
-            intercept: Vector3, kickDirection: Vector2, c: CarData ->
-                val approachVec = intercept.flatten() - c.position.flatten()
-                getStrikeProfile(intercept, Vector2.angle(approachVec, kickDirection), kickStrategy, strikeHint, bundle)
+            slice: BallSlice, kickDirection: Vector3, c: CarData ->
+                val approachVec = slice.space.flatten() - c.position.flatten()
+                getStrikeProfile(slice, Vector2.angle(approachVec, kickDirection.flatten()), kickStrategy, strikeHint, bundle)
 
         }
         val ballPath = bundle.tacticalSituation.ballPath
@@ -103,9 +106,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         val isNearGoal = intercept.space.distance(GoalUtil.getNearestGoal(intercept.space).center) < 50
 
-        if (kickStrategy is KickAtEnemyGoal &&
-                !intercept.strikeProfile.isForward &&
-                !isNearGoal) {
+        if (!intercept.strikeProfile.isForward && !isNearGoal) {
             // Don't do long-range diagonal or side dodges, it leaves us open to counter attacks.
             return null
         }
@@ -142,7 +143,8 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             return null
         }
 
-        if (ArenaModel.getDistanceFromWall(Vector3(precisionPlan.steerPlan.waypoint.x, precisionPlan.steerPlan.waypoint.y, 0.0)) < -1) {
+        if (ArenaModel.getDistanceFromWall(Vector3(precisionPlan.steerPlan.waypoint.x, precisionPlan.steerPlan.waypoint.y, 0.0)) < -1 &&
+                !ArenaModel.isBehindGoalLine(car.position)) {
             println("Failing flexible hit because waypoint is out of bounds", bundle.agentInput.playerIndex)
             return null
         }
@@ -157,7 +159,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private fun getNavigation(bundle: TacticalBundle, circleTurnOption: SteerPlan): AgentOutput? {
         val car = bundle.agentInput.myCarData
 
-        if (car.boost < 1) {
+        if (car.boost < 1 && bundle.tacticalSituation.ballAdvantage.seconds > 0) {
             SteerUtil.getSensibleFlip(car, circleTurnOption.waypoint)?.let {
                 println("Front flip toward flexible hit", bundle.agentInput.playerIndex)
                 return startPlan(it, bundle)
@@ -186,16 +188,16 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     }
 
     companion object {
-        fun getStrikeProfile(intercept: Vector3, approachAngleMagnitude: Double, kickStrategy: KickStrategy,
+        fun getStrikeProfile(slice: BallSlice, approachAngleMagnitude: Double, kickStrategy: KickStrategy,
                              styleHint: StrikeProfile.Style?, bundle: TacticalBundle): StrikeProfile {
 
             if (styleHint == StrikeProfile.Style.SIDE_HIT || styleHint == StrikeProfile.Style.DIAGONAL_HIT) {
                 // If we were going for a particular sideways hit, stay committed to it. Sometimes the
                 // angle changes as a natural part of the leadup and we don't want to thrash based on that.
-                return StrikePlanner.getStrikeProfile(styleHint, intercept.z, kickStrategy)
+                return StrikePlanner.getStrikeProfile(styleHint, slice.space.z, kickStrategy)
             }
-            val style = StrikePlanner.computeStrikeStyle(bundle, intercept, approachAngleMagnitude)
-            return StrikePlanner.getStrikeProfile(style, intercept.z, kickStrategy)
+            val style = StrikePlanner.computeStrikeStyle(slice, approachAngleMagnitude)
+            return StrikePlanner.getStrikeProfile(style, slice.space.z, kickStrategy)
         }
     }
 }
