@@ -140,7 +140,8 @@ class AgentInput(
                 matchEnded = gameInfo.isMatchEnded,
                 overTime = gameInfo.isOvertime,
                 roundActive = gameInfo.isRoundActive,
-                timeRemaining = Duration.ofSeconds(gameInfo.gameTimeRemaining().toDouble())
+                timeRemaining = Duration.ofSeconds(gameInfo.gameTimeRemaining().toDouble()),
+                isKickoffPause = gameInfo.isKickoffPause
         )
     }
 

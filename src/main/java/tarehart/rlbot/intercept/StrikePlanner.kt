@@ -53,10 +53,12 @@ object StrikePlanner {
 
 
     fun computeStrikeStyle(bundle: TacticalBundle, intercept: Vector3, approachAngleMagnitude: Double): StrikeProfile.Style {
+        val height = intercept.z
+        if (intercept.z > StrikePlanner.MAX_JUMP_HIT) {
+            return StrikeProfile.Style.AERIAL
+        }
 
         if (approachAngleMagnitude < Math.PI / 16) {
-
-            val height = intercept.z
             if (height <= ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
                 return StrikeProfile.Style.CHIP
             }
@@ -71,16 +73,10 @@ object StrikePlanner {
             return StrikeProfile.Style.CHIP
         }
 
-        if (intercept.z < StrikePlanner.MAX_JUMP_HIT) {
-            val isNearGoal = intercept.distance(GoalUtil.getNearestGoal(intercept).center) < 50
-            if (isNearGoal) {
-                if (approachAngleMagnitude > Math.PI / 4) {
-                    return StrikeProfile.Style.SIDE_HIT
-                }
-                return StrikeProfile.Style.DIAGONAL_HIT
-            }
+        if (approachAngleMagnitude > Math.PI / 4) {
+            return StrikeProfile.Style.SIDE_HIT
         }
-        return StrikeProfile.Style.AERIAL
+        return StrikeProfile.Style.DIAGONAL_HIT
     }
 
     fun computeStrikeProfile(height: Double): StrikeProfile {
@@ -107,6 +103,7 @@ object StrikePlanner {
             StrikeProfile.Style.SIDE_HIT -> SideHitStrike(height)
             StrikeProfile.Style.AERIAL -> AerialStrike(height, kickStrategy)
             StrikeProfile.Style.DRIBBLE -> DribbleStrike()
+            StrikeProfile.Style.DOUBLE_JUMP_POKE -> DoubleJumpPokeStrike(height)
         }
     }
 

@@ -26,7 +26,7 @@ import java.awt.Color
 
 class SideHitStrike(height: Double): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height).orElse(.8)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8
     override val preDodgeTime = Duration.ofSeconds(jumpTime + .04)
     override val postDodgeTime = Duration.ofMillis(250)
     override val speedBoost = 10.0

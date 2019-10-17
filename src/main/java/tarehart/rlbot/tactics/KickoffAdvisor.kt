@@ -47,9 +47,10 @@ class KickoffAdvisor {
     fun giveAdvice(kickoffType: GoForKickoffStep.KickoffType, bundle: TacticalBundle): KickoffAdvice {
 
         return goodKickoffs.getOrElse(kickoffType) {
-            val newAdvice = KickoffAdvice(18 + Math.random() * 4, Math.random() < 0.3, kickoffType)
+            val newAdvice = KickoffAdvice(18 + Math.random() * 4, Math.random() < 0.05, kickoffType)
+            BotLog.println("##################### Trying kickoff $newAdvice", bundle.agentInput.playerIndex)
             adviceUnderScrutiny = newAdvice
-            gradeMoment = bundle.agentInput.time.plusSeconds(10.0)
+            gradeMoment = bundle.agentInput.time.plusSeconds(6.0)
             ourScore = bundle.agentInput.getTeamScore(bundle.agentInput.team)
             enemyScore = bundle.agentInput.getTeamScore(bundle.agentInput.team.opposite())
             newAdvice

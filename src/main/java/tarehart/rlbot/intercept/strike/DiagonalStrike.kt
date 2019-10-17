@@ -30,7 +30,7 @@ import java.awt.Color
  */
 class DiagonalStrike(height: Double): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height).orElse(.8)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8
     override val preDodgeTime = Duration.ofSeconds(jumpTime + .02)
     override val postDodgeTime = Duration.ofMillis(60)
     override val speedBoost = 10.0

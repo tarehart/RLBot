@@ -10,6 +10,8 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.challenge.ChallengeStep
+import tarehart.rlbot.steps.defense.GetOnDefenseStep
+import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
@@ -44,7 +46,7 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
             startTime = bundle.agentInput.time
         }
 
-        if (counterAttack) {
+        if (counterAttack && bundle.agentInput.matchInfo.isKickoffPause) {
             val goalLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center.flatten()
             val toEnemy = goalLine.scaled(-1.0)
             return startPlan(Plan(Plan.Posture.NEUTRAL)

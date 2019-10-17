@@ -32,19 +32,19 @@ object ManeuverMath {
      * @param height the raw height that we want the center of the car to achieve.
      * If the height is less than BASE_CAR_Z, there's nothing to do.
      */
-    fun secondsForMashJumpHeight(height: Double): Optional<Double> {
+    fun secondsForMashJumpHeight(height: Double): Double? {
         if (height > MASH_JUMP_HEIGHT) {
-            return Optional.empty()
+            return null
         }
 
         if (height < SLOPE_CUTOFF) {
-            return Optional.of((height - BASE_CAR_Z) / MASH_SLOPE)
+            return (height - BASE_CAR_Z) / MASH_SLOPE
         }
 
         val d = MASH_B * MASH_B - 4.0 * MASH_A * (MASH_C - height)
         return if (d < 0) {
-            Optional.empty() // Too high!
-        } else Optional.of((-MASH_B + Math.sqrt(d)) / (2 * MASH_A))
+            null // Too high!
+        } else (-MASH_B + Math.sqrt(d)) / (2 * MASH_A)
     }
 
     fun secondsForSideFlipTravel(distance: Double): Double {

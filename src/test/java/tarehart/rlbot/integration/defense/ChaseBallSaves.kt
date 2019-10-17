@@ -1,4 +1,4 @@
-package tarehart.rlbot.integration.Defends
+package tarehart.rlbot.integration.defense
 
 import org.junit.Test
 import rlbot.gamestate.*

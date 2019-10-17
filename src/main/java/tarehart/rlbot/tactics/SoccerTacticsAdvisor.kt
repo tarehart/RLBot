@@ -116,7 +116,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
 
                 if (Math.abs(carApproachVsBallApproach) > Math.PI / 2) {
-                    return Plan(Plan.Posture.CLEAR).withStep(InterceptStep(Vector3(0.0, Math.signum(GoalUtil.getOwnGoal(car.team).center.y) * 1.5, 0.0)))
+                    return Plan(Plan.Posture.CLEAR)
+                            .withStep(FlexibleKickStep(KickAtEnemyGoal()))
+                            .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+                            .withStep(InterceptStep(Vector3(0.0, Math.signum(GoalUtil.getOwnGoal(car.team).center.y) * 1.5, 0.0)))
                 }
             }
 

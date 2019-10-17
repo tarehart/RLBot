@@ -12,6 +12,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
+import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.Zone
@@ -90,17 +91,21 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
                 strikeProfileFn = strikeProfileFn,
                 kickStrategy = kickStrategy) ?: return null
 
+        val intercept = precisionPlan.kickPlan.intercept
+
         if ((kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithBestShot?.car != car ||
                         !kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithInitiative?.car != car)  &&
-                (precisionPlan.kickPlan.intercept.time - car.time).seconds > 1.0) {
-            return null // Give up on the shot
+                (intercept.time - car.time).seconds > 1.0) {
+            return null // Give up on the shot because a teammate is going to touch it first, probably.
         }
 
         recentPrecisionPlan = precisionPlan
 
+        val isNearGoal = intercept.space.distance(GoalUtil.getNearestGoal(intercept.space).center) < 50
+
         if (kickStrategy is KickAtEnemyGoal &&
-                !precisionPlan.kickPlan.intercept.strikeProfile.isForward &&
-                Zone.isInDefensiveThird(bundle.zonePlan.ballZone, car.team)) {
+                !intercept.strikeProfile.isForward &&
+                !isNearGoal) {
             // Don't do long-range diagonal or side dodges, it leaves us open to counter attacks.
             return null
         }
@@ -108,7 +113,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         if (strikeHint == null) {
             val steerCorrection = SteerUtil.getCorrectionAngleRad(car, precisionPlan.steerPlan.waypoint)
             if (Math.abs(steerCorrection) < Math.PI / 20) {
-                strikeHint = precisionPlan.kickPlan.intercept.strikeProfile.style
+                strikeHint = intercept.strikeProfile.style
             }
         }
 
