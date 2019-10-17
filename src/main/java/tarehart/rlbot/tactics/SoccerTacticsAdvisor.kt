@@ -50,6 +50,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val car = input.myCarData
         val threatReport = ThreatAssessor.getThreatReport(bundle)
 
+        if (currentPlan == null) {
+            BotLog.println("findMoreUrgentPlan, but plan is actually null!", car.playerIndex)
+        }
+
         val scoreAdvantage = input.blueScore - input.orangeScore * if (car.team == Team.BLUE) 1 else -1
         // goNuts = scoreAdvantage < -1
         kickoffAdvisor.gradeKickoff(bundle)
@@ -276,7 +280,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val plan = FirstViableStepPlan(NEUTRAL)
                 .withStep(FlexibleKickStep(WallPass()))
 
-        if (car.boost > 80) {
+        if (car.boost > 80 && situation.enemyPlayerWithInitiative != null &&
+                car.position.distance(situation.enemyPlayerWithInitiative.car.position) < 80) {
             plan.withStep(DemolishEnemyStep())
         }
         plan.withStep(GetBoostStep())

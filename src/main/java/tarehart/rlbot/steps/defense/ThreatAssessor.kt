@@ -53,7 +53,7 @@ class ThreatAssessor {
 
             return ThreatReport(
                     enemyMightBoom = impactSpeed > 30 && shotAlignment > 0.6 && enemyIntercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT,
-                    enemyShotAligned = shotAlignment > 0.6,
+                    enemyShotAligned = shotAlignment > 0.6 && enemyIntercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT,
                     enemyWinsRace = bundle.tacticalSituation.ballAdvantage.millis < 0,
                     enemyHasBreakaway = ZoneUtil.isEnemyOffensiveBreakaway(car, enemyCar.car, ballPosition),
                     ballIsBehindUs = ballIsBehindUs,

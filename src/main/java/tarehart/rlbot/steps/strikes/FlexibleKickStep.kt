@@ -67,6 +67,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         }
 
         if (ArenaModel.isCarOnWall(car)) {
+            BotLog.println("Canceling flexible kick because the car is on the wall.", car.playerIndex)
             return null
         }
 
@@ -99,6 +100,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         if ((kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithBestShot?.car != car ||
                         !kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithInitiative?.car != car)  &&
                 (intercept.time - car.time).seconds > 1.0) {
+            BotLog.println("Canceling flexible kick because a teammate will get it.", car.playerIndex)
             return null // Give up on the shot because a teammate is going to touch it first, probably.
         }
 
@@ -108,6 +110,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         if (!intercept.strikeProfile.isForward && !isNearGoal) {
             // Don't do long-range diagonal or side dodges, it leaves us open to counter attacks.
+            BotLog.println("Canceling flexible kick because it's non-forward in midfield.", car.playerIndex)
             return null
         }
 

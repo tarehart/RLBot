@@ -76,8 +76,9 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         val carPositionAtContact = intercept.ballSlice.space - desiredKickForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
         val anticipatedContactPoint = intercept.ballSlice.space - desiredKickForce.scaledToMagnitude(ArenaModel.BALL_RADIUS)
 
-        val preKickRenderer = NamedRenderer("diagonalKick")
-        preKickRenderer.startPacket()
+        val preKickRenderer = car.renderer
+//        val preKickRenderer = NamedRenderer("diagonalKick")
+//        preKickRenderer.startPacket()
 
         val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
                 estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact.flatten(),
@@ -107,7 +108,7 @@ class DiagonalStrike(height: Double): StrikeProfile() {
                 carPositionAtContact.z,
                 Color.ORANGE)
 
-        preKickRenderer.finishAndSend()
+//        preKickRenderer.finishAndSend()
 
         return angled
     }

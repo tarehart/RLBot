@@ -34,7 +34,13 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
     override val style = Style.AERIAL
 
     override fun isVerticallyAccessible(car: CarData, intercept: SpaceTime): Boolean {
-        return StrikePlanner.isVerticallyAccessible(car, intercept)
+        val secondsTillIntercept = Duration.between(car.time, intercept.time).seconds
+
+        if (car.boost > StrikePlanner.boostNeededForAerial(intercept.space.z)) {
+            val tMinus = AerialStrike.getAerialLaunchCountdown(intercept.space.z, secondsTillIntercept)
+            return tMinus >= -0.1
+        }
+        return false
     }
 
     override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {

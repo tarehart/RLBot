@@ -89,7 +89,7 @@ object InterceptCalculator {
                 if (firstMomentInRange == null) {
                     firstMomentInRange = spaceTime.time
                 }
-                if (spatialPredicate.invoke(carData, spaceTime)) {
+                if (spatialPredicate.invoke(carData, spaceTime) && strikeProfile.isVerticallyAccessible(carData, spaceTime)) {
 
                     val tweenedSlice = getTweenedSlice(ballPath, slice, i, rangeDeficiency, previousRangeDeficiency)
                     val boostNeeded = StrikePlanner.boostNeededForAerial(spaceTime.space.z)
@@ -173,7 +173,7 @@ object InterceptCalculator {
                 if (firstMomentInRange == null) {
                     firstMomentInRange = spaceTime.time
                 }
-                if (spatialPredicate.invoke(carData, spaceTime, strikeProfile)) {
+                if (spatialPredicate.invoke(carData, spaceTime, strikeProfile) && strikeProfile.isVerticallyAccessible(carData, spaceTime)) {
 
                     if (spatialPredicateFailurePeriod == null) {
                         spatialPredicateFailurePeriod = spaceTime.time - firstMomentInRange
