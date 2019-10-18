@@ -93,7 +93,12 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
                 ballPath = ballPath,
                 spatialPredicate = overallPredicate,
                 strikeProfileFn = strikeProfileFn,
-                kickStrategy = kickStrategy) ?: return null
+                kickStrategy = kickStrategy)
+
+        if (precisionPlan == null) {
+            BotLog.println("Failed to find a route-aware plan for flexible kick!", car.playerIndex)
+            return null
+        }
 
         val intercept = precisionPlan.kickPlan.intercept
 

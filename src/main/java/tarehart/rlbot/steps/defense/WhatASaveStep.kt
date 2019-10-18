@@ -13,7 +13,6 @@ import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
-import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.tuning.BotLog
 
 class WhatASaveStep : NestedPlanStep() {
@@ -34,10 +33,9 @@ class WhatASaveStep : NestedPlanStep() {
 
 
         BotLog.println("Flexible kick save... Good luck!", car.playerIndex)
-        val plan = FirstViableStepPlan(Plan.Posture.SAVE)
-                .withStep(PlanarBlockStep())
-                .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
 
+        val plan = FirstViableStepPlan(Plan.Posture.SAVE).withStep(PlanarBlockStep())
+                .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
 
         bundle.tacticalSituation.expectedContact?.let {
             val goalToContact = (it.space - GoalUtil.getOwnGoal(car.team).center).flatten()
@@ -47,7 +45,7 @@ class WhatASaveStep : NestedPlanStep() {
             }
         }
 
-        plan.withStep(GetOnDefenseStep())
+        plan.withStep(CatchBallStep())
 
         return startPlan(plan, bundle)
     }
