@@ -2,12 +2,10 @@ package tarehart.rlbot.tactics
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.bots.Team
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
@@ -33,8 +31,8 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         val situation = bundle.tacticalSituation
         val car = input.myCarData
 
-        if (!car.hasWheelContact && Plan.Posture.LANDING.canInterrupt(currentPlan) && car.position.z > 5) {
-            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+        if (!car.hasWheelContact && Posture.LANDING.canInterrupt(currentPlan) && car.position.z > 5) {
+            return Plan(Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
         situation.ballPath.getLanding(input.time)?.let {
@@ -42,24 +40,24 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
             val isBallFriendly = input.latestBallTouch?.team == input.team
             val willLandOnOwnSide = it.space.y * GoalUtil.getOwnGoal(input.team).center.y > 0
 
-            if (willLandOnOwnSide && !isBallFriendly && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+            if (willLandOnOwnSide && !isBallFriendly && Posture.SAVE.canInterrupt(currentPlan)) {
                 // Need defense!
-                return Plan(Plan.Posture.SAVE)
+                return Plan(Posture.SAVE)
                         .withStep(CatchBallStep())
                         .withStep(InterceptStep(Vector3()))
             }
 
             val isBouncy = BallPhysics.getGroundBounceEnergy(input.ballPosition.z, input.ballVelocity.z) > 100
 
-            if (!willLandOnOwnSide && isBallFriendly && isBouncy && Plan.Posture.OFFENSIVE.canInterrupt(currentPlan)) {
+            if (!willLandOnOwnSide && isBallFriendly && isBouncy && Posture.OFFENSIVE.canInterrupt(currentPlan)) {
                 // The ball is about to score or do some damage. Get out of the way!
 
                 if (situation.teamPlayerWithInitiative?.car == input.myCarData && DemolishEnemyStep.hasEnoughBoost(car)) {
-                    return Plan(Plan.Posture.OFFENSIVE)
+                    return Plan(Posture.OFFENSIVE)
                             .withStep(DemolishEnemyStep())
                 }
 
-                return Plan(Plan.Posture.NEUTRAL).withStep(GetOnOffenseStep())
+                return Plan(Posture.NEUTRAL).withStep(GetOnOffenseStep())
             }
         }
 
@@ -72,7 +70,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         val situation = bundle.tacticalSituation
 
         if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
-            return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+            return FirstViableStepPlan(Posture.NEUTRAL)
                     .withStep(WallTouchStep())
                     .withStep(MidairStrikeStep(Duration.ofSeconds(0.3)))
         }
@@ -82,14 +80,14 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         }
 
         if (situation.teamPlayerWithBestShot?.car == input.myCarData || situation.needsDefensiveClear) {
-            return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+            return FirstViableStepPlan(Posture.NEUTRAL)
                     .withStep(FlexibleKickStep(KickToEnemyHalf()))
                     .withStep(CatchBallStep())
                     .withStep(InterceptStep(Vector3()))
         }
 
 
-        val rotationPlan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
+        val rotationPlan = FirstViableStepPlan(Posture.NEUTRAL)
         if (input.myCarData.boost > 50) {
             rotationPlan.withStep(GetOnOffenseStep())
         }

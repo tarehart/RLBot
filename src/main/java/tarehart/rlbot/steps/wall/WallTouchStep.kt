@@ -84,7 +84,7 @@ class WallTouchStep : NestedPlanStep() {
             // Continue this step until it becomes quite likely that we've hit the ball. Transitioning to
             // midair strike immediately before ball contact is unpleasant.
             return startPlan(
-                    Plan(Plan.Posture.NEUTRAL)
+                    Plan(Posture.NEUTRAL)
                             .withStep(BlindStep(Duration.ofSeconds(.1), AgentOutput().withThrottle(1.0).withJump()))
                             .withStep(MidairStrikeStep(Duration.ofMillis(0))),
                     bundle)

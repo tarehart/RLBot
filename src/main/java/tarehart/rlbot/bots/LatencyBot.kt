@@ -6,6 +6,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.debug.CalibrateStep
 
@@ -25,7 +26,7 @@ class LatencyBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
             return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.plus(Vector3(20.0, 0.0, 0.0)))
         }
 
-        if (Plan.Posture.NEUTRAL.canInterrupt(currentPlan)) {
+        if (Posture.NEUTRAL.canInterrupt(currentPlan)) {
             currentPlan = Plan().withStep(CalibrateStep())
         }
 

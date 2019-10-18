@@ -4,7 +4,7 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
-import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.ZonePlan
 import tarehart.rlbot.tactics.TacticalSituation
 import tarehart.rlbot.tactics.TacticsTelemetry
@@ -52,7 +52,7 @@ class PlainReadout {
         caret.updatePolicy = DefaultCaret.ALWAYS_UPDATE
     }
 
-    fun update(input: AgentInput, posture: Plan.Posture, situation: String, log: String, ballPath: BallPath) {
+    fun update(input: AgentInput, posture: Posture, situation: String, log: String, ballPath: BallPath) {
 
         var log = log
 

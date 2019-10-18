@@ -8,6 +8,7 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.PositionFacing
@@ -151,7 +152,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
 
                 phase++
 
-                return startPlan(Plan(Plan.Posture.NEUTRAL)
+                return startPlan(Plan(Posture.NEUTRAL)
                         .withStep(BlindStep(Duration.ofSeconds(0.2), AgentOutput()
                                 .withThrottle(1.0)
                                 .withSteer(turnDir.toDouble())))

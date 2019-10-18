@@ -7,11 +7,11 @@ import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.BotHouse
 import tarehart.rlbot.input.Chronometer
-import tarehart.rlbot.math.RunningAverage
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.ZonePlan
 import tarehart.rlbot.steps.WaitForActive
 import tarehart.rlbot.tactics.GameMode
@@ -138,7 +138,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
         val output: AgentOutput
 
         if (input.matchInfo.matchEnded || input.myCarData.isDemolished) {
-            currentPlan = Plan(Plan.Posture.MENU).withStep(WaitForActive())
+            currentPlan = Plan(Posture.MENU).withStep(WaitForActive())
             output = AgentOutput()
         } else {
 
@@ -147,12 +147,12 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             } else {
                 // When the round is not active, some bots may wish to do work while still having no car control
                 roundInLimbo(input)
-                currentPlan = Plan(Plan.Posture.NEUTRAL).withStep(WaitForActive())
+                currentPlan = Plan(Posture.NEUTRAL).withStep(WaitForActive())
                 output = AgentOutput()
             }
         }
 
-        val posture = currentPlan?.posture ?: Plan.Posture.NEUTRAL
+        val posture = currentPlan?.posture ?: Posture.NEUTRAL
         val situation = currentPlan?.situation ?: ""
         if (situation != previousSituation) {
             BotLog.println("[Sitch] $situation", input.playerIndex)

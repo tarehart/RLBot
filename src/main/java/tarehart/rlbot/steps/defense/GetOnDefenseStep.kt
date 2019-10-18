@@ -6,16 +6,10 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SoccerGoal
-import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.rendering.RenderUtil
+import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
-import tarehart.rlbot.tactics.SoccerTacticsAdvisor
-import tarehart.rlbot.tactics.TacticsTelemetry
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import java.awt.Color
@@ -53,7 +47,7 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
         }
 
         if (distanceToAnchor < 5) {
-            val plan = Plan(Plan.Posture.DEFENSIVE).withStep(ParkTheCarStep {
+            val plan = Plan(Posture.DEFENSIVE).withStep(ParkTheCarStep {
                 val position = (ownGoal.center + toCenter + centerToAnchor.scaledToMagnitude(0.3)).flatten()
                 val facing = centerToAnchor.scaledToMagnitude(-1.0).flatten()
                 PositionFacing(position, facing)

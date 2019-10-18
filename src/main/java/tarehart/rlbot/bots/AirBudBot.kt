@@ -4,10 +4,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.planning.FirstViableStepPlan
-import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.planning.*
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
@@ -50,7 +47,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
         val input = bundle.agentInput
         val car = input.myCarData
 
-        val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
+        val plan = FirstViableStepPlan(Posture.NEUTRAL)
 
         if (!car.hasWheelContact && car.velocity.z > -5 || input.ballPosition.z < car.position.z) {
             plan.withStep(MidairStrikeStep(Duration.ofMillis(0)))
@@ -90,24 +87,24 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
         val car = input.myCarData
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
-            return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
+            return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
         }
 
-        if (Plan.Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
+        if (Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
                 car.position.z > 5 && car.boost == 0.0 &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
-            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+            return Plan(Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
-        if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+        if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {
             BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
+            return Plan(Posture.SAVE).withStep(WhatASaveStep())
         }
 
-        if (situation.needsDefensiveClear && Plan.Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {
+        if (situation.needsDefensiveClear && Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             BotLog.println("Canceling current plan. Going for clear!", input.playerIndex)
-            return FirstViableStepPlan(Plan.Posture.CLEAR)
+            return FirstViableStepPlan(Posture.CLEAR)
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
                     .withStep(GetOnDefenseStep())
         }

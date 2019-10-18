@@ -1,7 +1,6 @@
 package tarehart.rlbot.hoops.tacticalstate
 
 import tarehart.rlbot.AgentInput
-import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.Ray
 import tarehart.rlbot.math.VectorUtil
@@ -11,7 +10,6 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GoForKickoffStep
-import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
@@ -38,24 +36,24 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         val input = bundle.agentInput
         val car = input.myCarData
         val situation = bundle.tacticalSituation
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
+        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
             if (situation.teamPlayerWithInitiative?.car == car) {
-                return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+                return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
             }
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
+                return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
             }
 
-            return Plan(Plan.Posture.KICKOFF).withStep(GetBoostStep())
+            return Plan(Posture.KICKOFF).withStep(GetBoostStep())
         }
 
-        if (!car.hasWheelContact && Plan.Posture.LANDING.canInterrupt(currentPlan) && !ArenaModel.isMicroGravity()) {
-            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+        if (!car.hasWheelContact && Posture.LANDING.canInterrupt(currentPlan) && !ArenaModel.isMicroGravity()) {
+            return Plan(Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
-        if (car.hasWheelContact && ArenaModel.isMicroGravity() && Plan.Posture.LANDING.canInterrupt(currentPlan)) {
-            return Plan(Plan.Posture.LANDING)
+        if (car.hasWheelContact && ArenaModel.isMicroGravity() && Posture.LANDING.canInterrupt(currentPlan)) {
+            return Plan(Posture.LANDING)
                     .withStep(AchieveVelocityStep((input.ballPosition - car.position).scaledToMagnitude(10.0)))
 //                    .withStep(BlindStep(Duration.ofSeconds(0.05), AgentOutput().withJump()))
 //                    .withStep(BlindStep(Duration.ofSeconds(0.05), AgentOutput()))
@@ -71,14 +69,14 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
             if(DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] == 1) {
                 RenderUtil.drawSquare(car.renderer, GoalUtil.getEnemyGoal(input.team).scorePlane, HoopsGoal.RADIUS, Color.PINK)
             }
-            return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+            return FirstViableStepPlan(Posture.NEUTRAL)
                     .withStep(DemolishEnemyStep())
                     .withStep(GetBoostStep())
                     .withStep(GetOnDefenseStep())
         }
 
-        if (situation.scoredOnThreat != null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
-            return Plan(Plan.Posture.SAVE).withStep(InterceptStep(Vector3(z = -1.0)))
+        if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {
+            return Plan(Posture.SAVE).withStep(InterceptStep(Vector3(z = -1.0)))
         }
 
         return null
@@ -93,25 +91,25 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
 
             val impact = LandGracefullyStep.predictImpact(bundle)
             if (impact != null && Duration.between(car.time, impact.time).seconds < 1.0) {
-                return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+                return Plan(Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
 
             }
 
             val goalToBall = input.ballPosition - GoalUtil.getEnemyGoal(car.team).center
             val ballToCar = car.position - input.ballPosition
             if (goalToBall.dotProduct(ballToCar) > 0) {
-                return Plan(Plan.Posture.OFFENSIVE)
+                return Plan(Posture.OFFENSIVE)
                         .withStep(MidairStrikeStep(Duration.ofMillis(0)))
             }
 
-            return Plan(Plan.Posture.OFFENSIVE)
+            return Plan(Posture.OFFENSIVE)
                     .withStep(FlyToTargetStep(
                         ArenaModel.getBounceNormal(Ray(bundle.tacticalSituation.futureBallMotion!!.space, goalToBall)).position))
 
         }
 
         if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
-            return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+            return FirstViableStepPlan(Posture.NEUTRAL)
                     .withStep(WallTouchStep())
                     .withStep(MidairStrikeStep(Duration.ofSeconds(0.3)))
         }
@@ -120,7 +118,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
             return Plan().withStep(DescendFromWallStep())
         }
 
-        return FirstViableStepPlan(Plan.Posture.NEUTRAL)
+        return FirstViableStepPlan(Posture.NEUTRAL)
                 .withStep(FlexibleKickStep(DunkIntoHoop()))
                 .withStep(FlexibleKickStep(WallPass()))
                 .withStep(FlexibleKickStep(KickToEnemyHalf()))

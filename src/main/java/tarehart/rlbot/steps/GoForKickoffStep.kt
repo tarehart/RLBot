@@ -2,22 +2,14 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.blind.BlindStep
-import tarehart.rlbot.steps.challenge.ChallengeStep
-import tarehart.rlbot.steps.defense.GetOnDefenseStep
-import tarehart.rlbot.steps.landing.LandGracefullyStep
-import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
-import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
-import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
@@ -49,7 +41,7 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         if (counterAttack && bundle.agentInput.matchInfo.isKickoffPause) {
             val goalLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center.flatten()
             val toEnemy = goalLine.scaled(-1.0)
-            return startPlan(Plan(Plan.Posture.NEUTRAL)
+            return startPlan(Plan(Posture.NEUTRAL)
                     .withStep(ParkTheCarStep { _ -> PositionFacing(goalLine, toEnemy) })
                     .withStep(BlindStep(Duration.ofSeconds(0.5), AgentOutput())),
                     bundle)
@@ -66,13 +58,13 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         }
 
         if (kickoffType == KickoffType.SPACE_JAM) {
-            return startPlan(Plan(Plan.Posture.NEUTRAL)
+            return startPlan(Plan(Posture.NEUTRAL)
                     .withStep(BlindStep(Duration.ofSeconds(0.2), AgentOutput().withBoost().withThrottle(1.0)))
                     .withStep(MidairStrikeStep(Duration.ofMillis(0))), bundle)
         }
 
         if (bundle.agentInput.ballPosition.z > 3) {
-            return startPlan(Plan(Plan.Posture.NEUTRAL).withStep(InterceptStep()), bundle)
+            return startPlan(Plan(Posture.NEUTRAL).withStep(InterceptStep()), bundle)
         }
 
         if (car.position.magnitude() < dodgeDistance) {

@@ -7,8 +7,8 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.hoops.HoopsZone
 import tarehart.rlbot.hoops.HoopsZoneTeamless
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.steps.blind.BlindStep
@@ -181,14 +181,14 @@ class KickoffState : TacticalState {
         val input = bundle.agentInput
         if (kickoffHasBegun) {
             if (kickoffStyle == KickoffStyle.CENTER) {
-                return Plan(Plan.Posture.KICKOFF)
+                return Plan(Posture.KICKOFF)
                         .withStep(BlindStep(Duration.ofMillis(800), AgentOutput().withThrottle(1.0).withBoost(true)))
                         .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(true)))
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(true).withJump(false)))
                         .withStep(BlindStep(Duration.ofMillis(16), AgentOutput().withThrottle(1.0).withPitch(0.0).withBoost(true).withJump(true)))
                         .withStep(MidairStrikeStep(Duration.ofMillis(0), hasJump = false))
             } else if (kickoffStyle == KickoffStyle.FORWARD_STANDARD) {
-                return Plan(Plan.Posture.KICKOFF)
+                return Plan(Posture.KICKOFF)
                         .withStep(BlindStep(Duration.ofMillis(600), SteerUtil.steerTowardGroundPosition(input.myCarData, input.ballPosition).withBoost(false)))
                         .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withThrottle(1.0).withPitch(1.0).withBoost(false).withJump(true)))
                         .withStep(BlindStep(Duration.ofMillis(20), AgentOutput().withThrottle(1.0).withPitch(0.5).withBoost(true).withJump(false)))

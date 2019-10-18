@@ -4,6 +4,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
@@ -45,7 +46,7 @@ class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex
         val car = input.myCarData
         val situation = bundle.tacticalSituation
 
-        val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
+        val plan = FirstViableStepPlan(Posture.NEUTRAL)
 
         if (situation.shotOnGoalAvailable && situation.teamPlayerWithInitiative?.car == car) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
@@ -64,13 +65,13 @@ class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex
         val situation = bundle.tacticalSituation
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
-            return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
+            return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
         }
 
-        if (situation.scoredOnThreat != null && situation.teamPlayerWithInitiative?.car == car && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+        if (situation.scoredOnThreat != null && situation.teamPlayerWithInitiative?.car == car && Posture.SAVE.canInterrupt(currentPlan)) {
             BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return Plan(Plan.Posture.SAVE).withStep(WhatASaveStep())
+            return Plan(Posture.SAVE).withStep(WhatASaveStep())
         }
 
         return null

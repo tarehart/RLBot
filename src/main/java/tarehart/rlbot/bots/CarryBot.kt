@@ -4,6 +4,7 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.time.Duration
@@ -48,7 +49,7 @@ class CarryBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
             lastSpeedChange = input.time
         }
 
-        val plan = FirstViableStepPlan(Plan.Posture.NEUTRAL)
+        val plan = FirstViableStepPlan(Posture.NEUTRAL)
 
         if (CarryBotStep.canCarry(bundle, true)) {
             plan.withStep(CarryBotStep())

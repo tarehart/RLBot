@@ -3,7 +3,7 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 
-class FirstViableStepPlan(posture: Plan.Posture) : Plan(posture) {
+class FirstViableStepPlan(posture: Posture) : Plan(posture) {
 
     private var frameCount = 0
 

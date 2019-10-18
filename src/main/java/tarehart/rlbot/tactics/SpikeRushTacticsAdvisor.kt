@@ -12,8 +12,8 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.planning.Plan.Posture.NEUTRAL
-import tarehart.rlbot.planning.Plan.Posture.OFFENSIVE
+import tarehart.rlbot.planning.Posture.NEUTRAL
+import tarehart.rlbot.planning.Posture.OFFENSIVE
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
@@ -69,18 +69,18 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
         if (ballCarrier == car) {
             if ((bundle.agentInput.ballPosition - car.position).dotProduct(car.orientation.roofVector) < ArenaModel.BALL_RADIUS * 0.5) {
                 // Let go of the ball if it's stuck underneath us.
-                return Plan(Plan.Posture.SPIKE_CARRY).withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withUseItem()))
+                return Plan(Posture.SPIKE_CARRY).withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withUseItem()))
             }
 
-            if (Plan.Posture.SPIKE_CARRY.canInterrupt(currentPlan)) {
+            if (Posture.SPIKE_CARRY.canInterrupt(currentPlan)) {
 
                 val ballRelative = car.relativePosition(bundle.agentInput.ballPosition).normaliseCopy()
 
                 if (ballRelative.x > .5 && ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes(car.team)).distance(car.position) < 35) {
-                    return Plan(Plan.Posture.SPIKE_CARRY).withStep(SpikedCeilingShotStep())
+                    return Plan(Posture.SPIKE_CARRY).withStep(SpikedCeilingShotStep())
                 }
 
-                return Plan(Plan.Posture.SPIKE_CARRY).withStep(SpikeCarryStep())
+                return Plan(Posture.SPIKE_CARRY).withStep(SpikeCarryStep())
             }
 
             bundle.agentInput.getTeamRoster(car.team.opposite()).forEach {
@@ -102,7 +102,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                     }
 
                     // Try to dodge by double jumping!
-                    return Plan(Plan.Posture.SPIKE_CARRY).withStep(BlindSequence()
+                    return Plan(Posture.SPIKE_CARRY).withStep(BlindSequence()
                             .withStep(BlindStep(Duration.ofMillis(200), AgentOutput().withJump()))
                             .withStep(BlindStep(Duration.ofMillis(50), AgentOutput().withJump(false)))
                             .withStep(BlindStep(Duration.ofMillis(100), AgentOutput().withJump(true))))
@@ -110,63 +110,63 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             }
         }
 
-        if (ballCarrier != null && ballCarrier.team != car.team && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+        if (ballCarrier != null && ballCarrier.team != car.team && Posture.SAVE.canInterrupt(currentPlan)) {
             if (situation.teamPlayerWithInitiative?.car == car) {
-                return Plan(Plan.Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false, isSpikeRush = true))
+                return Plan(Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false, isSpikeRush = true))
             } else {
-                return Plan(Plan.Posture.SAVE).withStep(GetOnDefenseStep())
+                return Plan(Posture.SAVE).withStep(GetOnDefenseStep())
             }
         }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Plan.Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
+        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
             if (situation.teamPlayerWithInitiative?.car == car) {
-                return Plan(Plan.Posture.KICKOFF).withStep(GoForKickoffStep())
+                return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
             }
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
+                return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
             }
 
-            return Plan(Plan.Posture.KICKOFF).withStep(GetBoostStep())
+            return Plan(Posture.KICKOFF).withStep(GetBoostStep())
         }
 
-        if (Plan.Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
+        if (Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
 
             if (ArenaModel.isMicroGravity() && situation.distanceBallIsBehindUs < 0) {
                 return Plan().withStep(MidairStrikeStep(Duration.ofMillis(0)))
             }
 
-            return Plan(Plan.Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+            return Plan(Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
-        if (situation.scoredOnThreat != null && ballCarrier == null && Plan.Posture.SAVE.canInterrupt(currentPlan)) {
+        if (situation.scoredOnThreat != null && ballCarrier == null && Posture.SAVE.canInterrupt(currentPlan)) {
 
             RLBotDll.sendQuickChat(car.playerIndex, false, QuickChatSelection.Reactions_Noooo)
             println("Canceling current plan. Going for intercept save!", input.playerIndex)
-            return Plan(Plan.Posture.SAVE).withStep(InterceptStep(needsChallenge = false))
+            return Plan(Posture.SAVE).withStep(InterceptStep(needsChallenge = false))
         }
 
-        if (SoccerTacticsAdvisor.getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+        if (SoccerTacticsAdvisor.getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
-            return Plan(Plan.Posture.DEFENSIVE).withStep(RotateAndWaitToClearStep())
+            return Plan(Posture.DEFENSIVE).withStep(RotateAndWaitToClearStep())
         }
 
         if (getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)
-                && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)) {
+                && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
 
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex)
             val secondsToOverrideFor = 0.25
-            return Plan(Plan.Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
+            return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
         }
 
         val threatReport = ThreatAssessor.getThreatReport(bundle)
 
-        if (threatReport.looksSerious() && situation.ballAdvantage.seconds < 0.5 && Plan.Posture.DEFENSIVE.canInterrupt(currentPlan)
+        if (threatReport.looksSerious() && situation.ballAdvantage.seconds < 0.5 && Posture.DEFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             println("Canceling current plan due to threat level.", input.playerIndex)
-            return FirstViableStepPlan(Plan.Posture.DEFENSIVE)
+            return FirstViableStepPlan(Posture.DEFENSIVE)
                     .withStep(ChallengeStep())
                     .withStep(GetOnDefenseStep())
                     .withStep(InterceptStep(needsChallenge = false))
@@ -212,7 +212,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             return makePlanWithPlentyOfTime(bundle)
         }
 
-        return FirstViableStepPlan(Plan.Posture.DEFENSIVE).withStep(ChallengeStep()).withStep(InterceptStep(needsChallenge = false))
+        return FirstViableStepPlan(Posture.DEFENSIVE).withStep(ChallengeStep()).withStep(InterceptStep(needsChallenge = false))
     }
 
     private fun makePlanWithPlentyOfTime(bundle: TacticalBundle): Plan {

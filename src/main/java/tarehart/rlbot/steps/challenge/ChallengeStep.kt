@@ -3,12 +3,12 @@ package tarehart.rlbot.steps.challenge
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.BallTouch
-import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
@@ -17,8 +17,6 @@ import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
-import tarehart.rlbot.tactics.TacticalSituation
-import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import java.awt.BasicStroke
@@ -80,14 +78,14 @@ class ChallengeStep: NestedPlanStep() {
 
         if (tacticalSituation.distanceBallIsBehindUs > 0 && ballAdvantage.seconds > -.2) {
             startPlan(
-                    Plan(Plan.Posture.DEFENSIVE)
+                    Plan(Posture.DEFENSIVE)
                             .withStep(FlexibleKickStep(KickAwayFromOwnGoal())),
                     bundle)
         }
 
         if (defensiveNodeDistance < DEFENSIVE_NODE_DISTANCE + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
             startPlan(
-                    Plan(Plan.Posture.DEFENSIVE)
+                    Plan(Posture.DEFENSIVE)
                             .withStep(InterceptStep(enemyShotLine.scaledToMagnitude(1.5))),
                     bundle)
         }

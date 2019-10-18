@@ -3,10 +3,10 @@ package tarehart.rlbot.steps.defense
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
-import tarehart.rlbot.tactics.TacticsTelemetry
 
 class RotateAndWaitToClearStep : NestedPlanStep() {
 
@@ -20,7 +20,7 @@ class RotateAndWaitToClearStep : NestedPlanStep() {
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
-        val plan = Plan(Plan.Posture.DEFENSIVE)
+        val plan = Plan(Posture.DEFENSIVE)
                 .withStep(ParkTheCarStep { inp -> GetOnDefenseStep.calculatePositionFacing(inp) })
 
         return startPlan(plan, bundle)
