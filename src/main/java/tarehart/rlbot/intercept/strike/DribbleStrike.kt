@@ -7,7 +7,6 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 
 class DribbleStrike: StrikeProfile() {

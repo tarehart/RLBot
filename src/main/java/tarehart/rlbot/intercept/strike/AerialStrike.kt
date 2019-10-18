@@ -12,7 +12,6 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.RoutePlanner
 import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint

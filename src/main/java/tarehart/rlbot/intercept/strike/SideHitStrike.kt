@@ -16,7 +16,6 @@ import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
-import tarehart.rlbot.steps.strikes.DirectedKickPlan
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog

@@ -1,11 +1,10 @@
 package tarehart.rlbot.steps.strikes
 
-import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.intercept.strike.Style
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector3
@@ -54,7 +53,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
         }
 
         if (!readyForFinalApproach(bundle.agentInput.myCarData, kickPlan.launchPad)) {
-            if (kickPlan.intercept.strikeProfile.style == StrikeProfile.Style.CHIP) {
+            if (kickPlan.intercept.strikeProfile.style == Style.CHIP) {
                 BotLog.println("Probably chipped successfully!", bundle.agentInput.playerIndex)
             } else {
                 BotLog.println("Failed final approach!", bundle.agentInput.playerIndex)

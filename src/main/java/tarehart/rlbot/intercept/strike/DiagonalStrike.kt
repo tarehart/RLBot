@@ -1,6 +1,5 @@
 package tarehart.rlbot.intercept.strike
 
-import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept

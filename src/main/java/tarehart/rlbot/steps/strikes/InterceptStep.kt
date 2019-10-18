@@ -3,10 +3,8 @@ package tarehart.rlbot.steps.strikes
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.AerialMath
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
@@ -27,7 +25,6 @@ import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Line2D
-import java.util.*
 
 class InterceptStep(
         private val interceptModifier: Vector3 = Vector3(),
@@ -145,7 +142,7 @@ class InterceptStep(
 
         val strikeProfileFn = { height: Double ->
             val desiredProfile = StrikePlanner.computeStrikeProfile(height)
-            if (needsChallenge && desiredProfile.style == StrikeProfile.Style.CHIP) {
+            if (needsChallenge && desiredProfile.style == Style.CHIP) {
                 FlipHitStrike()
             } else {
                 desiredProfile

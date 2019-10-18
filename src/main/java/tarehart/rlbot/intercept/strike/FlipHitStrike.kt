@@ -1,14 +1,12 @@
 package tarehart.rlbot.intercept.strike
 
 import tarehart.rlbot.AgentOutput
-import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
 import tarehart.rlbot.math.SpaceTime
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint

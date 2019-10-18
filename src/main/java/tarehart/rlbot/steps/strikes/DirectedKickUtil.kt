@@ -3,7 +3,7 @@ package tarehart.rlbot.steps.strikes
 import rlbot.render.Renderer
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.intercept.strike.Style
 import tarehart.rlbot.math.Atan
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.Triangle
@@ -48,7 +48,7 @@ object DirectedKickUtil {
         var plannedKickForce = Vector3() // This empty vector will never be used, but the compiler hasn't noticed.
         var desiredBallVelocity = Vector3()
 
-        val impactSpeed = if (intercept.strikeProfile.style == StrikeProfile.Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else 30.0
+        val impactSpeed = if (intercept.strikeProfile.style == Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else 30.0
 
         if (intercept.strikeProfile.isForward) {
 

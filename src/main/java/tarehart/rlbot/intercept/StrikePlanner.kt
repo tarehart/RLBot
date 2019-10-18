@@ -1,14 +1,11 @@
 package tarehart.rlbot.intercept
 
-import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.*
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
@@ -53,32 +50,32 @@ object StrikePlanner {
     }
 
 
-    fun computeStrikeStyle(slice: BallSlice, approachAngleMagnitude: Double): StrikeProfile.Style {
+    fun computeStrikeStyle(slice: BallSlice, approachAngleMagnitude: Double): Style {
         val height = slice.space.z
         if (height > StrikePlanner.MAX_JUMP_HIT) {
-            return StrikeProfile.Style.AERIAL
+            return Style.AERIAL
         }
 
         if (approachAngleMagnitude < Math.PI / 16) {
             if (height <= ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
-                return StrikeProfile.Style.CHIP
+                return Style.CHIP
             }
 
             if (FlipHitStrike.isVerticallyAccessible(height)) {
-                return StrikeProfile.Style.FLIP_HIT
+                return Style.FLIP_HIT
             }
             if (height < StrikePlanner.MAX_JUMP_HIT) {
-                return StrikeProfile.Style.JUMP_HIT
+                return Style.JUMP_HIT
             }
         } else if (approachAngleMagnitude < Math.PI * .2 &&
                 height < ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
-            return StrikeProfile.Style.CHIP
+            return Style.CHIP
         }
 
         if (approachAngleMagnitude > Math.PI / 4) {
-            return StrikeProfile.Style.SIDE_HIT
+            return Style.SIDE_HIT
         }
-        return StrikeProfile.Style.DIAGONAL_HIT
+        return Style.DIAGONAL_HIT
     }
 
     fun computeStrikeProfile(height: Double): StrikeProfile {
@@ -96,16 +93,16 @@ object StrikePlanner {
         return AerialStrike(height, null)
     }
 
-    fun getStrikeProfile(style: StrikeProfile.Style, height: Double, kickStrategy: KickStrategy): StrikeProfile {
+    fun getStrikeProfile(style: Style, height: Double, kickStrategy: KickStrategy): StrikeProfile {
         return when(style) {
-            StrikeProfile.Style.CHIP -> ChipStrike()
-            StrikeProfile.Style.JUMP_HIT -> JumpHitStrike(height)
-            StrikeProfile.Style.FLIP_HIT -> FlipHitStrike()
-            StrikeProfile.Style.DIAGONAL_HIT -> DiagonalStrike(height)
-            StrikeProfile.Style.SIDE_HIT -> SideHitStrike(height)
-            StrikeProfile.Style.AERIAL -> AerialStrike(height, kickStrategy)
-            StrikeProfile.Style.DRIBBLE -> DribbleStrike()
-            StrikeProfile.Style.DOUBLE_JUMP_POKE -> DoubleJumpPokeStrike(height)
+            Style.CHIP -> ChipStrike()
+            Style.JUMP_HIT -> JumpHitStrike(height)
+            Style.FLIP_HIT -> FlipHitStrike()
+            Style.DIAGONAL_HIT -> DiagonalStrike(height)
+            Style.SIDE_HIT -> SideHitStrike(height)
+            Style.AERIAL -> AerialStrike(height, kickStrategy)
+            Style.DRIBBLE -> DribbleStrike()
+            Style.DOUBLE_JUMP_POKE -> DoubleJumpPokeStrike(height)
         }
     }
 

@@ -7,11 +7,10 @@ import tarehart.rlbot.input.CarOrientation
 import tarehart.rlbot.intercept.strike.ChipStrike
 import tarehart.rlbot.intercept.strike.CustomStrike
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.intercept.strike.Style
 import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
@@ -21,10 +20,8 @@ import tarehart.rlbot.routing.StrikeRoutePart
 import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
 import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.steps.strikes.KickStrategy
-import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
-import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
 
 object InterceptCalculator {
@@ -196,7 +193,7 @@ object InterceptCalculator {
                     val steerPlan = kickPlan.launchPad.planRoute(carData, kickPlan.distancePlot)
 
 
-                    val strikeDuration = if (kickPlan.intercept.strikeProfile.style == StrikeProfile.Style.AERIAL && kickPlan.launchPad.expectedSpeed != null) {
+                    val strikeDuration = if (kickPlan.intercept.strikeProfile.style == Style.AERIAL && kickPlan.launchPad.expectedSpeed != null) {
 
                         val orientation = if (kickPlan.launchPad is FacingAndSpeedPreKickWaypoint) {
                             CarOrientation(kickPlan.launchPad.facing.toVector3(), Vector3.UP)
@@ -272,7 +269,7 @@ object InterceptCalculator {
             val acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, 1.0)
 
             // We're already in the air, so don't model any hang time.
-            val strikeProfile = CustomStrike(Duration.ZERO, Duration.ZERO, 0.0, StrikeProfile.Style.AERIAL)
+            val strikeProfile = CustomStrike(Duration.ZERO, Duration.ZERO, 0.0, Style.AERIAL)
 
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 

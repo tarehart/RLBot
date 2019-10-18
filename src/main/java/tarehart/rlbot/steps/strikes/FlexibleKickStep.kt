@@ -1,15 +1,13 @@
 package tarehart.rlbot.steps.strikes
 
-import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.intercept.strike.Style
 import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -17,9 +15,7 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.Zone
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
-import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.CircleRoutePart
 import tarehart.rlbot.routing.PrecisionPlan
 import tarehart.rlbot.routing.SteerPlan
@@ -41,7 +37,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private var recentCar: CarData? = null
     //private var earliestIntercept: GameTime? = null
     private val disruptionMeter = BallPathDisruptionMeter()
-    private var strikeHint: StrikeProfile.Style? = null
+    private var strikeHint: Style? = null
 
     override fun doInitialComputation(bundle: TacticalBundle) {
         recentCar = bundle.agentInput.myCarData
@@ -197,9 +193,9 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
     companion object {
         fun getStrikeProfile(slice: BallSlice, approachAngleMagnitude: Double, kickStrategy: KickStrategy,
-                             styleHint: StrikeProfile.Style?, bundle: TacticalBundle): StrikeProfile {
+                             styleHint: Style?, bundle: TacticalBundle): StrikeProfile {
 
-            if (styleHint == StrikeProfile.Style.SIDE_HIT || styleHint == StrikeProfile.Style.DIAGONAL_HIT) {
+            if (styleHint == Style.SIDE_HIT || styleHint == Style.DIAGONAL_HIT) {
                 // If we were going for a particular sideways hit, stay committed to it. Sometimes the
                 // angle changes as a natural part of the leadup and we don't want to thrash based on that.
                 return StrikePlanner.getStrikeProfile(styleHint, slice.space.z, kickStrategy)
