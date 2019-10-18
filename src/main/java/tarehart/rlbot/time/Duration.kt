@@ -13,8 +13,8 @@ class Duration private constructor(val millis: Long) : Comparable<Duration> {
         return java.lang.Long.compare(millis, other.millis)
     }
 
-    fun plusSeconds(seconds: Double): Duration {
-        return Duration(millis + (seconds * 1000).toLong())
+    fun plusSeconds(seconds: Number): Duration {
+        return Duration(millis + (seconds.toDouble() * 1000).toLong())
     }
 
     operator fun minus(other: Duration): Duration {
@@ -45,8 +45,8 @@ class Duration private constructor(val millis: Long) : Comparable<Duration> {
             return Duration(millis)
         }
 
-        fun ofSeconds(seconds: Double): Duration {
-            return Duration((seconds * 1000).toLong())
+        fun ofSeconds(seconds: Number): Duration {
+            return Duration((seconds.toDouble() * 1000).toLong())
         }
 
         fun max(d1: Duration, d2: Duration): Duration {

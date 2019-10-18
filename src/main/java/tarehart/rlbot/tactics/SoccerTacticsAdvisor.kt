@@ -66,7 +66,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             }
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
+                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> b.agentInput.time < car.time.plusSeconds(3) }
+                        .withStep(GetOnDefenseStep())
             }
 
             return Plan(Posture.KICKOFF).withStep(GetBoostStep())
@@ -96,7 +97,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             }
 
             println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return Plan(Posture.SAVE).withStep(WhatASaveStep())
+            return RetryableViableStepPlan(Posture.SAVE, GetOnDefenseStep()).withStep(WhatASaveStep())
         }
 
         if (!goNuts && getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
@@ -108,7 +109,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
             if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(bundle)) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
-                return FirstViableStepPlan(Posture.CLEAR).withStep(ChallengeStep()).withStep(GetOnDefenseStep(0.25))
+                return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep())
+                        .withStep(ChallengeStep())
             }
 
             println("Canceling current plan. Going for clear!", input.playerIndex)
@@ -125,9 +127,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 }
             }
 
-            return FirstViableStepPlan(Posture.CLEAR)
+            return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) { b -> !b.tacticalSituation.needsDefensiveClear }
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
-                    .withStep(GetOnDefenseStep())
         }
 
 
@@ -256,10 +257,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         if (car.boost < 50) {
             return Plan().withStep(GetBoostStep())
-        }
-
-        if (situation.expectedContact == null) {
-            return Plan(NEUTRAL).withStep(ChaseBallStep())
         }
 
         if (getYAxisWrongSidedness(input) > 0) {

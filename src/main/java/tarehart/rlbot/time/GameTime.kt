@@ -22,7 +22,7 @@ data class GameTime(private val gameMillis: Long) : Comparable<GameTime> {
         return GameTime(gameMillis + duration.millis)
     }
 
-    fun plusSeconds(seconds: Double): GameTime {
+    fun plusSeconds(seconds: Number): GameTime {
         return plus(Duration.ofSeconds(seconds))
     }
 

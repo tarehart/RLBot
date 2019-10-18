@@ -9,24 +9,22 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.UnfailingStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
-import tarehart.rlbot.time.Duration
-import tarehart.rlbot.time.GameTime
 import java.awt.Color
 
-class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = DEFAULT_LIFESPAN // seconds
-) : NestedPlanStep() {
-
+class GetOnDefenseStep : NestedPlanStep(), UnfailingStep {
     override fun getLocalSituation(): String {
         return "Getting on defense"
     }
 
-    private var startTime: GameTime? = null
+
+    override fun getUnfailingOutput(bundle: TacticalBundle): AgentOutput {
+        // Currently super.getOutput will never return null, so the else condition won't be hit.
+        return super.getOutput(bundle) ?: AgentOutput()
+    }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
-        if (startTime == null) {
-            startTime = bundle.agentInput.time
-        }
 
 //        val threatPosition = bundle.tacticalSituation.expectedEnemyContact?.space ?:
 //        bundle.tacticalSituation.futureBallMotion?.space ?:
@@ -58,20 +56,9 @@ class GetOnDefenseStep @JvmOverloads constructor(private val lifespan: Double = 
         return SteerUtil.steerTowardGroundPosition(car, waypoint.flatten(), detourForBoost = true)
     }
 
-    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        val st = startTime ?: bundle.agentInput.time
-        if (Duration.between(st, bundle.agentInput.time).seconds > lifespan) {
-            if (!ThreatAssessor.getThreatReport(bundle).looksSerious()) {
-                return true
-            }
-        }
-        return false
-    }
-
     companion object {
         val CENTER_OFFSET = SoccerGoal.EXTENT * .5
         val AWAY_FROM_GOAL = 3.0
-        val DEFAULT_LIFESPAN = 1.0
 
         fun calculatePositionFacing(inp: AgentInput): PositionFacing {
             val center = GoalUtil.getOwnGoal(inp.team).center

@@ -125,7 +125,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             }
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
+                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> !b.tacticalSituation.goForKickoff }
             }
 
             return Plan(Posture.KICKOFF).withStep(GetBoostStep())
@@ -157,8 +157,9 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
 
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex)
-            val secondsToOverrideFor = 0.25
-            return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep(secondsToOverrideFor))
+            return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) {
+                b -> !getForceDefensivePosture(b.agentInput.myCarData, b.tacticalSituation.enemyPlayerWithInitiative?.car, b.agentInput.ballPosition)
+            }
         }
 
         val threatReport = ThreatAssessor.getThreatReport(bundle)

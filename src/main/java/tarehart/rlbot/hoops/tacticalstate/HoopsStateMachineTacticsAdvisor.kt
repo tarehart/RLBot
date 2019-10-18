@@ -42,7 +42,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
             }
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep(3.0))
+                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> !b.tacticalSituation.goForKickoff }
             }
 
             return Plan(Posture.KICKOFF).withStep(GetBoostStep())
@@ -69,7 +69,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
             if(DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] == 1) {
                 RenderUtil.drawSquare(car.renderer, GoalUtil.getEnemyGoal(input.team).scorePlane, HoopsGoal.RADIUS, Color.PINK)
             }
-            return FirstViableStepPlan(Posture.NEUTRAL)
+            return RetryableViableStepPlan(Posture.NEUTRAL, GetOnDefenseStep())
                     .withStep(DemolishEnemyStep())
                     .withStep(GetBoostStep())
                     .withStep(GetOnDefenseStep())
