@@ -5,6 +5,7 @@ import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.Duration
 import java.util.*
@@ -100,14 +101,17 @@ class DistancePlot(start: DistanceTimeSpeed) {
         return motionAt?.time
     }
 
-    fun getMotionUponArrival(carData: CarData, destination: Vector3, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
+    fun getMaximumRange(car: CarData, direction: Vector2, travelTime: Duration): Double? {
+        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(car, direction)
+        return getMotionAfterDuration(Duration.ofSeconds(Math.max(0.0, travelTime.seconds - orientSeconds)))?.distance
+    }
+
+    fun getMotionUponArrival(carData: CarData, destination: Vector3): DistanceTimeSpeed? {
 
         val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination)
         val distance = carData.position.flatten().distance(destination.flatten())
 
         return getMotionAfterDistance(distance)?.let { DistanceTimeSpeed(it.distance, it.time.plusSeconds(orientSeconds), it.speed) }
-
-        // TODO: incorporate the speedup from the strike profile.
     }
 
     fun getMotionAfterDuration(time: Duration, strikeProfile: StrikeProfile): DistanceTimeSpeed? {

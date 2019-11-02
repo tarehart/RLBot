@@ -103,14 +103,19 @@ object RenderUtil {
     }
 
     fun drawCircle(renderer: Renderer, circle: Circle, height: Double, color: Color) {
-        var cursor = Vector2(circle.radius, 0.0)
+        return drawRadarChart(renderer, circle.center, 16, height, color) { circle.radius }
+    }
+
+    fun drawRadarChart(renderer: Renderer, center: Vector2, numSegments: Int, height: Double, color: Color, radiusFunction: (Double) -> Double) {
         var radians = 0.0
+        var cursor = Vector2(Math.max(0.001, radiusFunction(radians)), 0.0)
+        val increment = 2 * Math.PI / numSegments
 
         while (radians < Math.PI * 2) {
-            radians += Math.PI / 8
-            val nextCursor = VectorUtil.rotateVector(cursor, Math.PI / 8)
+            radians += increment
+            val nextCursor = VectorUtil.rotateVector(cursor, increment).scaledToMagnitude(Math.max(0.001, radiusFunction(radians)))
 
-            renderer.drawLine3d(color, (circle.center + cursor).withZ(height).toRlbot(), (circle.center + nextCursor).withZ(height).toRlbot())
+            renderer.drawLine3d(color, (center + cursor).withZ(height).toRlbot(), (center + nextCursor).withZ(height).toRlbot())
             cursor = nextCursor
         }
     }

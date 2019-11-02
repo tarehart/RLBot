@@ -3,6 +3,7 @@ package tarehart.rlbot.carpredict
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.DistanceTimeSpeed
+import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.time.Duration
@@ -141,12 +142,18 @@ object AccelerationModel {
     }
 
     fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {
+        return getSteerPenaltySeconds(carData, (target - carData.position).flatten())
+    }
+
+    /**
+     * Only works on flat ground.
+     */
+    fun getSteerPenaltySeconds(carData: CarData, newDirection: Vector2): Double {
         if (!carData.hasWheelContact) {
             // Might be flipping toward the ball, in that case facing the wrong way is not a problem.
             return 0.0
         }
-        val toTarget = target.minus(carData.position)
-        val correctionErr = Math.max( 0.0, 0.8 - toTarget.normaliseCopy().dotProduct(carData.orientation.noseVector))
+        val correctionErr = Math.max( 0.0, 0.8 - newDirection.normalized().dotProduct(carData.orientation.noseVector.flatten().normalized()))
         val seconds = correctionErr * .12 + correctionErr * carData.velocity.magnitude() * .02
         return seconds
     }
