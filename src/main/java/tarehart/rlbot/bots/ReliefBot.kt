@@ -16,17 +16,17 @@ class ReliefBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
             val distancePlot = it.distancePlot
             val car = bundle.agentInput.myCarData
 
-            RenderUtil.drawRadarChart(car.renderer, car.position.flatten(), 32, car.position.z, Color.CYAN) {
+            RenderUtil.drawRadarChart(car.renderer, car.position.flatten(), 64, car.position.z, Color.CYAN) {
                 val direction = VectorUtil.rotateVector(Vector2(1, 0), it)
-                distancePlot.getMaximumRange(car, direction, Duration.ofSeconds(2.0)) ?: 0.0
+                distancePlot.getMaximumRange(car, direction, Duration.ofSeconds(3.0)) ?: 0.0
             }
 
-            RenderUtil.drawRadarChart(car.renderer, car.position.flatten(), 32, car.position.z, Color.GREEN) {
+            RenderUtil.drawRadarChart(car.renderer, car.position.flatten(), 64, car.position.z, Color.GREEN) {
                 val direction = VectorUtil.rotateVector(Vector2(1, 0), it)
                 distancePlot.getMaximumRange(car, direction, Duration.ofSeconds(1.0)) ?: 0.0
             }
 
-            RenderUtil.drawRadarChart(car.renderer, car.position.flatten(), 32, car.position.z, Color.YELLOW) {
+            RenderUtil.drawRadarChart(car.renderer, car.position.flatten(), 64, car.position.z, Color.YELLOW) {
                 val direction = VectorUtil.rotateVector(Vector2(1, 0), it)
                 distancePlot.getMaximumRange(car, direction, Duration.ofSeconds(0.5)) ?: 0.0
             }

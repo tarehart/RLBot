@@ -109,7 +109,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
             if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(bundle)) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
-                return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep())
+                return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) { b -> !b.tacticalSituation.needsDefensiveClear }
                         .withStep(ChallengeStep())
             }
 

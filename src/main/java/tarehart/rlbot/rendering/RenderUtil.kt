@@ -115,7 +115,11 @@ object RenderUtil {
             radians += increment
             val nextCursor = VectorUtil.rotateVector(cursor, increment).scaledToMagnitude(Math.max(0.001, radiusFunction(radians)))
 
-            renderer.drawLine3d(color, (center + cursor).withZ(height).toRlbot(), (center + nextCursor).withZ(height).toRlbot())
+            val current = center + cursor
+            val next = center + nextCursor
+            if (!(current - next).isZero) {
+                renderer.drawLine3d(color, current.withZ(height).toRlbot(), next.withZ(height).toRlbot())
+            }
             cursor = nextCursor
         }
     }

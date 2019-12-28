@@ -149,19 +149,29 @@ object AccelerationModel {
      * Only works on flat ground.
      */
     fun getSteerPenaltySeconds(carData: CarData, newDirection: Vector2): Double {
-        if (!carData.hasWheelContact) {
-            // Might be flipping toward the ball, in that case facing the wrong way is not a problem.
-            return 0.0
+        val direction = newDirection.normalized()
+        val nominalSpeed = getNominalSpeed(carData)
+        val speedAlongDirection = carData.velocity.flatten().dotProduct(direction)
+        if (speedAlongDirection < nominalSpeed) {
+            val orientError = 0.5 * Math.max( 0.0, 0.8 - direction.dotProduct(carData.orientation.noseVector.flatten().normalized()))
+            val speedDeficit = nominalSpeed - speedAlongDirection
+            return speedDeficit / FULL_THROTTLE_ACCEL_AT_0 + orientError
         }
-        val correctionErr = Math.max( 0.0, 0.8 - newDirection.normalized().dotProduct(carData.orientation.noseVector.flatten().normalized()))
-        val seconds = correctionErr * .12 + correctionErr * carData.velocity.magnitude() * .02
-        return seconds
+        return 0.0
+    }
+
+    private fun getNominalSpeed(car: CarData): Double {
+        return if (car.hasWheelContact)
+            ManeuverMath.forwardSpeed(car)
+        else
+            car.velocity.flatten().magnitude()
     }
 
     @JvmOverloads
     fun simulateAcceleration(carData: CarData, duration: Duration, boostBudget: Double, flipCutoffDistance: Double = java.lang.Double.MAX_VALUE): DistancePlot {
 
-        var currentSpeed = ManeuverMath.forwardSpeed(carData)
+        var currentSpeed = getNominalSpeed(carData)
+
         val plot = DistancePlot(DistanceTimeSpeed(0.0, Duration.ofMillis(0), currentSpeed))
 
         var boostRemaining = boostBudget

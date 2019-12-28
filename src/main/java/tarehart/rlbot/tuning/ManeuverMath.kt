@@ -62,7 +62,7 @@ object ManeuverMath {
     }
 
     fun forwardSpeed(car: CarData): Double {
-        return VectorUtil.project(car.velocity, car.orientation.noseVector).magnitude() * Math.signum(car.velocity.dotProduct(car.orientation.noseVector))
+        return car.velocity.dotProduct(car.orientation.noseVector)
     }
 
     fun getBrakeDistance(speed: Double): Double {
