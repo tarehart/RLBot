@@ -46,15 +46,15 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         return Vector3(x * scale, y * scale, z * scale)
     }
 
-    fun withX(x: Double): Vector3 {
+    fun withX(x: Number): Vector3 {
         return Vector3(x, y, z)
     }
 
-    fun withY(y: Double): Vector3 {
+    fun withY(y: Number): Vector3 {
         return Vector3(x, y, z)
     }
 
-    fun withZ(z: Double): Vector3 {
+    fun withZ(z: Number): Vector3 {
         return Vector3(x, y, z)
     }
 

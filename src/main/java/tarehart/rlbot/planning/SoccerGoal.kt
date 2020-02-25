@@ -32,10 +32,10 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
 
     override fun getNearestEntrance(ballPosition: Vector3, padding: Double): Vector3 {
 
-        val adjustedExtent = EXTENT - ArenaModel.BALL_RADIUS.toDouble() - padding
-        val adjustedHeight = GOAL_HEIGHT - ArenaModel.BALL_RADIUS.toDouble() - padding
+        val adjustedExtent = EXTENT - ArenaModel.BALL_RADIUS - padding
+        val adjustedHeight = GOAL_HEIGHT - ArenaModel.BALL_RADIUS - padding
         val x = Clamper.clamp(ballPosition.x, -adjustedExtent, adjustedExtent)
-        val z = Clamper.clamp(ballPosition.z, ArenaModel.BALL_RADIUS.toDouble(), adjustedHeight)
+        val z = Clamper.clamp(ballPosition.z, ArenaModel.BALL_RADIUS, adjustedHeight)
         return Vector3(x, center.y, z)
     }
 

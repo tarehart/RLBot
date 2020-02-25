@@ -24,7 +24,7 @@ import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
-import tarehart.rlbot.steps.teamwork.PositionForPassStep
+import tarehart.rlbot.steps.teamwork.ShadowThePlayStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
 import tarehart.rlbot.time.Duration
@@ -66,7 +66,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             }
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> b.agentInput.time < car.time.plusSeconds(3) }
+                val expiryTime = car.time.plusSeconds(3)
+                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> b.agentInput.time > expiryTime }
                         .withStep(GetOnDefenseStep())
             }
 
@@ -97,7 +98,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             }
 
             println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return RetryableViableStepPlan(Posture.SAVE, GetOnDefenseStep()).withStep(WhatASaveStep())
+            return RetryableViableStepPlan(Posture.SAVE, GetOnDefenseStep()) {
+                b -> b.tacticalSituation.scoredOnThreat == null
+            }.withStep(WhatASaveStep())
         }
 
         if (!goNuts && getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
@@ -109,8 +112,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
             if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(bundle)) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
-                return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) { b -> !b.tacticalSituation.needsDefensiveClear }
-                        .withStep(ChallengeStep())
+                return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) {
+                    b -> !b.tacticalSituation.needsDefensiveClear
+                }.withStep(ChallengeStep())
             }
 
             println("Canceling current plan. Going for clear!", input.playerIndex)
@@ -174,10 +178,11 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val situation = bundle.tacticalSituation
         if (situation.teamPlayerWithInitiative?.car != input.myCarData &&
                 situation.teamPlayerWithBestShot?.car != input.myCarData) {
+            // TODO: this boolean is weak logic. You could both be way out of position. Rotating back needs to be a priority.
 
             return FirstViableStepPlan(NEUTRAL)
                     .withStep(GetBoostStep())
-                    .withStep(PositionForPassStep())
+                    .withStep(ShadowThePlayStep())
                     .withStep(GetOnOffenseStep())
                     .withStep(DemolishEnemyStep())
         }
@@ -333,10 +338,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
     }
 
     // Checks to see if the ball is in the box for a while or if we have a breakaway
-    private fun getShotOnGoalAvailable(team: Team, myCar: CarData, opponentCar: CarData?,
+    private fun getShotOnGoalAvailable(team: Team, car: CarData, opponentCar: CarData?,
                                        ballPosition: Vector3, soonestIntercept: Intercept?, ballPath: BallPath): Boolean {
 
-        if (!ManeuverMath.isOnGround(myCar)) {
+        if (!ManeuverMath.isOnGround(car)) {
             return false
         }
 
@@ -346,7 +351,10 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             }
         }
 
-        return generousShotAngle(GoalUtil.getEnemyGoal(myCar.team), soonestIntercept)
+        val enemyGoal = GoalUtil.getEnemyGoal(team)
+        val ballEntrance = soonestIntercept?.space?.let { enemyGoal.getNearestEntrance(it, 2.0) } ?: enemyGoal.center
+        val shotAlignment = Vector2.alignment(car.position.flatten(), ballPosition.flatten(), ballEntrance.flatten())
+        return generousShotAngle(GoalUtil.getEnemyGoal(car.team), soonestIntercept) && shotAlignment > 0
     }
 
     companion object {

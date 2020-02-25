@@ -98,13 +98,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         val intercept = precisionPlan.kickPlan.intercept
 
-        if ((kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithBestShot?.car != car ||
-                        !kickStrategy.isShotOnGoal() && bundle.tacticalSituation.teamPlayerWithInitiative?.car != car)  &&
-                (intercept.time - car.time).seconds > 1.0) {
-            BotLog.println("Canceling flexible kick because a teammate will get it.", car.playerIndex)
-            return null // Give up on the shot because a teammate is going to touch it first, probably.
-        }
-
         recentPrecisionPlan = precisionPlan
 
         val isNearGoal = intercept.space.distance(GoalUtil.getNearestGoal(intercept.space).center) < 50

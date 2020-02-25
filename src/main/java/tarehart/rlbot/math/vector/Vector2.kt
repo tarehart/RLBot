@@ -113,10 +113,10 @@ data class Vector2(val x: Double, val y: Double) {
     }
 
     fun toVector3(): Vector3 {
-        return withZ(0.0)
+        return withZ(0)
     }
 
-    fun withZ(z: Double): Vector3 {
+    fun withZ(z: Number): Vector3 {
         return Vector3(x, y, z)
     }
 
@@ -129,6 +129,11 @@ data class Vector2(val x: Double, val y: Double) {
             return Math.abs(a.correctionAngle(b))
         }
 
+        /**
+         * Returns 1.0 for a completely aligned series of points.
+         * Returns -1.0 if it doubles back completely.
+         * 0.0 for a right angle.
+         */
         fun alignment(start: Vector2, middle: Vector2, end: Vector2): Double {
             val startToMiddle = middle - start
             val middleToEnd = end - middle

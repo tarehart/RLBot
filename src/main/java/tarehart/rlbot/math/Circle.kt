@@ -8,6 +8,8 @@ import java.awt.geom.Ellipse2D
 
 class Circle(val center: Vector2, val radius: Double) {
 
+    constructor(center: Vector2, radius: Number): this(center, radius.toDouble())
+
     fun toShape(): Shape {
         return Ellipse2D.Double(center.x - radius, center.y - radius, radius * 2, radius * 2)
     }

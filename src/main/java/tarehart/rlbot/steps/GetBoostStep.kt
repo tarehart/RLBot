@@ -47,7 +47,8 @@ class GetBoostStep : NestedPlanStep() {
         val car = bundle.agentInput.myCarData
         val targetLoc = targetLocation ?: return null
 
-        RenderUtil.drawCircle(car.renderer, Circle(targetLoc.location.flatten(), 2.0), 0.0, Color.GREEN)
+        RenderUtil.drawCircle(car.renderer, Circle(targetLoc.location.flatten(), 2), 2, Color.GREEN)
+        car.renderer.drawLine3d(Color.GREEN, car.position.toRlbot(), targetLoc.location.withZ(2).toRlbot())
 
         val distance = SteerUtil.getDistanceFromCar(car, targetLoc.location)
 

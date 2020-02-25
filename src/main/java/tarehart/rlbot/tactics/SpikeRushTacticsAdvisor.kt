@@ -29,7 +29,7 @@ import tarehart.rlbot.steps.spikerush.SpikeCarryStep
 import tarehart.rlbot.steps.spikerush.SpikedCeilingShotStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
-import tarehart.rlbot.steps.teamwork.PositionForPassStep
+import tarehart.rlbot.steps.teamwork.ShadowThePlayStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog.println
@@ -201,7 +201,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
             return FirstViableStepPlan(NEUTRAL)
                     .withStep(GetBoostStep())
-                    .withStep(PositionForPassStep())
+                    .withStep(ShadowThePlayStep())
                     .withStep(GetOnOffenseStep())
                     .withStep(DemolishEnemyStep())
         }

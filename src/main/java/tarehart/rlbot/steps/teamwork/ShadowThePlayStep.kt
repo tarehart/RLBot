@@ -26,10 +26,10 @@ import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Line2D
 
-class PositionForPassStep: NestedPlanStep() {
+class ShadowThePlayStep: NestedPlanStep() {
 
     override fun getLocalSituation(): String {
-        return  "Positioning to receive pass"
+        return  "Shadowing the play"
     }
 
     override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
@@ -43,7 +43,7 @@ class PositionForPassStep: NestedPlanStep() {
         val car = bundle.agentInput.myCarData
 
         val ballFuture = situation.expectedContact?.space ?:
-        ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(3.0))?.space ?: bundle.agentInput.ballPosition
+        ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(1.0))?.space ?: bundle.agentInput.ballPosition
 
         val enemyGoal = GoalUtil.getEnemyGoal(bundle.agentInput.team)
 
@@ -61,11 +61,11 @@ class PositionForPassStep: NestedPlanStep() {
 
         idealPosition = ArenaModel.clampPosition(idealPosition, 20.0)
 
-        RenderUtil.drawSphere(car.renderer, idealPosition.withZ(1.0), 0.6, Color.BLACK)
-        car.renderer.drawLine3d(Color.BLACK, car.position.toRlbot(), idealPosition.withZ(1.0).toRlbot())
+        RenderUtil.drawSphere(car.renderer, idealPosition.withZ(1.0), 0.6, Color.WHITE)
+        car.renderer.drawLine3d(Color.WHITE, car.position.toRlbot(), idealPosition.withZ(1.0).toRlbot())
 
         SteerUtil.getSensibleFlip(car, idealPosition)?.let {
-            println("Front flip toward offense", bundle.agentInput.playerIndex)
+            println("Front flip toward shadowing play", bundle.agentInput.playerIndex)
             return startPlan(it, bundle)
         }
 

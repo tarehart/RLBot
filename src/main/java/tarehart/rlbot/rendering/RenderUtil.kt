@@ -1,6 +1,7 @@
 package tarehart.rlbot.rendering
 
 import rlbot.render.Renderer
+import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Plane
@@ -9,6 +10,8 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
+import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
@@ -102,11 +105,11 @@ object RenderUtil {
         renderer.drawLine3d(color, (position - d4).toRlbot(), (position + d4).toRlbot())
     }
 
-    fun drawCircle(renderer: Renderer, circle: Circle, height: Double, color: Color) {
+    fun drawCircle(renderer: Renderer, circle: Circle, height: Number, color: Color) {
         return drawRadarChart(renderer, circle.center, 16, height, color) { circle.radius }
     }
 
-    fun drawRadarChart(renderer: Renderer, center: Vector2, numSegments: Int, height: Double, color: Color, radiusFunction: (Double) -> Double) {
+    fun drawRadarChart(renderer: Renderer, center: Vector2, numSegments: Int, height: Number, color: Color, radiusFunction: (Number) -> Double) {
         var radians = 0.0
         var cursor = Vector2(Math.max(0.001, radiusFunction(radians)), 0.0)
         val increment = 2 * Math.PI / numSegments
@@ -121,6 +124,13 @@ object RenderUtil {
                 renderer.drawLine3d(color, current.withZ(height).toRlbot(), next.withZ(height).toRlbot())
             }
             cursor = nextCursor
+        }
+    }
+
+    fun drawSphereOfInfluence(car: CarData, distancePlot: DistancePlot, duration: Duration) {
+        drawRadarChart(car.renderer, car.position.flatten(), 64, car.position.z, Color.GREEN) {
+            val direction = VectorUtil.rotateVector(Vector2(1, 0), it.toDouble())
+            distancePlot.getMaximumRange(car, direction, duration) ?: 0.0
         }
     }
 
