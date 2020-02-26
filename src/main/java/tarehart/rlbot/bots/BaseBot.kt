@@ -102,6 +102,9 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
 //                BotLog.println("Average frame time: %.2fms".format(runningAverage.average), playerIndex)
 //            }
 
+            if (BotHouse.disableDriving) {
+                return AgentOutput()
+            }
             return output
         } catch (e: Exception) {
             e.printStackTrace()

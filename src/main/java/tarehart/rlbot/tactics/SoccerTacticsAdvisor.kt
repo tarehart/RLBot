@@ -32,6 +32,13 @@ import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
 
+// TODO: Respect opponents less by only entering the challenge state if their velocity is toward their
+// expected intercept. This will lead to more aggression.
+
+// TODO: Classify when opponents are rotating out and respond with aggression
+
+// TODO: Specific rotate out state which gathers big boost if possible
+
 class SoccerTacticsAdvisor: TacticsAdvisor {
 
     var goNuts = false
@@ -67,7 +74,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
                 val expiryTime = car.time.plusSeconds(3)
-                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> b.agentInput.time > expiryTime }
+                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> b.agentInput.time < expiryTime }
                         .withStep(GetOnDefenseStep())
             }
 
@@ -99,7 +106,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
             println("Canceling current plan. Need to go for save!", input.playerIndex)
             return RetryableViableStepPlan(Posture.SAVE, GetOnDefenseStep()) {
-                b -> b.tacticalSituation.scoredOnThreat == null
+                b -> b.tacticalSituation.scoredOnThreat != null
             }.withStep(WhatASaveStep())
         }
 
@@ -113,8 +120,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
             if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(bundle)) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
                 return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) {
-                    b -> !b.tacticalSituation.needsDefensiveClear
-                }.withStep(ChallengeStep())
+                    b -> b.tacticalSituation.needsDefensiveClear
+                }.withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
             }
 
             println("Canceling current plan. Going for clear!", input.playerIndex)
@@ -131,7 +138,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                 }
             }
 
-            return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) { b -> !b.tacticalSituation.needsDefensiveClear }
+            return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) { b -> b.tacticalSituation.needsDefensiveClear }
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
         }
 

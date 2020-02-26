@@ -20,7 +20,7 @@ import tarehart.rlbot.steps.UnfailingStep
 class RetryableViableStepPlan(
         posture: Posture,
         private val fallback: UnfailingStep,
-        private val shouldAbort: (TacticalBundle) -> Boolean = {false}) : Plan(posture) {
+        private val stillValid: (TacticalBundle) -> Boolean = {false}) : Plan(posture) {
 
     override val situation: String
         get() {
@@ -32,7 +32,7 @@ class RetryableViableStepPlan(
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        if (isComplete() || shouldAbort(bundle)) {
+        if (isComplete() || !stillValid(bundle)) {
             return null
         }
 

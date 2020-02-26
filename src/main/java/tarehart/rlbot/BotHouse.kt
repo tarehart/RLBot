@@ -68,6 +68,11 @@ class BotHouse {
         debugCheckbox.addActionListener { debugMode = debugCheckbox.isSelected }
         dataPanel.add(debugCheckbox)
 
+        val disableDrivingCheckbox = JCheckBox("Disable driving")
+        disableDrivingCheckbox.font = font
+        disableDrivingCheckbox.addActionListener { disableDriving = disableDrivingCheckbox.isSelected }
+        dataPanel.add(disableDrivingCheckbox)
+
         panel.add(dataPanel, BorderLayout.CENTER)
         frame.add(panel)
 
@@ -96,5 +101,6 @@ class BotHouse {
 
     companion object {
         var debugMode = false
+        var disableDriving = false
     }
 }
