@@ -54,7 +54,12 @@ class ChallengeStep: NestedPlanStep() {
             return null // We can probably go for a shot now.
         }
 
-        if (ballAdvantage.seconds < RISKIEST_CHALLENGE_ADVANTAGE_SECONDS && ThreatAssessor.getThreatReport(bundle).enemyMightBoom) {
+        val ourIntercept = bundle.tacticalSituation.expectedContact
+        val enemyIntercept = bundle.tacticalSituation.enemyPlayerWithInitiative?.intercept ?: return null
+        val ourTimeToEnemyIntercept = ourIntercept?.distancePlot?.getMotionUponArrival(car, enemyIntercept.space)?.time ?: return null
+        val toEnemyInterceptAdvantage = enemyIntercept.time - (car.time + ourTimeToEnemyIntercept)
+
+        if (toEnemyInterceptAdvantage.seconds < -0.6 && ThreatAssessor.getThreatReport(bundle).enemyMightBoom) {
             BotLog.println("Can't challenge, we're going to lose by too much!", car.playerIndex)
             return null
         }
@@ -125,11 +130,10 @@ class ChallengeStep: NestedPlanStep() {
         const val DEFENSIVE_NODE_DISTANCE = 18.0
         const val RISKIEST_CHALLENGE_ADVANTAGE_SECONDS = -0.2
 
-        const val SAFETY_TIME = 1.0
 
         fun threatExists(bundle: TacticalBundle): Boolean {
             val threatReport = ThreatAssessor.getThreatReport(bundle)
-            return bundle.tacticalSituation.ballAdvantage.seconds < SAFETY_TIME || threatReport.challengeImminent
+            return threatReport.challengeImminent
         }
     }
 }

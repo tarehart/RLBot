@@ -5,6 +5,7 @@ import tarehart.rlbot.intercept.strike.JumpHitStrike
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.ZoneUtil
+import tarehart.rlbot.time.Duration
 
 class ThreatAssessor {
 
@@ -30,24 +31,32 @@ class ThreatAssessor {
                         challengeImminent = false)
             }
 
-            val shotAlignment = Vector2.alignment(enemyCar.car.position.flatten(), ballPosition.flatten(), myGoal.center.flatten())
-            val intercept = enemyCar.intercept
+            val enemyIntercept = enemyCar.intercept
+            val enemyFlatPos = enemyCar.car.position.flatten()
+            val enemyToIntercept = enemyIntercept.space.flatten() - enemyFlatPos
+            val shotAlignment = Vector2.alignment(enemyFlatPos, enemyIntercept.space.flatten(), myGoal.center.flatten())
 
-            val enemyCarToStrike = intercept.space - enemyCar.car.position
-            val strikeVelocity = enemyCarToStrike.scaledToMagnitude(intercept.accelSlice.speed)
+            val enemyCarToStrike = enemyIntercept.space - enemyCar.car.position
+            val strikeVelocity = enemyCarToStrike.scaledToMagnitude(enemyIntercept.accelSlice.speed)
             val impactSpeed = (strikeVelocity - bundle.agentInput.ballVelocity).magnitude()
 
+            val enemyFlatVel = enemyCar.car.velocity.flatten()
             val enemyDribbling = enemyCar.car.position.distance(bundle.agentInput.ballPosition) < 10 &&
-                        enemyCar.car.velocity.flatten().distance(bundle.agentInput.ballVelocity.flatten()) < 10
+                        enemyFlatVel.distance(bundle.agentInput.ballVelocity.flatten()) < 10
 
             var challengeImminent = false
-            val enemyIntercept = enemyCar.intercept
             val ourIntercept = bundle.tacticalSituation.expectedContact
-            if (ourIntercept != null) {
+            val ourTimeToEnemyIntercept = ourIntercept?.distancePlot?.getMotionUponArrival(car, enemyIntercept.space)?.time
+            if (ourIntercept != null && ourTimeToEnemyIntercept != null) {
+                // Sometimes our own intercept time is not very important because the enemy is going to get there first
+                // and redirect the ball.
+
                 challengeImminent = ourIntercept.space.z < 5 &&
                         bundle.tacticalSituation.ballAdvantage.seconds < 0.3 &&
-                        ourIntercept.time.isBefore(car.time.plusSeconds(1.0)) &&
-                        enemyIntercept.time.isBefore(car.time.plusSeconds(1.0))
+                        ourTimeToEnemyIntercept < Duration.ofSeconds(1.5) &&
+                        enemyIntercept.time.isBefore(car.time.plusSeconds(1.0)) &&
+                        enemyFlatVel.normalized().dotProduct(enemyToIntercept.normalized()) > 0.5 &&  // Enemy driving toward intercept
+                        shotAlignment > 0.6 // Enemy is a threat to our goal
             }
 
 
@@ -58,7 +67,7 @@ class ThreatAssessor {
                     enemyHasBreakaway = ZoneUtil.isEnemyOffensiveBreakaway(car, enemyCar.car, ballPosition),
                     ballIsBehindUs = ballIsBehindUs,
                     enemyDribbling = enemyDribbling,
-                    challengeImminent = challengeImminent && shotAlignment > 0.6
+                    challengeImminent = challengeImminent
             )
 
         }
