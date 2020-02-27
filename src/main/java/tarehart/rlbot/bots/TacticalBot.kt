@@ -46,10 +46,11 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
         }
 
         currentPlan?.let {
-            if (it.isComplete()) {
-                currentPlan = null
+            val planOutput = it.getOutput(bundle)
+            if (planOutput != null) {
+                return planOutput
             } else {
-                it.getOutput(bundle)?.let { return it }
+                currentPlan = null
             }
         }
         return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.flatten()).withBoost(car.boost > 75)
