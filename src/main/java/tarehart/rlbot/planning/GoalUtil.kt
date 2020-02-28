@@ -38,7 +38,7 @@ object GoalUtil {
 
     fun ballLingersInBox(goal: SoccerGoal, ballPath: BallPath): Boolean {
         val firstSlice = ballPath.findSlice({ slice -> goal.isInBox(slice.space) }, increment = 4)
-        val secondSlice = firstSlice?.let { fs -> ballPath.getMotionAt(fs.time.plusSeconds(2.0)) }
+        val secondSlice = firstSlice?.let { fs -> ballPath.getMotionAt(fs.time.plusSeconds(1.0)) }
         return secondSlice != null && goal.isInBox(secondSlice.space)
     }
 

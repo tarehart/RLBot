@@ -15,6 +15,7 @@ import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.UnfailingStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
@@ -26,31 +27,27 @@ import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Line2D
 
-class ShadowThePlayStep: NestedPlanStep() {
+class ShadowThePlayStep: NestedPlanStep(), UnfailingStep {
 
     override fun getLocalSituation(): String {
         return  "Shadowing the play"
     }
 
-    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        return bundle.tacticalSituation.teamPlayerWithInitiative?.car == bundle.agentInput.myCarData
+    override fun getUnfailingOutput(bundle: TacticalBundle): AgentOutput {
+        // Currently super.getOutput will never return null, so the else condition won't be hit.
+        return super.getOutput(bundle) ?: AgentOutput()
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        val situation = bundle.tacticalSituation
-        val ballPath = bundle.tacticalSituation.ballPath
         val car = bundle.agentInput.myCarData
 
-        val ballFuture = situation.expectedContact?.space ?:
-        ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(1.0))?.space ?: bundle.agentInput.ballPosition
+//        val ballFuture = situation.expectedContact?.space ?:
+//        ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(1.0))?.space ?: bundle.agentInput.ballPosition
+        val ballFuture = bundle.agentInput.ballPosition
 
-        val enemyGoal = GoalUtil.getEnemyGoal(bundle.agentInput.team)
-
-        val backoff = 50 + ballFuture.z
-
-        val goalToBall = ballFuture.minus(enemyGoal.getNearestEntrance(ballFuture, -10.0))
-        var idealPosition = ballFuture.plus(goalToBall.scaledToMagnitude(backoff)).flatten()
+        val backoff = 75 + ballFuture.z
+        var idealPosition = ballFuture.flatten().plus(Vector2(0, backoff * car.team.side))
 
         bundle.agentInput.getTeamRoster(car.team).forEach {
             if (it != car) {

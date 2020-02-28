@@ -59,18 +59,8 @@ class ChallengeStep: NestedPlanStep() {
         val ourTimeToEnemyIntercept = ourIntercept?.distancePlot?.getMotionUponArrival(car, enemyIntercept.space)?.time ?: return null
         val toEnemyInterceptAdvantage = enemyIntercept.time - (car.time + ourTimeToEnemyIntercept)
 
-        if (toEnemyInterceptAdvantage.seconds < -0.6 && ThreatAssessor.getThreatReport(bundle).enemyMightBoom) {
-            BotLog.println("Can't challenge, we're going to lose by too much!", car.playerIndex)
-            return null
-        }
-
         val enemyContact = tacticalSituation.expectedEnemyContact ?:
             return null
-
-        if (enemyContact.space.z > 5) {
-            BotLog.println("Canceling challenge because the enemy probably won't get up for it.", car.playerIndex)
-            return null
-        }
 
         val enemyShotLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center - enemyContact.space
 

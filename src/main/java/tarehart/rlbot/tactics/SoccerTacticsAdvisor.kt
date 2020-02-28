@@ -1,7 +1,5 @@
 package tarehart.rlbot.tactics
 
-import rlbot.cppinterop.RLBotDll
-import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
@@ -13,14 +11,12 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.planning.Posture.NEUTRAL
-import tarehart.rlbot.planning.Posture.OFFENSIVE
+import tarehart.rlbot.planning.Posture.*
 import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep
 import tarehart.rlbot.steps.defense.ThreatAssessor
-import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
@@ -31,6 +27,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
+import java.awt.Color
 
 // TODO: Respect opponents less by only entering the challenge state if their velocity is toward their
 // expected intercept. This will lead to more aggression.
@@ -54,6 +51,11 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val situation = bundle.tacticalSituation
         val car = input.myCarData
         val threatReport = ThreatAssessor.getThreatReport(bundle)
+        val teamHasMeCovered = RotationAdvisor.teamHasMeCovered(bundle)
+
+        if (teamHasMeCovered) {
+            car.renderer.drawString3d("Team has me covered", Color.GREEN, car.position.toRlbot(), 2, 2)
+        }
 
         if (currentPlan == null) {
             BotLog.println("findMoreUrgentPlan, but plan is actually null!", car.playerIndex)
@@ -92,22 +94,8 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {
-
-            RLBotDll.sendQuickChat(car.playerIndex, false, QuickChatSelection.Reactions_Noooo)
-            if (situation.ballAdvantage.seconds < 0 && ChallengeStep.threatExists(bundle) &&
-                    situation.expectedEnemyContact?.time?.isBefore(situation.scoredOnThreat.time) == true &&
-                    situation.distanceBallIsBehindUs < 0) {
-                println("Need to save, but also need to challenge first!", input.playerIndex)
-                return FirstViableStepPlan(Posture.SAVE)
-                        .withStep(ChallengeStep())
-                        .withStep(WhatASaveStep())
-                        .withStep(InterceptStep())
-            }
-
             println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return RetryableViableStepPlan(Posture.SAVE, GetOnDefenseStep()) {
-                b -> b.tacticalSituation.scoredOnThreat != null
-            }.withStep(WhatASaveStep())
+            return SaveAdvisor.planSave(bundle, situation.scoredOnThreat)
         }
 
         if (!goNuts && getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
@@ -142,20 +130,25 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
         }
 
+        if (DEFENSIVE.canInterrupt(currentPlan)) {
+            if (threatReport.challengeImminent) {
+                return Plan(DEFENSIVE).withStep(ChallengeStep())
+            }
 
-
-
-        if (!goNuts && Posture.DEFENSIVE.canInterrupt(currentPlan) &&
-                threatReport.looksSerious() &&
-                situation.teamPlayerWithInitiative?.car == input.myCarData) {
-            println("Canceling current plan due to threat level: $threatReport", input.playerIndex)
-            return FirstViableStepPlan(Posture.DEFENSIVE)
-                    .withStep(ChallengeStep())
-                    .withStep(GetOnDefenseStep())
-                    .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+            if (!goNuts && !teamHasMeCovered &&
+                    threatReport.looksSerious() &&
+                    situation.teamPlayerWithInitiative?.car == input.myCarData) {
+                println("Canceling current plan due to threat level: $threatReport", input.playerIndex)
+                return FirstViableStepPlan(Posture.DEFENSIVE)
+                        .withStep(ChallengeStep())
+                        .withStep(GetOnDefenseStep())
+                        .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+            }
         }
 
-        if (situation.shotOnGoalAvailable &&
+        val alone = input.getTeamRoster(input.team).size <= 1
+
+        if (situation.shotOnGoalAvailable && (alone || teamHasMeCovered) &&
                 !threatReport.looksSerious() && !threatReport.enemyWinsRace &&
                 Posture.OFFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithBestShot?.car == input.myCarData) {
@@ -181,42 +174,45 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
     override fun makeFreshPlan(bundle: TacticalBundle): Plan {
 
-        val input = bundle.agentInput
         val situation = bundle.tacticalSituation
-        if (situation.teamPlayerWithInitiative?.car != input.myCarData &&
-                situation.teamPlayerWithBestShot?.car != input.myCarData) {
-            // TODO: this boolean is weak logic. You could both be way out of position. Rotating back needs to be a priority.
-
-            return FirstViableStepPlan(NEUTRAL)
-                    .withStep(GetBoostStep())
-                    .withStep(ShadowThePlayStep())
-                    .withStep(GetOnOffenseStep())
-                    .withStep(DemolishEnemyStep())
-        }
+        val teamHasMeCovered = RotationAdvisor.teamHasMeCovered(bundle)
 
         val raceResult = situation.ballAdvantage
-
         val threatReport = ThreatAssessor.getThreatReport(bundle)
-        if (!threatReport.looksSerious() && (raceResult.seconds > 0 || !threatReport.enemyShotAligned || goNuts)) {
-            // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
-            return makePlanWithPlentyOfTime(bundle)
-        }
 
-        if (raceResult.seconds > ChallengeStep.RISKIEST_CHALLENGE_ADVANTAGE_SECONDS || !threatReport.enemyMightBoom) {
+        if (threatReport.challengeImminent) {
             return Plan(Posture.DEFENSIVE).withStep(ChallengeStep())
         }
 
+        if (teamHasMeCovered) {
+
+            if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
+                return Plan(OFFENSIVE).withStep(WallTouchStep())
+            }
+
+            if (raceResult.seconds > 0 || !threatReport.enemyShotAligned || goNuts) {
+                // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
+                return makePlanWithPlentyOfTime(bundle)
+            }
+        }
+
         // The enemy is probably going to get there first.
-        return if (situation.enemyOffensiveApproachError?.let { it < Math.PI / 3 } == true && situation.distanceBallIsBehindUs > -50) {
+        if (situation.enemyOffensiveApproachError?.let { it < Math.PI / 3 } == true && situation.distanceBallIsBehindUs > -50) {
             // Enemy can probably shoot on goal, so get on defense
-            Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep())
+            return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep())
         } else {
+
+            val canTouchFirst = situation.teamPlayerWithInitiative?.car == bundle.agentInput.myCarData && situation.ballAdvantage.seconds > 0.5
+
+            if (canTouchFirst) {
+                return FirstViableStepPlan(OFFENSIVE)
+                        .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+            }
+
             // Enemy is just gonna hit it for the sake of hitting it, presumably. Let's try to stay on offense if possible.
-            // TODO: make sure we don't own-goal it with this
-            FirstViableStepPlan(NEUTRAL)
+            return RetryableViableStepPlan(NEUTRAL, ShadowThePlayStep()) { b -> !RotationAdvisor.teamHasMeCovered(b) && !canTouchFirst }
+                    .withStep(GetBoostStep())
                     .withStep(GetOnOffenseStep())
-                    .withStep(DribbleStep())
-                    .withStep(GetOnDefenseStep())
         }
 
     }
@@ -230,12 +226,6 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         if (car.boost < 10) {
             return Plan().withStep(GetBoostStep())
-        }
-
-        if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
-            return FirstViableStepPlan(OFFENSIVE)
-                    .withStep(WallTouchStep())
-                    .withStep(FlexibleKickStep(WallPass()))
         }
 
         if (DribbleStep.reallyWantsToDribble(bundle)) {

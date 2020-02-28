@@ -9,10 +9,10 @@ import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
-import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.wall.WallTouchStep
+import tarehart.rlbot.tactics.SaveAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
@@ -99,7 +99,7 @@ class AirBudBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
 
         if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {
             BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return Plan(Posture.SAVE).withStep(WhatASaveStep())
+            return SaveAdvisor.planSave(bundle, situation.scoredOnThreat)
         }
 
         if (situation.needsDefensiveClear && Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {

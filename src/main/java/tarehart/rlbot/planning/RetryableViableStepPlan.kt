@@ -3,6 +3,8 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.steps.UnfailingStep
+import tarehart.rlbot.time.Duration
+import tarehart.rlbot.time.GameTime
 
 /**
  * Composed of:
@@ -27,13 +29,26 @@ class RetryableViableStepPlan(
             if (isComplete()) {
                 return "Dead plan"
             }
-            return "${posture.name} RetryableViable - ${currentStep.situation}"
+            return "${posture.name} RetryableViable (${currentStepIndex + 1}/${steps.size}) - ${currentStep.situation}"
         }
+
+    private val fallbackDuration = Duration.ofMillis(500)
+    private var fallbackExpiration: GameTime? = null
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {
 
-        if (isComplete() || !stillValid(bundle)) {
+        if (isComplete() || !stillValid(bundle) && currentStep.canInterrupt()) {
             return null
+        }
+
+        val expiration = fallbackExpiration
+        val time = bundle.agentInput.time
+        if (expiration != null) {
+            if (time > expiration) {
+                fallbackExpiration = null
+            } else {
+                return fallback.getUnfailingOutput(bundle)
+            }
         }
 
         while (currentStepIndex < steps.size) {
@@ -55,7 +70,8 @@ class RetryableViableStepPlan(
         }
 
         currentStepIndex = 0
+        fallbackExpiration = time.plus(fallbackDuration)
 
-        return fallback.getOutput(bundle)
+        return fallback.getUnfailingOutput(bundle)
     }
 }

@@ -51,12 +51,12 @@ class ThreatAssessor {
                 // Sometimes our own intercept time is not very important because the enemy is going to get there first
                 // and redirect the ball.
 
-                challengeImminent = ourIntercept.space.z < 5 &&
+                challengeImminent = ourIntercept.space.z < 10 &&
                         bundle.tacticalSituation.ballAdvantage.seconds < 0.3 &&
                         ourTimeToEnemyIntercept < Duration.ofSeconds(1.5) &&
                         enemyIntercept.time.isBefore(car.time.plusSeconds(1.0)) &&
                         enemyFlatVel.normalized().dotProduct(enemyToIntercept.normalized()) > 0.5 &&  // Enemy driving toward intercept
-                        shotAlignment > 0.6 // Enemy is a threat to our goal
+                        shotAlignment > 0.3 // Enemy is a threat to our goal
             }
 
 

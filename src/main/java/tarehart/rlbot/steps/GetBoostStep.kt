@@ -37,7 +37,7 @@ class GetBoostStep : NestedPlanStep() {
 
     public override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
 
-        return bundle.agentInput.myCarData.boost > 99 ||
+        return bundle.agentInput.myCarData.boost > 70 ||
                 targetLocation == null || !targetLocation!!.isActive
 
     }

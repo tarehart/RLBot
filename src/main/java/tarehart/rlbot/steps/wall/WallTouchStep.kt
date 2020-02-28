@@ -13,6 +13,7 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.blind.BlindStep
@@ -28,7 +29,7 @@ import java.awt.Graphics2D
 class WallTouchStep : NestedPlanStep() {
 
     private var latestIntercept: Intercept? = null
-    private var disruptionMeter = InterceptDisruptionMeter(20.0)
+    private var disruptionMeter = BallPathDisruptionMeter(10.0)
     private var confusion = 0
 
     override fun getLocalSituation(): String {
@@ -59,9 +60,9 @@ class WallTouchStep : NestedPlanStep() {
 
         val motion = interceptOpportunity?.ballSlice
 
-        if (motion == null || disruptionMeter.isDisrupted(motion) || interceptOpportunity.spatialPredicateFailurePeriod > Duration.ofSeconds(0.5)) {
+        if (motion == null || disruptionMeter.isDisrupted(ballPath) || interceptOpportunity.spatialPredicateFailurePeriod > Duration.ofSeconds(0.5)) {
             confusion++
-            if (confusion > 1) {
+            if (confusion > 4) {
                 println("Failed to make the wall touch because the intercept changed", input.playerIndex)
                 return null
             }

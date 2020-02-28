@@ -9,10 +9,10 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
-import tarehart.rlbot.steps.defense.WhatASaveStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
+import tarehart.rlbot.tactics.SaveAdvisor
 import tarehart.rlbot.tuning.BotLog
 
 class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex) {
@@ -69,9 +69,9 @@ class AdversityBot(team: Team, playerIndex: Int) : TacticalBot(team, playerIndex
             return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
         }
 
-        if (situation.scoredOnThreat != null && situation.teamPlayerWithInitiative?.car == car && Posture.SAVE.canInterrupt(currentPlan)) {
+        if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {
             BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return Plan(Posture.SAVE).withStep(WhatASaveStep())
+            return SaveAdvisor.planSave(bundle, situation.scoredOnThreat)
         }
 
         return null

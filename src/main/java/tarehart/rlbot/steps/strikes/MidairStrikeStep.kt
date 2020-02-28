@@ -243,7 +243,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
                 val orthogonal = VectorUtil.orthogonal(goalToBall.flatten())
                 val transverseBallVelocity = VectorUtil.project(it.ballSlice.velocity.flatten(), orthogonal)
 
-                offset = goalToBall.plus(transverseBallVelocity.withZ(0.0)).scaledToMagnitude(3.3)
+                offset = goalToBall.plus(transverseBallVelocity.withZ(0.0)).scaledToMagnitude(3.2)
 
                 val gameMode = GameModeSniffer.getGameMode()
                 if (gameMode == GameMode.SOCCER) {
