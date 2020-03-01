@@ -30,11 +30,11 @@ data class Vector2(val x: Double, val y: Double) {
     /**
      * If magnitude is negative, we will return a vector facing the opposite direction.
      */
-    fun scaledToMagnitude(magnitude: Double): Vector2 {
+    fun scaledToMagnitude(magnitude: Number): Vector2 {
         if (isZero) {
             throw IllegalStateException("Cannot scale up a vector with length zero!")
         }
-        val scaleRequired = magnitude / magnitude()
+        val scaleRequired = magnitude.toDouble() / magnitude()
         return scaled(scaleRequired)
     }
 
