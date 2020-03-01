@@ -120,7 +120,12 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
         }
 
         private fun faceVelocity(bundle: TacticalBundle): Vector2 {
-            return bundle.agentInput.myCarData.velocity.flatten().normalized()
+
+            val velocity = bundle.agentInput.myCarData.velocity.flatten()
+            if (velocity.isZero) {
+                return faceBall(bundle)
+            }
+            return velocity.normalized()
         }
 
         fun predictImpact(bundle: TacticalBundle): Impact? {

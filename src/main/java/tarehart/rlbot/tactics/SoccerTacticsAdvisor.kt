@@ -131,6 +131,11 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         if (DEFENSIVE.canInterrupt(currentPlan)) {
+
+            if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
+                return Plan(DEFENSIVE).withStep(WallTouchStep())
+            }
+
             if (threatReport.challengeImminent) {
                 return Plan(DEFENSIVE).withStep(ChallengeStep())
             }
@@ -181,15 +186,14 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val threatReport = ThreatAssessor.getThreatReport(bundle)
 
         if (threatReport.challengeImminent) {
-            return Plan(Posture.DEFENSIVE).withStep(ChallengeStep())
+            return Plan(DEFENSIVE).withStep(ChallengeStep())
+        }
+
+        if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
+            return Plan(OFFENSIVE).withStep(WallTouchStep())
         }
 
         if (teamHasMeCovered) {
-
-            if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
-                return Plan(OFFENSIVE).withStep(WallTouchStep())
-            }
-
             if (raceResult.seconds > 0 || !threatReport.enemyShotAligned || goNuts) {
                 // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
                 return makePlanWithPlentyOfTime(bundle)
