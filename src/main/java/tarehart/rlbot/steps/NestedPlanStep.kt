@@ -24,7 +24,7 @@ abstract class NestedPlanStep : Step {
         doInitialComputation(bundle)
 
         if (zombie || shouldCancelPlanAndAbort(bundle) && canAbortPlanInternally()) {
-            BotLog.println("Cancel plan and abort!", bundle.agentInput.playerIndex)
+            BotLog.println("Bailing on step: ${this.javaClass.name}", bundle.agentInput.playerIndex)
             return null
         }
 

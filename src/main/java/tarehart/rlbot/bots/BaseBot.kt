@@ -144,15 +144,7 @@ abstract class BaseBot(private val team: Team, protected val playerIndex: Int) :
             currentPlan = Plan(Posture.MENU).withStep(WaitForActive())
             output = AgentOutput()
         } else {
-
-            if (input.matchInfo.roundActive) {
-                output = getOutput(input)
-            } else {
-                // When the round is not active, some bots may wish to do work while still having no car control
-                roundInLimbo(input)
-                currentPlan = Plan(Posture.NEUTRAL).withStep(WaitForActive())
-                output = AgentOutput()
-            }
+            output = getOutput(input)
         }
 
         val posture = currentPlan?.posture ?: Posture.NEUTRAL

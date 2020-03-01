@@ -103,7 +103,7 @@ class WallTouchStep : NestedPlanStep() {
     }
 
     companion object {
-        val ACCEPTABLE_WALL_DISTANCE = (ArenaModel.BALL_RADIUS + 2).toDouble()
+        val ACCEPTABLE_WALL_DISTANCE = (ArenaModel.BALL_RADIUS + 4)
         val WALL_DEPART_SPEED = 10.0
         private val MIN_HEIGHT = 6.0
         private val LOVELY_TEAL = Color(16, 194, 140)

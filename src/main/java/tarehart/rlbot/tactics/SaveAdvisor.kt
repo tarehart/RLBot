@@ -29,7 +29,7 @@ object SaveAdvisor {
         }
 
         RLBotDll.sendQuickChat(car.playerIndex, false, QuickChatSelection.Reactions_Noooo)
-        if (situation.ballAdvantage.seconds < 0 && ChallengeStep.threatExists(bundle) &&
+        if (situation.ballAdvantage.seconds < 0 &&
                 situation.expectedEnemyContact?.time?.isBefore(scoredOnThreat.time) == true &&
                 situation.distanceBallIsBehindUs < 0) {
             BotLog.println("Need to save, but also need to challenge first!", car.playerIndex)

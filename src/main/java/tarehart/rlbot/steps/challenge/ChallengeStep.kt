@@ -26,38 +26,18 @@ import java.awt.geom.Line2D
 
 class ChallengeStep: NestedPlanStep() {
 
-    private var originalTouch: BallTouch? = null
     private var latestDefensiveNode: Vector2? = null
-    private val ballPathDisruptionMeter = BallPathDisruptionMeter()
-
 
     override fun getLocalSituation(): String {
         return  "Working on challenge"
-    }
-
-    override fun shouldCancelPlanAndAbort(bundle: TacticalBundle): Boolean {
-        return !threatExists(bundle)
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = bundle.agentInput.myCarData
 
-        if (ballPathDisruptionMeter.isDisrupted(bundle.tacticalSituation.ballPath)) {
-            println("Ball path disrupted, quitting challenge", bundle.agentInput.playerIndex)
-            return null
-        }
-
         val tacticalSituation = bundle.tacticalSituation
         val ballAdvantage = tacticalSituation.ballAdvantage
-        if (ballAdvantage.seconds > 0.5) {
-            return null // We can probably go for a shot now.
-        }
-
-        val ourIntercept = bundle.tacticalSituation.expectedContact
-        val enemyIntercept = bundle.tacticalSituation.enemyPlayerWithInitiative?.intercept ?: return null
-        val ourTimeToEnemyIntercept = ourIntercept?.distancePlot?.getMotionUponArrival(car, enemyIntercept.space)?.time ?: return null
-        val toEnemyInterceptAdvantage = enemyIntercept.time - (car.time + ourTimeToEnemyIntercept)
 
         val enemyContact = tacticalSituation.expectedEnemyContact ?:
             return null
@@ -118,12 +98,5 @@ class ChallengeStep: NestedPlanStep() {
     companion object {
 
         const val DEFENSIVE_NODE_DISTANCE = 18.0
-        const val RISKIEST_CHALLENGE_ADVANTAGE_SECONDS = -0.2
-
-
-        fun threatExists(bundle: TacticalBundle): Boolean {
-            val threatReport = ThreatAssessor.getThreatReport(bundle)
-            return threatReport.challengeImminent
-        }
     }
 }

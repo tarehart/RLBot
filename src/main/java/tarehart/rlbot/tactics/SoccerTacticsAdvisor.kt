@@ -105,9 +105,9 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
         if (situation.needsDefensiveClear && Posture.CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {
 
-            if (situation.ballAdvantage.seconds < 0.3 && ChallengeStep.threatExists(bundle)) {
+            if (situation.ballAdvantage.seconds < 0.3 && threatReport.challengeImminent) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
-                return RetryableViableStepPlan(Posture.CLEAR, GetOnDefenseStep()) {
+                return RetryableViableStepPlan(CLEAR, GetOnDefenseStep()) {
                     b -> b.tacticalSituation.needsDefensiveClear
                 }.withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
             }
@@ -385,7 +385,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
 
             val goalCenter = goal.center.flatten()
             val ballToGoal = goalCenter.minus(expectedContact)
-            val generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI / 4
+            val generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI * .35
             val generousTriangle = measureShotTriangle(goal, expectedContact) > Math.PI / 4
 
             return generousAngle || generousTriangle
