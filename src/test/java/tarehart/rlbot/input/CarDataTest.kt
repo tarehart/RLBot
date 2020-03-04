@@ -46,6 +46,6 @@ class CarDataTest {
                 orientation,
                 CarSpin(0.0, 0.0, 0.0, Vector3.UP),
                 10.0, false, Team.BLUE, 0, GameTime.zero(), 0,
-                true, false, "Gaucho", NullRenderer())
+                true, false, "Gaucho", NullRenderer(), true)
     }
 }

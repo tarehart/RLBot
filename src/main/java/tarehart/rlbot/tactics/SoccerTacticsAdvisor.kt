@@ -283,7 +283,7 @@ class SoccerTacticsAdvisor: TacticsAdvisor {
         val enemyIntercept = enemyGoGetter?.intercept
         val enemyCar = enemyGoGetter?.car
 
-        val ourIntercept = teamIntercepts.asSequence().filter { it.car == input.myCarData }.first().intercept
+        val ourIntercept = teamIntercepts.first { it.car == input.myCarData }.intercept
 
         val zonePlan = ZonePlan(input)
         val myCar = input.myCarData

@@ -10,6 +10,7 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
+import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.CarWithIntercept
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
@@ -76,12 +77,14 @@ interface TacticsAdvisor {
 
         fun getCarIntercepts(cars: List<CarData>, ballPath: BallPath): List<CarWithIntercept> {
             return cars.asSequence()
-                    .map { CarWithIntercept(it, getSoonestIntercept(it, ballPath))  }
+                    .map {
+                        val distancePlot = AccelerationModel.simulateAcceleration(it, PLAN_HORIZON, it.boost)
+                        CarWithIntercept(it, distancePlot, getSoonestIntercept(it, distancePlot, ballPath))
+                    }
                     .sortedBy { it.intercept?.time?.toMillis() ?: Long.MAX_VALUE  }.toList()
         }
 
-        fun getSoonestIntercept(car: CarData, ballPath: BallPath): Intercept? {
-            val distancePlot = AccelerationModel.simulateAcceleration(car, PLAN_HORIZON, car.boost)
+        fun getSoonestIntercept(car: CarData, distancePlot: DistancePlot, ballPath: BallPath): Intercept? {
             return InterceptCalculator.getSoonestInterceptCheaply(car, ballPath, distancePlot)
         }
 

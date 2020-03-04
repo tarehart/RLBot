@@ -19,7 +19,8 @@ class CarData (
         val hasWheelContact: Boolean,
         val isDemolished: Boolean,
         val name: String,
-        val renderer: Renderer
+        val renderer: Renderer,
+        val isBot: Boolean
 ) {
 
     /**

@@ -94,7 +94,8 @@ class OrientationSolverTest {
                 hasWheelContact = false,
                 isDemolished = false,
                 name = "testCar",
-                renderer = renderer)
+                renderer = renderer,
+                isBot = true)
         return car
     }
 }

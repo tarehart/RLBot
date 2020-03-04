@@ -144,10 +144,14 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
         val car = bundle.agentInput.myCarData
         val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
+        val distancePlot = bundle.tacticalSituation.teamIntercepts.first { it.car == car }.distancePlot
 
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
             specificTarget ?:
-            oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) } ?: return
+            oppositeTeam.filter { !it.isDemolished }.minBy {
+                // Go after the enemy we can reach soonest, with a bias for going after humans.
+                AccelerationModel.getTravelTime(car, distancePlot, it.position)?.seconds ?: 6.0 - (if (car.isBot) 0 else 2 )
+            } ?: return
 
         if (!::carPredictor.isInitialized) {
             carPredictor = CarPredictor(enemyCar.playerIndex)
@@ -157,7 +161,6 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         val renderer = car.renderer
         path.renderIn3d(renderer)
 
-        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(SECONDS_TO_PREDICT), car.boost)
         val carIntercept = CarInterceptPlanner.getCarIntercept(car, path, distancePlot)
 
         carIntercept?.let {

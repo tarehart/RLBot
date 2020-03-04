@@ -45,7 +45,8 @@ class CarPathHelper {
                 true,
                 false,
                 "",
-                NamedRenderer("test"))
+                NamedRenderer("test"),
+                isBot = true)
     }
 
 }

@@ -4,7 +4,6 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BoostPad
-import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.VectorUtil
@@ -86,7 +85,7 @@ class GetBoostStep : NestedPlanStep() {
         val carData = bundle.agentInput.myCarData
         val distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), carData.boost)
         for (boost in BoostAdvisor.boostData.fullBoosts) {
-            val travelSeconds = AccelerationModel.getTravelSeconds(carData, distancePlot, boost.location)
+            val travelSeconds = AccelerationModel.getTravelTime(carData, distancePlot, boost.location)
             if (travelSeconds != null && travelSeconds.seconds < minTime &&
                     (boost.isActive || travelSeconds.minus(Duration.between(bundle.agentInput.time, boost.activeTime)).seconds > 1)) {
 

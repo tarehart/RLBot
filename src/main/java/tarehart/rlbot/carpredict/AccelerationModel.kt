@@ -130,7 +130,7 @@ object AccelerationModel {
         return output
     }
 
-    fun getTravelSeconds(carData: CarData, plot: DistancePlot, target: Vector3): Duration? {
+    fun getTravelTime(carData: CarData, plot: DistancePlot, target: Vector3): Duration? {
         val distance = carData.position.distance(target)
         val travelTime = plot.getTravelTime(distance)
         val penaltySeconds = getSteerPenaltySeconds(carData, target)

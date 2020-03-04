@@ -2,6 +2,7 @@ package tarehart.rlbot.hoops.tacticalstate
 
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.math.Ray
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
@@ -136,7 +137,8 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         val enemyIntercept = enemyGoGetter?.intercept
         val enemyCar = enemyGoGetter?.car
 
-        val ourIntercept = TacticsAdvisor.getSoonestIntercept(input.myCarData, ballPath)
+        val car = input.myCarData
+        val ourIntercept = teamIntercepts.first { it.car.playerIndex == car.playerIndex }.intercept
 
         val zonePlan = ZonePlan(input)
 
@@ -153,7 +155,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = false,
                 shotOnGoalAvailable = true,
-                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(input.myCarData, input.ballPosition),
+                goForKickoff = SoccerTacticsAdvisor.getGoForKickoff(car, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,
                 enemyIntercepts = enemyIntercepts,

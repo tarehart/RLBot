@@ -172,7 +172,8 @@ class AgentInput(
                 frameCount = frameCount,
                 isDemolished = playerInfo.isDemolished,
                 name = playerInfo.name(),
-                renderer = renderer
+                renderer = renderer,
+                isBot = playerInfo.isBot
         )
     }
 
