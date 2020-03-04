@@ -36,7 +36,7 @@ import java.awt.Color
 
 // TODO: Specific rotate out state which gathers big boost if possible
 
-class SoccerTacticsAdvisor: TacticsAdvisor {
+open class SoccerTacticsAdvisor: TacticsAdvisor {
 
     var goNuts = false
     val kickoffAdvisor = KickoffAdvisor()
