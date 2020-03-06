@@ -6,7 +6,7 @@ import tarehart.rlbot.time.Duration
 
 
 class BallPathDisruptionMeter(
-        private val distanceThreshold: Double = 20.0) {
+        private val distanceThreshold: Number = 20.0) {
 
     private var trackingSlice: BallSlice? = null
 
@@ -28,7 +28,7 @@ class BallPathDisruptionMeter(
 
         val currentSlice = path.getMotionAt(slice.time) ?: return false
 
-        if (currentSlice.space.distance(slice.space) > distanceThreshold) {
+        if (currentSlice.space.distance(slice.space) > distanceThreshold.toDouble()) {
             return true
         }
 

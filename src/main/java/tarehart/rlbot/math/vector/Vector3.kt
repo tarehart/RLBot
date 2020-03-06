@@ -61,11 +61,11 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
     /**
      * If magnitude is negative, we will return a vector facing the opposite direction.
      */
-    fun scaledToMagnitude(magnitude: Double): Vector3 {
+    fun scaledToMagnitude(magnitude: Number): Vector3 {
         if (isZero) {
             throw IllegalStateException("Cannot scale up a vector with length zero!")
         }
-        val scaleRequired = magnitude / magnitude()
+        val scaleRequired = magnitude.toDouble() / magnitude()
         return scaled(scaleRequired)
     }
 

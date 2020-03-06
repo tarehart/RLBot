@@ -151,6 +151,13 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
 
         val alone = input.getTeamRoster(input.team).size <= 1
 
+        if (OFFENSIVE.canInterrupt(currentPlan)) {
+            return FirstViableStepPlan(OFFENSIVE)
+                    .withStep(SlotKickStep(KickAtEnemyGoal()))
+                    .withStep(SlotKickStep(WallPass()))
+                    .withStep(SlotKickStep(KickAwayFromOwnGoal()))
+        }
+
         if (situation.shotOnGoalAvailable && (alone || teamHasMeCovered) &&
                 !threatReport.looksSerious() && !threatReport.enemyWinsRace &&
                 Posture.OFFENSIVE.canInterrupt(currentPlan)

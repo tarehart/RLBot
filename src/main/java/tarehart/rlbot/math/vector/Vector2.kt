@@ -137,6 +137,9 @@ data class Vector2(val x: Double, val y: Double) {
         fun alignment(start: Vector2, middle: Vector2, end: Vector2): Double {
             val startToMiddle = middle - start
             val middleToEnd = end - middle
+            if (startToMiddle.isZero || middleToEnd.isZero) {
+                return 1.0
+            }
             return startToMiddle.normalized().dotProduct(middleToEnd.normalized())
         }
 
