@@ -18,7 +18,8 @@ class BallPhysicsTest {
                 Vector3(0, -50, ManeuverMath.BASE_CAR_Z),
                 40F,
                 BallSlice(Vector3(0, 0, 0), GameTime.zero(), Vector3(), Vector3()),
-                CarHitbox.OCTANE)
+                CarHitbox.OCTANE,
+                horizontalOffsetList = (-25..25).map { it * .1F })
 
     }
 }

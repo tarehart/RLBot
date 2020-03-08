@@ -22,7 +22,12 @@ class SlotKickTest: StateSettingAbstractTest() {
 
     @Test
     fun testStraightShot() {
-        runTestCase(makeCase(1))
+        runTestCase(makeCase(0))
+    }
+
+    @Test
+    fun testAngledShot() {
+        runTestCase(makeCase(30))
     }
 
     fun makeCase(offset: Number): StateSettingTestCase {
@@ -34,8 +39,8 @@ class SlotKickTest: StateSettingAbstractTest() {
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(0F).withPhysics(PhysicsState()
-                                .withLocation(StateVector(offset, -20F, ManeuverMath.BASE_CAR_Z))
-                                .withVelocity(StateVector(0F, 20F, 0F))
+                                .withLocation(StateVector(offset, -40F, ManeuverMath.BASE_CAR_Z))
+                                .withVelocity(StateVector(0F, 0F, 0F))
                                 .withAngularVelocity(StateVector.ZERO)
                                 .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
                         )),

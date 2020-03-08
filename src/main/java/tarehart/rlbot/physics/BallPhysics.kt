@@ -9,6 +9,7 @@ import tarehart.rlbot.math.Ray2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
+import kotlin.math.abs
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.min
@@ -114,18 +115,16 @@ object BallPhysics {
         return inelasticImpulse / 30.0 + scriptImpulse
     }
 
-    fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox): List<Pair<CarSlice, Vector3>> {
+    fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox, horizontalOffsetList: List<Float>): List<ChipOption> {
         val contactHeight = ManeuverMath.BASE_CAR_Z + hitbox.upwardExtent
         val chipRingRadius = cos(asin((ballSlice.space.z - contactHeight) / ArenaModel.BALL_RADIUS)) * ArenaModel.BALL_RADIUS
         val toSlice = (ballSlice.space - currentCarPosition).withZ(0)
         val toSliceNormal = toSlice.normaliseCopy()
         val orthogonal = toSliceNormal.crossProduct(Vector3.UP)
 
-        val options = ArrayList<Pair<CarSlice, Vector3>>()
+        val options = ArrayList<ChipOption>()
 
-        for (i in 0..25) {
-            val offsetAmount = i * 0.1F
-
+        for (offsetAmount in horizontalOffsetList) {
             // TODO: use this aim point so we can account for the different approach angle when aiming at an offset.
             val aimPoint = ballSlice.space + orthogonal * offsetAmount
             val toAimPointNormal = (aimPoint - currentCarPosition).withZ(0).normaliseCopy()
@@ -186,9 +185,32 @@ object BallPhysics {
 
             val predictedVelocity = predictBallVelocity(carSlice, ballSlice.space, ballSlice.velocity)
 
-            options.add(Pair(carSlice, predictedVelocity))
+            options.add(ChipOption(carSlice, predictedVelocity))
         }
 
         return options
+    }
+
+    fun computeBestChipOption(position: Vector3, speed: Float, ballSlice: BallSlice, hitbox: CarHitbox, idealDirection: Vector3): ChipOption {
+        var lowerBound = -2F
+        var upperBound = 2F
+        val flatIdeal = idealDirection.flatten()
+        var latestOption: ChipOption? = null
+        while (upperBound - lowerBound > .1) {
+            val middle = (lowerBound + upperBound) / 2F
+            val option = computeChipOptions(position, speed, ballSlice, hitbox, listOf(middle)).firstOrNull() ?: break
+            latestOption = option
+            val correctionAngle = option.velocity.flatten().correctionAngle(flatIdeal)
+            if (abs(correctionAngle) < 0.01) {
+                // This generally happens if we're going for the 'easy kick' from the kick strategy.
+                return option
+            }
+            if (correctionAngle < 0) {
+                upperBound = middle
+            } else {
+                lowerBound = middle
+            }
+        }
+        return latestOption!!
     }
 }

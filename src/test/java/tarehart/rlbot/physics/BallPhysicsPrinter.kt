@@ -46,7 +46,8 @@ class BallPhysicsPrinter {
                         time = GameTime.zero(),
                         velocity = Vector3.ZERO,
                         spin = Vector3.ZERO),
-                hitbox = CarHitbox.OCTANE)
+                hitbox = CarHitbox.OCTANE,
+                horizontalOffsetList = (-25..25).map { it * .1F })
 
         print(options)
     }

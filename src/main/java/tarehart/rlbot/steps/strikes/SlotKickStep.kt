@@ -10,6 +10,7 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPhysics
+import tarehart.rlbot.physics.ChipOption
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
@@ -22,6 +23,8 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
     private var slotStart: Vector3? = null
     private var slotEnd: Vector3? = null
+    private var favoredChipOption: ChipOption? = null
+    private var favoredOffset: Vector3? = null
 
     private val disruptionMeter = BallPathDisruptionMeter(1)
 
@@ -44,15 +47,18 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
         val distancePlot = bundle.tacticalSituation.expectedContact?.distancePlot ?: return null
 
-        val ballCenterToCarCenter = Vector3() // TODO: figure this out nicely
+        val ballCenterToCarCenter = favoredOffset ?: Vector3()
         val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, ballCenterToCarCenter, overallPredicate) ?: return null
 
-        val chipOptions = BallPhysics.computeChipOptions(car.position, intercept.accelSlice.speed, intercept.ballSlice, car.hitbox)
+        if (slotStart == null) {
+            val chipOptions = BallPhysics.computeChipOptions(car.position, intercept.accelSlice.speed, intercept.ballSlice,
+                    car.hitbox, (-25..25).map { it * .1F })
 
-        for ((index, chipOption) in chipOptions.withIndex()) {
-            val color = RenderUtil.rainbowColor(index)
-            car.renderer.drawLine3d(color, intercept.ballSlice.space, intercept.ballSlice.space + chipOption.second)
-            chipOption.first.render(car.renderer, color)
+            for ((index, chipOption) in chipOptions.withIndex()) {
+                val color = RenderUtil.rainbowColor(index)
+                car.renderer.drawLine3d(color, intercept.ballSlice.space, intercept.ballSlice.space + chipOption.velocity)
+                chipOption.carSlice.render(car.renderer, color)
+            }
         }
 
         slotEnd = intercept.space.withZ(car.position.z)
@@ -61,6 +67,12 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
         val firmStart = slotStart
         val firmEnd = intercept.space
         if (firmStart == null && Math.abs(steerCorrection) < 0.03) {
+            val idealDirection = kickStrategy.getKickDirection(car, intercept.space) ?: return null
+
+            val chipOption = BallPhysics.computeBestChipOption(car.position, intercept.accelSlice.speed,
+                    intercept.ballSlice, car.hitbox, idealDirection)
+            favoredChipOption = chipOption
+            favoredOffset = chipOption.carSlice.space - intercept.ballSlice.space
             slotStart = car.position
         }
 
@@ -69,6 +81,11 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             if (alignment < .9) {
                 BotLog.println("Car fell out of the slot!", car.playerIndex)
                 return null
+            }
+
+            favoredChipOption?.let {
+                car.renderer.drawLine3d(Color.GREEN, intercept.ballSlice.space, intercept.ballSlice.space + it.velocity)
+                it.carSlice.render(car.renderer, Color.GREEN)
             }
         }
 
