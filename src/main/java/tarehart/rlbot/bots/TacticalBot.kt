@@ -6,6 +6,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.tactics.*
 import java.awt.Color
 
@@ -41,6 +42,9 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
         val car = input.myCarData
 
         CarSlice(car).render(car.renderer, Color.WHITE)
+        bundle.agentInput.latestBallTouch?.let {
+            RenderUtil.drawImpact(car.renderer, it.position, it.normal * 3, Color.ORANGE)
+        }
 
         tacticsAdvisor.findMoreUrgentPlan(bundle, currentPlan)?.let {
             currentPlan = it

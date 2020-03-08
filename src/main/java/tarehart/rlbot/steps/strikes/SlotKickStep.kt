@@ -86,6 +86,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             favoredChipOption?.let {
                 car.renderer.drawLine3d(Color.GREEN, intercept.ballSlice.space, intercept.ballSlice.space + it.velocity)
                 it.carSlice.render(car.renderer, Color.GREEN)
+                RenderUtil.drawCircle(car.renderer, it.chipCircle, it.impactPoint.z, Color.WHITE)
             }
         }
 

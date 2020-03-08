@@ -117,20 +117,20 @@ object BallPhysics {
 
     fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox, horizontalOffsetList: List<Float>): List<ChipOption> {
         val contactHeight = ManeuverMath.BASE_CAR_Z + hitbox.upwardExtent
-        val chipRingRadius = cos(asin((ballSlice.space.z - contactHeight) / ArenaModel.BALL_RADIUS)) * ArenaModel.BALL_RADIUS
+        val chipRingRadius = cos(asin((ballSlice.space.z - contactHeight) / ArenaModel.BALL_RADIUS)) *
+                ArenaModel.BALL_RADIUS * .92F  // TODO: this is a fudge factor, needed?
         val toSlice = (ballSlice.space - currentCarPosition).withZ(0)
         val toSliceNormal = toSlice.normaliseCopy()
         val orthogonal = toSliceNormal.crossProduct(Vector3.UP)
+        val chipCircle = Circle(ballSlice.space.flatten(), chipRingRadius)
 
         val options = ArrayList<ChipOption>()
 
         for (offsetAmount in horizontalOffsetList) {
-            // TODO: use this aim point so we can account for the different approach angle when aiming at an offset.
             val aimPoint = ballSlice.space + orthogonal * offsetAmount
             val toAimPointNormal = (aimPoint - currentCarPosition).withZ(0).normaliseCopy()
             val aimOrthogonal = toAimPointNormal.crossProduct(Vector3.UP)
 
-            val chipCircle = Circle(ballSlice.space.flatten(), chipRingRadius)
             val tangentPoints = chipCircle.calculateTangentPointsWithSlope(aimOrthogonal.flatten())
             val closerTangentPoint = tangentPoints.toList().minBy { p -> p.distance(currentCarPosition.flatten()) }!!
             val tangentRay = Ray2(closerTangentPoint, aimOrthogonal.flatten())
@@ -143,6 +143,8 @@ object BallPhysics {
             val headlightRays = carSliceWithProperOrientation.headlightRays()
             val frontLeftRay = headlightRays.first.flatten()
             val frontRightRay = headlightRays.second.flatten()
+
+            val contactPoint: Vector3
             val carPositionAtContact: Vector3
 
             // This section of code assumes that the tangent ray is pointing to the right.
@@ -155,26 +157,30 @@ object BallPhysics {
                         carSliceWithProperOrientation.toSide - carSliceWithProperOrientation.toSide.scaledToMagnitude(intersection.second) +
                         carSliceWithProperOrientation.hitboxCenterLocal
 
-                carPositionAtContact = tangentRay.position.withZ(contactHeight) - toContactPoint
+                contactPoint = tangentRay.position.withZ(contactHeight)
+                carPositionAtContact = contactPoint - toContactPoint
 
             } else if (intersection.second > 0) {
                 // We'll be hitting the ball with the left corner of the car. Intersect the front left ray with the circle.
                 val circleIntersect = frontLeftRay.firstCircleIntersection(chipCircle) ?: break
+                contactPoint = circleIntersect.withZ(contactHeight)
+
                 // now we know where the front left corner will be during contact. Figure out where the car center will be.
                 val toUpperFrontLeft = carSliceWithProperOrientation.toNose +
                         carSliceWithProperOrientation.toRoof +
                         carSliceWithProperOrientation.toSide * -1 +
                         carSliceWithProperOrientation.hitboxCenterLocal
-                carPositionAtContact = circleIntersect.withZ(contactHeight) - toUpperFrontLeft
+                carPositionAtContact = contactPoint - toUpperFrontLeft
 
             } else {
                 val circleIntersect = frontRightRay.firstCircleIntersection(chipCircle) ?: break
+                contactPoint = circleIntersect.withZ(contactHeight)
 
                 val toUpperFrontRight = carSliceWithProperOrientation.toNose +
                         carSliceWithProperOrientation.toRoof +
                         carSliceWithProperOrientation.toSide +
                         carSliceWithProperOrientation.hitboxCenterLocal
-                carPositionAtContact = circleIntersect.withZ(contactHeight) - toUpperFrontRight
+                carPositionAtContact = contactPoint - toUpperFrontRight
             }
 
             val carSlice = CarSlice(
@@ -185,7 +191,7 @@ object BallPhysics {
 
             val predictedVelocity = predictBallVelocity(carSlice, ballSlice.space, ballSlice.velocity)
 
-            options.add(ChipOption(carSlice, predictedVelocity))
+            options.add(ChipOption(carSlice, chipCircle, contactPoint, predictedVelocity))
         }
 
         return options

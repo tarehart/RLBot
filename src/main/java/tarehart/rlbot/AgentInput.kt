@@ -128,7 +128,7 @@ class AgentInput(
                         playerIndex = index,
                         time = touchTime,
                         position = Vector3.fromRlbot(latestTouch.location()),
-                        normal = Vector3.fromRlbot(latestTouch.normal()))
+                        normal = Vector3(-latestTouch.normal().x(), latestTouch.normal().y(), latestTouch.normal().z()))
 
                 return ballTouch
             }
