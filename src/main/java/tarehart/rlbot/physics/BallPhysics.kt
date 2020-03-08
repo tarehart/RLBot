@@ -124,6 +124,8 @@ object BallPhysics {
 
         for (i in 0..25) {
             val offsetAmount = i * 0.1F
+
+            // TODO: use this aim point so we can account for the different approach angle when aiming at an offset.
             val aimPoint = ballSlice.space + orthogonal * offsetAmount
             val offsetBackoffMagnitude: Float
             if (offsetAmount > hitboxSideExtent) {
