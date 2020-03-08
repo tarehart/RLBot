@@ -14,9 +14,9 @@ import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.CarWithIntercept
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import kotlin.math.sign
 
 interface TacticsAdvisor {
 
@@ -33,13 +33,13 @@ interface TacticsAdvisor {
         val LOOKAHEAD_SECONDS = 2.0
         val PLAN_HORIZON = Duration.ofSeconds(6.0)
 
-        fun getYAxisWrongSidedness(input: AgentInput): Double {
-            val (_, y) = GoalUtil.getOwnGoal(input.team).center
+        fun getYAxisWrongSidedness(input: AgentInput): Float {
+            val center = GoalUtil.getOwnGoal(input.team).center
             val playerToBallY = input.ballPosition.y - input.myCarData.position.y
-            return playerToBallY * Math.signum(y)
+            return playerToBallY * sign(center.y)
         }
 
-        fun getYAxisWrongSidedness(car: CarData, ball: Vector3): Double {
+        fun getYAxisWrongSidedness(car: CarData, ball: Vector3): Float {
             val center = GoalUtil.getOwnGoal(car.team).center
             val playerToBallY = ball.y - car.position.y
             return playerToBallY * Math.signum(center.y)
@@ -55,7 +55,7 @@ interface TacticsAdvisor {
             }
         }
 
-        fun measureApproachError(car: CarData, contact: Vector2): Double {
+        fun measureApproachError(car: CarData, contact: Vector2): Float {
 
             val goal = GoalUtil.getEnemyGoal(car.team)
             val ballToGoal = goal.center.flatten().minus(contact)
@@ -66,7 +66,7 @@ interface TacticsAdvisor {
         }
 
 
-        fun measureOutOfPosition(input: AgentInput): Double {
+        fun measureOutOfPosition(input: AgentInput): Float {
             val car = input.myCarData
             val myGoal = GoalUtil.getOwnGoal(input.team)
             val ballToGoal = myGoal.center.minus(input.ballPosition)
@@ -97,8 +97,8 @@ interface TacticsAdvisor {
         /**
          * Lower is better
          */
-        private fun scoreShotOpportunity(carWithIntercept: CarWithIntercept): Double {
-            val intercept = carWithIntercept?.intercept ?: return Double.MAX_VALUE
+        private fun scoreShotOpportunity(carWithIntercept: CarWithIntercept): Float {
+            val intercept = carWithIntercept.intercept ?: return Float.MAX_VALUE
             val seconds = intercept.time.toSeconds()
             val radianError = measureApproachError(carWithIntercept.car, intercept.space.flatten())
 

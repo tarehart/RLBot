@@ -54,7 +54,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
         val teamHasMeCovered = RotationAdvisor.teamHasMeCovered(bundle)
 
         if (teamHasMeCovered) {
-            car.renderer.drawString3d("Team has me covered", Color.GREEN, car.position.toRlbot(), 2, 2)
+            car.renderer.drawString3d("Team has me covered", Color.GREEN, car.position, 2, 2)
         }
 
         if (currentPlan == null) {
@@ -356,13 +356,12 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
             val zonePlan = bundle.zonePlan
             val myGoalLocation = GoalUtil.getOwnGoal(input.team).center
             val myBallDistance = input.ballPosition.distance(input.myCarData.position)
-            val enemyBallDistance = enemyCar?.let { c -> input.ballPosition.distance(c.position) } ?: java.lang.Double.MAX_VALUE
+            val enemyBallDistance = enemyCar?.let { c -> input.ballPosition.distance(c.position) } ?: Float.MAX_VALUE
             val ballDistanceToGoal = input.ballPosition.distance(myGoalLocation)
             val myDistanceToGoal = input.myCarData.position.distance(myGoalLocation)
             //double enemyDistanceToGoal = input.getEnemyCarData().position.distance(myGoalLocation);
 
-            return if (zonePlan != null
-                    && (myBallDistance > enemyBallDistance // Enemy is closer
+            return if ((myBallDistance > enemyBallDistance // Enemy is closer
                             || myDistanceToGoal > ballDistanceToGoal) // Wrong side of the ball
 
                     && (zonePlan.ballZone.subZone == Zone.SubZone.TOPCORNER || zonePlan.ballZone.subZone == Zone.SubZone.BOTTOMCORNER)) {
@@ -389,7 +388,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
             return expectedContact?.let { generousShotAngle(goal, it.space.flatten()) } ?: false
         }
 
-        private fun measureShotTriangle(goal: Goal, position: Vector2): Double {
+        private fun measureShotTriangle(goal: Goal, position: Vector2): Float {
 
             val rightPost = GoalUtil.transformNearPost(goal.rightPost.flatten(), position)
             val leftPost = GoalUtil.transformNearPost(goal.leftPost.flatten(), position)
@@ -401,7 +400,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         fun getGoForKickoff(car: CarData, ballPosition: Vector3): Boolean {
-            return ballPosition.flatten().magnitudeSquared() == 0.0 &&
+            return ballPosition.flatten().magnitudeSquared() == 0F &&
                     car.team.ownsPosition(car.position)
         }
     }

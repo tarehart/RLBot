@@ -14,10 +14,9 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
-import tarehart.rlbot.planning.cancellation.InterceptDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
-import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.time.Duration
@@ -74,7 +73,7 @@ class WallTouchStep : NestedPlanStep() {
         RenderUtil.drawSphere(car.renderer, motion.space, ArenaModel.BALL_RADIUS.toDouble(), LOVELY_TEAL)
 
         val plane = ArenaModel.getNearestPlane(motion.space)
-        if (plane.normal.z == 1.0) {
+        if (plane.normal.z == 1F) {
             println("Failed to make the wall touch because the ball is now close to the ground", input.playerIndex)
             return null
         }

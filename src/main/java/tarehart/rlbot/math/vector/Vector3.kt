@@ -1,12 +1,18 @@
 package tarehart.rlbot.math.vector
 
+import com.google.flatbuffers.FlatBufferBuilder
 import tarehart.rlbot.math.Plane
 import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.sqrt
 
-data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0) {
-    val isZero = (x == 0.0 && y == 0.0 && z == 0.0)
+class Vector3(x: Number = 0, y: Number = 0, z: Number = 0): rlbot.vector.Vector3(x.toFloat(), y.toFloat(), z.toFloat()) {
+    val isZero = (x == 0 && y == 0 && z == 0)
 
-    constructor(x: Number, y: Number, z: Number): this(x.toDouble(), y.toDouble(), z.toDouble())
+    constructor(flatVec: rlbot.flat.Vector3): this(
+            -flatVec.x() / PACKET_DISTANCE_TO_CLASSIC,
+            flatVec.y() / PACKET_DISTANCE_TO_CLASSIC,
+            flatVec.z() / PACKET_DISTANCE_TO_CLASSIC)
 
     operator fun plus(other: Vector3): Vector3 {
         return Vector3(x + other.x, y + other.y, z + other.z)
@@ -16,34 +22,35 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         return Vector3(x - other.x, y - other.y, z - other.z)
     }
 
-    operator fun div(value: Double): Vector3 {
-        return Vector3(x / value, y / value, z / value)
+    operator fun div(value: Number): Vector3 {
+        return Vector3(x / value.toFloat(), y / value.toFloat(), z / value.toFloat())
     }
 
     operator fun div(value: Vector3): Vector3 {
         return Vector3(x / value.x, y / value.y, z / value.z)
     }
 
-    operator fun times(value: Double): Vector3 {
-        return Vector3(x * value, y * value, z * value)
+    operator fun times(value: Number): Vector3 {
+        return Vector3(x * value.toFloat(), y * value.toFloat(), z * value.toFloat())
     }
 
     operator fun times(value: Vector3): Vector3 {
         return Vector3(x * value.x, y * value.y, z * value.z)
     }
 
-    operator fun get(index: Int): Double {
+    operator fun get(index: Int): Float {
         if (index == 0)
             return x
         if (index == 1)
             return y
         if (index == 2)
             return z
-        return 0.0
+        return 0F
     }
 
-    fun scaled(scale: Double): Vector3 {
-        return Vector3(x * scale, y * scale, z * scale)
+    fun scaled(scale: Number): Vector3 {
+        val s = scale.toFloat()
+        return Vector3(x * s, y * s, z * s)
     }
 
     fun withX(x: Number): Vector3 {
@@ -65,27 +72,27 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         if (isZero) {
             throw IllegalStateException("Cannot scale up a vector with length zero!")
         }
-        val scaleRequired = magnitude.toDouble() / magnitude()
+        val scaleRequired = magnitude.toFloat() / magnitude()
         return scaled(scaleRequired)
     }
 
-    fun distance(other: Vector3): Double {
-        return Math.sqrt(distanceSquared(other))
+    fun distance(other: Vector3): Float {
+        return sqrt(distanceSquared(other))
     }
 
-    fun distanceSquared(other: Vector3): Double {
+    fun distanceSquared(other: Vector3): Float {
         val xDiff = x - other.x
         val yDiff = y - other.y
         val zDiff = z - other.z
-        return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff
+        return (xDiff * xDiff + yDiff * yDiff + zDiff * zDiff)
     }
 
-    fun magnitude(): Double {
-        return Math.sqrt(magnitudeSquared())
+    fun magnitude(): Float {
+        return sqrt(magnitudeSquared())
     }
 
-    fun magnitudeSquared(): Double {
-        return x * x + y * y + z * z
+    fun magnitudeSquared(): Float {
+        return (x * x + y * y + z * z)
     }
 
     fun normaliseCopy(): Vector3 {
@@ -96,19 +103,19 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         return this.scaled(1 / magnitude())
     }
 
-    fun dotProduct(other: Vector3): Double {
-        return x * other.x + y * other.y + z * other.z
+    fun dotProduct(other: Vector3): Float {
+        return (x * other.x + y * other.y + z * other.z)
     }
 
     fun flatten(): Vector2 {
         return Vector2(x, y)
     }
 
-    fun angle(v: Vector3): Double {
+    fun angle(v: Vector3): Float {
         val mag2 = magnitudeSquared()
         val vmag2 = v.magnitudeSquared()
         val dot = dotProduct(v)
-        return Math.acos(dot / Math.sqrt(mag2 * vmag2))
+        return acos(dot / sqrt(mag2 * vmag2))
     }
 
     fun crossProduct(v: Vector3): Vector3 {
@@ -139,12 +146,11 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
         return absolute.x <= tolerance.x && absolute.y <= tolerance.y && absolute.z <= tolerance.z
     }
 
-    fun toRlbot(): rlbot.vector.Vector3 {
-        // Invert x because rlbot uses left-handed coordinates
-        return rlbot.vector.Vector3(
-                (-x * PACKET_DISTANCE_TO_CLASSIC).toFloat(),
-                (y * PACKET_DISTANCE_TO_CLASSIC).toFloat(),
-                (z * PACKET_DISTANCE_TO_CLASSIC).toFloat())
+    override fun toFlatbuffer(builder: FlatBufferBuilder?): Int {
+        return rlbot.flat.Vector3.createVector3(builder,
+                -x * PACKET_DISTANCE_TO_CLASSIC,
+                y * PACKET_DISTANCE_TO_CLASSIC,
+                z * PACKET_DISTANCE_TO_CLASSIC)
     }
 
     override fun toString(): String {
@@ -156,7 +162,7 @@ data class Vector3(val x: Double = 0.0, val y: Double = 0.0, val z: Double = 0.0
 
     companion object {
 
-        const val PACKET_DISTANCE_TO_CLASSIC = 50.0
+        const val PACKET_DISTANCE_TO_CLASSIC = 50
         val UP = Vector3(0.0, 0.0, 1.0)
         val DOWN = Vector3(0.0, 0.0, -1.0)
         val ZERO = Vector3()

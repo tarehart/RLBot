@@ -2,7 +2,6 @@ package tarehart.rlbot.steps.teamwork
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
@@ -29,7 +28,7 @@ class ShadowThePlayStep: NestedPlanStep(), UnfailingStep {
 
         val ballPosition = bundle.agentInput.ballPosition
         val ballToOwnGoal = GoalUtil.getOwnGoal(car.team).center.flatten() - ballPosition.flatten()
-        val backoffVectorMagnitude = (ballToOwnGoal.magnitude() - 5).coerceAtMost(70.0)
+        val backoffVectorMagnitude = (ballToOwnGoal.magnitude() - 5).coerceAtMost(70F)
         var idealPosition = ballPosition.flatten() + ballToOwnGoal.scaledToMagnitude(backoffVectorMagnitude)
 
         bundle.agentInput.getTeamRoster(car.team).forEach {
@@ -44,7 +43,7 @@ class ShadowThePlayStep: NestedPlanStep(), UnfailingStep {
         idealPosition = ArenaModel.clampPosition(idealPosition, 5.0)
 
         RenderUtil.drawSphere(car.renderer, idealPosition.withZ(1.0), 0.6, Color.WHITE)
-        car.renderer.drawLine3d(Color.WHITE, car.position.toRlbot(), idealPosition.withZ(1.0).toRlbot())
+        car.renderer.drawLine3d(Color.WHITE, car.position, idealPosition.withZ(1.0))
 
         SteerUtil.getSensibleFlip(car, idealPosition)?.let {
             println("Front flip toward shadowing play", bundle.agentInput.playerIndex)

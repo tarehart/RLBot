@@ -1,7 +1,6 @@
 package tarehart.rlbot.physics
 
 import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
@@ -9,6 +8,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.Duration
 import java.util.*
+import kotlin.math.max
 
 class DistancePlot(start: DistanceTimeSpeed) {
 
@@ -54,7 +54,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
         return plot[plot.size - 1]
     }
 
-    fun getMotionAfterDistance(distance: Double): DistanceTimeSpeed? {
+    fun getMotionAfterDistance(distance: Float): DistanceTimeSpeed? {
 
         for (i in 0 until plot.size - 1) {
             val current = plot[i]
@@ -74,7 +74,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
      * Only applies to forward acceleration. Will return null if we're already going faster than
      * the target speed, or if the target speed is impossible to attain.
      */
-    fun getMotionUponSpeed(targetSpeed: Double): DistanceTimeSpeed? {
+    fun getMotionUponSpeed(targetSpeed: Float): DistanceTimeSpeed? {
 
         val currentSpeed = plot[0].speed
         if (currentSpeed > targetSpeed) return null
@@ -96,14 +96,14 @@ class DistancePlot(start: DistanceTimeSpeed) {
         return null
     }
 
-    fun getTravelTime(distance: Double): Duration? {
+    fun getTravelTime(distance: Float): Duration? {
         val motionAt = getMotionAfterDistance(distance)
         return motionAt?.time
     }
 
-    fun getMaximumRange(car: CarData, direction: Vector2, travelTime: Duration): Double? {
+    fun getMaximumRange(car: CarData, direction: Vector2, travelTime: Duration): Float? {
         val orientSeconds = AccelerationModel.getSteerPenaltySeconds(car, direction)
-        return getMotionAfterDuration(Duration.ofSeconds(Math.max(0.0, travelTime.seconds - orientSeconds)))?.distance
+        return getMotionAfterDuration(Duration.ofSeconds(max(0.0, travelTime.seconds - orientSeconds)))?.distance
     }
 
     fun getMotionUponArrival(carData: CarData, destination: Vector3): DistanceTimeSpeed? {
@@ -116,10 +116,10 @@ class DistancePlot(start: DistanceTimeSpeed) {
 
     fun getMotionAfterDuration(time: Duration, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
 
-        val totalSeconds = Math.max(time.seconds, 0.0)
+        val totalSeconds = max(time.seconds, 0F)
         val secondsSpentAccelerating = totalSeconds
 
-        if (strikeProfile.postDodgeTime == Duration.ZERO || strikeProfile.speedBoost == 0.0) {
+        if (strikeProfile.postDodgeTime == Duration.ZERO || strikeProfile.speedBoost == 0F) {
             val motion = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating))
             return motion?.let { DistanceTimeSpeed(it.distance, time, it.speed) }
         }

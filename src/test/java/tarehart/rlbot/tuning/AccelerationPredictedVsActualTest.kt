@@ -42,7 +42,7 @@ class AccelerationPredictedVsActualTest {
         for (slice in actual) {
             val predicted = predictedAccel.getMotionAfterDuration(Duration.between(startTime, slice.time))
             predicted ?: throw AssertionError()
-            Assert.assertEquals(predicted.speed, slice.velocity.magnitude(), 1.0)
+            Assert.assertEquals(predicted.speed, slice.velocity.magnitude(), 1F)
         }
     }
 }

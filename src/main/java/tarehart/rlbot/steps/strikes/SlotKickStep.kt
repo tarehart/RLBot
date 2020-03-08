@@ -5,9 +5,6 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
-import tarehart.rlbot.intercept.strike.StrikeProfile
-import tarehart.rlbot.intercept.strike.Style
-import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
@@ -80,14 +77,14 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
         val start = slotStart
         val end = slotEnd ?: return
         if (start != null) {
-            car.renderer.drawLine3d(Color.GREEN, start.toRlbot(), end.toRlbot())
+            car.renderer.drawLine3d(Color.GREEN, start, end)
         } else {
             car.renderer.drawLine3d(Color.ORANGE,
-                    car.position.toRlbot(),
-                    car.position.plus(car.orientation.noseVector.scaledToMagnitude(5)).toRlbot())
+                    car.position,
+                    car.position.plus(car.orientation.noseVector.scaledToMagnitude(5)))
             car.renderer.drawLine3d(Color.ORANGE,
-                    car.position.toRlbot(),
-                    car.position.plus((end - car.position).withZ(0).scaledToMagnitude(5)).toRlbot())
+                    car.position,
+                    car.position.plus((end - car.position).withZ(0).scaledToMagnitude(5)))
         }
     }
 

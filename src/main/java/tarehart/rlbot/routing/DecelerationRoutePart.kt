@@ -25,19 +25,19 @@ class DecelerationRoutePart(
     override fun drawDebugInfo(graphics: Graphics2D) {
         graphics.stroke = BasicStroke(1f, CAP_SQUARE, JOIN_MITER, 10.0f, floatArrayOf(2f), 0.0f)
         graphics.color = Color(233, 214, 75)
-        graphics.draw(Line2D.Double(start.x, start.y, end.x, end.y))
+        graphics.draw(Line2D.Float(start.x, start.y, end.x, end.y))
     }
 
     override fun renderDebugInfo(renderer: Renderer) {
 
         val toStart = start.toVector3() - end.toVector3()
-        if (toStart.magnitudeSquared() == 0.0) {
+        if (toStart.magnitudeSquared() == 0F) {
             return
         }
         val toStartNormal = toStart.normaliseCopy()
         val raisedEnd = Vector3(end.x, end.y, 2.0)
         val distance = toStart.magnitude()
-        var distanceCovered = 0.0
+        var distanceCovered = 0F
         while (distanceCovered < distance) {
             distanceCovered += 2
             RenderUtil.drawSquare(renderer, Plane(toStart.normaliseCopy(), raisedEnd + toStartNormal.scaled(distanceCovered)), 2.0, Color.YELLOW)

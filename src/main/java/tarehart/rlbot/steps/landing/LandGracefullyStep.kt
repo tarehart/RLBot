@@ -45,17 +45,17 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
             // If we're drifting in space, boost toward the nearest wall
             val nearestPlane = ArenaModel.getNearestPlane(car.position)
             if (nearestPlane.distance(car.position) > 2) {  // Avoid getting stuck on your nose forever.
-                return OrientationSolver.orientCar(car, Mat3.lookingTo(nearestPlane.normal * -1.0), 1.0 / 60).withBoost()
+                return OrientationSolver.orientCar(car, Mat3.lookingTo(nearestPlane.normal * -1F), 1F / 60).withBoost()
             }
         }
 
         impact?.let {
             RenderUtil.drawSquare(car.renderer, Plane(it.direction, it.position), 5.0, Color.RED)
 
-            if (it.direction.z != 1.0) {
+            if (it.direction.z != 1F) {
                 // It's a wall!
                 val targetOrientation = Mat3.lookingTo(car.velocity.projectToPlane(it.direction), it.direction)
-                return OrientationSolver.orientCar(bundle.agentInput.myCarData, targetOrientation, 1.0 / 60).withThrottle(1.0)
+                return OrientationSolver.orientCar(bundle.agentInput.myCarData, targetOrientation, 1F / 60).withThrottle(1.0)
             }
 //            else {
 //                // It's not a wall!
@@ -69,7 +69,7 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
 //            }
         }
 
-        return OrientationSolver.orientCar(bundle.agentInput.myCarData, Mat3.lookingTo(facingFn.invoke(bundle).toVector3()), 1.0 / 60).withThrottle(1.0).withSlide(true)
+        return OrientationSolver.orientCar(bundle.agentInput.myCarData, Mat3.lookingTo(facingFn.invoke(bundle).toVector3()), 1F / 60).withThrottle(1.0).withSlide(true)
     }
 
     fun getWavedashOutput(car: CarData, landingOrientation: Mat3, impactTime: GameTime): AgentOutput {
@@ -82,7 +82,7 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
         // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.forward() ), Color.PINK)
         // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.left() ), Color.ORANGE)
         // RenderUtil.drawPath(renderer, listOf(input.myCarData.position, input.myCarData.position + orientation.up() ), Color.CYAN)
-        val solution = OrientationSolver.orientCar(car, orientation, 1.0 / 60).withThrottle(1.0).withSlide(true)
+        val solution = OrientationSolver.orientCar(car, orientation, 1F / 60).withThrottle(1.0).withSlide(true)
         val timeUntil = impactTime - car.time
         if (timeUntil.millis < 100) {
             solution.withPitch(-1.0).withSteer(0.0).withJump(true)//.withBoost(true)

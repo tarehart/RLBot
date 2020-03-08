@@ -1,21 +1,21 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.planning.*
+import tarehart.rlbot.planning.GoalUtil
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.tactics.TacticsAdvisor
-import tarehart.rlbot.tactics.TacticsTelemetry
-
-import java.awt.*
-import java.awt.geom.Line2D
-
 import tarehart.rlbot.tuning.BotLog.println
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Graphics2D
+import java.awt.geom.Line2D
 
 class GetOnOffenseStep : NestedPlanStep() {
     private var originalTarget: PositionFacing? = null
@@ -48,7 +48,7 @@ class GetOnOffenseStep : NestedPlanStep() {
             // Get into a strike position, 10 units behind the ball
             val goalToBall = ballFuture.minus(enemyGoal.getNearestEntrance(ballFuture, -10.0))
             val goalToBallNormal = goalToBall.normaliseCopy()
-            facing = goalToBallNormal.flatten().scaled(-1.0)
+            facing = goalToBallNormal.flatten().scaled(-1F)
             target = ballFuture.plus(goalToBallNormal.scaled(backoff))
 
         } else {
@@ -103,8 +103,8 @@ class GetOnOffenseStep : NestedPlanStep() {
             graphics.stroke = BasicStroke(1f)
             val (x, y) = it.position
             val crossSize = 2
-            graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
-            graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
+            graphics.draw(Line2D.Float(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
+            graphics.draw(Line2D.Float(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
         }
     }
 }

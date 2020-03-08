@@ -11,7 +11,7 @@ import tarehart.rlbot.time.Duration
 class CustomStrike(
         override val preDodgeTime: Duration,
         override val postDodgeTime: Duration,
-        override val speedBoost: Double,
+        override val speedBoost: Float,
         override val style: Style): StrikeProfile() {
 
     override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {
@@ -22,7 +22,7 @@ class CustomStrike(
         throw NotImplementedError("You should not be calling this on a custom strike!")
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         throw NotImplementedError("You should not be calling this on a custom strike!")
     }
 }

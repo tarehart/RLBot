@@ -3,13 +3,16 @@ package tarehart.rlbot.math.vector
 import tarehart.rlbot.math.Atan
 import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.VectorUtil
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.sqrt
 
-data class Vector2(val x: Double, val y: Double) {
+data class Vector2(val x: Float, val y: Float) {
 
-    constructor(x: Number, y: Number): this(x.toDouble(), y.toDouble())
+    constructor(x: Number, y: Number): this(x.toFloat(), y.toFloat())
 
     val isZero: Boolean
-        get() = x == 0.0 && y == 0.0
+        get() = x == 0F && y == 0F
 
     operator fun plus(other: Vector2): Vector2 {
         return Vector2(x + other.x, y + other.y)
@@ -19,11 +22,11 @@ data class Vector2(val x: Double, val y: Double) {
         return Vector2(x - other.x, y - other.y)
     }
 
-    operator fun times(value: Double): Vector2 {
+    operator fun times(value: Float): Vector2 {
         return Vector2(x * value, y * value)
     }
 
-    fun scaled(scale: Double): Vector2 {
+    fun scaled(scale: Float): Vector2 {
         return Vector2(x * scale, y * scale)
     }
 
@@ -34,21 +37,21 @@ data class Vector2(val x: Double, val y: Double) {
         if (isZero) {
             throw IllegalStateException("Cannot scale up a vector with length zero!")
         }
-        val scaleRequired = magnitude.toDouble() / magnitude()
+        val scaleRequired = magnitude.toFloat() / magnitude()
         return scaled(scaleRequired)
     }
 
-    fun distance(other: Vector2): Double {
+    fun distance(other: Vector2): Float {
         val xDiff = x - other.x
         val yDiff = y - other.y
-        return Math.sqrt(xDiff * xDiff + yDiff * yDiff)
+        return sqrt(xDiff * xDiff + yDiff * yDiff)
     }
 
-    fun magnitude(): Double {
-        return Math.sqrt(magnitudeSquared())
+    fun magnitude(): Float {
+        return sqrt(magnitudeSquared())
     }
 
-    fun magnitudeSquared(): Double {
+    fun magnitudeSquared(): Float {
         return x * x + y * y
     }
 
@@ -60,34 +63,34 @@ data class Vector2(val x: Double, val y: Double) {
         return this.scaled(1 / magnitude())
     }
 
-    fun dotProduct(other: Vector2): Double {
+    fun dotProduct(other: Vector2): Float {
         return x * other.x + y * other.y
     }
 
-    fun correctionAngle(ideal: Vector2): Double {
+    fun correctionAngle(ideal: Vector2): Float {
 
         if (isZero || ideal.isZero) {
-            return 0.0
+            return 0F
         }
 
         // https://stackoverflow.com/questions/2150050/finding-signed-angle-between-vectors
         return Atan.atan2( this.x * ideal.y - this.y * ideal.x, this.x * ideal.x + this.y * ideal.y )
     }
 
-    fun correctionAngle(ideal: Vector2, clockwise: Boolean): Double {
+    fun correctionAngle(ideal: Vector2, clockwise: Boolean): Float {
 
         if (isZero || ideal.isZero) {
-            return 0.0
+            return 0F
         }
 
         var currentRad = Atan.atan2(y, x)
         var idealRad = Atan.atan2(ideal.y, ideal.x)
 
         if ((idealRad - currentRad) > 0 && clockwise) {
-            currentRad += Math.PI * 2
+            currentRad += PI.toFloat() * 2
         }
         if ((idealRad - currentRad) < 0 && !clockwise) {
-            idealRad += Math.PI * 2
+            idealRad += PI.toFloat() * 2
         }
 
         return idealRad - currentRad
@@ -97,12 +100,13 @@ data class Vector2(val x: Double, val y: Double) {
      * This vector will be rotated towards the ideal vector, but will move no further than
      * maxRotation.
      */
-    fun rotateTowards(ideal: Vector2, maxRotation: Double): Vector2 {
+    fun rotateTowards(ideal: Vector2, maxRotation: Number): Vector2 {
+        val maxRot = maxRotation.toFloat()
         val correctionAngle = correctionAngle(ideal)
-        if (Math.abs(correctionAngle) < maxRotation) {
+        if (Math.abs(correctionAngle) < maxRot) {
             return ideal.scaledToMagnitude(this.magnitude())
         }
-        val tolerantCorrection = Clamper.clamp(correctionAngle, -maxRotation, maxRotation)
+        val tolerantCorrection = Clamper.clamp(correctionAngle, -maxRot, maxRot)
         return VectorUtil.rotateVector(this, tolerantCorrection)
     }
 
@@ -125,8 +129,8 @@ data class Vector2(val x: Double, val y: Double) {
         /**
          * Will always return a positive value <= Math.PI
          */
-        fun angle(a: Vector2, b: Vector2): Double {
-            return Math.abs(a.correctionAngle(b))
+        fun angle(a: Vector2, b: Vector2): Float {
+            return abs(a.correctionAngle(b))
         }
 
         /**
@@ -134,11 +138,11 @@ data class Vector2(val x: Double, val y: Double) {
          * Returns -1.0 if it doubles back completely.
          * 0.0 for a right angle.
          */
-        fun alignment(start: Vector2, middle: Vector2, end: Vector2): Double {
+        fun alignment(start: Vector2, middle: Vector2, end: Vector2): Float {
             val startToMiddle = middle - start
             val middleToEnd = end - middle
             if (startToMiddle.isZero || middleToEnd.isZero) {
-                return 1.0
+                return 1F
             }
             return startToMiddle.normalized().dotProduct(middleToEnd.normalized())
         }

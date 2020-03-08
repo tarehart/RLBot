@@ -9,14 +9,14 @@ import tarehart.rlbot.tuning.ManeuverMath
 
 object RoutePlanner{
 
-    fun arriveWithSpeed(start: Vector2, end: Vector2, speed:Double, distancePlot: DistancePlot): List<RoutePart>? {
+    fun arriveWithSpeed(start: Vector2, end: Vector2, speed: Float, distancePlot: DistancePlot): List<RoutePart>? {
 
         val distanceDuration = getDecelerationDistanceWhenTargetingSpeed(start, end, speed, distancePlot)
 
         val distance = start.distance(end)
         val maxAccelMotion = distancePlot.getMotionAfterDistance(distance) ?: return null
 
-        if (distanceDuration.distance == 0.0) {
+        if (distanceDuration.distance == 0F) {
             return listOf(AccelerationRoutePart(start, end, maxAccelMotion.time))
         }
 
@@ -33,14 +33,14 @@ object RoutePlanner{
                 DecelerationRoutePart(inflectionPoint, end, distanceDuration.duration))
     }
 
-    fun getDecelerationDistanceWhenTargetingSpeed(start: Vector2, end: Vector2, desiredSpeed:Double, distancePlot: DistancePlot): DistanceDuration {
+    fun getDecelerationDistanceWhenTargetingSpeed(start: Vector2, end: Vector2, desiredSpeed: Float, distancePlot: DistancePlot): DistanceDuration {
 
         val distance = start.distance(end)
         // Assume we'll only accelerate half way.
-        val maxAccelMotion = distancePlot.getMotionAfterDistance(distance / 2) ?: return DistanceDuration(0.0, Duration.ofMillis(0))
+        val maxAccelMotion = distancePlot.getMotionAfterDistance(distance / 2) ?: return DistanceDuration(0F, Duration.ofMillis(0))
 
         if (maxAccelMotion.speed <= desiredSpeed) {
-            return DistanceDuration(0.0, Duration.ofMillis(0))
+            return DistanceDuration(0F, Duration.ofMillis(0))
         }
 
         val speedDiff = maxAccelMotion.speed - desiredSpeed
@@ -49,7 +49,7 @@ object RoutePlanner{
         return DistanceDuration(avgSpeed * secondsDecelerating, Duration.ofSeconds(secondsDecelerating))
     }
 
-    fun getMotionAfterSpeedChange(currentSpeed: Double, idealSpeed: Double, forwardAccelPlot: DistancePlot): DistanceTimeSpeed? {
+    fun getMotionAfterSpeedChange(currentSpeed: Float, idealSpeed: Float, forwardAccelPlot: DistancePlot): DistanceTimeSpeed? {
 
         if (idealSpeed < currentSpeed) {
             val secondsRequired = (currentSpeed - idealSpeed) / ManeuverMath.BRAKING_DECELERATION

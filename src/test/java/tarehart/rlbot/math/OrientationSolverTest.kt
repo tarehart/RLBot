@@ -8,6 +8,7 @@ import rlbot.render.NamedRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.input.CarHitbox
 import tarehart.rlbot.input.CarOrientation
 import tarehart.rlbot.input.CarSpin
 import tarehart.rlbot.math.vector.Vector3
@@ -38,7 +39,7 @@ class OrientationSolverTest {
         val orientation = CarOrientation(Vector3(cos(tilt), 0.0, -sin(tilt)), Vector3(sin(tilt), 0.0, cos(tilt)))
         val car = makeCarData(orientation)
 
-        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
+        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60F)
 
         val epsilon = 0.0001
         Assert.assertTrue(agentOutput.pitch > 0.5) // Doesn't go full force because we need to slow down soon
@@ -55,7 +56,7 @@ class OrientationSolverTest {
         val orientation = CarOrientation(Vector3(1.0, 0.0, 0.0), Vector3(0.0, -sin(tilt), cos(tilt)))
         val car = makeCarData(orientation)
 
-        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
+        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60F)
 
         val epsilon = 0.0001
         Assert.assertTrue(agentOutput.roll < 0) // Doesn't go full force because we need to slow down soon
@@ -70,7 +71,7 @@ class OrientationSolverTest {
         val orientation = CarOrientation(Vector3(0.0, -1.0, 0.0), Vector3.UP)
         val car = makeCarData(orientation)
 
-        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60.0)
+        val agentOutput = OrientationSolver.orientCar(car, Mat3.lookingTo(Vector3(x = 1.0)), 1 / 60F)
 
         val epsilon = 0.0001
         Assert.assertTrue(agentOutput.yaw < 0)
@@ -85,7 +86,7 @@ class OrientationSolverTest {
                 velocity = Vector3(),
                 orientation = orientation,
                 spin = CarSpin(Vector3(), orientation.matrix),
-                boost = 100.0,
+                boost = 100F,
                 isSupersonic = false,
                 team = Team.BLUE,
                 playerIndex = 0,
@@ -95,7 +96,8 @@ class OrientationSolverTest {
                 isDemolished = false,
                 name = "testCar",
                 renderer = renderer,
-                isBot = true)
+                isBot = true,
+                hitbox =  CarHitbox(1F, 2F, 0F, Vector3()))
         return car
     }
 }

@@ -13,14 +13,15 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.RoutePlanner
-import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Line2D
+import kotlin.math.abs
 
 class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?) : NestedPlanStep() {
 
@@ -66,12 +67,12 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         if (phase == AIM_AT_TARGET) {
 
             val noseToTargetAngle = Vector2.angle(toTarget, car.orientation.noseVector.flatten())
-            val angle: Double
+            val angle: Float
             if (backwards || toTarget.magnitude() < 35 &&
                     noseToTargetAngle > 5 * Math.PI / 6 &&
                     reasonableToGoBackwards(car)) {
                 backwards = true
-                angle = Math.PI - noseToTargetAngle
+                angle = Math.PI.toFloat() - noseToTargetAngle
             } else {
                 angle = noseToTargetAngle
             }
@@ -123,7 +124,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     }
 
                     val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
-                    val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 30.0, distancePlot)
+                    val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 30F, distancePlot)
 
                     val steer = SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = distance > 50, conserveBoost = car.boost < 50 || distance < 20)
 
@@ -183,7 +184,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
         return AgentOutput().withThrottle(-0.5 * currentSpeed)
     }
 
-    private fun requiresSlide(facingCorrectionRadians: Double) = Math.abs(facingCorrectionRadians) > Math.PI / 3
+    private fun requiresSlide(facingCorrectionRadians: Float) = abs(facingCorrectionRadians) > Math.PI / 3
 
     override fun drawDebugInfo(graphics: Graphics2D) {
         super.drawDebugInfo(graphics)
@@ -193,8 +194,8 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
             graphics.stroke = BasicStroke(1f)
             val position = it.position
             val crossSize = 2
-            graphics.draw(Line2D.Double(position.x - crossSize, position.y - crossSize, position.x + crossSize, position.y + crossSize))
-            graphics.draw(Line2D.Double(position.x - crossSize, position.y + crossSize, position.x + crossSize, position.y - crossSize))
+            graphics.draw(Line2D.Float(position.x - crossSize, position.y - crossSize, position.x + crossSize, position.y + crossSize))
+            graphics.draw(Line2D.Float(position.x - crossSize, position.y + crossSize, position.x + crossSize, position.y - crossSize))
         }
     }
 

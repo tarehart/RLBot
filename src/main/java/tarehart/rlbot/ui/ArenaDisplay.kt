@@ -128,7 +128,7 @@ class ArenaDisplay : JPanel() {
         if (hasInitiative) {
             val underline = Line2D.Double(-2.0, 0.0, 2.0, 0.0)
             val transform = AffineTransform()
-            transform.translate(car.position.x, car.position.y - 4)
+            transform.translate(car.position.x.toDouble(), (car.position.y - 4).toDouble())
             g.stroke = BasicStroke(0.8f)
             g.draw(transform.createTransformedShape(underline))
         }
@@ -146,7 +146,7 @@ class ArenaDisplay : JPanel() {
     private fun drawBoost(position: Vector3, g: Graphics2D) {
         val ballShape = Ellipse2D.Double(-BOOST_DRAW_RADIUS, -BOOST_DRAW_RADIUS, BOOST_DRAW_RADIUS * 2, BOOST_DRAW_RADIUS * 2)
         val ballTransform = AffineTransform()
-        ballTransform.translate(position.x, position.y)
+        ballTransform.translate(position.x.toDouble(), position.y.toDouble())
         val transformedBall = ballTransform.createTransformedShape(ballShape)
 
         g.color = BOOST_COLOR
@@ -217,7 +217,7 @@ class ArenaDisplay : JPanel() {
                 //filter to see if there is someone maybe waiting for a pass
                 teamPlan.teamIntents.filter { ti -> ti.action == TeamAction.RECEIVING_PASS }.forEach { recipient ->
                     if (recipient.car.team == it.car.team) {
-                        val line = Line2D.Double(it.car.position.x, it.car.position.y,
+                        val line = Line2D.Float(it.car.position.x, it.car.position.y,
                                 recipient.car.position.x, recipient.car.position.y)
                         g.stroke = BasicStroke(.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
                                 0f, floatArrayOf(2f), 0f)
@@ -264,12 +264,12 @@ class ArenaDisplay : JPanel() {
         val BOOST_COLOR = Color(255, 207, 64)
         val TEAM_INTENT_COLOR = Color(41, 41, 41, 170)
 
-        fun drawCar(positionFacing: PositionFacing, height: Double, g: Graphics2D) {
+        fun drawCar(positionFacing: PositionFacing, height: Float, g: Graphics2D) {
             // Determine size and rotation of car
             val carShape = Rectangle2D.Double((-CAR_LENGTH / 2).toDouble(), (-CAR_WIDTH / 2).toDouble(), CAR_LENGTH.toDouble(), CAR_WIDTH.toDouble())
             val carTransformation = AffineTransform()
-            carTransformation.translate(positionFacing.position.x, positionFacing.position.y)
-            carTransformation.rotate(positionFacing.facing.x, positionFacing.facing.y)
+            carTransformation.translate(positionFacing.position.x.toDouble(), positionFacing.position.y.toDouble())
+            carTransformation.rotate(positionFacing.facing.x.toDouble(), positionFacing.facing.y.toDouble())
             val scale = getHeightScaling(height)
             carTransformation.scale(scale, scale)
             val transformedCar = carTransformation.createTransformedShape(carShape)
@@ -285,7 +285,7 @@ class ArenaDisplay : JPanel() {
             val ballShape = Ellipse2D.Double(-BALL_DRAW_RADIUS, -BALL_DRAW_RADIUS, BALL_DRAW_RADIUS * 2, BALL_DRAW_RADIUS * 2)
             val ballTransform = AffineTransform()
             val scale = getHeightScaling(position.z)
-            ballTransform.translate(position.x, position.y)
+            ballTransform.translate(position.x.toDouble(), position.y.toDouble())
             ballTransform.scale(scale, scale)
             val transformedBall = ballTransform.createTransformedShape(ballShape)
 
@@ -298,8 +298,8 @@ class ArenaDisplay : JPanel() {
             }
         }
 
-        private fun getHeightScaling(height: Double): Double {
-            return 1 + height / 40
+        private fun getHeightScaling(height: Float): Double {
+            return 1 + height.toDouble() / 40
         }
     }
 }

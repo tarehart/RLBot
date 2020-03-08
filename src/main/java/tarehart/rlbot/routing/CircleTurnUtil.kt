@@ -12,6 +12,8 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
+import kotlin.math.abs
+import kotlin.math.max
 
 object CircleTurnUtil {
 
@@ -19,13 +21,13 @@ object CircleTurnUtil {
     // Speed 0: radius 7
 
     // TODO: maybe it ought to be tighter, e.g. A = .018 B = .16
-    private val TURN_RADIUS_A = .0153
-    private val TURN_RADIUS_B = .16
-    private val TURN_RADIUS_C = 7.0
+    private val TURN_RADIUS_A = .0153F
+    private val TURN_RADIUS_B = .16F
+    private val TURN_RADIUS_C = 7.0F
 
-    private val ENFORCED_CIRCLE_SPEED = 40.0
+    private val ENFORCED_CIRCLE_SPEED = 40.0F
 
-    private fun planWithinCircle(car: CarData, strikePoint: StrictPreKickWaypoint, currentSpeed: Double, desiredSpeed: Double, circle: Circle): SteerPlan {
+    private fun planWithinCircle(car: CarData, strikePoint: StrictPreKickWaypoint, currentSpeed: Float, desiredSpeed: Float, circle: Circle): SteerPlan {
 
         val targetPosition = strikePoint.position
         val targetFacing = strikePoint.facing
@@ -62,23 +64,23 @@ object CircleTurnUtil {
         return SteerPlan(output, route)
     }
 
-    private fun getTurnDuration(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean, speed: Double): Duration {
+    private fun getTurnDuration(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean, speed: Float): Duration {
         val sweepRadians = getSweepRadians(circle, start, end, clockwise)
-        return Duration.ofSeconds(Math.abs(sweepRadians) * circle.radius / speed)
+        return Duration.ofSeconds(abs(sweepRadians) * circle.radius / speed)
     }
 
-    fun getSweepRadians(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean): Double {
+    fun getSweepRadians(circle: Circle, start: Vector2, end: Vector2, clockwise: Boolean): Float {
         val centerToStart = start - circle.center
         val centerToEnd = end - circle.center
 
         return centerToStart.correctionAngle(centerToEnd, clockwise)
     }
 
-    private fun getTurnRadius(speed: Double): Double {
+    private fun getTurnRadius(speed: Float): Float {
         return TURN_RADIUS_A * speed * speed + TURN_RADIUS_B * speed + TURN_RADIUS_C
     }
 
-    private fun getSpeedForRadius(radius: Double): Double? {
+    private fun getSpeedForRadius(radius: Float): Double? {
 
         if (radius == TURN_RADIUS_C) {
             return 0.0
@@ -109,23 +111,23 @@ object CircleTurnUtil {
         return circleWaypoint(car, strikePoint, currentSpeed, Math.min(maxSpeed, idealSpeed), distancePlot)
     }
 
-    private fun getIdealCircleSpeed(currentFacing: PositionFacing, targetFacing: PositionFacing): Double {
+    private fun getIdealCircleSpeed(currentFacing: PositionFacing, targetFacing: PositionFacing): Float {
 
         val estimatedEntryAngle = ManeuverMath.estimateApproachVector(currentFacing, targetFacing.position)
 
         val orientationCorrection = estimatedEntryAngle.correctionAngle(targetFacing.facing)
-        val angleAllowingFullSpeed = Math.PI / 6
-        val speedPenaltyPerRadian = 20.0
-        val rawPenalty = speedPenaltyPerRadian * (Math.abs(orientationCorrection) - angleAllowingFullSpeed)
-        val correctionPenalty = Math.max(0.0, rawPenalty)
-        return Math.max(15.0, AccelerationModel.SUPERSONIC_SPEED - correctionPenalty)
+        val angleAllowingFullSpeed = Math.PI.toFloat() / 6
+        val speedPenaltyPerRadian = 20F
+        val rawPenalty = speedPenaltyPerRadian * (abs(orientationCorrection) - angleAllowingFullSpeed)
+        val correctionPenalty = max(0F, rawPenalty)
+        return max(15F, AccelerationModel.SUPERSONIC_SPEED - correctionPenalty)
     }
 
     private fun circleWaypoint(
             car: CarData,
             strikePoint: StrictPreKickWaypoint,
-            currentSpeed: Double,
-            expectedSpeed: Double,
+            currentSpeed: Float,
+            expectedSpeed: Float,
             distancePlot: DistancePlot): SteerPlan {
 
         val targetPosition = strikePoint.position
@@ -135,7 +137,7 @@ object CircleTurnUtil {
         val toTarget = targetPosition.minus(flatPosition)
 
         val correctionAngle = toTarget.correctionAngle(targetFacing)
-        if (correctionAngle == 0.0) {
+        if (correctionAngle == 0F) {
             return planDirectRoute(flatPosition, car, strikePoint, distancePlot, toTarget)
         }
 

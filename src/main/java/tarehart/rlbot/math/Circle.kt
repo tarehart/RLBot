@@ -2,16 +2,17 @@ package tarehart.rlbot.math
 
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-
-import java.awt.*
+import java.awt.Shape
 import java.awt.geom.Ellipse2D
+import kotlin.math.abs
+import kotlin.math.sqrt
 
-class Circle(val center: Vector2, val radius: Double) {
+class Circle(val center: Vector2, val radius: Float) {
 
-    constructor(center: Vector2, radius: Number): this(center, radius.toDouble())
+    constructor(center: Vector2, radius: Number): this(center, radius.toFloat())
 
     fun toShape(): Shape {
-        return Ellipse2D.Double(center.x - radius, center.y - radius, radius * 2, radius * 2)
+        return Ellipse2D.Float(center.x - radius, center.y - radius, radius * 2, radius * 2)
     }
 
     // https://stackoverflow.com/questions/3349125/circle-circle-intersection-points
@@ -23,12 +24,12 @@ class Circle(val center: Vector2, val radius: Double) {
             return null
         }
 
-        if (d < Math.abs(this.radius - other.radius)) {
+        if (d < abs(this.radius - other.radius)) {
             return null
         }
 
         val a = (radius * radius - other.radius * other.radius + d * d) / (2 * d)
-        val h = Math.sqrt(radius * radius - a * a)
+        val h = sqrt(radius * radius - a * a)
         val p2 = (other.center - this.center).scaled(a / d) + this.center
 
         return Pair(
@@ -39,7 +40,7 @@ class Circle(val center: Vector2, val radius: Double) {
     }
 
     fun calculateTangentPoints(outsidePoint: Vector2): Pair<Vector2, Vector2>? {
-        val toMidpoint = (center - outsidePoint).scaled(.5)
+        val toMidpoint = (center - outsidePoint).scaled(.5F)
         val midpoint = outsidePoint + toMidpoint
 
         val thalesCircle = Circle(midpoint, toMidpoint.magnitude())
@@ -55,12 +56,12 @@ class Circle(val center: Vector2, val radius: Double) {
             val yDelta2 = c.y - b.y
             var xDelta2 = c.x - b.x
 
-            if (xDelta1 == 0.0) {
-                xDelta1 = .00001
+            if (xDelta1 == 0F) {
+                xDelta1 = .00001F
             }
 
-            if (xDelta2 == 0.0) {
-                xDelta2 = .00001
+            if (xDelta2 == 0F) {
+                xDelta2 = .00001F
             }
 
             val slope1 = yDelta1 / xDelta1
@@ -76,7 +77,7 @@ class Circle(val center: Vector2, val radius: Double) {
             return tangentToCenter.correctionAngle(tangentDirection) < 0
         }
 
-        fun getCircleFromSphereSlice(center: Vector3, radius: Double, sliceHeight: Double): Circle? {
+        fun getCircleFromSphereSlice(center: Vector3, radius: Float, sliceHeight: Float): Circle? {
             val diff = Math.abs(center.z - sliceHeight)
             val capHeight = radius - diff
 
@@ -84,7 +85,7 @@ class Circle(val center: Vector2, val radius: Double) {
                 return null
             }
 
-            val sliceRadius = Math.sqrt(radius * 2 * capHeight - capHeight * capHeight)
+            val sliceRadius = sqrt(radius * 2 * capHeight - capHeight * capHeight)
 
             return Circle(center.flatten(), sliceRadius)
         }

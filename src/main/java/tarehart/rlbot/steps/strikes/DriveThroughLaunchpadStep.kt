@@ -26,7 +26,7 @@ class DriveThroughLaunchpadStep(private val launchPad: PreKickWaypoint) : Standa
             return null
         }
 
-        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5.0), 0.0)
+        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5.0), 0F)
         val steerPlan = launchPad.planRoute(car, distancePlot)
 
         val renderer = car.renderer

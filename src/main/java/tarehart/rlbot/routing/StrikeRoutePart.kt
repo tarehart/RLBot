@@ -17,7 +17,7 @@ class StrikeRoutePart(override val start: Vector2, val intercept: Vector3, overr
     override fun drawDebugInfo(graphics: Graphics2D) {
         graphics.stroke = BasicStroke(3f)
         graphics.color = Color(214, 206, 243)
-        graphics.draw(Line2D.Double(start.x, start.y, end.x, end.y))
+        graphics.draw(Line2D.Float(start.x, start.y, end.x, end.y))
     }
 
     override fun renderDebugInfo(renderer: Renderer) {

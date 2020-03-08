@@ -15,7 +15,7 @@ import tarehart.rlbot.tuning.ManeuverMath
 class ChipStrike: StrikeProfile() {
 
     override val preDodgeTime = Duration.ZERO
-    override val speedBoost = 0.0
+    override val speedBoost = 0F
     override val postDodgeTime = Duration.ZERO
     override val style = Style.CHIP
 
@@ -27,7 +27,7 @@ class ChipStrike: StrikeProfile() {
         return intercept.space.z <= MAX_HEIGHT_OF_BALL_FOR_CHIP
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
 
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), desiredKickForce.flatten())

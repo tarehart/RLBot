@@ -23,16 +23,18 @@ import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
+import kotlin.math.cos
+import kotlin.math.min
 
 /**
  * @param height the height that the car should be at contact.
  */
-class DiagonalStrike(height: Double): StrikeProfile() {
+class DiagonalStrike(height: Float): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8
-    override val preDodgeTime = Duration.ofSeconds(jumpTime + .02)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8F
+    override val preDodgeTime = Duration.ofSeconds(jumpTime + .02F)
     override val postDodgeTime = Duration.ofMillis(60)
-    override val speedBoost = 10.0
+    override val speedBoost = 10.0F
     override val style = Style.DIAGONAL_HIT
     override val isForward = false
 
@@ -63,12 +65,12 @@ class DiagonalStrike(height: Double): StrikeProfile() {
         return intercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         val flatForce = desiredKickForce.flatten()
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), flatForce)
 
-        val carStrikeRadius = 1.5 + 0.2 * Clamper.clamp(Math.cos(estimatedApproachDeviationFromKickForce), 0.0, 1.0)
+        val carStrikeRadius = 1.5 + 0.2 * Clamper.clamp(cos(estimatedApproachDeviationFromKickForce), 0.0, 1.0)
 
         // intercept.space is already supposed to be the car position at contact, BUT it's based on a hard-coded
         // default value for carStrikeRadius.
@@ -81,7 +83,7 @@ class DiagonalStrike(height: Double): StrikeProfile() {
 
         val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
                 estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact.flatten(),
-                Math.PI / 4, preKickRenderer)
+                Math.PI.toFloat() / 4, preKickRenderer)
 
         if (angled == null) {
             BotLog.println("Failed to calculate diagonal waypoint", car.playerIndex)
@@ -128,7 +130,7 @@ class DiagonalStrike(height: Double): StrikeProfile() {
             val jumpTime = if (rawJumpTime.millis < 0) Duration.ofMillis(0) else rawJumpTime
             val tiltRate = 1.0 // 0.3 / jumpTime.seconds
 
-            val tiltSeconds = Math.min(jumpTime.seconds, 0.1)
+            val tiltSeconds = min(jumpTime.seconds, 0.1F)
 
             return Plan()
                     .unstoppable()

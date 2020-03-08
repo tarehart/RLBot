@@ -14,7 +14,7 @@ class PlaneTest {
         val point = Vector3(-13.4, 5.6, 13.0)
         val distance = p.distance(point)
 
-        Assert.assertEquals(10.0, distance, 0.0)
+        assertEquals(10F, distance, 0F)
     }
 
     @Test
@@ -24,15 +24,15 @@ class PlaneTest {
 
         val intersect = ground.intersect(wall)
         if (intersect == null) {
-            Assert.fail()
+            fail()
             return
         }
-        Assert.assertEquals(0.0, intersect.direction.x, 0.0)
-        Assert.assertEquals(0.0, intersect.direction.z, 0.0)
-        Assert.assertEquals(1.0, Math.abs(intersect.direction.y), 0.0)
+        assertEquals(0F, intersect.direction.x, 0F)
+        assertEquals(0F, intersect.direction.z, 0F)
+        assertEquals(1F, Math.abs(intersect.direction.y), 0F)
 
-        Assert.assertEquals(-8.0, intersect.position.x, 0.0)
-        Assert.assertEquals(0.0, intersect.position.z, 0.0)
+        assertEquals(-8F, intersect.position.x, 0F)
+        assertEquals(0F, intersect.position.z, 0F)
     }
 
 }

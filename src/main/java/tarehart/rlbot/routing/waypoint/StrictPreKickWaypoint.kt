@@ -17,7 +17,7 @@ import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 
-class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: GameTime, expectedSpeed: Double? = null, waitUntil: GameTime? = null) :
+class StrictPreKickWaypoint(position: Vector2, facing: Vector2, expectedTime: GameTime, expectedSpeed: Float? = null, waitUntil: GameTime? = null) :
         PreKickWaypoint(position, facing, expectedTime, expectedSpeed, waitUntil) {
 
     override fun isPlausibleFinalApproach(car: CarData): Boolean {

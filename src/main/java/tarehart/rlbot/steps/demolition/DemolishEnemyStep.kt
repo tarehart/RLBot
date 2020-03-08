@@ -150,7 +150,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
             specificTarget ?:
             oppositeTeam.filter { !it.isDemolished }.minBy {
                 // Go after the enemy we can reach soonest, with a bias for going after humans.
-                AccelerationModel.getTravelTime(car, distancePlot, it.position)?.seconds ?: 6.0 - (if (car.isBot) 0 else 2 )
+                AccelerationModel.getTravelTime(car, distancePlot, it.position)?.seconds ?: 6F - (if (car.isBot) 0 else 2 )
             } ?: return
 
         if (!::carPredictor.isInitialized) {
@@ -164,7 +164,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         val carIntercept = CarInterceptPlanner.getCarIntercept(car, path, distancePlot)
 
         carIntercept?.let {
-            RenderUtil.drawSphere(renderer, it.space, 1.0, Color.RED)
+            RenderUtil.drawSphere(renderer, it.space, 1F, Color.RED)
         }
     }
 
@@ -244,7 +244,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
             val secondsTillContact = Duration.between(car.time, it.time).seconds
 
-            if (!car.isSupersonic && car.boost == 0.0 && enemyCar.velocity.dotProduct(car.velocity) > 0 &&
+            if (!car.isSupersonic && car.boost == 0F && enemyCar.velocity.dotProduct(car.velocity) > 0 &&
                     car.velocity.magnitude() > AccelerationModel.MEDIUM_SPEED * .8 &&
                     SteerUtil.isDrivingOnTarget(car, it.space.flatten())) {
 

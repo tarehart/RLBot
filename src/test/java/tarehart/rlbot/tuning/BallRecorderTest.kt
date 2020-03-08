@@ -30,7 +30,7 @@ class BallRecorderTest {
         val path = list.sorted().findFirst().get()
         val json = Files.readAllLines(path)[0]
         val ballPath = Gson().fromJson(json, BallPath::class.java)
-        Assert.assertEquals(2.0, ballPath.endpoint.space.z, 0.0001)
+        Assert.assertEquals(2F, ballPath.endpoint.space.z, 0.0001F)
 
     }
 

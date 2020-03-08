@@ -33,7 +33,7 @@ object CarInterceptPlanner {
                     val timeDiff = Duration.between(previousSlice.time, slice.time).seconds
                     val toCurrentSlice = slice.space.minus(previousSlice.space)
                     return SpaceTime(
-                            previousSlice.space + toCurrentSlice.scaled(.5),
+                            previousSlice.space + toCurrentSlice.scaled(.5F),
                             previousSlice.time.plusSeconds(timeDiff * .5))
 
                 }

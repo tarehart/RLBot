@@ -1,38 +1,36 @@
 package tarehart.rlbot.tuning
 
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.routing.PositionFacing
-
-import java.util.Optional
+import kotlin.math.sqrt
 
 object ManeuverMath {
 
-    const val DODGE_SPEED = 10.0
+    const val DODGE_SPEED = 10.0F
 
-    const val BASE_CAR_Z = 0.3405
+    const val BASE_CAR_Z = 0.3405F
 
-    const val MASH_JUMP_HEIGHT = 4.8 // This is absolute height, so subtract BASE_CAR_Z if you want relative height.
+    const val MASH_JUMP_HEIGHT = 4.8F // This is absolute height, so subtract BASE_CAR_Z if you want relative height.
 
-    const val BRAKING_DECELERATION = 30.0
+    const val BRAKING_DECELERATION = 30.0F
 
-    private const val TAP_JUMP_HEIGHT = 1.88 - BASE_CAR_Z
-    private const val TAP_JUMP_APEX_TIME = 0.5
+    private const val TAP_JUMP_HEIGHT = 1.88F - BASE_CAR_Z
+    private const val TAP_JUMP_APEX_TIME = 0.5F
 
 
-    private const val MASH_A = -6.451144
-    private const val MASH_B = 11.26689
-    private const val MASH_C = -0.09036379
-    private const val MASH_SLOPE = 7.78
-    private const val SLOPE_CUTOFF = 3.2
+    private const val MASH_A = -6.451144F
+    private const val MASH_B = 11.26689F
+    private const val MASH_C = -0.09036379F
+    private const val MASH_SLOPE = 7.78F
+    private const val SLOPE_CUTOFF = 3.2F
 
     /**
      * @param height the raw height that we want the center of the car to achieve.
      * If the height is less than BASE_CAR_Z, there's nothing to do.
      */
-    fun secondsForMashJumpHeight(height: Double): Double? {
+    fun secondsForMashJumpHeight(height: Float): Float? {
         if (height > MASH_JUMP_HEIGHT) {
             return null
         }
@@ -41,10 +39,10 @@ object ManeuverMath {
             return (height - BASE_CAR_Z) / MASH_SLOPE
         }
 
-        val d = MASH_B * MASH_B - 4.0 * MASH_A * (MASH_C - height)
+        val d = MASH_B * MASH_B - 4F * MASH_A * (MASH_C - height)
         return if (d < 0) {
             null // Too high!
-        } else (-MASH_B + Math.sqrt(d)) / (2 * MASH_A)
+        } else (-MASH_B + sqrt(d)) / (2 * MASH_A)
     }
 
     fun secondsForSideFlipTravel(distance: Double): Double {
@@ -61,13 +59,13 @@ object ManeuverMath {
                 car.position.z < BASE_CAR_Z + 0.2
     }
 
-    fun forwardSpeed(car: CarData): Double {
+    fun forwardSpeed(car: CarData): Float {
         return car.velocity.dotProduct(car.orientation.noseVector)
     }
 
-    fun getBrakeDistance(speed: Double): Double {
+    fun getBrakeDistance(speed: Float): Float {
         // TODO: make this incorporate BRAKING_DECELERATION, and make it accurate
-        return speed * speed * .01 + speed * .1
+        return speed * speed * .01F + speed * .1F
     }
 
     /**

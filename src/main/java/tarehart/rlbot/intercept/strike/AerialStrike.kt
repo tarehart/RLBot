@@ -24,11 +24,11 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
 
-open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?): StrikeProfile() {
+open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?): StrikeProfile() {
     override val preDodgeTime = Duration.ofSeconds(AerialMath.timeToAir(height))
 
     private val canDodge = preDodgeTime < MidairStrikeStep.MAX_TIME_FOR_AIR_DODGE
-    override val speedBoost = if (canDodge) 10.0 else 0.0
+    override val speedBoost = if (canDodge) 10F else 0F
     override val postDodgeTime = if (canDodge) Duration.ofMillis(250) else Duration.ZERO
     override val style = Style.AERIAL
 
@@ -59,7 +59,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
         return null
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
 
         val secondsTillIntercept = (intercept.time - car.time).seconds
         val flatPosition = car.position.flatten()
@@ -75,7 +75,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
 
         if (approachError < maxAerialApproachError) {
 
-            val desiredSpeedAtLaunch = averageSpeedNeeded * 0.8
+            val desiredSpeedAtLaunch = averageSpeedNeeded * 0.8F
             val orientSeconds = FacingAndSpeedPreKickWaypoint.getOrientDuration(car.orientation.noseVector.flatten(), toIntercept).seconds
 
             val motionAfterSpeedChange = RoutePlanner.getMotionAfterSpeedChange(
@@ -134,7 +134,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             }
 
             val courseCorrection = AerialMath.calculateAerialCourseCorrection(
-                    CarSlice(car), intercept, true, 0.0)
+                    CarSlice(car), intercept, true, 0F)
             val accelRatio = courseCorrection.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR
 
             if (accelRatio < 0.4) {
@@ -145,7 +145,7 @@ open class AerialStrike(height: Double, private val kickStrategy: KickStrategy?)
             return true
         }
 
-        fun getAerialLaunchCountdown(height: Double, secondsTillIntercept: Double): Double {
+        fun getAerialLaunchCountdown(height: Float, secondsTillIntercept: Float): Float {
             val expectedAerialSeconds = AerialMath.timeToAir(height)
             return secondsTillIntercept - expectedAerialSeconds
         }

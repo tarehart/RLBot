@@ -6,10 +6,11 @@ import org.junit.Test
 class ManeuverMathTest {
     @Test
     fun secondsForMashJumpHeight() {
-        Assert.assertEquals(0.0, ManeuverMath.secondsForMashJumpHeight(ManeuverMath.BASE_CAR_Z)!!, .01)
-        Assert.assertEquals(.65, ManeuverMath.secondsForMashJumpHeight(4.5)!!, .01)
-        Assert.assertEquals(.81, ManeuverMath.secondsForMashJumpHeight(ManeuverMath.MASH_JUMP_HEIGHT)!!, .01)
-        Assert.assertNull(ManeuverMath.secondsForMashJumpHeight(5.0))
+        val delta = .01F
+        Assert.assertEquals(0F, ManeuverMath.secondsForMashJumpHeight(ManeuverMath.BASE_CAR_Z)!!, delta)
+        Assert.assertEquals(.65F, ManeuverMath.secondsForMashJumpHeight(4.5F)!!, delta)
+        Assert.assertEquals(.81F, ManeuverMath.secondsForMashJumpHeight(ManeuverMath.MASH_JUMP_HEIGHT)!!, delta)
+        Assert.assertNull(ManeuverMath.secondsForMashJumpHeight(5F))
     }
 
 }

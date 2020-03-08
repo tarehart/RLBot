@@ -1,11 +1,14 @@
 package tarehart.rlbot.intercept
 
 import tarehart.rlbot.carpredict.CarSlice
-import tarehart.rlbot.math.*
+import tarehart.rlbot.math.Mat3
+import tarehart.rlbot.math.OrientationSolver
+import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
+import kotlin.math.sqrt
 
 object AerialMath {
 
@@ -13,7 +16,7 @@ object AerialMath {
     val JUMP_ASSIST_ACCEL = 12
 
     // This is a constant that we tuned with some testing. No mathematical basis
-    val TYPICAL_UPWARD_ACCEL = 2.5
+    val TYPICAL_UPWARD_ACCEL = 2.5F
 
     private const val MINIMUM_JUMP_HEIGHT = 2.0
     private const val JUMP_VELOCITY = 12.0
@@ -24,7 +27,7 @@ object AerialMath {
     /**
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L415-L421
      */
-    fun isViableAerial(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): Boolean {
+    fun isViableAerial(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Float): Boolean {
 
         val courseResult = calculateAerialCourseCorrection(car, target, modelJump, secondsSinceJump)
         val accelNeeded = courseResult.averageAccelerationRequired
@@ -46,7 +49,7 @@ object AerialMath {
      *
      * Taken from https://github.com/samuelpmish/RLUtilities/blob/master/RLUtilities/Maneuvers.py#L423-L445
      */
-    fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Double): AerialCourseCorrection {
+    fun calculateAerialCourseCorrection(car: CarSlice, target: SpaceTime, modelJump: Boolean, secondsSinceJump: Float): AerialCourseCorrection {
 
         var initialPosition = car.space
         var initialVelocity = car.velocity
@@ -88,12 +91,12 @@ object AerialMath {
         return AerialCourseCorrection(correctionDirection, averageAccelerationRequired, targetError, Duration.ofSeconds(secondsNeededForTurn))
     }
 
-    fun timeToAir(height: Double): Double {
+    fun timeToAir(height: Float): Float {
         val a = TYPICAL_UPWARD_ACCEL // Upward acceleration
         val b = 7 // Initial upward velocity from jump, less a bit because we'll take a bit to orient and lose some of it.
         val c = -(height - ManeuverMath.BASE_CAR_Z)
-        val liftoffDelay = 0.3
-        return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a) + liftoffDelay
+        val liftoffDelay = 0.3F
+        return (-b + sqrt(b * b - 4 * a * c)) / (2 * a) + liftoffDelay
     }
 
 }

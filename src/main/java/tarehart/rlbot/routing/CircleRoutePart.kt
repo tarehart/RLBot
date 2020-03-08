@@ -55,7 +55,7 @@ class CircleRoutePart(
                         Plane((nextCursor - cursor).toVector3(), (circle.center + cursor).withZ(2.0)),
                         2.0,
                         Color.MAGENTA)
-                renderer.drawLine3d(Color.MAGENTA, (circle.center + cursor).toVector3().toRlbot(), (circle.center + nextCursor).toVector3().toRlbot())
+                renderer.drawLine3d(Color.MAGENTA, (circle.center + cursor).toVector3(), (circle.center + nextCursor).toVector3())
                 cursor = nextCursor
             }
         }

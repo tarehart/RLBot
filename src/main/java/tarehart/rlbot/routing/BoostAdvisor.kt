@@ -3,7 +3,6 @@ package tarehart.rlbot.routing
 import rlbot.cppinterop.RLBotDll
 import rlbot.flat.FieldInfo
 import rlbot.flat.GameTickPacket
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.BoostData
 import tarehart.rlbot.input.BoostPad
@@ -83,7 +82,7 @@ object BoostAdvisor {
             return waypoint
         }
 
-        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
+        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0)
         val closestBoost = getClosestBoost(car, distancePlot, waypoint)
         closestBoost?.location?.flatten()?.let {
             RenderUtil.drawCircle(car.renderer, Circle(it, 2.0), 0.0, Color.GREEN)

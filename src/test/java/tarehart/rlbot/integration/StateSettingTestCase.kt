@@ -7,9 +7,11 @@ import tarehart.rlbot.bots.BundleListener
 import tarehart.rlbot.integration.asserts.AssertStatus
 import tarehart.rlbot.integration.asserts.PacketAssert
 import tarehart.rlbot.integration.metrics.TimeMetric
+import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.time.GameTime
 
-class StateSettingTestCase(private val initialState: GameState, val conditions: Set<PacketAssert>): BundleListener {
+class StateSettingTestCase(private val initialState: GameState, val conditions: Set<PacketAssert>,
+                           val initialPlan: Plan? = null): BundleListener {
 
     private var previousBundle: TacticalBundle? = null
     var isComplete = false

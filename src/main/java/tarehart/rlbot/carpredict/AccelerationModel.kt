@@ -14,24 +14,24 @@ import kotlin.math.min
 
 object AccelerationModel {
 
-    val SUPERSONIC_SPEED = 46.0
-    val MEDIUM_SPEED = 28.0
-    val FLIP_THRESHOLD_SPEED = 20.0
+    val SUPERSONIC_SPEED = 46F
+    val MEDIUM_SPEED = 28F
+    val FLIP_THRESHOLD_SPEED = 20F
 
-    private val TIME_STEP = 0.1
-    private val FRONT_FLIP_SPEED_BOOST = 10.0
-    private val FRONT_FLIP_SECONDS = 1.4
+    private val TIME_STEP = 0.1F
+    private val FRONT_FLIP_SPEED_BOOST = 10.0F
+    private val FRONT_FLIP_SECONDS = 1.4F
 
     private val INCREMENTAL_BOOST_ACCELERATION = 19
-    private val AIR_BOOST_ACCELERATION = 19.0 // It's a tiny bit faster, but account for course correction wiggle
-    private val BOOST_CONSUMED_PER_SECOND = 25.0
+    private val AIR_BOOST_ACCELERATION = 19.0F // It's a tiny bit faster, but account for course correction wiggle
+    private val BOOST_CONSUMED_PER_SECOND = 25.0F
 
     // Thanks @chip#7643 for these uu values
-    private val BRAKING_DECELERATION = -3500 / Vector3.PACKET_DISTANCE_TO_CLASSIC
-    private val COASTING_DECELERATION = -525 / Vector3.PACKET_DISTANCE_TO_CLASSIC
-    private val FULL_THROTTLE_ACCEL_AT_0 = 1600 / Vector3.PACKET_DISTANCE_TO_CLASSIC
-    private val FULL_THROTTLE_TOP_SPEED = 1410 / Vector3.PACKET_DISTANCE_TO_CLASSIC
-    private val BOOST_ACCEL = 991.66 / Vector3.PACKET_DISTANCE_TO_CLASSIC // I know we have 3 values for boost now... :/
+    private val BRAKING_DECELERATION = -3500F / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val COASTING_DECELERATION = -525F / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val FULL_THROTTLE_ACCEL_AT_0 = 1600F / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val FULL_THROTTLE_TOP_SPEED = 1410F / Vector3.PACKET_DISTANCE_TO_CLASSIC
+    private val BOOST_ACCEL = 991.66F / Vector3.PACKET_DISTANCE_TO_CLASSIC // I know we have 3 values for boost now... :/
 
 
     /*
@@ -44,35 +44,36 @@ object AccelerationModel {
     /**
      * Gets the acceleration in UU/s (ReliefBot units) with the throttle input and current velocity
      */
-    fun getAccelerationWithThrottle(throttle: Double, carToManipulate: CarData): Double {
+    fun getAccelerationWithThrottle(throttle: Number, carToManipulate: CarData): Float {
+        val t = throttle.toFloat()
         val forwardSpeed = carToManipulate.velocity.dotProduct(carToManipulate.orientation.noseVector)
-        if (throttle < 0) return BRAKING_DECELERATION
-        else if (throttle > 0) {
+        if (t < 0) return BRAKING_DECELERATION
+        else if (t > 0) {
             // Acceleration at full speed is 0
             val maxAccel = FULL_THROTTLE_ACCEL_AT_0 * (FULL_THROTTLE_TOP_SPEED - forwardSpeed) / FULL_THROTTLE_TOP_SPEED
-            return throttle * maxAccel
+            return t * maxAccel
         } else { // throttle == 0
             return COASTING_DECELERATION
         }
     }
 
-    fun getThrottleForAcceleration(desiredAcceleration: Double, carToManipulate: CarData): Double {
+    fun getThrottleForAcceleration(desiredAcceleration: Float, carToManipulate: CarData): Float {
         val forwardSpeed = carToManipulate.velocity.dotProduct(carToManipulate.orientation.noseVector)
         if (desiredAcceleration < 0) {
             // Get the closest one out of braking or coasting, hopefully this works. I've no idea if it will
             if (abs(desiredAcceleration - COASTING_DECELERATION) > abs(desiredAcceleration - BRAKING_DECELERATION)) {
-                return 0.0
+                return 0F
             } else {
-                return -1.0
+                return -1F
             }
         } else {
             // Desired acceleration of 0 requires we throttle a little bit.
             val maxAccel = FULL_THROTTLE_ACCEL_AT_0 * (FULL_THROTTLE_TOP_SPEED - forwardSpeed) / FULL_THROTTLE_TOP_SPEED
-            return max(min(1.0, desiredAcceleration / maxAccel), 0.001)
+            return max(min(1F, desiredAcceleration / maxAccel), 0.001F)
         }
     }
 
-    fun getAccelerationForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64)) : Double {
+    fun getAccelerationForDesiredSpeed(desiredSpeed: Float, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64)) : Float {
         val forwardSpeed = carToManipulate.velocity.dotProduct(carToManipulate.orientation.noseVector)
         val timeToChangeSpeed = accelerationTime.seconds
         val changeInVelocity = desiredSpeed - forwardSpeed
@@ -80,7 +81,7 @@ object AccelerationModel {
         return desiredAcceleration
     }
 
-    fun getThrottleForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64) ) : Double {
+    fun getThrottleForDesiredSpeed(desiredSpeed: Float, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64) ) : Float {
         val desiredAcceleration = getAccelerationForDesiredSpeed(desiredSpeed, carToManipulate, accelerationTime)
         return getThrottleForAcceleration(desiredAcceleration, carToManipulate)
     }
@@ -89,7 +90,7 @@ object AccelerationModel {
      * Return control output to reach desired speed
      * Will attempt to solve for boost if permitted
      */
-    fun getControlsForDesiredSpeed(desiredSpeed: Double, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64), finesse: ControlFinesse = ControlFinesse() ) : AgentOutput {
+    fun getControlsForDesiredSpeed(desiredSpeed: Float, carToManipulate: CarData, accelerationTime: Duration = Duration.ofMillis(64), finesse: ControlFinesse = ControlFinesse() ) : AgentOutput {
         // Don't solve for boost if our acceleration time is greater than the max amount of boost we have
         // Assuming that acceleration time is how long we are intending to distribute the acceleration over, the boost wont last.
         val shouldSolveBoost = finesse.allowBoost && (carToManipulate.boost >= (BOOST_CONSUMED_PER_SECOND * accelerationTime.seconds))
@@ -160,7 +161,7 @@ object AccelerationModel {
         return 0.0
     }
 
-    private fun getNominalSpeed(car: CarData): Double {
+    private fun getNominalSpeed(car: CarData): Float {
         return if (car.hasWheelContact)
             ManeuverMath.forwardSpeed(car)
         else
@@ -168,16 +169,16 @@ object AccelerationModel {
     }
 
     @JvmOverloads
-    fun simulateAcceleration(carData: CarData, duration: Duration, boostBudget: Double, flipCutoffDistance: Double = java.lang.Double.MAX_VALUE): DistancePlot {
+    fun simulateAcceleration(carData: CarData, duration: Duration, boostBudget: Float, flipCutoffDistance: Number = Float.MAX_VALUE): DistancePlot {
 
         var currentSpeed = getNominalSpeed(carData)
 
-        val plot = DistancePlot(DistanceTimeSpeed(0.0, Duration.ofMillis(0), currentSpeed))
+        val plot = DistancePlot(DistanceTimeSpeed(0F, Duration.ofMillis(0), currentSpeed))
 
         var boostRemaining = boostBudget
 
-        var distanceSoFar = 0.0
-        var secondsSoFar = 0.0
+        var distanceSoFar = 0.0F
+        var secondsSoFar = 0.0F
 
         val secondsToSimulate = duration.seconds
 
@@ -190,7 +191,7 @@ object AccelerationModel {
                 val secondsRemaining = secondsToSimulate - secondsSoFar
                 plot.addSlice(DistanceTimeSpeed(distanceSoFar + SUPERSONIC_SPEED * secondsRemaining, duration, SUPERSONIC_SPEED))
                 break
-            } else if (boostRemaining <= 0 && currentSpeed > FLIP_THRESHOLD_SPEED && distanceSoFar + hypotheticalFrontFlipDistance < flipCutoffDistance) {
+            } else if (boostRemaining <= 0 && currentSpeed > FLIP_THRESHOLD_SPEED && distanceSoFar + hypotheticalFrontFlipDistance < flipCutoffDistance.toFloat()) {
                 currentSpeed += FRONT_FLIP_SPEED_BOOST
                 if (currentSpeed > SUPERSONIC_SPEED) {
                     currentSpeed = SUPERSONIC_SPEED
@@ -202,7 +203,7 @@ object AccelerationModel {
 
             } else {
                 val acceleration = getAcceleration(currentSpeed, boostRemaining > 0)
-                val nextSpeed = Math.min(SUPERSONIC_SPEED, currentSpeed + acceleration * TIME_STEP)
+                val nextSpeed = min(SUPERSONIC_SPEED, currentSpeed + acceleration * TIME_STEP)
                 boostRemaining -= BOOST_CONSUMED_PER_SECOND * TIME_STEP
                 distanceSoFar += ((currentSpeed + nextSpeed) / 2) * TIME_STEP
                 secondsSoFar += TIME_STEP
@@ -214,15 +215,15 @@ object AccelerationModel {
         return plot
     }
 
-    private fun getAcceleration(currentSpeed: Double, hasBoost: Boolean): Double {
+    private fun getAcceleration(currentSpeed: Float, hasBoost: Boolean): Float {
 
         if (currentSpeed >= SUPERSONIC_SPEED || !hasBoost && currentSpeed >= MEDIUM_SPEED) {
-            return 0.0
+            return 0F
         }
 
-        var accel = 0.0
+        var accel = 0F
         if (currentSpeed < MEDIUM_SPEED) {
-            accel = 30 - currentSpeed * .95
+            accel = 30 - currentSpeed * .95F
         }
 
         if (hasBoost) {
@@ -232,24 +233,24 @@ object AccelerationModel {
         return accel
     }
 
-    fun getFrontFlipDistance(speed: Double): Double {
+    fun getFrontFlipDistance(speed: Float): Float {
         return Math.min(SUPERSONIC_SPEED, speed + FRONT_FLIP_SPEED_BOOST) * FRONT_FLIP_SECONDS
     }
 
-    fun simulateAirAcceleration(car: CarData, duration: Duration, horizontalPitchComponent: Double): DistancePlot {
+    fun simulateAirAcceleration(car: CarData, duration: Duration, horizontalPitchComponent: Float): DistancePlot {
         var currentSpeed = car.velocity.flatten().magnitude()
-        val plot = DistancePlot(DistanceTimeSpeed(0.0, Duration.ofMillis(0), currentSpeed))
+        val plot = DistancePlot(DistanceTimeSpeed(0F, Duration.ofMillis(0), currentSpeed))
 
         var boostRemaining = car.boost
 
-        var distanceSoFar = 0.0
-        var secondsSoFar = 0.0
+        var distanceSoFar = 0F
+        var secondsSoFar = 0F
 
         val secondsToSimulate = duration.seconds
 
         while (secondsSoFar < secondsToSimulate) {
 
-            val acceleration = if (boostRemaining > 0) horizontalPitchComponent * AIR_BOOST_ACCELERATION else 0.0
+            val acceleration = if (boostRemaining > 0) horizontalPitchComponent * AIR_BOOST_ACCELERATION else 0F
             currentSpeed += acceleration * TIME_STEP
             if (currentSpeed > SUPERSONIC_SPEED) {
                 currentSpeed = SUPERSONIC_SPEED

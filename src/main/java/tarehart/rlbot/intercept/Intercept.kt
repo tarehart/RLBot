@@ -15,7 +15,7 @@ data class Intercept(
          */
         val space: Vector3,
         val time: GameTime,
-        val airBoost: Double,
+        val airBoost: Float,
         val strikeProfile: StrikeProfile, // TODO: consider removing this. Sometimes we want to defer the strikeProfile selection until later.
         val distancePlot: DistancePlot,
 

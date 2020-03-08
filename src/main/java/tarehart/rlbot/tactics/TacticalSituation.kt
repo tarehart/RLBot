@@ -8,9 +8,9 @@ import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.time.Duration
 
 class TacticalSituation(
-        val ownGoalFutureProximity: Double,
-        val distanceBallIsBehindUs: Double,
-        val enemyOffensiveApproachError: Double? = null, // If the enemy wants to shoot on our goal, how many radians away from a direct approach? Always positive.
+        val ownGoalFutureProximity: Float,
+        val distanceBallIsBehindUs: Float,
+        val enemyOffensiveApproachError: Float? = null, // If the enemy wants to shoot on our goal, how many radians away from a direct approach? Always positive.
         val expectedContact: Intercept? = null,
         val expectedEnemyContact: Intercept? = null,
         val ballAdvantage: Duration,
@@ -30,8 +30,8 @@ class TacticalSituation(
 ) {
     companion object {
         val DUMMY = TacticalSituation(
-                0.0,
-                0.0,
+                0F,
+                0F,
                 null,
                 null,
                 null,

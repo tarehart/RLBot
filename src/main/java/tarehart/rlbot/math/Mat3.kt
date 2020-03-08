@@ -10,7 +10,7 @@ import kotlin.math.sin
 
 class Mat3(private val matrix: SimpleMatrix) {
 
-    constructor(values: Array<DoubleArray>): this(SimpleMatrix(values))
+    constructor(values: Array<FloatArray>): this(SimpleMatrix(values))
 
     fun transpose(): Mat3 {
         return Mat3(matrix.transpose())
@@ -24,8 +24,8 @@ class Mat3(private val matrix: SimpleMatrix) {
         return Mat3(matrix.mult(mat.matrix))
     }
 
-    fun trace(): Double {
-        return matrix.trace()
+    fun trace(): Float {
+        return matrix.trace().toFloat()
     }
 
     fun get(row: Int, col: Int): Double {
@@ -36,8 +36,8 @@ class Mat3(private val matrix: SimpleMatrix) {
         return Mat3(matrix.plus(mat.matrix))
     }
 
-    operator fun times(value: Double): Mat3 {
-        return Mat3(matrix.scale(value))
+    operator fun times(value: Float): Mat3 {
+        return Mat3(matrix.scale(value.toDouble()))
     }
 
     operator fun times(matrix: Mat3): Mat3 {
@@ -92,7 +92,7 @@ class Mat3(private val matrix: SimpleMatrix) {
         val IDENTITY = Mat3(SimpleMatrix.identity(3))
 
         private fun toMatrix(vec: Vector3): SimpleMatrix {
-            return SimpleMatrix(arrayOf(doubleArrayOf(vec.x), doubleArrayOf(vec.y), doubleArrayOf(vec.z)))
+            return SimpleMatrix(arrayOf(floatArrayOf(vec.x), floatArrayOf(vec.y), floatArrayOf(vec.z)))
         }
 
         private fun toVec(matrix: SimpleMatrix): Vector3 {
@@ -101,25 +101,25 @@ class Mat3(private val matrix: SimpleMatrix) {
 
         fun lookingTo(direction: Vector3, up: Vector3 = Vector3.UP): Mat3 {
             val forward = direction.normaliseCopy()
-            val safeUp = if (abs(forward.z) == 1.0 && abs(up.z) == 1.0) Vector3(x = 1.0) else up
+            val safeUp = if (abs(forward.z) == 1F && abs(up.z) == 1F) Vector3(x = 1.0) else up
             val upward = forward.crossProduct(safeUp.crossProduct(forward)).normaliseCopy()
             val leftward = safeUp.crossProduct(forward).normaliseCopy()
 
             return Mat3(arrayOf(
-                    doubleArrayOf(forward.x, leftward.x, upward.x),
-                    doubleArrayOf(forward.y, leftward.y, upward.y),
-                    doubleArrayOf(forward.z, leftward.z, upward.z)))
+                    floatArrayOf(forward.x, leftward.x, upward.x),
+                    floatArrayOf(forward.y, leftward.y, upward.y),
+                    floatArrayOf(forward.z, leftward.z, upward.z)))
         }
 
         fun rotationMatrix(unitAxis: Vector3, rad: Double): Mat3 {
-            val cosTheta = cos(rad)
-            val sinTheta = sin(rad)
-            val n1CosTheta = 1.0 - cosTheta
+            val cosTheta = cos(rad).toFloat()
+            val sinTheta = sin(rad).toFloat()
+            val n1CosTheta = 1F - cosTheta
             val u = unitAxis
             return Mat3(arrayOf(
-                    doubleArrayOf(cosTheta + u.x * u.x * n1CosTheta, u.x * u.y * n1CosTheta - u.z * sinTheta, u.x * u.z * n1CosTheta + u.y * sinTheta),
-                    doubleArrayOf(u.y * u.x * n1CosTheta + u.z * sinTheta, cosTheta + u.y * u.y * n1CosTheta, u.y * u.z * n1CosTheta - u.x * sinTheta),
-                    doubleArrayOf(u.z * u.x * n1CosTheta - u.y * sinTheta, u.z * u.y * n1CosTheta + u.x * sinTheta, cosTheta + u.z * u.z * n1CosTheta)
+                    floatArrayOf(cosTheta + u.x * u.x * n1CosTheta, u.x * u.y * n1CosTheta - u.z * sinTheta, u.x * u.z * n1CosTheta + u.y * sinTheta),
+                    floatArrayOf(u.y * u.x * n1CosTheta + u.z * sinTheta, cosTheta + u.y * u.y * n1CosTheta, u.y * u.z * n1CosTheta - u.x * sinTheta),
+                    floatArrayOf(u.z * u.x * n1CosTheta - u.y * sinTheta, u.z * u.y * n1CosTheta + u.x * sinTheta, cosTheta + u.z * u.z * n1CosTheta)
             ))
         }
     }

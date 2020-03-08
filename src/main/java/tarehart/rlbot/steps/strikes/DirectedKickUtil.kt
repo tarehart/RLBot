@@ -19,9 +19,10 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
+import kotlin.math.*
 
 object DirectedKickUtil {
-    private val BALL_VELOCITY_INFLUENCE = .2
+    private const val BALL_VELOCITY_INFLUENCE = .2F
 
     fun planKickFromIntercept(intercept: Intercept, ballPath: BallPath, car: CarData, kickStrategy: KickStrategy): DirectedKickPlan? {
 
@@ -45,10 +46,10 @@ object DirectedKickUtil {
 
         var kickDirection: Vector3
         val easyKickAllowed: Boolean
-        var plannedKickForce = Vector3() // This empty vector will never be used, but the compiler hasn't noticed.
-        var desiredBallVelocity = Vector3()
+        val plannedKickForce: Vector3 // This empty vector will never be used, but the compiler hasn't noticed.
+        val desiredBallVelocity: Vector3
 
-        val impactSpeed = if (intercept.strikeProfile.style == Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else 30.0
+        val impactSpeed = if (intercept.strikeProfile.style == Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else 30F
 
         if (intercept.strikeProfile.isForward) {
 
@@ -70,7 +71,7 @@ object DirectedKickUtil {
                 val towardIntercept = (intercept.space - car.position).normaliseCopy()
                 val approximateCarVelocityAtContact = towardIntercept.scaled(preStrikeSpeed)
                 val relativeVelocity = intercept.ballSlice.velocity - approximateCarVelocityAtContact
-                val ballVelocityFactor = BALL_VELOCITY_INFLUENCE + Math.max(0.0, 4 - relativeVelocity.magnitude() * 0.12)
+                val ballVelocityFactor = BALL_VELOCITY_INFLUENCE + max(0.0, 4 - relativeVelocity.magnitude() * 0.12)
 
                 plannedKickForce = Vector3(
                         desiredBallVelocity.x - transverseBallVelocity.x * ballVelocityFactor,
@@ -102,7 +103,7 @@ object DirectedKickUtil {
      * approach vector. If the approach vector is perfectly aligned with the intended kick force, that's easy--
      * no deviation. This method measures the deviation in radians. Can return positive or negative.
      */
-    fun getEstimatedApproachDeviationFromKickForce(car: CarData, kickLocation: Vector2, desiredForce: Vector2): Double {
+    fun getEstimatedApproachDeviationFromKickForce(car: CarData, kickLocation: Vector2, desiredForce: Vector2): Float {
         val estimatedApproach = ManeuverMath.estimateApproachVector(PositionFacing(car), kickLocation)
         return estimatedApproach.correctionAngle(desiredForce)
     }
@@ -128,30 +129,30 @@ object DirectedKickUtil {
      * dodgePosition: The place in midair where the car initiates a dodge with the second jump
      * strikeTravel: The distance between the dodgePosition to the car's position at the moment of ball contact
      */
-    fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Double, approachVsKickForceAngle:Double,
-                          carPosition: Vector2, carPositionAtContact: Vector2, shallowAngleThreshold: Double, renderer: Renderer): PreKickWaypoint? {
+    fun getAngledWaypoint(intercept: Intercept, arrivalSpeed: Float, approachVsKickForceAngle:Float,
+                          carPosition: Vector2, carPositionAtContact: Vector2, shallowAngleThreshold: Float, renderer: Renderer): PreKickWaypoint? {
 
         val postDodgeVelocity = intercept.strikeProfile.getPostDodgeVelocity(arrivalSpeed)
 
         val strikeTravel = intercept.strikeProfile.postDodgeTime.seconds * postDodgeVelocity.speed
-        val deflectionAngle = Atan.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * Math.signum(approachVsKickForceAngle)
+        val deflectionAngle = Atan.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * sign(approachVsKickForceAngle)
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
 
         val finalApproachVsKickForceAngle = approachVsKickForceAngle - deflectionAngle
-        if (Math.abs(finalApproachVsKickForceAngle) > shallowAngleThreshold) {
+        if (abs(finalApproachVsKickForceAngle) > shallowAngleThreshold) {
             // The angle is too shallow, we need to curve into it!
             val force = intercept.ballSlice.space.flatten() - carPositionAtContact
             val approach = carPositionAtContact - carPosition
-            val approachError = finalApproachVsKickForceAngle - shallowAngleThreshold * Math.signum(deflectionAngle)
+            val approachError = finalApproachVsKickForceAngle - shallowAngleThreshold * sign(deflectionAngle)
             val allowedApproach = approach.rotateTowards(force, approachError)
             val wishfulCarPosition = carPositionAtContact - allowedApproach
             val dodgePosition = dodgePosition(wishfulCarPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
             val dodgePositionToHop = (wishfulCarPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
             val hopPosition = dodgePosition + dodgePositionToHop
 
-            renderer.drawLine3d(Color.GREEN, dodgePosition.withZ(intercept.space.z).toRlbot(), carPositionAtContact.withZ(intercept.space.z).toRlbot())
-            renderer.drawLine3d(Color.CYAN, hopPosition.withZ(ManeuverMath.BASE_CAR_Z).toRlbot(), dodgePosition.withZ(intercept.space.z).toRlbot())
+            renderer.drawLine3d(Color.GREEN, dodgePosition.withZ(intercept.space.z), carPositionAtContact.withZ(intercept.space.z))
+            renderer.drawLine3d(Color.CYAN, hopPosition.withZ(ManeuverMath.BASE_CAR_Z), dodgePosition.withZ(intercept.space.z))
 
             return StrictPreKickWaypoint(
                     position = hopPosition,
@@ -165,22 +166,22 @@ object DirectedKickUtil {
         val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
         val hopPosition = dodgePosition + dodgePositionToHop
 
-        renderer.drawLine3d(Color.ORANGE, dodgePosition.withZ(intercept.space.z).toRlbot(), carPositionAtContact.withZ(intercept.space.z).toRlbot())
-        renderer.drawLine3d(Color.YELLOW, hopPosition.withZ(ManeuverMath.BASE_CAR_Z).toRlbot(), dodgePosition.withZ(intercept.space.z).toRlbot())
+        renderer.drawLine3d(Color.ORANGE, dodgePosition.withZ(intercept.space.z), carPositionAtContact.withZ(intercept.space.z))
+        renderer.drawLine3d(Color.YELLOW, hopPosition.withZ(ManeuverMath.BASE_CAR_Z), dodgePosition.withZ(intercept.space.z))
 
         return AnyFacingPreKickWaypoint(
                 position = hopPosition,
                 idealFacing = dodgePosition - carPosition,
-                allowableFacingError = Math.PI / 8,
+                allowableFacingError = Math.PI.toFloat() / 8,
                 expectedTime = launchPadMoment,
                 waitUntil = if (intercept.needsPatience) launchPadMoment else null
         )
     }
 
-    private fun dodgePosition(carPosition: Vector2, carAtContact: Vector2, dodgeDeflectionAngle: Double, dodgeTravel: Double): Vector2? {
+    private fun dodgePosition(carPosition: Vector2, carAtContact: Vector2, dodgeDeflectionAngle: Float, dodgeTravel: Float): Vector2? {
 
         val toContact = carAtContact - carPosition
-        val triangle = Triangle.sideSideAngle(toContact.magnitude(), dodgeTravel, Math.PI - Math.abs(dodgeDeflectionAngle)) ?: return null
+        val triangle = Triangle.sideSideAngle(toContact.magnitude(), dodgeTravel, Math.PI.toFloat() - abs(dodgeDeflectionAngle)) ?: return null
 
         // We want the location of pt A as the launch position.
         // carPosition is at B
@@ -188,8 +189,8 @@ object DirectedKickUtil {
 
         // Let's find the absolute angle of side B, by getting the absolute angle of side A and then adding angleC to it.
         val sideAAngle = Atan.atan2(toContact.y, toContact.x)
-        val sideBAngle = sideAAngle + triangle.angleB * Math.signum(-dodgeDeflectionAngle) // TODO: is this inverted?
-        val toDodge = Vector2(Math.cos(sideBAngle), Math.sin(sideBAngle)).scaled(triangle.sideC)
+        val sideBAngle = sideAAngle + triangle.angleB * sign(-dodgeDeflectionAngle) // TODO: is this inverted?
+        val toDodge = Vector2(cos(sideBAngle), sin(sideBAngle)).scaled(triangle.sideC)
         return carPosition + toDodge
 
     }

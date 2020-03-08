@@ -48,7 +48,7 @@ class PlanarBlockStep: NestedPlanStep() {
                     car.position + car.orientation.rightVector.scaledToMagnitude(CONTACT_DISTANCE))
         } else {
             interceptPlane = Plane(
-                    car.orientation.rightVector.scaled(-1.0),
+                    car.orientation.rightVector.scaled(-1F),
                     car.position - car.orientation.rightVector.scaledToMagnitude(CONTACT_DISTANCE))
         }
 

@@ -16,12 +16,12 @@ import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 
-class DoubleJumpPokeStrike(height: Double): StrikeProfile() {
+class DoubleJumpPokeStrike(height: Float): StrikeProfile() {
 
     // TODO: secondsForMashJumpHeight is designed for single jumps not double jumps. It works pretty well anyway for now.
     override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(height) ?: 0.8)
     override val postDodgeTime = Duration.ofMillis(0)
-    override val speedBoost = 0.0
+    override val speedBoost = 0.0F
     override val style = Style.DOUBLE_JUMP_POKE
 
     override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {
@@ -39,7 +39,7 @@ class DoubleJumpPokeStrike(height: Double): StrikeProfile() {
         return intercept.space.z < MAX_BALL_HEIGHT_FOR_DOUBLE_JUMP_POKE
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         val flatForce = desiredKickForce.flatten()
         val strikeTravel = preDodgeTime.seconds * expectedArrivalSpeed
         val launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)

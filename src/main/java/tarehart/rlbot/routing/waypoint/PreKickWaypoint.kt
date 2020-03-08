@@ -16,7 +16,7 @@ abstract class PreKickWaypoint(
         val position: Vector2,
         facing: Vector2,
         val expectedTime: GameTime,
-        val expectedSpeed: Double? = null,
+        val expectedSpeed: Float? = null,
         val waitUntil: GameTime? = null) {
 
     val facing = facing.normalized()

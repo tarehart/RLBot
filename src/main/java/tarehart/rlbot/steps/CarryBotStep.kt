@@ -1,27 +1,14 @@
 package tarehart.rlbot.steps
 
-import rlbot.manager.BotLoopRenderer
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.AccelerationModel
-import tarehart.rlbot.carpredict.ControlFinesse
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
-import tarehart.rlbot.planning.GoalUtil
-import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
-
 import tarehart.rlbot.tuning.BotLog.println
-import java.awt.Color
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * I don't think this was ever tested.
@@ -172,9 +159,11 @@ class CarryBotStep : StandardStep() {
         fun canCarry(bundle: TacticalBundle, log: Boolean): Boolean {
 
             val car = bundle.agentInput.myCarData
-            val (x, y, z) = positionInCarCoordinates(car, bundle.agentInput.ballPosition)
+            val localPos = positionInCarCoordinates(car, bundle.agentInput.ballPosition)
+            val y = localPos.y
+            val z = localPos.z
 
-            val xMag = Math.abs(x)
+            val xMag = Math.abs(localPos.x)
             if (xMag > MAX_X_DIFF) {
                 if (log) {
                     println("Fell off the side", bundle.agentInput.playerIndex)

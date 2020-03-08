@@ -2,7 +2,6 @@ package tarehart.rlbot.planning
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.intercept.strike.FlipHitStrike
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.steps.blind.BlindSequence
@@ -10,6 +9,8 @@ import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.travel.LineUpInReverseStep
 import tarehart.rlbot.time.Duration
+import kotlin.math.cos
+import kotlin.math.sin
 
 object SetPieces {
 
@@ -102,8 +103,8 @@ object SetPieces {
         val realDirection = direction.scaledToMagnitude(10.0) - velocityOffset
         val correctionAngle = car.orientation.noseVector.flatten().correctionAngle(realDirection)
 
-        val pitch = -Math.cos(correctionAngle)
-        val roll = -Math.sin(correctionAngle)
+        val pitch = -cos(correctionAngle)
+        val roll = -sin(correctionAngle)
 
         return Plan()
                 .unstoppable()

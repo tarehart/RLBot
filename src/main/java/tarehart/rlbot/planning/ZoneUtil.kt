@@ -6,6 +6,8 @@ import tarehart.rlbot.math.Polygon
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.tactics.TacticalSituation
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 object ZoneUtil {
 
@@ -73,8 +75,8 @@ object ZoneUtil {
 
         val topSlope = (y - topPost.y) / (x - topPost.x)
         val bottomSlope = (y - bottomPost.y) / (x - bottomPost.x)
-        val topFactor = extendedDistance / Math.sqrt(1 + Math.pow(topSlope, 2.0))
-        val bottomFactor = extendedDistance / Math.sqrt(1 + Math.pow(bottomSlope, 2.0))
+        val topFactor = extendedDistance / sqrt(1 + topSlope.pow(2))
+        val bottomFactor = extendedDistance / sqrt(1 + bottomSlope.pow(2))
 
         val extendedTop = Vector2(
                 topPost.x + topFactor,

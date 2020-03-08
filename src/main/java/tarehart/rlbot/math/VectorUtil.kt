@@ -2,9 +2,8 @@ package tarehart.rlbot.math
 
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-
-import java.util.Optional
-import java.util.function.Function
+import kotlin.math.cos
+import kotlin.math.sin
 
 object VectorUtil {
 
@@ -18,11 +17,11 @@ object VectorUtil {
         return onto.scaled(scale)
     }
 
-    fun flatDistance(a: Vector3, b: Vector3): Double {
+    fun flatDistance(a: Vector3, b: Vector3): Float {
         return a.flatten().distance(b.flatten())
     }
 
-    fun flatDistance(a: Vector3, b: Vector3, planeNormal: Vector3): Double {
+    fun flatDistance(a: Vector3, b: Vector3, planeNormal: Vector3): Float {
         return a.projectToPlane(planeNormal).distance(b.projectToPlane(planeNormal))
     }
 
@@ -30,7 +29,7 @@ object VectorUtil {
         // get d value
         val d = plane.normal.dotProduct(plane.position)
 
-        if (plane.normal.dotProduct(segmentVector) == 0.0) {
+        if (plane.normal.dotProduct(segmentVector) == 0F) {
             return null // No intersection, the line is parallel to the plane
         }
 
@@ -52,10 +51,11 @@ object VectorUtil {
 
     }
 
-    fun rotateVector(vec: Vector2, radians: Double): Vector2 {
+    fun rotateVector(vec: Vector2, radians: Number): Vector2 {
+        val r = radians.toFloat()
         return Vector2(
-                vec.x * Math.cos(radians) - vec.y * Math.sin(radians),
-                vec.x * Math.sin(radians) + vec.y * Math.cos(radians))
+                vec.x * cos(r) - vec.y * sin(r),
+                vec.x * sin(r) + vec.y * cos(r))
     }
 
     fun orthogonal(vec: Vector2): Vector2 {
@@ -77,10 +77,10 @@ object VectorUtil {
         val result = orthogonal(vec)
         return if (isCorrectDirection.invoke(result)) {
             result
-        } else result.scaled(-1.0)
+        } else result.scaled(-1F)
     }
 
-    fun getCorrectionAngle(current: Vector3, ideal: Vector3, up: Vector3): Double {
+    fun getCorrectionAngle(current: Vector3, ideal: Vector3, up: Vector3): Float {
 
         val currentProj = current.projectToPlane(up)
         val idealProj = ideal.projectToPlane(up)
@@ -89,12 +89,12 @@ object VectorUtil {
         val cross = currentProj.crossProduct(idealProj)
 
         if (cross.dotProduct(up) < 0) {
-            angle *= -1.0
+            angle *= -1F
         }
         return angle
     }
 
-    fun weightedAverage(a: Vector3, b: Vector3, weightOfA: Double): Vector3 {
+    fun weightedAverage(a: Vector3, b: Vector3, weightOfA: Float): Vector3 {
         val weightedA = a.scaled(weightOfA)
         val weightedB = b.scaled(1 - weightOfA)
         return weightedA.plus(weightedB)

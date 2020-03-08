@@ -26,7 +26,7 @@ abstract class StrikeProfile {
     /**
      * The amount of speed potentially gained over the course of the strike's final stage (generally after driving over and lining up)
      */
-    abstract val speedBoost: Double
+    abstract val speedBoost: Float
 
     abstract fun getPlan(car: CarData, intercept: SpaceTime): Plan?
 
@@ -34,7 +34,7 @@ abstract class StrikeProfile {
         return getPlan(car, kickPlan.intercept.toSpaceTime())
     }
 
-    abstract fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint?
+    abstract fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint?
 
     abstract val style: Style
 
@@ -45,20 +45,20 @@ abstract class StrikeProfile {
 
     open val isForward = true
 
-    data class PostDodgeVelocity(val forwardMagnitude: Double, val sidewaysMagnitude: Double) {
+    data class PostDodgeVelocity(val forwardMagnitude: Float, val sidewaysMagnitude: Float) {
         val speed = Vector2(forwardMagnitude, sidewaysMagnitude).magnitude()
     }
 
     /**
      * When we are doing either a side dodge or a diagonal dodge, the car will speed up in the forward and horizontal directions.
      */
-    fun getPostDodgeVelocity(arrivalSpeed: Double): PostDodgeVelocity {
+    fun getPostDodgeVelocity(arrivalSpeed: Float): PostDodgeVelocity {
 
         // https://youtu.be/pX950bhGhJE?t=370
         val sidewaysImpulseMagnitude = ManeuverMath.DODGE_SPEED * (1 + 0.9 *  arrivalSpeed / AccelerationModel.SUPERSONIC_SPEED)
 
         val sidewaysComponent = if (isForward) 0.0 else sidewaysImpulseMagnitude
-        val forwardComponent = if (style == Style.SIDE_HIT) 0.0 else ManeuverMath.DODGE_SPEED
+        val forwardComponent = if (style == Style.SIDE_HIT) 0F else ManeuverMath.DODGE_SPEED
 
         val tentativeFinalSpeed = Vector2(arrivalSpeed + forwardComponent, sidewaysComponent)
         val finalSpeed = tentativeFinalSpeed.magnitude()

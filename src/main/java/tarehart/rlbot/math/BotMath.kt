@@ -2,7 +2,10 @@ package tarehart.rlbot.math
 
 
 object BotMath {
-    fun nonZeroSignum(value: Double) : Int {
+
+    const val PI = Math.PI.toFloat()
+
+    fun nonZeroSignum(value: Float) : Int {
         return if (value < 0) -1 else 1
     }
 }

@@ -18,15 +18,16 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
+import kotlin.math.min
 
-class JumpHitStrike(height: Double): StrikeProfile() {
+class JumpHitStrike(height: Float): StrikeProfile() {
 
     // If we have time to tilt back, the nose will be higher and we can cheat a little.
-    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) * .9
+    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) * .9F
 
-    override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(requiredHeight) ?: .8 + .016)
+    override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(requiredHeight) ?: .8F + .016F)
     override val postDodgeTime = Duration.ofMillis(50)
-    override val speedBoost = 10.0
+    override val speedBoost = 10.0F
     override val style = Style.JUMP_HIT
 
     override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {
@@ -42,7 +43,7 @@ class JumpHitStrike(height: Double): StrikeProfile() {
         return intercept.space.z < MAX_BALL_HEIGHT_FOR_JUMP_HIT
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         val flatForce = desiredKickForce.flatten()
         val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, expectedArrivalSpeed + speedBoost)
         val strikeTravel = preDodgeTime.seconds * expectedArrivalSpeed + postDodgeTime.seconds * postDodgeSpeed
@@ -62,9 +63,9 @@ class JumpHitStrike(height: Double): StrikeProfile() {
 
         const val MAX_BALL_HEIGHT_FOR_JUMP_HIT = ManeuverMath.MASH_JUMP_HEIGHT
 
-        fun performJumpHit(jumpSeconds: Double): Plan {
+        fun performJumpHit(jumpSeconds: Float): Plan {
 
-            val pitchBackPortion = Math.min(.36, jumpSeconds)
+            val pitchBackPortion = min(.36F, jumpSeconds)
             val driftUpPortion = jumpSeconds - pitchBackPortion
 
             val blindSequence = BlindSequence()

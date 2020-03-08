@@ -84,7 +84,7 @@ class BallPath() {
             if (time2.isAfter(time)) {
 
                 val simulationStepMillis = Duration.between(time1, time2).millis
-                val tweenPoint = Duration.between(time1, time).millis * 1.0 / simulationStepMillis
+                val tweenPoint = Duration.between(time1, time).millis * 1F / simulationStepMillis
                 val toNext = space2.minus(space1)
                 val toTween = toNext.scaled(tweenPoint)
                 val space = space1.plus(toTween)

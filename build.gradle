@@ -33,6 +33,11 @@ run {
 
 test {
     systemProperty 'java.library.path', dllDirectory
+
+    // This avoids running integration tests during the test target,
+    // which also runs during a build. To run integration tests, first go into
+    // IntelliJ settings and configure gradle to run tests with IntelliJ.
+    // Then open the test file and use the play buttons.
 	exclude 'tarehart/rlbot/integration/**'
 }
 

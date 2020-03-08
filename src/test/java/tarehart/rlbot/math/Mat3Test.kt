@@ -8,15 +8,15 @@ import tarehart.rlbot.math.vector.Vector3
 class Mat3Test {
 
     val identity = Mat3(arrayOf(
-            doubleArrayOf(1.0, 0.0, 0.0),
-            doubleArrayOf(0.0, 1.0, 0.0),
-            doubleArrayOf(0.0, 0.0, 1.0)
+            floatArrayOf(1F, 0F, 0F),
+            floatArrayOf(0F, 1F, 0F),
+            floatArrayOf(0F, 0F, 1F)
     ))
 
     val turnRight = Mat3(arrayOf(
-            doubleArrayOf(0.0, 1.0, 0.0),
-            doubleArrayOf(-1.0, 0.0, 0.0),
-            doubleArrayOf(0.0, 0.0, 1.0)
+            floatArrayOf(0F, 1F, 0F),
+            floatArrayOf(-1F, 0F, 0F),
+            floatArrayOf(0F, 0F, 1F)
     ))
 
     @Test

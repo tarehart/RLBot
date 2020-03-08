@@ -71,7 +71,7 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
             return startPlan(it, bundle)
         }
 
-        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5.0), 0.0)
+        val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(5.0), 0F)
 
         val steerPlan = kickPlan.launchPad.planRoute(car, distancePlot)
 

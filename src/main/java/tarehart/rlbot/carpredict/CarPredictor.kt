@@ -103,7 +103,7 @@ class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean 
     }
 
     companion object {
-        private val TIME_STEP = 0.02
+        private val TIME_STEP = 0.02F
 
         fun doNaivePrediction(car: CarData, duration: Duration, acceleration: Vector3, respectFloor: Boolean = true): CarPath {
             val velocity = Vector3(

@@ -13,6 +13,8 @@ import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
+import kotlin.math.abs
+import kotlin.math.sign
 
 class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boolean = false) : NestedPlanStep() {
     override fun getLocalSituation(): String {
@@ -40,7 +42,7 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
 
         if (counterAttack && bundle.agentInput.matchInfo.isKickoffPause) {
             val goalLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center.flatten()
-            val toEnemy = goalLine.scaled(-1.0)
+            val toEnemy = goalLine.scaled(-1F)
             return startPlan(Plan(Posture.NEUTRAL)
                     .withStep(ParkTheCarStep { _ -> PositionFacing(goalLine, toEnemy) })
                     .withStep(BlindStep(Duration.ofSeconds(0.5), AgentOutput())),
@@ -48,8 +50,8 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         }
 
         val target: Vector2
-        val ySide = Math.signum(car.position.y)
-        if (kickoffType == KickoffType.CHEATIN && Math.abs(car.position.y) > CHEATIN_BOOST_Y + 10) {
+        val ySide = sign(car.position.y)
+        if (kickoffType == KickoffType.CHEATIN && abs(car.position.y) > CHEATIN_BOOST_Y + 10) {
             // Steer toward boost
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
 
@@ -83,23 +85,23 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
     }
 
     companion object {
-        private val DIAGONAL_KICKOFF_X = 40.96
-        private val DIAGONAL_KICKOFF_Y = 51.2
-        private val CHEATER_KICKOFF_X = 5.12
-        private val CHEATER_KICKOFF_Y = 76.8
-        private val CENTER_KICKOFF_X = 0.0
-        private val CENTER_KICKOFF_Y = 92.16
-        private val WIGGLE_ROOM = 2.0
-        private val CHEATIN_BOOST_Y = 58.0
+        private val DIAGONAL_KICKOFF_X = 40.96F
+        private val DIAGONAL_KICKOFF_Y = 51.2F
+        private val CHEATER_KICKOFF_X = 5.12F
+        private val CHEATER_KICKOFF_Y = 76.8F
+        private val CENTER_KICKOFF_X = 0.0F
+        private val CENTER_KICKOFF_Y = 92.16F
+        private val WIGGLE_ROOM = 2.0F
+        private val CHEATIN_BOOST_Y = 58.0F
 
-        private fun getNumberDistance(first: Double, second: Double): Double {
-            return Math.abs(first - second)
+        private fun getNumberDistance(first: Float, second: Float): Float {
+            return abs(first - second)
         }
 
         fun getKickoffType(bundle: TacticalBundle): KickoffType {
             val car = bundle.agentInput.myCarData
-            val xPosition = Math.abs(car.position.x)
-            val yPosition = Math.abs(car.position.y)
+            val xPosition = abs(car.position.x)
+            val yPosition = abs(car.position.y)
             if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(CENTER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
                 BotLog.println("it be center", car.playerIndex)
                 return KickoffType.CENTER

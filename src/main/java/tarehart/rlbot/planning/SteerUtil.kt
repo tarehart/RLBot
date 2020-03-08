@@ -24,9 +24,9 @@ import java.util.*
 
 object SteerUtil {
 
-    private val GOOD_ENOUGH_ANGLE = Math.PI * 0.05
+    private const val GOOD_ENOUGH_ANGLE = 0.1F
 
-    fun getCatchOpportunity(carData: CarData, ballPath: BallPath, boostBudget: Double): SpaceTime? {
+    fun getCatchOpportunity(carData: CarData, ballPath: BallPath, boostBudget: Float): SpaceTime? {
 
         var searchStart = carData.time
 
@@ -54,7 +54,7 @@ object SteerUtil {
         return null
     }
 
-    private fun canGetUnder(carData: CarData, spaceTime: SpaceTime, boostBudget: Double): Boolean {
+    private fun canGetUnder(carData: CarData, spaceTime: SpaceTime, boostBudget: Float): Boolean {
         val plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), boostBudget, carData.position.distance(spaceTime.space))
 
         val strikeProfile = ChipStrike()
@@ -67,11 +67,11 @@ object SteerUtil {
         return dts?.takeIf { it.distance > requiredDistance } != null
     }
 
-    fun getCorrectionAngleRad(carData: CarData, target: Vector3): Double {
+    fun getCorrectionAngleRad(carData: CarData, target: Vector3): Float {
         return getCorrectionAngleRad(carData, target.flatten())
     }
 
-    fun getCorrectionAngleRad(carData: CarData, target: Vector2): Double {
+    fun getCorrectionAngleRad(carData: CarData, target: Vector2): Float {
         val noseVector = carData.orientation.noseVector.flatten()
         val toTarget = target.minus(carData.position.flatten())
         return noseVector.correctionAngle(toTarget)
@@ -92,7 +92,7 @@ object SteerUtil {
 
             adjustedPosition = getAdjustedSoccerGoalCrossing(position, myPositionFlat)
             if(DisplayFlags[DisplayFlags.GOAL_CROSSING] == 1) {
-                RenderUtil.drawSquare(car.renderer, Plane(Vector3.UP, adjustedPosition.toVector3()), 1.0, Color.RED)
+                RenderUtil.drawSquare(car.renderer, Plane(Vector3.UP, adjustedPosition.toVector3()), 1, Color.RED)
             }
 
         } else {
@@ -121,7 +121,7 @@ object SteerUtil {
         val crossingFactor = (yLine - p2.y) / (p1.y - p2.y)
         val desiredExit = p2 + toTarget * crossingFactor
         val nearestGoal = GoalUtil.getNearestGoal(desiredExit.toVector3())
-        return nearestGoal.getNearestEntrance(desiredExit.toVector3(), 2.0).flatten()
+        return nearestGoal.getNearestEntrance(desiredExit.toVector3(), 2F).flatten()
     }
 
     fun backUpTowardGroundPosition(car: CarData, position: Vector2): AgentOutput {
@@ -144,7 +144,7 @@ object SteerUtil {
         val carPlane = ArenaModel.getNearestPlane(car.position)
         val targetPlane = ArenaModel.getNearestPlane(position)
 
-        if (carPlane.normal.z == 1.0 &&
+        if (carPlane.normal.z == 1F &&
                 TacticsTelemetry[car.playerIndex]?.gameMode == GameMode.SOCCER &&
                 crossesSoccerGoalLine(position.flatten(), car.position.flatten())) {
 
@@ -159,7 +159,7 @@ object SteerUtil {
         val carShadowOnTargetPlane = car.position.shadowOntoPlane(targetPlane)
         val distanceFromTargetPlane = targetPlane.distance(car.position)
         val targetDistanceFromCarPlane =  carPlane.distance(position)
-        val hurryToSeamBias = 1.5 // 1.0 would be neutral
+        val hurryToSeamBias = 1.5F // 1.0 would be neutral
         val carPlaneWeight = distanceFromTargetPlane / (distanceFromTargetPlane + targetDistanceFromCarPlane * hurryToSeamBias)
         val toPositionAlongSeam = toPositionOnTargetPlane.projectToPlane(carPlane.normal)
         val seamPosition = carShadowOnTargetPlane.plus(toPositionAlongSeam.scaled(carPlaneWeight))
@@ -175,7 +175,7 @@ object SteerUtil {
         return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false, carData.spin.yawRate)
     }
 
-    private fun getSteeringOutput(correctionAngle: Double, distance: Double, speed: Double, isSupersonic: Boolean, conserveBoost: Boolean, yawRate: Double): AgentOutput {
+    private fun getSteeringOutput(correctionAngle: Float, distance: Float, speed: Float, isSupersonic: Boolean, conserveBoost: Boolean, yawRate: Float): AgentOutput {
         val difference = Math.abs(correctionAngle)
         val turnSharpness = difference * 6 / Math.PI + difference * speed * .1
         //turnSharpness = (1 - DEAD_ZONE) * turnSharpness + Math.signum(turnSharpness) * DEAD_ZONE;
@@ -198,7 +198,7 @@ object SteerUtil {
         return steerTowardGroundPosition(carData, position.flatten(), detourForBoost = false)
     }
 
-    fun getDistanceFromCar(car: CarData, loc: Vector3): Double {
+    fun getDistanceFromCar(car: CarData, loc: Vector3): Float {
         return VectorUtil.flatDistance(loc, car.position)
     }
 

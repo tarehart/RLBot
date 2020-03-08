@@ -3,7 +3,6 @@ package tarehart.rlbot.routing
 import rlbot.render.Renderer
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
 import java.awt.BasicStroke
@@ -23,7 +22,7 @@ class AccelerationRoutePart(
     override fun drawDebugInfo(graphics: Graphics2D) {
         graphics.stroke = BasicStroke(1f)
         graphics.color = Color(125, 216, 171)
-        graphics.draw(Line2D.Double(start.x, start.y, end.x, end.y))
+        graphics.draw(Line2D.Float(start.x, start.y, end.x, end.y))
     }
 
     override fun renderDebugInfo(renderer: Renderer) {
@@ -35,10 +34,10 @@ class AccelerationRoutePart(
         val toStartNormal = toStart.normaliseCopy()
         val raisedEnd = end.withZ(2.0)
         val distance = toStart.magnitude()
-        var distanceCovered = 4.0
+        var distanceCovered = 4.0F
         while (distanceCovered < distance) {
             RenderUtil.drawSquare(renderer, Plane(toStart.normaliseCopy(), raisedEnd + toStartNormal.scaled(distanceCovered)), 2.0, Color.GREEN)
-            distanceCovered *= 1.5
+            distanceCovered *= 1.5F
         }
     }
 

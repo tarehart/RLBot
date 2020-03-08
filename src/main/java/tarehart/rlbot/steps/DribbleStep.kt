@@ -7,7 +7,6 @@ import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.strike.DribbleStrike
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
-import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.GoalUtil
@@ -47,8 +46,8 @@ class DribbleStep : NestedPlanStep() {
                 strikeProfileFn =  { DribbleStrike() }) ?: return null
 
         if(DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] == 1) {
-            renderer.drawCenteredRectangle3d(Color.CYAN, intercept.space.toRlbot(), 4, 4, true)
-            renderer.drawLine3d(Color.GREEN, car.position.toRlbot(), intercept.space.toRlbot())
+            renderer.drawCenteredRectangle3d(Color.CYAN, intercept.space, 4, 4, true)
+            renderer.drawLine3d(Color.GREEN, car.position, intercept.space)
         }
 
         val enemyGoal = GoalUtil.getEnemyGoal(car.team)
@@ -78,8 +77,8 @@ class DribbleStep : NestedPlanStep() {
                 .minus(carToIntercept.scaledToMagnitude(ballHeightFallback).withZ(0.0))
 
         if(DisplayFlags[DisplayFlags.DRIBBLE_INTERCEPT] == 1) {
-            renderer.drawLine3d(Color.ORANGE, intercept.space.toRlbot(), basisTip.toRlbot())
-            renderer.drawCenteredRectangle3d(Color.RED, basisTip.toRlbot(), 8, 8, true)
+            renderer.drawLine3d(Color.ORANGE, intercept.space, basisTip)
+            renderer.drawCenteredRectangle3d(Color.RED, basisTip, 8, 8, true)
         }
 
         val speedupMillis = if (distanceToIntercept > 5) 100L else 0

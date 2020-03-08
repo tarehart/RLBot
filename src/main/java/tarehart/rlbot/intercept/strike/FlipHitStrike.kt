@@ -4,8 +4,8 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
@@ -17,12 +17,13 @@ import tarehart.rlbot.steps.strikes.DirectedKickUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.LatencyAdvisor
+import kotlin.math.min
 
 class FlipHitStrike: StrikeProfile() {
 
     override val preDodgeTime = Duration.ZERO
     override val postDodgeTime = Duration.ofMillis(400)
-    override val speedBoost = 10.0
+    override val speedBoost = 10.0F
     override val style = Style.FLIP_HIT
 
     override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {
@@ -38,9 +39,9 @@ class FlipHitStrike: StrikeProfile() {
         return isVerticallyAccessible(intercept.space.z)
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         val flatForce = desiredKickForce.flatten()
-        val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, expectedArrivalSpeed + speedBoost)
+        val postDodgeSpeed = min(AccelerationModel.SUPERSONIC_SPEED, expectedArrivalSpeed + speedBoost)
         val strikeTravel = preDodgeTime.seconds * expectedArrivalSpeed + postDodgeTime.seconds * postDodgeSpeed
         val launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
         return DirectedKickUtil.getStandardWaypoint(launchPosition, flatForce.normalized(), intercept)
@@ -57,7 +58,7 @@ class FlipHitStrike: StrikeProfile() {
 
         private const val MAX_HEIGHT_OF_BALL_FOR_FLIP_HIT = 3.2
 
-        fun isVerticallyAccessible(height: Double): Boolean {
+        fun isVerticallyAccessible(height: Float): Boolean {
             return height <= MAX_HEIGHT_OF_BALL_FOR_FLIP_HIT
         }
 

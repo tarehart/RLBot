@@ -10,7 +10,7 @@ class CarData (
         val velocity: Vector3,
         val orientation: CarOrientation,
         val spin: CarSpin,
-        val boost: Double,
+        val boost: Float,
         val isSupersonic: Boolean,
         val team: Team,
         val playerIndex: Int,
@@ -20,7 +20,8 @@ class CarData (
         val isDemolished: Boolean,
         val name: String,
         val renderer: Renderer,
-        val isBot: Boolean
+        val isBot: Boolean,
+        val hitbox: CarHitbox
 ) {
 
     /**

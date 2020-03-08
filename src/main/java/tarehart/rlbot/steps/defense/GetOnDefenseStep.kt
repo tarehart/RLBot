@@ -38,7 +38,7 @@ class GetOnDefenseStep : NestedPlanStep(), UnfailingStep {
         val distanceToAnchor = car.position.flatten().distance(anchorPoint.flatten())
         val waypoint = anchorPoint + centerToAnchor.scaledToMagnitude(Clamper.clamp(distanceToAnchor * .4 - 5, 0.0, 30.0))
 
-        car.renderer.drawLine3d(Color.CYAN, waypoint.toRlbot(), anchorPoint.toRlbot())
+        car.renderer.drawLine3d(Color.CYAN, waypoint, anchorPoint)
 
         if (distanceToAnchor > 60) {
             SteerUtil.getSensibleFlip(car, waypoint)?.let { return startPlan(it, bundle) }

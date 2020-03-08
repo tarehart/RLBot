@@ -2,9 +2,10 @@ package tarehart.rlbot.planning
 
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.Plane
-import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.BallPath
+import kotlin.math.min
+import kotlin.math.sign
 
 
 class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
@@ -19,10 +20,10 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
     }
 
 
-    override fun getNearestEntrance(ballPosition: Vector3, padding: Double): Vector3 {
+    override fun getNearestEntrance(ballPosition: Vector3, padding: Number): Vector3 {
 
         val centerToBall = ballPosition - center
-        val newRadius = Math.min(RADIUS - padding, centerToBall.flatten().magnitude())
+        val newRadius = min(RADIUS - padding.toFloat(), centerToBall.flatten().magnitude())
         val centerToEntrance = centerToBall.flatten().scaledToMagnitude(newRadius).toVector3()
 
         return center + centerToEntrance
@@ -31,15 +32,15 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
     /**
      * From shooter's perspective
      */
-    override fun getLeftPost(padding: Double): Vector3 {
-        return Vector3(center.x - (RADIUS - padding) * Math.signum(center.y), center.y, center.z)
+    override fun getLeftPost(padding: Number): Vector3 {
+        return Vector3(center.x - (RADIUS - padding.toFloat()) * sign(center.y), center.y, center.z)
     }
 
     /**
      * From shooter's perspective
      */
-    override fun getRightPost(padding: Double): Vector3 {
-        return Vector3(center.x + (RADIUS - padding) * Math.signum(center.y), center.y, center.z)
+    override fun getRightPost(padding: Number): Vector3 {
+        return Vector3(center.x + (RADIUS - padding.toFloat()) * sign(center.y), center.y, center.z)
     }
 
     override fun predictGoalEvent(ballPath: BallPath): BallSlice? {
@@ -53,8 +54,8 @@ class HoopsGoal(negativeSide: Boolean): Goal(negativeSide) {
 
     companion object {
 
-        private const val GOAL_DISTANCE = 65.0
-        const val GOAL_HEIGHT = 7.0
-        const val RADIUS = 16.0
+        private const val GOAL_DISTANCE = 65.0F
+        const val GOAL_HEIGHT = 7.0F
+        const val RADIUS = 16.0F
     }
 }

@@ -15,7 +15,7 @@ class Plane(normal: Vector3, position: Vector3): Ray(position, normal) {
      * This is direction sensitive. Distance will be negative if the point is
      * behind the plane!
      */
-    fun distance(point: Vector3): Double {
+    fun distance(point: Vector3): Float {
         return (point - this.position).dotProduct(this.normal)
     }
 
@@ -79,8 +79,8 @@ class Plane(normal: Vector3, position: Vector3): Ray(position, normal) {
         val a0 = ((b2 * d1) - (b1 * d2)) / ((a1 * b2 - a2 * b1))
         val b0 = ((a1 * d2) - (a2 * d1)) / ((a1 * b2 - a2 * b1))
 
-        val components = LinkedList<Pair<Int, Double>>()
-        components.add(Pair(zeroIndex, 0.0))
+        val components = LinkedList<Pair<Int, Float>>()
+        components.add(Pair(zeroIndex, 0F))
         components.add(Pair(aIndex, a0))
         components.add(Pair(bIndex, b0))
 

@@ -1,10 +1,8 @@
 package tarehart.rlbot.integration.metrics
 
-import tarehart.rlbot.time.Duration
+class VelocityMetric(velocity: Float, name: String = "Velocity") : IntegrationMetric<Float, Float>(name, velocity) {
 
-class VelocityMetric(velocity: Double, name: String = "Velocity") : IntegrationMetric<Double, Double>(name, velocity) {
-
-    override fun quantify(): Double {
+    override fun quantify(): Float {
         return value
     }
 

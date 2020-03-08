@@ -2,7 +2,6 @@ package tarehart.rlbot.steps.challenge
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.input.BallTouch
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
@@ -10,15 +9,11 @@ import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
-import tarehart.rlbot.tuning.BotLog
-import tarehart.rlbot.tuning.BotLog.println
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
@@ -90,8 +85,8 @@ class ChallengeStep: NestedPlanStep() {
 
             val (x, y) = it
             val crossSize = 2
-            graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
-            graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
+            graphics.draw(Line2D.Float(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
+            graphics.draw(Line2D.Float(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
         }
     }
 

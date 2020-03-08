@@ -9,7 +9,7 @@ import tarehart.rlbot.math.vector.Vector3
  */
 class CarSpin(val spin: Spin, val angularVelGlobal: Vector3) {
 
-    constructor(pitchRate: Double, yawRate: Double, rollRate: Double, angularVel: Vector3):
+    constructor(pitchRate: Float, yawRate: Float, rollRate: Float, angularVel: Vector3):
             this(Spin(pitchRate, yawRate, rollRate), angularVel)
 
     constructor(angularVelGlobal: Vector3, orientation: Mat3): this(Spin(orientation.transpose().dot(angularVelGlobal)), angularVelGlobal)

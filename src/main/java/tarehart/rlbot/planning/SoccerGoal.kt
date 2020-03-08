@@ -7,6 +7,7 @@ import tarehart.rlbot.math.Rectangle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
+import kotlin.math.sign
 
 
 class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
@@ -30,10 +31,10 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
     }
 
 
-    override fun getNearestEntrance(ballPosition: Vector3, padding: Double): Vector3 {
+    override fun getNearestEntrance(ballPosition: Vector3, padding: Number): Vector3 {
 
-        val adjustedExtent = EXTENT - ArenaModel.BALL_RADIUS - padding
-        val adjustedHeight = GOAL_HEIGHT - ArenaModel.BALL_RADIUS - padding
+        val adjustedExtent = EXTENT - ArenaModel.BALL_RADIUS - padding.toFloat()
+        val adjustedHeight = GOAL_HEIGHT - ArenaModel.BALL_RADIUS - padding.toFloat()
         val x = Clamper.clamp(ballPosition.x, -adjustedExtent, adjustedExtent)
         val z = Clamper.clamp(ballPosition.z, ArenaModel.BALL_RADIUS, adjustedHeight)
         return Vector3(x, center.y, z)
@@ -42,15 +43,15 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
     /**
      * From shooter's perspective
      */
-    override fun getLeftPost(padding: Double): Vector3 {
-        return Vector3(center.x - (EXTENT - padding) * Math.signum(center.y), center.y, center.z)
+    override fun getLeftPost(padding: Number): Vector3 {
+        return Vector3(center.x - (EXTENT - padding.toFloat()) * sign(center.y), center.y, center.z)
     }
 
     /**
      * From shooter's perspective
      */
-    override fun getRightPost(padding: Double): Vector3 {
-        return Vector3(center.x + (EXTENT - padding) * Math.signum(center.y), center.y, center.z)
+    override fun getRightPost(padding: Number): Vector3 {
+        return Vector3(center.x + (EXTENT - padding.toFloat()) * sign(center.y), center.y, center.z)
     }
 
     fun isInBox(position: Vector3): Boolean {

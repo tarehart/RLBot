@@ -18,12 +18,10 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.HoopsGoal
-import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.GameModeSniffer
 import tarehart.rlbot.time.Duration
@@ -117,7 +115,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         }
 
         val renderer = car.renderer
-        RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3.0), Color.CYAN)
+        RenderUtil.drawImpact(renderer, latestIntercept.space, offset.scaled(-3F), Color.CYAN)
         RenderUtil.drawBallPath(renderer, ballPath, latestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
 
         val canDodge = latestIntercept.time < lastMomentForDodge
@@ -187,7 +185,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return null
         }
 
-        if (car.boost == 0.0 && courseResult.targetError.magnitude() > 5) {
+        if (car.boost == 0F && courseResult.targetError.magnitude() > 5) {
             return null
         }
 
@@ -226,7 +224,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         private const val SIDE_DODGE_THRESHOLD = Math.PI / 4
         private val DODGE_TIME = Duration.ofMillis(300)
         val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
-        const val ORIENT_DT = 1/60.0
+        const val ORIENT_DT = 1/60F
 
         fun standardOffset(intercept: Intercept?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
             val ownGoal = GoalUtil.getOwnGoal(team).center

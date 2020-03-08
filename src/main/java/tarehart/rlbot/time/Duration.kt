@@ -2,8 +2,8 @@ package tarehart.rlbot.time
 
 class Duration private constructor(val millis: Long) : Comparable<Duration> {
 
-    val seconds: Double
-        get() = millis / 1000.0
+    val seconds: Float
+        get() = millis / 1000F
 
     fun abs(): Duration {
         return if (millis < 0) Duration(-millis) else this

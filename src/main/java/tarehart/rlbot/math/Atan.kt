@@ -37,38 +37,38 @@ object Atan {
         }
     }
 
-    fun atan2(y: Double, x: Double): Double {
-        var y = y
-        var x = x
+    fun atan2(y: Number, x: Number): Float {
+        var y = y.toFloat()
+        var x = x.toFloat()
         if (y < 0) {
             if (x < 0) {
                 //(y < x) because == (-y > -x)
                 return if (y < x) {
-                    Atan2_RMM[(x / y * Size_Ac).toInt()].toDouble()
+                    Atan2_RMM[(x / y * Size_Ac).toInt()]
                 } else {
-                    Atan2_MM[(y / x * Size_Ac).toInt()].toDouble()
+                    Atan2_MM[(y / x * Size_Ac).toInt()]
                 }
             } else {
                 y = -y
                 return if (y > x) {
-                    Atan2_RMP[(x / y * Size_Ac).toInt()].toDouble()
+                    Atan2_RMP[(x / y * Size_Ac).toInt()]
                 } else {
-                    Atan2_MP[(y / x * Size_Ac).toInt()].toDouble()
+                    Atan2_MP[(y / x * Size_Ac).toInt()]
                 }
             }
         } else {
             if (x < 0) {
                 x = -x
                 return if (y > x) {
-                    Atan2_RPM[(x / y * Size_Ac).toInt()].toDouble()
+                    Atan2_RPM[(x / y * Size_Ac).toInt()]
                 } else {
-                    Atan2_PM[(y / x * Size_Ac).toInt()].toDouble()
+                    Atan2_PM[(y / x * Size_Ac).toInt()]
                 }
             } else {
                 return if (y > x) {
-                    Atan2_R[(x / y * Size_Ac).toInt()].toDouble()
+                    Atan2_R[(x / y * Size_Ac).toInt()]
                 } else {
-                    Atan2[(y / x * Size_Ac).toInt()].toDouble()
+                    Atan2[(y / x * Size_Ac).toInt()]
                 }
             }
         }

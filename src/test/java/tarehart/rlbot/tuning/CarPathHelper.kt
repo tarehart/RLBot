@@ -7,6 +7,7 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarPath
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.input.CarHitbox
 import tarehart.rlbot.input.CarSpin
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
@@ -27,7 +28,7 @@ class CarPathHelper {
     fun makePrediction(actual: CarPath, hasBoost: Boolean): DistancePlot {
         val duration = Duration.between(actual.firstSlice.time, actual.lastSlice.time)
         val carData = getCarDataFromSlice(actual.firstSlice)
-        return AccelerationModel.simulateAcceleration(carData, duration, (if (hasBoost) 100 else 0).toDouble(), 0.0)
+        return AccelerationModel.simulateAcceleration(carData, duration, (if (hasBoost) 100 else 0).toFloat(), 0.0)
     }
 
     private fun getCarDataFromSlice(carSlice: CarSlice): CarData {
@@ -35,8 +36,8 @@ class CarPathHelper {
                 carSlice.space,
                 carSlice.velocity,
                 carSlice.orientation,
-                CarSpin(0.0, 0.0, 0.0, Vector3()),
-                100.0,
+                CarSpin(0F, 0F, 0F, Vector3()),
+                100F,
                 false,
                 Team.BLUE,
                 0,
@@ -46,7 +47,8 @@ class CarPathHelper {
                 false,
                 "",
                 NamedRenderer("test"),
-                isBot = true)
+                isBot = true,
+                hitbox = CarHitbox.OCTANE)
     }
 
 }

@@ -42,20 +42,20 @@ class SpikedCeilingShotStep : NestedPlanStep() {
 
             return OrientationSolver.orientCar(car,
                     Mat3.lookingTo(carToGoal.withZ(0.0), Vector3(0.0, 0.0, -1.0)),
-                    1 / 60.0)
+                    1 / 60F)
         }
 
-        val ceiling = ArenaModel.getCollisionPlanes().first { it.normal.z == -1.0 }
+        val ceiling = ArenaModel.getCollisionPlanes().first { it.normal.z == -1F }
         val carToGoal = GoalUtil.getEnemyGoal(car.team).center - car.position
 
         if (ArenaModel.isCarOnWall(car) || car.position.z > 20) {
-            val targetPosition = car.position.shadowOntoPlane(ceiling) + carToGoal.flatten().scaled(0.5).withZ(ceiling.position.z)
+            val targetPosition = car.position.shadowOntoPlane(ceiling) + carToGoal.flatten().scaled(0.5F).withZ(ceiling.position.z)
             return SteerUtil.steerTowardPositionAcrossSeam(car, targetPosition)
         }
 
         val sideWalls = getViableWallPlanes(car.team)
         val targetWall = ArenaModel.getNearestPlane(car.position, sideWalls)
-        val targetPosition = car.position.shadowOntoPlane(targetWall) + carToGoal.scaled(0.5).shadowOntoPlane(targetWall).withZ(ceiling.position.z)
+        val targetPosition = car.position.shadowOntoPlane(targetWall) + carToGoal.scaled(0.5F).shadowOntoPlane(targetWall).withZ(ceiling.position.z)
 
         return SteerUtil.steerTowardPositionAcrossSeam(car, targetPosition)
     }

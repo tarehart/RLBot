@@ -7,6 +7,7 @@ import tarehart.rlbot.bots.BaseBot
 import tarehart.rlbot.bots.Team
 import tarehart.rlbot.input.*
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.math.vector.Vector3.Companion.PACKET_DISTANCE_TO_CLASSIC
 import tarehart.rlbot.rendering.NullRenderer
 import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.time.Duration
@@ -158,12 +159,22 @@ class AgentInput(
 
         val spinNew = CarSpin(angularVel, orientation.matrix)
 
+        val carHitbox = CarHitbox(
+                playerInfo.hitbox().width() / PACKET_DISTANCE_TO_CLASSIC,
+                playerInfo.hitbox().length() / PACKET_DISTANCE_TO_CLASSIC,
+                playerInfo.hitbox().height() / PACKET_DISTANCE_TO_CLASSIC,
+                Vector3(
+                        playerInfo.hitboxOffset().x() / PACKET_DISTANCE_TO_CLASSIC,
+                        0,
+                        playerInfo.hitboxOffset().z() / PACKET_DISTANCE_TO_CLASSIC)
+        )
+
         return CarData(
                 position = Vector3.fromRlbot(playerInfo.physics().location()),
                 velocity = Vector3.fromRlbot(playerInfo.physics().velocity()),
                 orientation = orientation,
                 spin = spinNew,
-                boost = playerInfo.boost().toDouble(),
+                boost = playerInfo.boost().toFloat(),
                 isSupersonic = playerInfo.isSupersonic,
                 hasWheelContact = playerInfo.hasWheelContact(),
                 team = teamFromInt(playerInfo.team()),
@@ -173,7 +184,8 @@ class AgentInput(
                 isDemolished = playerInfo.isDemolished,
                 name = playerInfo.name(),
                 renderer = renderer,
-                isBot = playerInfo.isBot
+                isBot = playerInfo.isBot,
+                hitbox = carHitbox
         )
     }
 

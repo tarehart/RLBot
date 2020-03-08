@@ -8,7 +8,8 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
-import tarehart.rlbot.intercept.strike.*
+import tarehart.rlbot.intercept.strike.FlipHitStrike
+import tarehart.rlbot.intercept.strike.Style
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -69,7 +70,7 @@ class InterceptStep(
         RenderUtil.drawSphere(renderer, soonestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
         RenderUtil.drawBallPath(renderer, ballPath, soonestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
         if (!interceptModifier.isZero) {
-            RenderUtil.drawImpact(renderer, soonestIntercept.space, interceptModifier.scaled(-1.0), Color.CYAN)
+            RenderUtil.drawImpact(renderer, soonestIntercept.space, interceptModifier.scaled(-1F), Color.CYAN)
         }
 
 
@@ -129,8 +130,8 @@ class InterceptStep(
             graphics.stroke = BasicStroke(1f)
             val (x, y) = it.space.flatten()
             val crossSize = 2
-            graphics.draw(Line2D.Double(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
-            graphics.draw(Line2D.Double(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
+            graphics.draw(Line2D.Float(x - crossSize, y - crossSize, x + crossSize, y + crossSize))
+            graphics.draw(Line2D.Float(x - crossSize, y + crossSize, x + crossSize, y - crossSize))
         }
     }
 
@@ -140,7 +141,7 @@ class InterceptStep(
             fullAcceleration: DistancePlot,
             interceptModifier: Vector3): Intercept? {
 
-        val strikeProfileFn = { height: Double ->
+        val strikeProfileFn = { height: Float ->
             val desiredProfile = StrikePlanner.computeStrikeProfile(height)
             if (needsChallenge && desiredProfile.style == Style.CHIP) {
                 FlipHitStrike()

@@ -76,7 +76,7 @@ class AirBudTacticsAdvisor: SoccerTacticsAdvisor() {
         }
 
         if (Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
-                car.position.z > 5 && car.boost == 0.0 &&
+                car.position.z > 5 && car.boost == 0F &&
                 !ArenaModel.isBehindGoalLine(car.position)) {
             return Plan(Posture.LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }

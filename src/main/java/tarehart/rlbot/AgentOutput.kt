@@ -36,28 +36,28 @@ class AgentOutput : rlbot.ControllerState {
     var useItemDepressed: Boolean = false
         private set
 
-    fun withSteer(steeringTilt: Double): AgentOutput {
-        this.steer = Clamper.clamp(steeringTilt, -1.0, 1.0)
+    fun withSteer(steeringTilt: Number): AgentOutput {
+        this.steer = Clamper.clamp(steeringTilt, -1, 1).toDouble()
         return this
     }
 
-    fun withPitch(pitchTilt: Double): AgentOutput {
-        this.pitch = Clamper.clamp(pitchTilt, -1.0, 1.0)
+    fun withPitch(pitchTilt: Number): AgentOutput {
+        this.pitch = Clamper.clamp(pitchTilt, -1, 1).toDouble()
         return this
     }
 
-    fun withYaw(yawTilt: Double): AgentOutput {
-        this.yaw = Clamper.clamp(yawTilt, -1.0, 1.0)
+    fun withYaw(yawTilt: Number): AgentOutput {
+        this.yaw = Clamper.clamp(yawTilt, -1, 1).toDouble()
         return this
     }
 
-    fun withRoll(rollTilt: Double): AgentOutput {
-        this.roll = Math.max(-1.0, Math.min(1.0, rollTilt))
+    fun withRoll(rollTilt: Number): AgentOutput {
+        this.roll = Clamper.clamp(rollTilt, -1, 1).toDouble()
         return this
     }
 
-    fun withThrottle(throttle: Double): AgentOutput {
-        this.throttle = Clamper.clamp(throttle, -1.0, 1.0)
+    fun withThrottle(throttle: Number): AgentOutput {
+        this.throttle = Clamper.clamp(throttle, -1, 1).toDouble()
         return this
     }
 

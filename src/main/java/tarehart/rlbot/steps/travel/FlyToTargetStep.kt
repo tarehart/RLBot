@@ -4,7 +4,10 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.intercept.AerialMath
-import tarehart.rlbot.math.*
+import tarehart.rlbot.math.Mat3
+import tarehart.rlbot.math.OrientationSolver
+import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
@@ -32,7 +35,7 @@ class FlyToTargetStep(private val target: Vector3) : NestedPlanStep() {
                 CarSlice(car),
                 SpaceTime(target, bundle.agentInput.time.plusSeconds(1.0)),
                 modelJump = false,
-                secondsSinceJump = 0.0)
+                secondsSinceJump = 0F)
 
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, car.orientation.roofVector), MidairStrikeStep.ORIENT_DT)

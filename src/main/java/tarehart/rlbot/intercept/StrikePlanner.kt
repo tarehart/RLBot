@@ -12,7 +12,7 @@ import tarehart.rlbot.tuning.ManeuverMath
 
 object StrikePlanner {
 
-    const val BOOST_NEEDED_FOR_AERIAL = 20.0
+    const val BOOST_NEEDED_FOR_AERIAL = 20.0F
     const val NEEDS_AERIAL_THRESHOLD = ManeuverMath.MASH_JUMP_HEIGHT
     const val MAX_JUMP_HIT = NEEDS_AERIAL_THRESHOLD
     const val CAR_BASE_HEIGHT = ManeuverMath.BASE_CAR_Z
@@ -45,14 +45,14 @@ object StrikePlanner {
         return false
     }
 
-    fun boostNeededForAerial(height: Double) : Double {
-        return if (height > StrikePlanner.NEEDS_AERIAL_THRESHOLD) StrikePlanner.BOOST_NEEDED_FOR_AERIAL + height else 0.0
+    fun boostNeededForAerial(height: Float) : Float {
+        return if (height > NEEDS_AERIAL_THRESHOLD) BOOST_NEEDED_FOR_AERIAL + height else 0F
     }
 
 
-    fun computeStrikeStyle(slice: BallSlice, approachAngleMagnitude: Double): Style {
+    fun computeStrikeStyle(slice: BallSlice, approachAngleMagnitude: Float): Style {
         val height = slice.space.z
-        if (height > StrikePlanner.MAX_JUMP_HIT) {
+        if (height > MAX_JUMP_HIT) {
             return Style.AERIAL
         }
 
@@ -64,7 +64,7 @@ object StrikePlanner {
             if (FlipHitStrike.isVerticallyAccessible(height)) {
                 return Style.FLIP_HIT
             }
-            if (height < StrikePlanner.MAX_JUMP_HIT) {
+            if (height < MAX_JUMP_HIT) {
                 return Style.JUMP_HIT
             }
         } else if (approachAngleMagnitude < Math.PI * .2 &&
@@ -78,7 +78,7 @@ object StrikePlanner {
         return Style.DIAGONAL_HIT
     }
 
-    fun computeStrikeProfile(height: Double): StrikeProfile {
+    fun computeStrikeProfile(height: Float): StrikeProfile {
         if (height <= ChipStrike.MAX_HEIGHT_OF_BALL_FOR_CHIP) {
             return ChipStrike()
         }
@@ -86,14 +86,14 @@ object StrikePlanner {
         if (FlipHitStrike.isVerticallyAccessible(height)) {
             return FlipHitStrike()
         }
-        if (height < StrikePlanner.MAX_JUMP_HIT) {
+        if (height < MAX_JUMP_HIT) {
             return JumpHitStrike(height)
         }
 
         return AerialStrike(height, null)
     }
 
-    fun getStrikeProfile(style: Style, height: Double, kickStrategy: KickStrategy): StrikeProfile {
+    fun getStrikeProfile(style: Style, height: Float, kickStrategy: KickStrategy): StrikeProfile {
         return when(style) {
             Style.CHIP -> ChipStrike()
             Style.JUMP_HIT -> JumpHitStrike(height)
@@ -106,7 +106,7 @@ object StrikePlanner {
         }
     }
 
-    fun getBoostBudget(carData: CarData): Double {
-        return carData.boost - BOOST_NEEDED_FOR_AERIAL - 5.0
+    fun getBoostBudget(carData: CarData): Float {
+        return carData.boost - BOOST_NEEDED_FOR_AERIAL - 5
     }
 }

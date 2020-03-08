@@ -17,25 +17,25 @@ abstract class Goal( negativeSide: Boolean) {
      * From shooter's perspective
      */
     val leftPost: Vector3
-        get() = getLeftPost(0.0)
+        get() = getLeftPost(0F)
 
     /**
      * From shooter's perspective
      */
     val rightPost: Vector3
-        get() = getRightPost(0.0)
+        get() = getRightPost(0F)
 
-    abstract fun getNearestEntrance(ballPosition: Vector3, padding: Double): Vector3
-
-    /**
-     * From shooter's perspective
-     */
-    abstract fun getLeftPost(padding: Double): Vector3
+    abstract fun getNearestEntrance(ballPosition: Vector3, padding: Number): Vector3
 
     /**
      * From shooter's perspective
      */
-    abstract fun getRightPost(padding: Double): Vector3
+    abstract fun getLeftPost(padding: Number): Vector3
+
+    /**
+     * From shooter's perspective
+     */
+    abstract fun getRightPost(padding: Number): Vector3
 
     abstract fun predictGoalEvent(ballPath: BallPath): BallSlice?
 

@@ -51,8 +51,8 @@ class ArenaModel {
         val SIDE_WALL = 81.92f
         val BACK_WALL = 102.4f
         val CEILING = 40.88f
-        var GRAVITY = 13.0
-        const val BALL_RADIUS = 1.8555
+        var GRAVITY = 13F
+        const val BALL_RADIUS = 1.8555F
 
         val CORNER_BEVEL = 11.8 // 45 degree angle walls come in this far from where the rectangular corner would be.
         val CORNER_ANGLE_CENTER = Vector2(SIDE_WALL.toDouble(), BACK_WALL.toDouble()).minus(Vector2(CORNER_BEVEL, CORNER_BEVEL))
@@ -178,9 +178,9 @@ class ArenaModel {
         fun renderWalls(renderer: Renderer) {
             arenaPlanes.forEach { p ->
                 run {
-                    RenderUtil.drawSquare(renderer, p, 5.0, Color.WHITE)
-                    RenderUtil.drawSquare(renderer, p, 10.0, Color.WHITE)
-                    RenderUtil.drawSquare(renderer, p, 12.0, Color.WHITE)
+                    RenderUtil.drawSquare(renderer, p, 5F, Color.WHITE)
+                    RenderUtil.drawSquare(renderer, p, 10F, Color.WHITE)
+                    RenderUtil.drawSquare(renderer, p, 12F, Color.WHITE)
                 }
             }
         }
@@ -207,15 +207,15 @@ class ArenaModel {
             return getDistanceFromWall(car.position) < 2
         }
 
-        fun getDistanceFromWall(position: Vector3): Double {
+        fun getDistanceFromWall(position: Vector3): Float {
 
             return arenaPlanes.asSequence()
-                    .filter { it.normal.z == 0.0 } // Exclude the floor and ceiling
-                    .map { it.distance(position) }.min() ?: 0.0
+                    .filter { it.normal.z == 0F } // Exclude the floor and ceiling
+                    .map { it.distance(position) }.min() ?: 0F
         }
 
-        fun getDistanceFromCeiling(position: Vector3): Double {
-            return arenaPlanes.first { it.normal.z == -1.0 }.distance(position)
+        fun getDistanceFromCeiling(position: Vector3): Float {
+            return arenaPlanes.first { it.normal.z == -1F }.distance(position)
         }
 
         fun isCarOnWall(car: CarData): Boolean {
@@ -231,11 +231,11 @@ class ArenaModel {
         }
 
         fun getWallPlanes(): List<Plane> {
-            return getCollisionPlanes().filter { p -> p.normal.z == 0.0 }
+            return getCollisionPlanes().filter { p -> p.normal.z == 0F }
         }
 
         private fun getWallIntersectionPoints(): List<Vector2> {
-            val orderedWalls = getWallPlanes().sortedBy { p -> Atan.atan2(p.position.y, p.position.x) }
+            val orderedWalls = getWallPlanes().sortedBy { p -> Atan.atan2(p.position.y.toDouble(), p.position.x.toDouble()) }
             val points = ArrayList<Vector2>(orderedWalls.size)
 
             for (i in 0 until orderedWalls.size - 1) {
@@ -284,11 +284,13 @@ class ArenaModel {
             val longDirection = direction.scaledToMagnitude(500.0)
 
             val intersectionDistances = arenaPlanes.asSequence().asStream()
-                    .collect(Collectors.toMap<Plane, Plane, Double>({p -> p}, { p ->
-                        VectorUtil.getPlaneIntersection(p, origin, longDirection)?.distance(origin) ?: Double.MAX_VALUE
+                    .collect(Collectors.toMap<Plane, Plane, Float>({p -> p}, { p ->
+                        VectorUtil.getPlaneIntersection(p, origin, longDirection)?.distance(origin) ?: Float.MAX_VALUE
                     }))
 
-            return intersectionDistances.entries.stream().min(Comparator.comparingDouble{ ent -> ent.value}).get().key
+            return intersectionDistances.entries.stream()
+                    .min(Comparator.comparingDouble { ent -> ent.value.toDouble()})
+                    .get().key
         }
 
         fun getBounceNormal(ray: Ray): Ray {

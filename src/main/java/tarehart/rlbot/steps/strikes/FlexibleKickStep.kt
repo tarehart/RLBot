@@ -185,7 +185,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     }
 
     companion object {
-        fun getStrikeProfile(slice: BallSlice, approachAngleMagnitude: Double, kickStrategy: KickStrategy,
+        fun getStrikeProfile(slice: BallSlice, approachAngleMagnitude: Float, kickStrategy: KickStrategy,
                              styleHint: Style?, bundle: TacticalBundle): StrikeProfile {
 
             if (styleHint == Style.SIDE_HIT || styleHint == Style.DIAGONAL_HIT) {

@@ -26,7 +26,7 @@ import tarehart.rlbot.tuning.ManeuverMath
 
 object InterceptCalculator {
 
-    fun getInterceptOpportunityAssumingMaxAccel(carData: CarData, ballPath: BallPath, boostBudget: Double): Intercept? {
+    fun getInterceptOpportunityAssumingMaxAccel(carData: CarData, ballPath: BallPath, boostBudget: Float): Intercept? {
         val plot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), boostBudget)
 
         return getInterceptOpportunity(carData, ballPath, plot)
@@ -43,7 +43,7 @@ object InterceptCalculator {
             acceleration: DistancePlot,
             interceptModifier: Vector3,
             predicate: (CarData, SpaceTime) -> Boolean,
-            strikeProfileFn: (Double) -> StrikeProfile = { ChipStrike() }): Intercept? {
+            strikeProfileFn: (Float) -> StrikeProfile = { ChipStrike() }): Intercept? {
 
         val groundNormal = Vector3(0.0, 0.0, 1.0)
         return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, strikeProfileFn, groundNormal)
@@ -66,12 +66,12 @@ object InterceptCalculator {
             acceleration: DistancePlot,
             interceptModifier: Vector3,
             spatialPredicate: (CarData, SpaceTime) -> Boolean,
-            strikeProfileFn: (Double) -> StrikeProfile,
+            strikeProfileFn: (Float) -> StrikeProfile,
             planeNormal: Vector3): Intercept? {
 
         val myPosition = carData.position
         var firstMomentInRange: GameTime? = null
-        var previousRangeDeficiency = 0.0
+        var previousRangeDeficiency = 0F
 
         for (i in 0 until ballPath.slices.size) {
             val slice = ballPath.slices[i]
@@ -138,7 +138,7 @@ object InterceptCalculator {
         var firstMomentInRange: GameTime? = null
         var spatialPredicateFailurePeriod: Duration? = null
 
-        var acceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(6.0), carData.boost, 0.0)
+        var acceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(6.0), carData.boost, 0F)
         var frontFlipDistance = AccelerationModel.getFrontFlipDistance(carData.velocity.magnitude())
         var hasUsedHypotheticalFlip = false
 
@@ -206,7 +206,7 @@ object InterceptCalculator {
                                         kickPlan.launchPad.expectedTime,
                                         toIntercept.scaledToMagnitude(kickPlan.launchPad.expectedSpeed).toVector3(),
                                         orientation),
-                                intercept.toSpaceTime(), true, 0.0)
+                                intercept.toSpaceTime(), true, 0F)
                         AerialMath.calculateAerialTimeNeeded(correction)
                     } else
                         kickPlan.intercept.strikeProfile.strikeDuration
@@ -227,13 +227,13 @@ object InterceptCalculator {
         return null
     }
 
-    private fun getTweenedSlice(ballPath: BallPath, currentSlice: BallSlice, currentSliceIndex: Int, currentShortfall: Double, previousShortfall: Double): BallSlice {
+    private fun getTweenedSlice(ballPath: BallPath, currentSlice: BallSlice, currentSliceIndex: Int, currentShortfall: Float, previousShortfall: Float): BallSlice {
 
         if (currentSliceIndex == 0) {
             return currentSlice
         }
 
-        var tweenPoint = 1.0
+        var tweenPoint = 1F
         if (previousShortfall > 0) {
             tweenPoint = previousShortfall / (previousShortfall - currentShortfall)
         }
@@ -266,10 +266,10 @@ object InterceptCalculator {
 
             val timeSinceLaunch = Duration.between(launchMoment, carData.time)
             val duration = Duration.between(carData.time, slice.time)
-            val acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, 1.0)
+            val acceleration = AccelerationModel.simulateAirAcceleration(carData, duration, 1F)
 
             // We're already in the air, so don't model any hang time.
-            val strikeProfile = CustomStrike(Duration.ZERO, Duration.ZERO, 0.0, Style.AERIAL)
+            val strikeProfile = CustomStrike(Duration.ZERO, Duration.ZERO, 0F, Style.AERIAL)
 
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, intercept.time), strikeProfile) ?: return null
 
@@ -287,7 +287,7 @@ object InterceptCalculator {
                     return Intercept(
                             intercept.space,
                             intercept.time,
-                            airBoost = 0.0,
+                            airBoost = 0F,
                             strikeProfile = ChipStrike(),
                             distancePlot = acceleration,
                             spatialPredicateFailurePeriod = Duration.ofMillis(0),
@@ -318,7 +318,7 @@ object InterceptCalculator {
                     return Intercept(
                             spaceTime.space,
                             spaceTime.time,
-                            0.0,
+                            0F,
                             strikeProfile,
                             acceleration,
                             Duration.ofMillis(0),

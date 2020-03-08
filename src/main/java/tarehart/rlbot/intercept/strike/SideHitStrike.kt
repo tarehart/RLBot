@@ -3,8 +3,8 @@ package tarehart.rlbot.intercept.strike
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.LaunchChecklist
+import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
@@ -22,13 +22,15 @@ import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
+import kotlin.math.abs
+import kotlin.math.sign
 
-class SideHitStrike(height: Double): StrikeProfile() {
+class SideHitStrike(height: Float): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8
-    override val preDodgeTime = Duration.ofSeconds(jumpTime + .04)
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8F
+    override val preDodgeTime = Duration.ofSeconds(jumpTime + .04F)
     override val postDodgeTime = Duration.ofMillis(250)
-    override val speedBoost = 10.0
+    override val speedBoost = 10.0F
     override val style = Style.SIDE_HIT
     override val isForward = false
 
@@ -47,12 +49,12 @@ class SideHitStrike(height: Double): StrikeProfile() {
         return intercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT
     }
 
-    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Double): PreKickWaypoint? {
+    override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         val flatForce = desiredKickForce.flatten()
         val estimatedApproachDeviationFromKickForce = DirectedKickUtil.getEstimatedApproachDeviationFromKickForce(
                 car, intercept.space.flatten(), flatForce)
 
-        val useFrontCorner = Math.abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
+        val useFrontCorner = abs(estimatedApproachDeviationFromKickForce) < Math.PI * .45
 
         val carStrikeRadius = 1.0
         val carPositionAtContact = intercept.ballSlice.space - desiredKickForce.scaledToMagnitude(carStrikeRadius + ArenaModel.BALL_RADIUS)
@@ -81,7 +83,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
         if (useFrontCorner) {
 
             val angled = DirectedKickUtil.getAngledWaypoint(intercept, expectedArrivalSpeed,
-                    estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact.flatten(), Math.PI * .55, car.renderer)
+                    estimatedApproachDeviationFromKickForce, car.position.flatten(), carPositionAtContact.flatten(), Math.PI.toFloat() * .55F, car.renderer)
 
             if (angled == null) {
                 BotLog.println("Failed to calculate side hit waypoint", car.playerIndex)
@@ -92,7 +94,7 @@ class SideHitStrike(height: Double): StrikeProfile() {
 
             val facing = VectorUtil.rotateVector(
                     flatForce,
-                    -Math.signum(estimatedApproachDeviationFromKickForce) * Math.PI / 2)
+                    -sign(estimatedApproachDeviationFromKickForce) * Math.PI / 2)
 
             val postDodgeVelocity = intercept.strikeProfile.getPostDodgeVelocity(expectedArrivalSpeed)
             val lateralTravel = intercept.strikeProfile.postDodgeTime.seconds * postDodgeVelocity.sidewaysMagnitude

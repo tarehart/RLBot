@@ -91,11 +91,11 @@ class AccelerationCharts {
             val (_, time) = actual.path[0]
 
             for (slice in actual.path) {
-                xValues.add(Duration.between(time, slice.time).seconds)
+                xValues.add(Duration.between(time, slice.time).seconds.toDouble())
                 yValues.add(getYValue(slice))
             }
 
-            return arrayOf(xValues.stream().mapToDouble { d -> d }.toArray(), yValues.stream().mapToDouble { d -> d }.toArray())
+            return arrayOf(xValues.stream().mapToDouble { d -> d.toDouble() }.toArray(), yValues.stream().mapToDouble { d -> d.toDouble() }.toArray())
         }
 
         private fun createChart(dataset: DefaultXYDataset, title: String): JFreeChart {
@@ -113,11 +113,11 @@ class AccelerationCharts {
             get() = "distance"
 
         override fun getYValue(slice: CarSlice): Double {
-            return slice.space.distance(start.space)
+            return slice.space.distance(start.space).toDouble()
         }
 
         override fun getYValue(motion: DistanceTimeSpeed?): Double {
-            return motion!!.distance
+            return motion!!.distance.toDouble()
         }
     }
 
@@ -128,11 +128,11 @@ class AccelerationCharts {
             get() = "velocity"
 
         override fun getYValue(motion: DistanceTimeSpeed?): Double {
-            return motion!!.speed
+            return motion!!.speed.toDouble()
         }
 
         override fun getYValue(slice: CarSlice): Double {
-            return slice.velocity.magnitude()
+            return slice.velocity.magnitude().toDouble()
         }
     }
 

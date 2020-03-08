@@ -11,9 +11,9 @@ import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.routing.BoostAdvisor
-import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.WhileConditionStep
+import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
@@ -81,9 +81,9 @@ class KickoffState : TacticalState {
                 for (zone in HoopsZone.values()) {
                     if(DisplayFlags[DisplayFlags.HOOPS_KICKOFF] == 1) {
                         if (zone.toString().contains("ORANGE")) {
-                            kickoffRenderer!!.drawRectangle3d(Color.ORANGE, zone.center.toRlbot(), 10, 10, true)
+                            kickoffRenderer!!.drawRectangle3d(Color.ORANGE, zone.center, 10, 10, true)
                         } else if (zone == HoopsZone.KICKOFF_BLUE_FORWARD_LEFT) {
-                            kickoffRenderer!!.drawRectangle3d(Color.BLUE, zone.center.toRlbot(), 10, 10, true)
+                            kickoffRenderer!!.drawRectangle3d(Color.BLUE, zone.center, 10, 10, true)
                         }
                     }
                 }
@@ -200,7 +200,7 @@ class KickoffState : TacticalState {
                 if(DisplayFlags[DisplayFlags.HOOPS_KICKOFF] == 1) {
                     val boostRenderer = NamedRenderer("kickoffTargetRenderer")
                     boostRenderer.startPacket()
-                    boostRenderer.drawRectangle3d(Color.WHITE, closestSmallBoost.location.toRlbot(), 15, 15, true)
+                    boostRenderer.drawRectangle3d(Color.WHITE, closestSmallBoost.location, 15, 15, true)
                     boostRenderer.finishAndSend()
                 }
 

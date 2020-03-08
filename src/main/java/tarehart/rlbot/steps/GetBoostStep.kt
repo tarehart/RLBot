@@ -47,7 +47,7 @@ class GetBoostStep : NestedPlanStep() {
         val targetLoc = targetLocation ?: return null
 
         RenderUtil.drawCircle(car.renderer, Circle(targetLoc.location.flatten(), 2), 2, Color.GREEN)
-        car.renderer.drawLine3d(Color.GREEN, car.position.toRlbot(), targetLoc.location.withZ(2).toRlbot())
+        car.renderer.drawLine3d(Color.GREEN, car.position, targetLoc.location.withZ(2))
 
         val distance = SteerUtil.getDistanceFromCar(car, targetLoc.location)
 
@@ -81,7 +81,7 @@ class GetBoostStep : NestedPlanStep() {
 
     private fun getTacticalBoostLocation(bundle: TacticalBundle): BoostPad? {
         var nearestLocation: BoostPad? = null
-        var minTime = java.lang.Double.MAX_VALUE
+        var minTime = Float.MAX_VALUE
         val carData = bundle.agentInput.myCarData
         val distancePlot = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(4.0), carData.boost)
         for (boost in BoostAdvisor.boostData.fullBoosts) {
@@ -102,7 +102,7 @@ class GetBoostStep : NestedPlanStep() {
         // Add a defensive bias.
         val defensiveBias = 80 * Math.signum(GoalUtil.getOwnGoal(bundle.agentInput.team).center.y)
         val defensiveLocation = Vector3(endpoint.space.x, endpoint.space.y + defensiveBias, 0.0)
-        var idealPlaceToGetBoost = defensiveLocation.scaled(.5) + carData.position.scaled(.5)
+        var idealPlaceToGetBoost = defensiveLocation.scaled(.5F) + carData.position.scaled(.5F)
 
         bundle.agentInput.allCars.forEach {
             if (it != carData) {
@@ -116,7 +116,7 @@ class GetBoostStep : NestedPlanStep() {
 
     private fun getNearestBoost(boosts: List<BoostPad>, position: Vector3): BoostPad? {
         var location: BoostPad? = null
-        var minDistance = java.lang.Double.MAX_VALUE
+        var minDistance = Float.MAX_VALUE
         for (boost in boosts) {
             if (boost.isActive) {
                 val distance = position.distance(boost.location)

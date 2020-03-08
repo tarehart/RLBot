@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps.strikes
 
-import tarehart.rlbot.carpredict.Impact
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.Ray
@@ -39,21 +38,21 @@ class DropshotWallKick : KickStrategy {
             hit?.let {
                 if (Math.abs(it.direction.dotProduct(wallPlane.normal)) > .99) {
                     // We're hitting a plane square on.
-                    car.renderer.drawLine3d(Color.ORANGE, car.position.toRlbot(), it.position.toRlbot())
+                    car.renderer.drawLine3d(Color.ORANGE, car.position, it.position)
                 }
 
             }
         }
 
         ArenaModel.wallIntersectionPoints.forEach {
-            car.renderer.drawLine3d(Color.LIGHT_GRAY, car.position.toRlbot(), it.withZ(car.position.z).toRlbot())
+            car.renderer.drawLine3d(Color.LIGHT_GRAY, car.position, it.withZ(car.position.z))
         }
 
         return easyKick
     }
 
     private fun getFirstPlaneBreak(ray: Ray, planes: List<Plane>): Ray? {
-        var closest = Double.MAX_VALUE
+        var closest = Float.MAX_VALUE
         var impact: Ray? = null
         for (p in planes) {
             val spot = VectorUtil.getPlaneIntersection(p, ray.position, ray.direction * 10000.0) ?: continue

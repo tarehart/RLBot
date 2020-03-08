@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
@@ -8,12 +7,12 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
-
 import tarehart.rlbot.tuning.BotLog.println
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * I don't think this was ever tested.
@@ -41,16 +40,16 @@ class CarryStep : StandardStep() {
 
         val futureBallPosition = ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(leadSeconds))?.space?.flatten() ?: return null
 
-        val scoreLocation = GoalUtil.getEnemyGoal(bundle.agentInput.team).getNearestEntrance(bundle.agentInput.ballPosition, 3.0).flatten()
+        val scoreLocation = GoalUtil.getEnemyGoal(bundle.agentInput.team).getNearestEntrance(bundle.agentInput.ballPosition, 3).flatten()
 
         val ballToGoal = scoreLocation.minus(futureBallPosition)
         val pushDirection: Vector2
         val pressurePoint: Vector2
-        val approachDistance = 1.0
+        val approachDistance = 1.0F
         // TODO: vary the approachDistance based on whether the ball is forward / off to the side.
 
         val velocityCorrectionAngle = ballVelocityFlat.correctionAngle(ballToGoal)
-        val angleTweak = Math.min(Math.PI / 6, Math.max(-Math.PI / 6, velocityCorrectionAngle * 2))
+        val angleTweak = min(Math.PI.toFloat() / 6, max(-Math.PI.toFloat() / 6, velocityCorrectionAngle * 2))
         pushDirection = VectorUtil.rotateVector(ballToGoal, angleTweak).normalized()
         pressurePoint = futureBallPosition.minus(pushDirection.scaled(approachDistance))
 
@@ -82,7 +81,10 @@ class CarryStep : StandardStep() {
         private fun canCarry(bundle: TacticalBundle, log: Boolean): Boolean {
 
             val car = bundle.agentInput.myCarData
-            val (x, y, z) = positionInCarCoordinates(car, bundle.agentInput.ballPosition)
+            val local = positionInCarCoordinates(car, bundle.agentInput.ballPosition)
+            val x = local.x
+            val y = local.y
+            val z = local.z
 
             val xMag = Math.abs(x)
             if (xMag > MAX_X_DIFF) {
