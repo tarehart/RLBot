@@ -2,14 +2,17 @@ package tarehart.rlbot.steps.strikes
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
@@ -43,6 +46,14 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
         val ballCenterToCarCenter = Vector3() // TODO: figure this out nicely
         val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, ballCenterToCarCenter, overallPredicate) ?: return null
+
+        val chipOptions = BallPhysics.computeChipOptions(car.position, intercept.accelSlice.speed, intercept.ballSlice, car.hitbox)
+
+        for ((index, chipOption) in chipOptions.withIndex()) {
+            val color = RenderUtil.rainbowColor(index)
+            car.renderer.drawLine3d(color, intercept.ballSlice.space, intercept.ballSlice.space + chipOption.second)
+            chipOption.first.render(car.renderer, color)
+        }
 
         slotEnd = intercept.space.withZ(car.position.z)
 

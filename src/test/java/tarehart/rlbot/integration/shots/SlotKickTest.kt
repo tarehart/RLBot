@@ -29,7 +29,7 @@ class SlotKickTest: StateSettingAbstractTest() {
         return StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
-                                .withLocation(StateVector(0F, 10F, ArenaModel.BALL_RADIUS))
+                                .withLocation(StateVector(0F, 10F, ArenaModel.BALL_RADIUS + 1))
                                 .withVelocity(StateVector(0, 0, 0.1))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
@@ -43,7 +43,7 @@ class SlotKickTest: StateSettingAbstractTest() {
                         PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(5.0),
+                        timeLimit = Duration.ofSeconds(4.0),
                         delayWhenBallFloating = true),
 
                         BallTouchAssert(Duration.ofSeconds(3.0))),

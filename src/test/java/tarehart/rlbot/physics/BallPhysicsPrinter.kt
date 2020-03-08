@@ -40,7 +40,7 @@ class BallPhysicsPrinter {
     fun printChipOptions() {
         val options = BallPhysics.computeChipOptions(
                 currentCarPosition = Vector3(0, -50, 0),
-                arrivalSpeed = 35.0,
+                arrivalSpeed = 35F,
                 ballSlice = BallSlice(
                         space = Vector3(0, 0, ArenaModel.BALL_RADIUS),
                         time = GameTime.zero(),

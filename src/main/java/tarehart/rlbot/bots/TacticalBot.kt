@@ -3,9 +3,11 @@ package tarehart.rlbot.bots
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.tactics.*
+import java.awt.Color
 
 abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
@@ -37,6 +39,9 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
 
         val input = bundle.agentInput
         val car = input.myCarData
+
+        CarSlice(car).render(car.renderer, Color.WHITE)
+
         tacticsAdvisor.findMoreUrgentPlan(bundle, currentPlan)?.let {
             currentPlan = it
         }

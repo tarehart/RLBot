@@ -160,6 +160,11 @@ class Vector3(x: Number = 0, y: Number = 0, z: Number = 0): rlbot.vector.Vector3
                 + ")")
     }
 
+    override fun equals(other: Any?): Boolean {
+        val o = other as? Vector3 ?: return false
+        return o.x == x && o.y == y && o.z == z
+    }
+
     companion object {
 
         const val PACKET_DISTANCE_TO_CLASSIC = 50

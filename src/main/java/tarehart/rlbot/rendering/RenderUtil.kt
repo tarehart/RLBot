@@ -14,7 +14,9 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.ui.DisplayFlags
 import java.awt.Color
+import java.util.*
 import kotlin.math.max
+import kotlin.math.min
 
 
 object RenderUtil {
@@ -148,6 +150,17 @@ object RenderUtil {
             renderer.drawLine3d(color, (flatCenter + cursor).withZ(sliceHeight), (flatCenter + nextCursor).withZ(sliceHeight))
             cursor = nextCursor
         }
+    }
+
+    private val RAND = Random()
+
+    fun randomColor(): Color {
+        return Color.getHSBColor(RAND.nextFloat(), 1F, 0.7F)
+    }
+
+    private val RAINBOW_COLORS = listOf(Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE, Color.MAGENTA)
+    fun rainbowColor(index: Int): Color {
+        return RAINBOW_COLORS[index % RAINBOW_COLORS.size]
     }
 
 }

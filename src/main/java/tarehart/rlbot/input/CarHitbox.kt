@@ -8,7 +8,6 @@ class CarHitbox(val width: Float, val length: Float, val height: Float, val offs
     val upwardExtent = height / 2 + offset.z
 
     companion object {
-        // TODO: set accurate numbers.
-        val OCTANE = CarHitbox(1F, 1F, 1F, Vector3())
+        val OCTANE = CarHitbox(1.6839882F, 2.3601475F, 0.7231815F, Vector3(0.2775132, 0, 0.41509974))
     }
 }

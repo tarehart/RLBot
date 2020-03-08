@@ -111,7 +111,7 @@ object BallPhysics {
         return inelasticImpulse / 30.0 + scriptImpulse
     }
 
-    fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Double, ballSlice: BallSlice, hitbox: CarHitbox): List<Pair<Vector3, Vector3>> {
+    fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox): List<Pair<CarSlice, Vector3>> {
         val hitboxSideExtent = hitbox.sidewaysExtent
         val hitboxForwardExtent = hitbox.forwardExtent
         val contactHeight = ManeuverMath.BASE_CAR_Z + hitbox.upwardExtent
@@ -120,7 +120,7 @@ object BallPhysics {
         val toSliceNormal = toSlice.normaliseCopy()
         val orthogonal = toSliceNormal.crossProduct(Vector3.UP)
 
-        val options = ArrayList<Pair<Vector3, Vector3>>()
+        val options = ArrayList<Pair<CarSlice, Vector3>>()
 
         for (i in 0..25) {
             val offsetAmount = i * 0.1F
@@ -129,10 +129,15 @@ object BallPhysics {
             val aimPoint = ballSlice.space + orthogonal * offsetAmount
             val offsetBackoffMagnitude: Float
             if (offsetAmount > hitboxSideExtent) {
-                offsetBackoffMagnitude = cos( asin(offsetAmount - hitboxSideExtent)) * chipRingRadius
+                offsetBackoffMagnitude = cos( asin((offsetAmount - hitboxSideExtent) / chipRingRadius)) * chipRingRadius
             } else {
                 offsetBackoffMagnitude = chipRingRadius
             }
+
+            if (offsetBackoffMagnitude.isNaN()) {
+                continue
+            }
+
             val offset = toSliceNormal * (-offsetBackoffMagnitude - hitboxForwardExtent) +
                     orthogonal * offsetAmount +
                     Vector3.UP * (ManeuverMath.BASE_CAR_Z - ballSlice.space.z)
@@ -145,7 +150,7 @@ object BallPhysics {
 
             val predictedVelocity = predictBallVelocity(carSlice, ballSlice.space, ballSlice.velocity)
 
-            options.add(Pair(offset, predictedVelocity))
+            options.add(Pair(carSlice, predictedVelocity))
         }
 
         return options

@@ -27,6 +27,12 @@ data class CarSlice(
         val toNose = orientation.noseVector * (hitbox.length / 2)
         val toSide = orientation.rightVector * (hitbox.width / 2)
 
-        renderer.drawLine3d(color, toRoof + toNose + toSide + hitbox.offset, toRoof + toNose - toSide + hitbox.offset)
+        val localOffset = orientation.matrix.dot(hitbox.offset)
+        val overallOffset = space + localOffset
+
+        renderer.drawLine3d(color, toRoof + toNose + toSide + overallOffset, toRoof + toNose - toSide + overallOffset)
+        renderer.drawLine3d(color, toRoof + toNose + toSide + overallOffset, toRoof - toNose + toSide + overallOffset)
+        renderer.drawLine3d(color, toRoof + toNose - toSide + overallOffset, toRoof - toNose - toSide + overallOffset)
+        renderer.drawLine3d(color, toRoof - toNose + toSide + overallOffset, toRoof - toNose - toSide + overallOffset)
     }
 }
