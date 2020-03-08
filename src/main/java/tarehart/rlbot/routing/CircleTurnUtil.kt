@@ -150,7 +150,7 @@ object CircleTurnUtil {
         val center = targetPosition.plus(radiusVector)
         val circle = Circle(center, turnRadius)
 
-        val tangentPoints = circle.calculateTangentPoints(flatPosition) ?:
+        val tangentPoints = circle.calculateTangentPointsToExternalPoint(flatPosition) ?:
             return planWithinCircle(car, strikePoint, currentSpeed, expectedSpeed, circle)
 
         val toCenter = center.minus(flatPosition)

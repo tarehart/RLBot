@@ -39,12 +39,29 @@ class Circle(val center: Vector2, val radius: Float) {
                         p2.y + h*(other.center.x - this.center.x)/d))
     }
 
-    fun calculateTangentPoints(outsidePoint: Vector2): Pair<Vector2, Vector2>? {
+    fun calculateTangentPointsToExternalPoint(outsidePoint: Vector2): Pair<Vector2, Vector2>? {
         val toMidpoint = (center - outsidePoint).scaled(.5F)
         val midpoint = outsidePoint + toMidpoint
 
         val thalesCircle = Circle(midpoint, toMidpoint.magnitude())
         return intersect(thalesCircle)
+    }
+
+    /**
+     * Given a slope, find the two tangent points on this circle which have that slope.
+     * Could probably implement this with atan also.
+     */
+    fun calculateTangentPointsWithSlope(slopeVector: Vector2): Pair<Vector2, Vector2> {
+        if (slopeVector.y == 0F) {
+            return Pair(Vector2(0, radius) + center, Vector2(0, -radius) + center)
+        }
+
+        val ratio = -slopeVector.x / slopeVector.y
+        val x1 = radius * sqrt(1 / (ratio * ratio + 1))
+        val x2 = -x1
+        val y1 = x1 * ratio
+        val y2 = x2 * ratio
+        return Pair(Vector2(x1, y1) + center, Vector2(x2, y2) + center)
     }
 
     companion object {

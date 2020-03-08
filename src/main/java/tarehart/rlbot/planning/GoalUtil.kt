@@ -28,7 +28,7 @@ object GoalUtil {
 
         val ballCircle = Circle(ballPosition, ArenaModel.BALL_RADIUS.toDouble())
 
-        ballCircle.calculateTangentPoints(post)?.let {
+        ballCircle.calculateTangentPointsToExternalPoint(post)?.let {
             val riskyTangent = it.toList().sortedBy { it.distance(post) }.first()
             return post + (ballPosition - riskyTangent)
         }

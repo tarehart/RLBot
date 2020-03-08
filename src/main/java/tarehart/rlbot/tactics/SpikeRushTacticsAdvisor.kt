@@ -47,7 +47,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 car.position.distance(otherCar.position) > 30) {
             return null
         }
-        val intersection = Ray2.getIntersection(Ray2.fromCar(car), Ray2.fromCar(otherCar)) ?: return null
+        val intersection = Ray2.getIntersection(Ray2.fromCar(car), Ray2.fromCar(otherCar)).first ?: return null
 
         val ourArrival = car.time + Duration.ofSeconds(car.position.flatten().distance(intersection) / car.velocity.magnitude())
         val enemyArrival = car.time + Duration.ofSeconds(otherCar.position.flatten().distance(intersection) / otherCar.velocity.magnitude())

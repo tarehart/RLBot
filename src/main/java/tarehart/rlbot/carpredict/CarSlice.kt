@@ -4,7 +4,7 @@ import rlbot.render.Renderer
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.input.CarHitbox
 import tarehart.rlbot.input.CarOrientation
-import tarehart.rlbot.math.SpaceTime
+import tarehart.rlbot.math.Ray
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.GameTime
 import java.awt.Color
@@ -18,21 +18,27 @@ data class CarSlice(
 
     constructor(carData: CarData): this(carData.position, carData.time, carData.velocity, carData.orientation, carData.hitbox)
 
-    fun toSpaceTime(): SpaceTime {
-        return SpaceTime(space, time)
-    }
+    val hitboxCenterLocal: Vector3 by lazy { orientation.matrix.dot(hitbox.offset) }
+    val hitboxCenterWorld: Vector3 by lazy { hitboxCenterLocal + space }
+
+    // Caveat: these use world rotation frame, but car-local position with no offset!
+    val toRoof: Vector3 by lazy { orientation.roofVector * (hitbox.height / 2) }
+    val toNose: Vector3 by lazy { orientation.noseVector * (hitbox.length / 2) }
+    val toSide: Vector3 by lazy { orientation.rightVector * (hitbox.width / 2) }
 
     fun render(renderer: Renderer, color: Color) {
-        val toRoof = orientation.roofVector * (hitbox.height / 2)
-        val toNose = orientation.noseVector * (hitbox.length / 2)
-        val toSide = orientation.rightVector * (hitbox.width / 2)
+        renderer.drawLine3d(color, toRoof + toNose + toSide + hitboxCenterWorld, toRoof + toNose - toSide + hitboxCenterWorld)
+        renderer.drawLine3d(color, toRoof + toNose + toSide + hitboxCenterWorld, toRoof - toNose + toSide + hitboxCenterWorld)
+        renderer.drawLine3d(color, toRoof + toNose - toSide + hitboxCenterWorld, toRoof - toNose - toSide + hitboxCenterWorld)
+        renderer.drawLine3d(color, toRoof - toNose + toSide + hitboxCenterWorld, toRoof - toNose - toSide + hitboxCenterWorld)
+    }
 
-        val localOffset = orientation.matrix.dot(hitbox.offset)
-        val overallOffset = space + localOffset
-
-        renderer.drawLine3d(color, toRoof + toNose + toSide + overallOffset, toRoof + toNose - toSide + overallOffset)
-        renderer.drawLine3d(color, toRoof + toNose + toSide + overallOffset, toRoof - toNose + toSide + overallOffset)
-        renderer.drawLine3d(color, toRoof + toNose - toSide + overallOffset, toRoof - toNose - toSide + overallOffset)
-        renderer.drawLine3d(color, toRoof - toNose + toSide + overallOffset, toRoof - toNose - toSide + overallOffset)
+    /**
+     * Left headlight is first.
+     */
+    fun headlightRays(): Pair<Ray, Ray> {
+        return Pair(
+                Ray(toRoof + toNose + toSide * -1 + hitboxCenterWorld, orientation.noseVector),
+                Ray(toRoof + toNose + toSide + hitboxCenterWorld, orientation.noseVector))
     }
 }
