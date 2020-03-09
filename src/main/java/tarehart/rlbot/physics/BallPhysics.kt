@@ -112,13 +112,15 @@ object BallPhysics {
                 ballVelocity = ballVelocity,
                 carForwardDirectionNormal = carSlice.orientation.noseVector)
 
-        return inelasticImpulse / 30.0 + scriptImpulse
+        return ballVelocity + inelasticImpulse / 30.0 + scriptImpulse
     }
 
     fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox, horizontalOffsetList: List<Float>): List<ChipOption> {
         val contactHeight = ManeuverMath.BASE_CAR_Z + hitbox.upwardExtent
+
+        val radiusMultiplier = 1.3F // TODO: this is a fudge factor, needed?
         val chipRingRadius = cos(asin((ballSlice.space.z - contactHeight) / ArenaModel.BALL_RADIUS)) *
-                ArenaModel.BALL_RADIUS * .92F  // TODO: this is a fudge factor, needed?
+                ArenaModel.BALL_RADIUS * radiusMultiplier
         val toSlice = (ballSlice.space - currentCarPosition).withZ(0)
         val toSliceNormal = toSlice.normaliseCopy()
         val orthogonal = toSliceNormal.crossProduct(Vector3.UP)
@@ -198,13 +200,14 @@ object BallPhysics {
     }
 
     fun computeBestChipOption(position: Vector3, speed: Float, ballSlice: BallSlice, hitbox: CarHitbox, idealDirection: Vector3): ChipOption {
-        var lowerBound = -2F
-        var upperBound = 2F
+        var lowerBound = -2.6F
+        var upperBound = 2.6F
         val flatIdeal = idealDirection.flatten()
         var latestOption: ChipOption? = null
         while (upperBound - lowerBound > .1) {
             val middle = (lowerBound + upperBound) / 2F
-            val option = computeChipOptions(position, speed, ballSlice, hitbox, listOf(middle)).firstOrNull() ?: break
+            val option = computeChipOptions(position, speed, ballSlice, hitbox, listOf(middle)).firstOrNull()
+                    ?: break
             latestOption = option
             val correctionAngle = option.velocity.flatten().correctionAngle(flatIdeal)
             if (abs(correctionAngle) < 0.01) {

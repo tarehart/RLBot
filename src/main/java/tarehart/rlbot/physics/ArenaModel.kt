@@ -30,10 +30,8 @@ class ArenaModel {
             val prevPrediction = prevPath.getMotionAt(start.time)
             if ((prevPath.endpoint.time - start.time) > SIMULATION_DURATION &&
                     prevPrediction != null &&
-                    prevPrediction.space.distance(start.space) < .3 &&
-                    prevPrediction.space.flatten().distance(start.space.flatten()) < .1 &&
-                    prevPrediction.velocity.distance(start.velocity) < .3 &&
-                    prevPrediction.velocity.flatten().distance(start.velocity.flatten()) < .1) {
+                    prevPrediction.space.distance(start.space) < .1 &&
+                    prevPrediction.velocity.distance(start.velocity) < .1) {
 
                 ballPath = prevPath // Previous prediction is still legit, build on top of it.
             } else {

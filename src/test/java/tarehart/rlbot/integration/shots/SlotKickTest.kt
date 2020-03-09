@@ -22,15 +22,92 @@ class SlotKickTest: StateSettingAbstractTest() {
 
     @Test
     fun testStraightShot() {
-        runTestCase(makeCase(0))
+        runTestCase(makeStationaryCase(0))
     }
 
     @Test
     fun testAngledShot() {
-        runTestCase(makeCase(30))
+        runTestCase(makeStationaryCase(30))
     }
 
-    fun makeCase(offset: Number): StateSettingTestCase {
+    @Test
+    fun testExtremeShot() {
+        runTestCase(makeStationaryCase(50))
+    }
+
+    @Test
+    fun rollingSidewaysShot() {
+        runTestCase(makeRollingSidewaysShot(50F, -35F))
+    }
+
+    @Test
+    fun rollingFasterSidewaysShot() {
+        runTestCase(makeRollingSidewaysShot(70F, -45F))
+    }
+
+    @Test
+    fun rollingSlowerSidewaysShot() {
+        runTestCase(makeRollingSidewaysShot(70F, -25F))
+    }
+
+    @Test
+    fun bouncingSidewaysShot() {
+        runTestCase(makeBouncingShot(70F, -25F, ballHeight = 15F))
+    }
+
+    fun makeBouncingShot(ballXPos: Float, ballXVel: Float, ballHeight: Float): StateSettingTestCase {
+
+        return StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(ballXPos, 0F, ArenaModel.BALL_RADIUS + ballHeight))
+                                .withVelocity(StateVector(ballXVel, 0, 0.1))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(0, -40F, ManeuverMath.BASE_CAR_Z))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(5.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(3.0))),
+                Plan(Posture.OVERRIDE).withStep(SlotKickStep(KickAtEnemyGoal())))
+    }
+
+    fun makeRollingSidewaysShot(ballXPos: Float, ballXVel: Float): StateSettingTestCase {
+
+        return StateSettingTestCase(
+                GameState()
+                        .withBallState(BallState().withPhysics(PhysicsState()
+                                .withLocation(StateVector(ballXPos, 0F, ArenaModel.BALL_RADIUS + 1))
+                                .withVelocity(StateVector(ballXVel, 0, 0.1))
+                                .withAngularVelocity(StateVector.ZERO)
+                        ))
+                        .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
+                                .withLocation(StateVector(0, -40F, ManeuverMath.BASE_CAR_Z))
+                                .withVelocity(StateVector(0F, 0F, 0F))
+                                .withAngularVelocity(StateVector.ZERO)
+                                .withRotation(DesiredRotation(0F, Math.PI.toFloat() / 2, 0F))
+                        )),
+                hashSetOf(
+                        PlaneBreakAssert(
+                                plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
+                                extent = SoccerGoal.EXTENT,
+                                timeLimit = Duration.ofSeconds(5.0),
+                                delayWhenBallFloating = true),
+
+                        BallTouchAssert(Duration.ofSeconds(3.0))),
+                Plan(Posture.OVERRIDE).withStep(SlotKickStep(KickAtEnemyGoal())))
+    }
+
+    fun makeStationaryCase(offset: Number): StateSettingTestCase {
         return StateSettingTestCase(
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
@@ -38,7 +115,7 @@ class SlotKickTest: StateSettingAbstractTest() {
                                 .withVelocity(StateVector(0, 0, 0.1))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
-                        .withCarState(0, CarState().withBoostAmount(0F).withPhysics(PhysicsState()
+                        .withCarState(0, CarState().withBoostAmount(100F).withPhysics(PhysicsState()
                                 .withLocation(StateVector(offset, -40F, ManeuverMath.BASE_CAR_Z))
                                 .withVelocity(StateVector(0F, 0F, 0F))
                                 .withAngularVelocity(StateVector.ZERO)
@@ -48,7 +125,7 @@ class SlotKickTest: StateSettingAbstractTest() {
                         PlaneBreakAssert(
                         plane = PlaneBreakAssert.ENEMY_GOAL_PLANE,
                         extent = SoccerGoal.EXTENT,
-                        timeLimit = Duration.ofSeconds(4.0),
+                        timeLimit = Duration.ofSeconds(5.0),
                         delayWhenBallFloating = true),
 
                         BallTouchAssert(Duration.ofSeconds(3.0))),

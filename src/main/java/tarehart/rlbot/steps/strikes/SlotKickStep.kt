@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.carpredict.CarSlice
@@ -26,7 +27,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
     private var favoredChipOption: ChipOption? = null
     private var favoredOffset: Vector3? = null
 
-    private val disruptionMeter = BallPathDisruptionMeter(1)
+    private val disruptionMeter = BallPathDisruptionMeter(3)
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
@@ -66,7 +67,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
         val steerCorrection = SteerUtil.getCorrectionAngleRad(car, intercept.space)
         val firmStart = slotStart
         val firmEnd = intercept.space
-        if (firmStart == null && Math.abs(steerCorrection) < 0.03) {
+        if (Math.abs(steerCorrection) < 0.03) {
             val idealDirection = kickStrategy.getKickDirection(car, intercept.space) ?: return null
 
             val chipOption = BallPhysics.computeBestChipOption(car.position, intercept.accelSlice.speed,
@@ -84,9 +85,12 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             }
 
             favoredChipOption?.let {
-                car.renderer.drawLine3d(Color.GREEN, intercept.ballSlice.space, intercept.ballSlice.space + it.velocity)
-                it.carSlice.render(car.renderer, Color.GREEN)
-                RenderUtil.drawCircle(car.renderer, it.chipCircle, it.impactPoint.z, Color.WHITE)
+                val renderer = NamedRenderer("slotKick")
+                renderer.startPacket()
+                renderer.drawLine3d(Color.GREEN, intercept.ballSlice.space, intercept.ballSlice.space + it.velocity)
+                it.carSlice.render(renderer, Color.GREEN)
+                RenderUtil.drawCircle(renderer, it.chipCircle, it.impactPoint.z, Color.WHITE)
+                renderer.finishAndSend()
             }
         }
 
@@ -99,7 +103,12 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             }
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, intercept.space.flatten(), detourForBoost = slotStart == null, conserveBoost = false)
+        val toIntercept = intercept.space.flatten() - car.position.flatten()
+
+        return SteerUtil.steerTowardGroundPosition(
+                car, car.position.flatten() + toIntercept * 1.5F,
+                detourForBoost = slotStart == null && car.boost < 20,
+                conserveBoost = false)
     }
 
     fun drawSlot(car: CarData) {

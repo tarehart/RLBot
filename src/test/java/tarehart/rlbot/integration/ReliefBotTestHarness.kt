@@ -9,6 +9,7 @@ import tarehart.rlbot.bots.Team
 import tarehart.rlbot.integration.asserts.AssertStatus
 import tarehart.rlbot.integration.metrics.TimeMetric
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.ui.DisplayFlags
 import java.lang.AssertionError
 
 class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
@@ -32,15 +33,16 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
                 testCase.setState()
                 Thread.sleep(100) // Give the state a chance to take hold.
             } catch (e: Error) {
-                e.printStackTrace()
+                // e.printStackTrace()
                 Thread.sleep(1000) // Wait a while to give python a chance to phone in.
             } catch (e: Exception) {
-                e.printStackTrace()
+                // e.printStackTrace()
                 Thread.sleep(1000) // Wait a while to give python a chance to phone in.
             }
         }
 
         System.out.println("Booting up ReliefBot")
+        DisplayFlags.init()
         botInstance = ReliefBot(Team.BLUE, STANDARD_PLAYER_INDEX)
         botInstance.currentPlan = testCase.initialPlan
         botManager.ensureBotRegistered(STANDARD_PLAYER_INDEX) { botInstance }
