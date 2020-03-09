@@ -138,7 +138,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 //        }
 
         if (finalOrientation && millisTillIntercept < 500) {
-            return orientForFinalTouch(offset, car).withJump()
+            return orientForFinalTouch(offset, car)
         } else {
             finalOrientation = false
         }
@@ -169,13 +169,13 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         if (courseResult.targetError.magnitude() < acceptableError && !canDodge) {
             finalOrientation = true
             BotLog.println("Doing final orientation for aerial touch!", car.playerIndex)
-            return orientForFinalTouch(offset, car).withJump()
+            return orientForFinalTouch(offset, car)
         }
 
         val up = if (offset.z > 0 && secondsSinceLaunch > 1.5) Vector3.DOWN else Vector3.UP
 
         if (courseResult.targetError.magnitude() < acceptableError && !canDodge && !wasBoosting) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT).withJump()
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT)
         }
 
         if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 &&
@@ -196,7 +196,7 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
         wasBoosting = courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold
 
         return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT)
-                .withJump()
+                .withJump(timeInAirAtStart.millis == 0L)
                 .withBoost(wasBoosting)
 
     }

@@ -3,6 +3,7 @@ package tarehart.rlbot.carpredict
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.DistanceTimeSpeed
+import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
@@ -142,19 +143,16 @@ object AccelerationModel {
         return Duration.ofSeconds(getSteerPenaltySeconds(carData, space))
     }
 
-    fun getSteerPenaltySeconds(carData: CarData, target: Vector3): Double {
-        return getSteerPenaltySeconds(carData, (target - carData.position).flatten())
-    }
-
     /**
      * Only works on flat ground.
      */
-    fun getSteerPenaltySeconds(carData: CarData, newDirection: Vector2): Double {
-        val direction = newDirection.normalized()
+    fun getSteerPenaltySeconds(carData: CarData, destination: Vector3): Double {
+        val direction = (destination - carData.position).projectToPlane(carData.orientation.roofVector).normaliseCopy()
         val nominalSpeed = getNominalSpeed(carData)
-        val speedAlongDirection = carData.velocity.flatten().dotProduct(direction)
+        val velocityOnPlane = carData.velocity.projectToPlane(carData.orientation.roofVector)
+        val speedAlongDirection = velocityOnPlane.dotProduct(direction)
         if (speedAlongDirection < nominalSpeed) {
-            val orientError = 0.5 * Math.max( 0.0, 0.8 - direction.dotProduct(carData.orientation.noseVector.flatten().normalized()))
+            val orientError = 0.5 * Math.max( 0.0, 0.8 - direction.dotProduct(carData.orientation.noseVector))
             val speedDeficit = nominalSpeed - speedAlongDirection
             return speedDeficit / FULL_THROTTLE_ACCEL_AT_0 + orientError
         }

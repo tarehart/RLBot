@@ -7,6 +7,7 @@ import tarehart.rlbot.math.Rectangle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
+import kotlin.math.max
 import kotlin.math.sign
 
 
@@ -34,7 +35,7 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
     override fun getNearestEntrance(ballPosition: Vector3, padding: Number): Vector3 {
 
         val adjustedExtent = EXTENT - ArenaModel.BALL_RADIUS - padding.toFloat()
-        val adjustedHeight = GOAL_HEIGHT - ArenaModel.BALL_RADIUS - padding.toFloat()
+        val adjustedHeight = max(GOAL_HEIGHT - ArenaModel.BALL_RADIUS - padding.toFloat(), ArenaModel.BALL_RADIUS)
         val x = Clamper.clamp(ballPosition.x, -adjustedExtent, adjustedExtent)
         val z = Clamper.clamp(ballPosition.z, ArenaModel.BALL_RADIUS, adjustedHeight)
         return Vector3(x, center.y, z)
@@ -68,8 +69,8 @@ class SoccerGoal(negativeSide: Boolean): Goal(negativeSide) {
 
     companion object {
 
-        private const val GOAL_DISTANCE = 102.0
-        const val GOAL_HEIGHT = 12.0
-        const val EXTENT = 17.8555
+        private const val GOAL_DISTANCE = 102.0F
+        const val GOAL_HEIGHT = 12F
+        const val EXTENT = 17.8555F
     }
 }

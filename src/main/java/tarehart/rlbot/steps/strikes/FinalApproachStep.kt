@@ -81,11 +81,6 @@ class FinalApproachStep(private val kickPlan: DirectedKickPlan) : NestedPlanStep
 //        steerPlan.route.renderDebugInfo(renderer)
 //        renderer.finishAndSend()
 
-        if (kickPlan.intercept.strikeProfile.preDodgeTime.millis > 0) {
-            // TODO: this is a hack put in place because the car often slows down too much at the last moment
-            steerPlan.immediateSteer.withThrottle(1.0)
-        }
-
         return steerPlan.immediateSteer
     }
 

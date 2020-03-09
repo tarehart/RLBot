@@ -132,7 +132,7 @@ object RenderUtil {
     fun drawSphereOfInfluence(car: CarData, distancePlot: DistancePlot, duration: Duration) {
         drawRadarChart(car.renderer, car.position.flatten(), 64, car.position.z, Color.GREEN) {
             val direction = VectorUtil.rotateVector(Vector2(1, 0), it.toFloat())
-            distancePlot.getMaximumRange(car, direction, duration) ?: 0F
+            distancePlot.getMaximumRange(car, direction.withZ(0), duration) ?: 0F
         }
     }
 

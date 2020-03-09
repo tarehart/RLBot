@@ -10,6 +10,7 @@ import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.travel.LineUpInReverseStep
 import tarehart.rlbot.time.Duration
 import kotlin.math.cos
+import kotlin.math.sign
 import kotlin.math.sin
 
 object SetPieces {
@@ -106,15 +107,27 @@ object SetPieces {
         val pitch = -cos(correctionAngle)
         val roll = -sin(correctionAngle)
 
-        return Plan()
+        val plan = Plan()
                 .unstoppable()
                 .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput().withJump(true)))
                 .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()))
-                .withStep(BlindStep(Duration.ofSeconds(.05),
+                .withStep(BlindStep(Duration.ofSeconds(.24),
                         AgentOutput()
                                 .withJump(true)
                                 .withPitch(pitch)
                                 .withRoll(roll)))
-                .withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
+
+        if (pitch > .5) {
+            plan
+                    .withStep(BlindStep(Duration.ofSeconds(.4), AgentOutput()
+                            .withPitch(-1.0)
+                    ))
+                    .withStep(BlindStep(Duration.ofSeconds(.3), AgentOutput()
+                            .withPitch(-1.0)
+                            .withRoll(sign(roll))
+                    ))
+        }
+
+        return plan.withStep(LandGracefullyStep { direction })
     }
 }

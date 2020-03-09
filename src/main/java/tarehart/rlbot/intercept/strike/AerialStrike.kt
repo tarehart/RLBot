@@ -127,9 +127,11 @@ open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?):
 
             val avgSpeedNeeded = car.position.flatten().distance(intercept.space.flatten()) / (intercept.time - car.time).seconds
             val speedRatio = car.velocity.magnitude() / avgSpeedNeeded
+            val timeToAirRatio = AerialMath.timeToAir(intercept.space.z) / (intercept.time - car.time).seconds
 
-            if (speedRatio < 0.6 && avgSpeedNeeded > 20) {
-                BotLog.println("Not aerialing yet: Have only sped up to $speedRatio of the average speed needed", car.playerIndex)
+            if (speedRatio < 0.6 && timeToAirRatio < 0.6) {
+                BotLog.println("Not aerialing yet: Have only sped up to $speedRatio of the average speed needed" +
+                        " and timeToAirRatio is $timeToAirRatio", car.playerIndex)
                 return false
             }
 

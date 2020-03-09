@@ -23,10 +23,10 @@ import kotlin.math.min
 class JumpHitStrike(height: Float): StrikeProfile() {
 
     // If we have time to tilt back, the nose will be higher and we can cheat a little.
-    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) * .9F
+    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) - .5F
 
     override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(requiredHeight) ?: .8F + .016F)
-    override val postDodgeTime = Duration.ofMillis(50)
+    override val postDodgeTime = Duration.ofMillis(100)
     override val speedBoost = 10.0F
     override val style = Style.JUMP_HIT
 
@@ -63,8 +63,8 @@ class JumpHitStrike(height: Float): StrikeProfile() {
 
         const val MAX_BALL_HEIGHT_FOR_JUMP_HIT = ManeuverMath.MASH_JUMP_HEIGHT
 
-        fun performJumpHit(jumpSeconds: Float): Plan {
-
+        fun performJumpHit(preDodgeSeconds: Float): Plan {
+            val jumpSeconds = preDodgeSeconds - 0.02F
             val pitchBackPortion = min(.36F, jumpSeconds)
             val driftUpPortion = jumpSeconds - pitchBackPortion
 

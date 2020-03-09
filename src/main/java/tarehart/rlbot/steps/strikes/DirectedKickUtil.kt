@@ -139,12 +139,17 @@ object DirectedKickUtil {
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
 
+        // After we dodge, the car will take on a new angle which is more favorable. This is a signed value.
         val finalApproachVsKickForceAngle = approachVsKickForceAngle - deflectionAngle
+
         if (abs(finalApproachVsKickForceAngle) > shallowAngleThreshold) {
             // The angle is too shallow, we need to curve into it!
             val force = intercept.ballSlice.space.flatten() - carPositionAtContact
             val approach = carPositionAtContact - carPosition
-            val approachError = finalApproachVsKickForceAngle - shallowAngleThreshold * sign(deflectionAngle)
+
+            // we know that abs(finalApproachVsKickForceAngle) > shallowAngleThreshold. We want to move
+            // that final approach angle closer to zero by the amount of shallowAngleThreshold(which is always positive)
+            val approachError = abs(finalApproachVsKickForceAngle - shallowAngleThreshold * sign(deflectionAngle))
             val allowedApproach = approach.rotateTowards(force, approachError)
             val wishfulCarPosition = carPositionAtContact - allowedApproach
             val dodgePosition = dodgePosition(wishfulCarPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null

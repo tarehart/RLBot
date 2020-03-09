@@ -55,6 +55,7 @@ class ThreatAssessor {
                         bundle.tacticalSituation.ballAdvantage.seconds < 0.3 &&
                         ourTimeToEnemyIntercept < Duration.ofSeconds(1.5) &&
                         enemyIntercept.time.isBefore(car.time.plusSeconds(1.0)) &&
+                        !enemyFlatVel.isZero &&
                         enemyFlatVel.normalized().dotProduct(enemyToIntercept.normalized()) > 0.5 &&  // Enemy driving toward intercept
                         shotAlignment > 0.3 // Enemy is a threat to our goal
             }

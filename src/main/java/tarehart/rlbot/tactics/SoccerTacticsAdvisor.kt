@@ -21,6 +21,7 @@ import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.teamwork.ShadowThePlayStep
+import tarehart.rlbot.steps.wall.DescendFromWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
 import tarehart.rlbot.time.Duration
@@ -83,14 +84,16 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
             return Plan(KICKOFF).withStep(GetBoostStep())
         }
 
-        if (LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&
-                !ArenaModel.isBehindGoalLine(car.position)) {
+        if (LANDING.canInterrupt(currentPlan)) {
+            if (car.hasWheelContact && car.position.z > 5) {
+                return Plan(LANDING).withStep(DescendFromWallStep())
+            } else if (!car.hasWheelContact && !ArenaModel.isBehindGoalLine(car.position)) {
+                if (ArenaModel.isMicroGravity() && situation.distanceBallIsBehindUs < 0) {
+                    return Plan().withStep(MidairStrikeStep(Duration.ofMillis(0)))
+                }
 
-            if (ArenaModel.isMicroGravity() && situation.distanceBallIsBehindUs < 0) {
-                return Plan().withStep(MidairStrikeStep(Duration.ofMillis(0)))
+                return Plan(LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
             }
-
-            return Plan(LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
 
         if (situation.scoredOnThreat != null && SAVE.canInterrupt(currentPlan)) {
@@ -176,6 +179,11 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
     }
 
     override fun makeFreshPlan(bundle: TacticalBundle): Plan {
+
+        val car = bundle.agentInput.myCarData
+        if (ArenaModel.isCarOnWall(car)) {
+            return Plan(NEUTRAL).withStep(DescendFromWallStep())
+        }
 
         val situation = bundle.tacticalSituation
         val teamHasMeCovered = RotationAdvisor.teamHasMeCovered(bundle)
