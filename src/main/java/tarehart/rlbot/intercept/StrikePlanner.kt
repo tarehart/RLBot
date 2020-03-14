@@ -103,6 +103,7 @@ object StrikePlanner {
             Style.AERIAL -> AerialStrike(height, kickStrategy)
             Style.DRIBBLE -> DribbleStrike()
             Style.DOUBLE_JUMP_POKE -> DoubleJumpPokeStrike(height)
+            Style.DODGELESS_JUMP_HIT -> DodgelessJumpStrike(height)
         }
     }
 

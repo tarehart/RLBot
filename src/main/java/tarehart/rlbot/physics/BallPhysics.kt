@@ -8,7 +8,9 @@ import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Ray2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.GameTime
+import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
+import java.lang.Exception
 import kotlin.math.abs
 import kotlin.math.asin
 import kotlin.math.cos
@@ -115,12 +117,17 @@ object BallPhysics {
         return ballVelocity + inelasticImpulse / 30.0 + scriptImpulse
     }
 
-    fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox, horizontalOffsetList: List<Float>): List<ChipOption> {
-        val contactHeight = ManeuverMath.BASE_CAR_Z + hitbox.upwardExtent
+    fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox,
+                           horizontalOffsetList: List<Float>, arrivalCarHeight: Float = ManeuverMath.BASE_CAR_Z): List<ChipOption> {
+        val contactHeight = arrivalCarHeight + hitbox.upwardExtent
 
         val radiusMultiplier = 1.3F // TODO: this is a fudge factor, needed?
         val chipRingRadius = cos(asin((ballSlice.space.z - contactHeight) / ArenaModel.BALL_RADIUS)) *
                 ArenaModel.BALL_RADIUS * radiusMultiplier
+        if (chipRingRadius.isNaN()) {
+            println("Failed to find chip options, probably because the car is too low to touch the ball!")
+            return emptyList()
+        }
         val toSlice = (ballSlice.space - currentCarPosition).withZ(0)
         val toSliceNormal = toSlice.normaliseCopy()
         val orthogonal = toSliceNormal.crossProduct(Vector3.UP)
@@ -199,14 +206,15 @@ object BallPhysics {
         return options
     }
 
-    fun computeBestChipOption(position: Vector3, speed: Float, ballSlice: BallSlice, hitbox: CarHitbox, idealDirection: Vector3): ChipOption {
+    fun computeBestChipOption(position: Vector3, speed: Float, ballSlice: BallSlice, hitbox: CarHitbox,
+                              idealDirection: Vector3, arrivalCarHeight: Float = ManeuverMath.BASE_CAR_Z): ChipOption {
         var lowerBound = -2.6F
         var upperBound = 2.6F
         val flatIdeal = idealDirection.flatten()
         var latestOption: ChipOption? = null
         while (upperBound - lowerBound > .1) {
             val middle = (lowerBound + upperBound) / 2F
-            val option = computeChipOptions(position, speed, ballSlice, hitbox, listOf(middle)).firstOrNull()
+            val option = computeChipOptions(position, speed, ballSlice, hitbox, listOf(middle), arrivalCarHeight).firstOrNull()
                     ?: break
             latestOption = option
             val correctionAngle = option.velocity.flatten().correctionAngle(flatIdeal)

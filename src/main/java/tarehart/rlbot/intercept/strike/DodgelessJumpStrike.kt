@@ -20,20 +20,17 @@ import tarehart.rlbot.tuning.LatencyAdvisor
 import tarehart.rlbot.tuning.ManeuverMath
 import kotlin.math.min
 
-class JumpHitStrike(height: Float): StrikeProfile() {
+class DodgelessJumpStrike(height: Float): StrikeProfile() {
 
-    // If we have time to tilt back, the nose will be higher and we can cheat a little.
-    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) - TILT_HEIGHT_CHEAT
-
-    override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(requiredHeight) ?: .8F + .016F)
-    override val postDodgeTime = Duration.ofMillis(100)
-    override val speedBoost = 10.0F
-    override val style = Style.JUMP_HIT
+    override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(height) ?: .8F + .016F)
+    override val postDodgeTime = Duration.ofMillis(0)
+    override val speedBoost = 0F
+    override val style = Style.DODGELESS_JUMP_HIT
 
     override fun getPlan(car: CarData, intercept: SpaceTime): Plan? {
         val checklist = checkJumpHitReadiness(car, intercept)
         if (checklist.readyToLaunch()) {
-            BotLog.println("Performing JumpHit!", car.playerIndex)
+            BotLog.println("Performing Dodgeless Jump!", car.playerIndex)
             return performJumpHit(preDodgeTime.seconds)
         }
         return null
@@ -45,8 +42,7 @@ class JumpHitStrike(height: Float): StrikeProfile() {
 
     override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         val flatForce = desiredKickForce.flatten()
-        val postDodgeSpeed = Math.min(AccelerationModel.SUPERSONIC_SPEED, expectedArrivalSpeed + speedBoost)
-        val strikeTravel = preDodgeTime.seconds * expectedArrivalSpeed + postDodgeTime.seconds * postDodgeSpeed
+        val strikeTravel = preDodgeTime.seconds * expectedArrivalSpeed
         val launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
         return DirectedKickUtil.getStandardWaypoint(launchPosition, flatForce.normalized(), intercept)
     }
@@ -61,41 +57,12 @@ class JumpHitStrike(height: Float): StrikeProfile() {
 
     companion object {
 
-        const val TILT_HEIGHT_CHEAT = 0.5F
-        const val MAX_BALL_HEIGHT_FOR_JUMP_HIT = ManeuverMath.MASH_JUMP_HEIGHT - TILT_HEIGHT_CHEAT
+        const val MAX_BALL_HEIGHT_FOR_JUMP_HIT = ManeuverMath.MASH_JUMP_HEIGHT
 
         fun performJumpHit(preDodgeSeconds: Float): Plan {
-            val jumpSeconds = preDodgeSeconds - 0.02F
-            val pitchBackPortion = min(.36F, jumpSeconds)
-            val driftUpPortion = jumpSeconds - pitchBackPortion
-
+            val jumpSeconds = preDodgeSeconds
             val blindSequence = BlindSequence()
-
-
-
-            blindSequence.withStep(BlindStep(Duration.ofSeconds(pitchBackPortion), AgentOutput()
-                            .withJump(true)
-                            .withPitch(1.0)
-                    ))
-
-            if (driftUpPortion > 0) {
-                blindSequence.withStep(BlindStep(Duration.ofSeconds(driftUpPortion), AgentOutput().withJump(true)))
-            }
-
-            blindSequence
-                    .withStep(BlindStep(Duration.ofMillis(16), AgentOutput()
-                            .withPitch(-1.0)
-                            .withJump(false)
-                            .withThrottle(1.0)))
-                    .withStep(BlindStep(Duration.ofMillis(80), AgentOutput()
-                            .withPitch(-1.0)
-                            .withJump(true)
-                            .withThrottle(1.0)))
-                    .withStep(BlindStep(Duration.ofMillis(800), AgentOutput()
-                            .withThrottle(1.0)
-                            .withPitch(-1.0)
-                    ))
-
+            blindSequence.withStep(BlindStep(Duration.ofSeconds(jumpSeconds), AgentOutput().withJump(true)))
             val plan = Plan().unstoppable().withStep(blindSequence)
             return plan.withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }

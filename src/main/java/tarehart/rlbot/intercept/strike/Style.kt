@@ -8,5 +8,6 @@ enum class Style {
     JUMP_HIT,
     AERIAL,
     DRIBBLE,
-    DOUBLE_JUMP_POKE
+    DOUBLE_JUMP_POKE,
+    DODGELESS_JUMP_HIT
 }

@@ -117,12 +117,14 @@ class DistancePlot(start: DistanceTimeSpeed) {
 
     fun getMotionAfterDuration(time: Duration, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
 
-        val totalSeconds = max(time.seconds, 0F)
-        val secondsSpentAccelerating = totalSeconds
+        val secondsSpentAccelerating = max(time.seconds - strikeProfile.strikeDuration.seconds, 0F)
 
         if (strikeProfile.postDodgeTime == Duration.ZERO || strikeProfile.speedBoost == 0F) {
             val motion = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating))
-            return motion?.let { DistanceTimeSpeed(it.distance, time, it.speed) }
+            return motion?.let { DistanceTimeSpeed(
+                    it.distance + it.speed * strikeProfile.preDodgeTime.seconds,
+                    time + strikeProfile.preDodgeTime,
+                    it.speed) }
         }
 
         val speedupSeconds = strikeProfile.postDodgeTime.seconds
@@ -134,8 +136,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
             return DistanceTimeSpeed(increasedSpeed * secondsSpentAccelerating, time, increasedSpeed)
         }
 
-        val accelSecondsBeforeStrike = secondsSpentAccelerating - speedupSeconds
-        val dtsOption = getMotionAfterDuration(Duration.ofSeconds(accelSecondsBeforeStrike))
+        val dtsOption = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating))
 
         return dtsOption?.let {
             val beginningSpeed = it.speed

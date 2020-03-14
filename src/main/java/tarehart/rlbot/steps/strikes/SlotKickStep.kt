@@ -4,19 +4,29 @@ import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
+import tarehart.rlbot.intercept.strike.DodgelessJumpStrike
+import tarehart.rlbot.intercept.strike.DoubleJumpPokeStrike
+import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.physics.ChipOption
+import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
+import tarehart.rlbot.steps.blind.BlindStep
+import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 
 /**
@@ -39,7 +49,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
     private var favoredChipOption: ChipOption? = null
     private var favoredSliceToCar: Vector3? = null
 
-    private val disruptionMeter = BallPathDisruptionMeter(3)
+    private val disruptionMeter = BallPathDisruptionMeter(5)
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
@@ -58,14 +68,18 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             verticallyAccessible && viableKick
         }
 
-        val distancePlot = bundle.tacticalSituation.expectedContact?.distancePlot ?: return null
+        val distancePlot = bundle.tacticalSituation.expectedContact?.distancePlot ?:
+            return null
 
         val sliceToCar = favoredSliceToCar ?: Vector3()
-        val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, sliceToCar, overallPredicate) ?: return null
+        val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, sliceToCar, overallPredicate,
+                strikeProfileFn = { height -> selectStrike(height) }) ?:
+        return null
 
         if (slotStart == null) {
+            val arrivalHeight = intercept.ballSlice.space.z - ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z
             val chipOptions = BallPhysics.computeChipOptions(car.position, intercept.accelSlice.speed, intercept.ballSlice,
-                    car.hitbox, (-25..25).map { it * .1F })
+                    car.hitbox, (-25..25).map { it * .1F }, arrivalHeight)
 
             for ((index, chipOption) in chipOptions.withIndex()) {
                 val color = RenderUtil.rainbowColor(index)
@@ -80,10 +94,12 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
         val firmStart = slotStart
         val firmEnd = intercept.space
         if (Math.abs(steerCorrection) < 0.03) {
-            val idealDirection = kickStrategy.getKickDirection(car, intercept.space) ?: return null
+            val idealDirection = kickStrategy.getKickDirection(car, intercept.space) ?:
+                return null
 
+            val arrivalHeight = intercept.ballSlice.space.z - ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z
             val chipOption = BallPhysics.computeBestChipOption(car.position, intercept.accelSlice.speed,
-                    intercept.ballSlice, car.hitbox, idealDirection)
+                    intercept.ballSlice, car.hitbox, idealDirection, arrivalHeight)
             favoredChipOption = chipOption
             favoredSliceToCar = chipOption.carSlice.space - intercept.ballSlice.space
             slotStart = car.position
@@ -104,6 +120,11 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
                 RenderUtil.drawCircle(renderer, it.chipCircle, it.impactPoint.z, Color.WHITE)
                 renderer.finishAndSend()
             }
+
+            val jumpOutput = reflexManeuver(car, intercept, bundle)
+            if (jumpOutput != null) {
+                return jumpOutput
+            }
         }
 
         drawSlot(car)
@@ -117,10 +138,45 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
         val toIntercept = intercept.space.flatten() - car.position.flatten()
 
+        if (intercept.needsPatience) {
+            return SteerUtil.getThereOnTime(car, intercept.toSpaceTime(), false)
+        }
+
         return SteerUtil.steerTowardGroundPosition(
                 car, car.position.flatten() + toIntercept * 1.5F,
-                detourForBoost = slotStart == null && car.boost < 20,
+                detourForBoost = false,
                 conserveBoost = false)
+    }
+
+    private fun selectStrike(height: Float): StrikeProfile {
+        return DodgelessJumpStrike(height)
+        // TODO: enable some higher stuff
+    }
+
+    private fun reflexManeuver(car: CarData, intercept: Intercept, bundle: TacticalBundle): AgentOutput? {
+
+        intercept.strikeProfile.getPlan(car, intercept.toSpaceTime())?.let {
+            return startPlan(it, bundle)
+        }
+
+        return null
+
+//        if (car.hasWheelContact) {
+//            val secondsNeededForJump = ManeuverMath.secondsForMashJumpHeight(intercept.space.z)
+//
+//            if (secondsNeededForJump == null) {
+//                // TODO: Probably need a double jump or something
+//                println("Probably need to double jump", car.playerIndex)
+//            } else if (secondsNeededForJump >= (intercept.time - car.time).seconds) {
+//                return startPlan(
+//                        Plan(Posture.NEUTRAL)
+//                                .unstoppable()
+//                                .withStep(BlindStep(Duration.ofSeconds(secondsNeededForJump), AgentOutput().withJump())),
+//                        bundle)
+//            }
+//        }
+//
+//        return null
     }
 
     fun drawSlot(car: CarData) {
