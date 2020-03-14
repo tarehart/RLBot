@@ -41,12 +41,12 @@ object InterceptCalculator {
             carData: CarData,
             ballPath: BallPath,
             acceleration: DistancePlot,
-            interceptModifier: Vector3,
+            sliceToCar: Vector3,
             predicate: (CarData, SpaceTime) -> Boolean,
             strikeProfileFn: (Float) -> StrikeProfile = { ChipStrike() }): Intercept? {
 
         val groundNormal = Vector3(0.0, 0.0, 1.0)
-        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, interceptModifier, predicate, strikeProfileFn, groundNormal)
+        return getFilteredInterceptOpportunity(carData, ballPath, acceleration, sliceToCar, predicate, strikeProfileFn, groundNormal)
     }
 
     /**
@@ -54,7 +54,7 @@ object InterceptCalculator {
      * @param carData
      * @param ballPath
      * @param acceleration
-     * @param interceptModifier an offset from the ball position that the car is trying to reach
+     * @param sliceToCar an offset from the ball position that the car is trying to reach
      * @param spatialPredicate determines whether a particular ball slice is eligible for intercept
      * @param strikeProfileFn a description of how the car will move during the final moments of the intercept
      * @param planeNormal the normal of the plane that the car is driving on for this intercept.
@@ -64,7 +64,7 @@ object InterceptCalculator {
             carData: CarData,
             ballPath: BallPath,
             acceleration: DistancePlot,
-            interceptModifier: Vector3,
+            sliceToCar: Vector3,
             spatialPredicate: (CarData, SpaceTime) -> Boolean,
             strikeProfileFn: (Float) -> StrikeProfile,
             planeNormal: Vector3): Intercept? {
@@ -75,7 +75,7 @@ object InterceptCalculator {
 
         for (i in 0 until ballPath.slices.size) {
             val slice = ballPath.slices[i]
-            val spaceTime = SpaceTime(slice.space.plus(interceptModifier), slice.time)
+            val spaceTime = SpaceTime(slice.space.plus(sliceToCar), slice.time)
             val strikeProfile = strikeProfileFn.invoke(spaceTime.space.z)
             val orientDuration = if (strikeProfile.isForward) AccelerationModel.getOrientDuration(carData, spaceTime.space) else Duration.ofMillis(0)
             val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - orientDuration, strikeProfile) ?: return null
@@ -95,7 +95,7 @@ object InterceptCalculator {
                             else Duration.ofMillis(0)
 
                     return Intercept(
-                            tweenedSlice.space + interceptModifier,
+                            tweenedSlice.space + sliceToCar,
                             tweenedSlice.time,
                             boostNeeded,
                             strikeProfile,

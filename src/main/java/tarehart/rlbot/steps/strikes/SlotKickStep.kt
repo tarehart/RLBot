@@ -3,7 +3,6 @@ package tarehart.rlbot.steps.strikes
 import rlbot.render.NamedRenderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
-import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
@@ -20,12 +19,25 @@ import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import java.awt.Color
 
+/**
+ * The philosophy here will be:
+ * 1. Pick an intercept somewhat sloppily
+ * 2. Steer toward that intercept until we're lined up well.
+ * 3. Now we have a more refined ball slice / arrival speed.
+ * 4. Simulate some hits on the ball which are based on driving straight and hitting the ball off-center
+ * 5. Pick the hit with your favorite result. Now you have a sliceToCar vector to pass into the intercept calculator.
+ * 6. Intercept is now at max refinement. Maybe stop doing hit simulation because we don't want to create an unstable
+ *    Oscillation between changing ball slice vs changing sliceToCar
+ * 7. If the ball slice is off the ground and requires a single jump:
+ *    - Don't pre-plan it, just jump when you have exactly enough time to reach the required height
+ *    - Once in the air, dodge if/when necessary to refine the contact
+ */
 class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
     private var slotStart: Vector3? = null
     private var slotEnd: Vector3? = null
     private var favoredChipOption: ChipOption? = null
-    private var favoredOffset: Vector3? = null
+    private var favoredSliceToCar: Vector3? = null
 
     private val disruptionMeter = BallPathDisruptionMeter(3)
 
@@ -48,8 +60,8 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
         val distancePlot = bundle.tacticalSituation.expectedContact?.distancePlot ?: return null
 
-        val ballCenterToCarCenter = favoredOffset ?: Vector3()
-        val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, ballCenterToCarCenter, overallPredicate) ?: return null
+        val sliceToCar = favoredSliceToCar ?: Vector3()
+        val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, sliceToCar, overallPredicate) ?: return null
 
         if (slotStart == null) {
             val chipOptions = BallPhysics.computeChipOptions(car.position, intercept.accelSlice.speed, intercept.ballSlice,
@@ -73,7 +85,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             val chipOption = BallPhysics.computeBestChipOption(car.position, intercept.accelSlice.speed,
                     intercept.ballSlice, car.hitbox, idealDirection)
             favoredChipOption = chipOption
-            favoredOffset = chipOption.carSlice.space - intercept.ballSlice.space
+            favoredSliceToCar = chipOption.carSlice.space - intercept.ballSlice.space
             slotStart = car.position
         }
 

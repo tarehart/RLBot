@@ -7,6 +7,7 @@ import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import kotlin.math.abs
@@ -135,28 +136,12 @@ object AccelerationModel {
     fun getTravelTime(carData: CarData, plot: DistancePlot, target: Vector3): Duration? {
         val distance = carData.position.distance(target)
         val travelTime = plot.getTravelTime(distance)
-        val penaltySeconds = getSteerPenaltySeconds(carData, target)
+        val penaltySeconds = SteerUtil.getSteerPenaltySeconds(carData, target)
         return travelTime?.plusSeconds(penaltySeconds)
     }
 
     fun getOrientDuration(carData: CarData, space: Vector3): Duration {
-        return Duration.ofSeconds(getSteerPenaltySeconds(carData, space))
-    }
-
-    /**
-     * Only works on flat ground.
-     */
-    fun getSteerPenaltySeconds(carData: CarData, destination: Vector3): Double {
-        val direction = (destination - carData.position).projectToPlane(carData.orientation.roofVector).normaliseCopy()
-        val nominalSpeed = getNominalSpeed(carData)
-        val velocityOnPlane = carData.velocity.projectToPlane(carData.orientation.roofVector)
-        val speedAlongDirection = velocityOnPlane.dotProduct(direction)
-        if (speedAlongDirection < nominalSpeed) {
-            val orientError = 0.5 * Math.max( 0.0, 0.8 - direction.dotProduct(carData.orientation.noseVector))
-            val speedDeficit = nominalSpeed - speedAlongDirection
-            return speedDeficit / FULL_THROTTLE_ACCEL_AT_0 + orientError
-        }
-        return 0.0
+        return Duration.ofSeconds(SteerUtil.getSteerPenaltySeconds(carData, space))
     }
 
     private fun getNominalSpeed(car: CarData): Float {

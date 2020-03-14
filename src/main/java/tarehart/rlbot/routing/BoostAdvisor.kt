@@ -11,6 +11,7 @@ import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
@@ -122,7 +123,7 @@ object BoostAdvisor {
      * Pretends that full boosts are a little closer than they really are, because of greed
      */
     private fun getGreedyTime(car: CarData, distancePlot: DistancePlot, boostPad: BoostPad) : Duration {
-        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(car, boostPad.location)
+        val orientSeconds = SteerUtil.getSteerPenaltySeconds(car, boostPad.location)
         val distance = car.position.flatten().distance(boostPad.location.flatten())
 
         val realDuration = distancePlot.getMotionAfterDistance(distance)

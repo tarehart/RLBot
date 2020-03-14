@@ -6,6 +6,7 @@ import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
 import java.util.*
 import kotlin.math.max
@@ -102,13 +103,13 @@ class DistancePlot(start: DistanceTimeSpeed) {
     }
 
     fun getMaximumRange(car: CarData, direction: Vector3, travelTime: Duration): Float? {
-        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(car, direction)
+        val orientSeconds = SteerUtil.getSteerPenaltySeconds(car, direction)
         return getMotionAfterDuration(Duration.ofSeconds(max(0.0, travelTime.seconds - orientSeconds)))?.distance
     }
 
     fun getMotionUponArrival(carData: CarData, destination: Vector3): DistanceTimeSpeed? {
 
-        val orientSeconds = AccelerationModel.getSteerPenaltySeconds(carData, destination)
+        val orientSeconds = SteerUtil.getSteerPenaltySeconds(carData, destination)
         val distance = carData.position.flatten().distance(destination.flatten())
 
         return getMotionAfterDistance(distance)?.let { DistanceTimeSpeed(it.distance, it.time.plusSeconds(orientSeconds), it.speed) }

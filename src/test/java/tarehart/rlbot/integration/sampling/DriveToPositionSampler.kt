@@ -47,6 +47,9 @@ class DriveToPositionSampler: StateSettingAbstractTest() {
     Root relative squared error             40.387  %
     Total Number of Instances             3571
 
+
+This was achieved by loading the CSV in https://www.cs.waikato.ac.nz/ml/weka/ and doing a linear regression.
+
      */
 
     @Test

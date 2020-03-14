@@ -41,7 +41,7 @@ class DribbleStep : NestedPlanStep() {
                 car,
                 ballPath,
                 distancePlot,
-                interceptModifier = ballToCar.scaledToMagnitude(1.5),
+                sliceToCar = ballToCar.scaledToMagnitude(1.5),
                 predicate =  {_, st -> st.space.z < 2},
                 strikeProfileFn =  { DribbleStrike() }) ?: return null
 

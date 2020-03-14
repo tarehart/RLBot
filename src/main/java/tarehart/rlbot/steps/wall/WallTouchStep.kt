@@ -63,7 +63,7 @@ class WallTouchStep : NestedPlanStep() {
                 car,
                 ballPath,
                 fullAcceleration,
-                interceptModifier = Vector3(),
+                sliceToCar = Vector3(),
                 spatialPredicate = { c: CarData, ballPosition: SpaceTime -> isBallOnWall(c, ballPosition) && isAcceptableZoneForWallTouch(bundle, ballPosition.space) },
                 strikeProfileFn = { WallTouchStrike() },
                 planeNormal = car.orientation.roofVector)

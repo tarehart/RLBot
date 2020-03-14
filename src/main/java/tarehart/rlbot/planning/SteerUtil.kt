@@ -175,6 +175,11 @@ object SteerUtil {
         return getSteeringOutput(correctionAngle, distance, speed, carData.isSupersonic, false, carData.spin.yawRate)
     }
 
+    /**
+     * Before changing this, note that it's linked to getSteerPenaltySeconds, which was tuned via lots of
+     * timing trials to predict time-to-target. If you mess with this, you should probably redo that via
+     * DriveToPositionSampler.
+     */
     private fun getSteeringOutput(correctionAngle: Float, distance: Float, speed: Float, isSupersonic: Boolean, conserveBoost: Boolean, yawRate: Float): AgentOutput {
         val difference = Math.abs(correctionAngle)
         val turnSharpness = difference * 6 / Math.PI + difference * speed * .1
@@ -192,6 +197,23 @@ object SteerUtil {
                 .withSteer(-Math.signum(correctionAngle) * turnSharpness)
                 .withSlide(shouldSlide)
                 .withBoost(shouldBoost)
+    }
+
+    /**
+     * Based on the standard steering algorithm, how much time are we going to burn changing direction?
+     * Steer penalty seconds is typically added to the idealized 1D acceleration model.
+     *
+     * This was tuned via lots of timing trials using DriveToPositionSampler to predict time-to-target.
+     */
+    fun getSteerPenaltySeconds(car: CarData, target: Vector3): Double {
+        val unpleasantSpeed = car.velocity.magnitude() - car.velocity.dotProduct((target - car.position).normaliseCopy())
+        val toTargetOnPlane = (target - car.position).projectToPlane(car.orientation.roofVector).normaliseCopy()
+        val angle = toTargetOnPlane.angle(car.orientation.noseVector)
+
+        return 0.2786 * angle +
+               -0.101  * angle * angle +
+               0.0326 * angle * angle * angle +
+               0.0151 * unpleasantSpeed
     }
 
     fun steerTowardGroundPosition(carData: CarData, position: Vector3): AgentOutput {

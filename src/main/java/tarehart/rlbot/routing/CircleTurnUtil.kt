@@ -182,7 +182,7 @@ object CircleTurnUtil {
 
 
         val route = Route()
-        route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(AccelerationModel.getSteerPenaltySeconds(car, tangentPoint.toVector3()))))
+        route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(SteerUtil.getSteerPenaltySeconds(car, tangentPoint.toVector3()))))
 
         val accelerationTime = distancePlot.getTravelTime(distanceToTangent) ?: distancePlot.getEndPoint().time
         val arrivalParts = RoutePlanner.arriveWithSpeed(flatPosition, tangentPoint, expectedSpeed, distancePlot) ?:
@@ -201,7 +201,7 @@ object CircleTurnUtil {
 
     private fun planDirectRoute(flatPosition: Vector2, car: CarData, strikePoint: StrictPreKickWaypoint, distancePlot: DistancePlot, toTarget: Vector2): SteerPlan {
         val route = Route()
-        route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(AccelerationModel.getSteerPenaltySeconds(car, strikePoint.position.toVector3()))))
+        route.withPart(OrientRoutePart(flatPosition, Duration.ofSeconds(SteerUtil.getSteerPenaltySeconds(car, strikePoint.position.toVector3()))))
 
         val accelerationTime = distancePlot.getTravelTime(toTarget.magnitude())
 
