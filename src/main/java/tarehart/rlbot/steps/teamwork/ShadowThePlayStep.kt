@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.teamwork
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SteerUtil
@@ -33,9 +34,11 @@ class ShadowThePlayStep: NestedPlanStep(), UnfailingStep {
 
         bundle.agentInput.getTeamRoster(car.team).forEach {
             if (it != car) {
-                val teammateToMe = car.position - it.position
-                if (teammateToMe.magnitude() < 20) {
-                    idealPosition += teammateToMe.scaledToMagnitude(20.0).flatten()
+                val teammateToMe = (car.position - it.position).withY(0) // Only do horizontal spacing
+                val distanceToTeammate = teammateToMe.magnitude()
+                val teamSpacing = 30
+                if (distanceToTeammate < teamSpacing) {
+                    idealPosition += teammateToMe.withY(0).scaledToMagnitude(teamSpacing - distanceToTeammate).flatten()
                 }
             }
         }
@@ -50,6 +53,6 @@ class ShadowThePlayStep: NestedPlanStep(), UnfailingStep {
             return startPlan(it, bundle)
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, idealPosition, conserveBoost = true)
+        return SteerUtil.getThereOnTime(car, SpaceTime(idealPosition.withZ(0), car.time.plusSeconds(1)))
     }
 }

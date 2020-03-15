@@ -52,8 +52,8 @@ data class GameTime(private val gameMillis: Long) : Comparable<GameTime> {
         /**
          * @param gameSeconds reported by the RLBot framework
          */
-        fun fromGameSeconds(gameSeconds: Double): GameTime {
-            return GameTime((gameSeconds * 1000).toLong())
+        fun fromGameSeconds(gameSeconds: Number): GameTime {
+            return GameTime((gameSeconds.toFloat() * 1000).toLong())
         }
 
         fun zero(): GameTime {

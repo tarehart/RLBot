@@ -280,22 +280,23 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             return Plan(NEUTRAL).withStep(GetOnOffenseStep())
         }
 
-        if (SteerUtil.getCatchOpportunity(car, ballPath, car.boost) != null) {
-            println("Catch opportunity here", car.playerIndex)
-            return FirstViableStepPlan(NEUTRAL)
-                    .withStep(CatchBallStep())
-                    .withStep(DribbleStep())
+        val plan = FirstViableStepPlan(NEUTRAL)
+
+        val teamHasMeCovered = RotationAdvisor.teamHasMeCovered(bundle)
+        if (teamHasMeCovered) {
+            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
-        val plan = FirstViableStepPlan(NEUTRAL)
-                .withStep(WallTouchStep())
-                .withStep(FlexibleKickStep(WallPass()))
+        plan.withStep(WallTouchStep())
+        plan.withStep(FlexibleKickStep(WallPass()))
 
         if (car.boost > 80 && situation.enemyPlayerWithInitiative != null &&
                 car.position.distance(situation.enemyPlayerWithInitiative.car.position) < 80) {
             plan.withStep(DemolishEnemyStep())
         }
+        plan.withStep(CatchBallStep())
         plan.withStep(GetBoostStep())
+        // TODO: Add a rotate out step right here.
         return plan
     }
 
