@@ -53,6 +53,8 @@ class ChallengeStep: NestedPlanStep() {
                     bundle)
         }
 
+        // TODO: also attack aggressively if the enemy appears to be dribbling
+
         if (defensiveNodeDistance < DEFENSIVE_NODE_DISTANCE + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
             startPlan(
                     Plan(Posture.DEFENSIVE)
