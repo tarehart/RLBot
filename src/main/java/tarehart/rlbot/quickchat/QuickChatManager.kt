@@ -19,6 +19,7 @@ class QuickChatManager(val playerIndex: Int, val team: Int) {
             if (input.allCars[message.playerIndex()].team.ordinal == team) {
                 latestTeamMessages[message.playerIndex()] = QuickChatRecord(message.quickChatSelection(), input.time)
             }
+            lastMessageIndex = message.messageIndex()
         }
     }
 
