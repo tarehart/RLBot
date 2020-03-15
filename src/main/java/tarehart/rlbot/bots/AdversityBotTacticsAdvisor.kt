@@ -1,5 +1,6 @@
 package tarehart.rlbot.bots
 
+import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
@@ -15,7 +16,7 @@ import tarehart.rlbot.tactics.SaveAdvisor
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
 import tarehart.rlbot.tuning.BotLog
 
-class AdversityBotTacticsAdvisor: SoccerTacticsAdvisor() {
+class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input) {
 
     override fun makeFreshPlan(bundle: TacticalBundle): Plan {
         val input = bundle.agentInput

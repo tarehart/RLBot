@@ -22,7 +22,7 @@ import kotlin.math.min
 class FlipHitStrike: StrikeProfile() {
 
     override val preDodgeTime = Duration.ZERO
-    override val postDodgeTime = Duration.ofMillis(400)
+    override val postDodgeTime = Duration.ofMillis(300)
     override val speedBoost = 10.0F
     override val style = Style.FLIP_HIT
 

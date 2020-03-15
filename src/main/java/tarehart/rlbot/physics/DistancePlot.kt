@@ -10,6 +10,7 @@ import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.time.Duration
 import java.util.*
 import kotlin.math.max
+import kotlin.math.min
 
 class DistancePlot(start: DistanceTimeSpeed) {
 
@@ -118,30 +119,14 @@ class DistancePlot(start: DistanceTimeSpeed) {
     fun getMotionAfterDuration(time: Duration, strikeProfile: StrikeProfile): DistanceTimeSpeed? {
 
         val secondsSpentAccelerating = max(time.seconds - strikeProfile.strikeDuration.seconds, 0F)
+        val secondsForPreDodge = min(strikeProfile.preDodgeTime.seconds, max(0F, time.seconds))
+        val secondsForPostDodge = max(0F, min(time.seconds - strikeProfile.preDodgeTime.seconds, strikeProfile.postDodgeTime.seconds))
 
-        if (strikeProfile.postDodgeTime == Duration.ZERO || strikeProfile.speedBoost == 0F) {
-            val motion = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating))
-            return motion?.let { DistanceTimeSpeed(
-                    it.distance + it.speed * strikeProfile.preDodgeTime.seconds,
-                    time + strikeProfile.preDodgeTime,
-                    it.speed) }
-        }
+        val speedBoost = if (time < strikeProfile.strikeDuration) strikeProfile.speedBoost else 0F
 
-        val speedupSeconds = strikeProfile.postDodgeTime.seconds
-        val speedBoost = strikeProfile.speedBoost
-        if (secondsSpentAccelerating < speedupSeconds) {
-            // Not enough time for a full strike.
-            val beginningSpeed = plot[0].speed
-            val increasedSpeed = Math.min(beginningSpeed + speedBoost, AccelerationModel.SUPERSONIC_SPEED)
-            return DistanceTimeSpeed(increasedSpeed * secondsSpentAccelerating, time, increasedSpeed)
-        }
-
-        val dtsOption = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating))
-
-        return dtsOption?.let {
-            val beginningSpeed = it.speed
-            val increasedSpeed = Math.min(beginningSpeed + speedBoost, AccelerationModel.SUPERSONIC_SPEED)
-            DistanceTimeSpeed(it.distance + increasedSpeed * speedupSeconds, time, increasedSpeed)
-        }
+        val dts = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating)) ?: return null
+        val increasedSpeed = min(dts.speed + speedBoost, AccelerationModel.SUPERSONIC_SPEED)
+        val distance = dts.distance + secondsForPreDodge * dts.speed + secondsForPostDodge * increasedSpeed
+        return DistanceTimeSpeed(distance, time, increasedSpeed)
     }
 }

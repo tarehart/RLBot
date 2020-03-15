@@ -1,5 +1,6 @@
 package tarehart.rlbot.bots
 
+import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -20,7 +21,7 @@ import tarehart.rlbot.tactics.SoccerTacticsAdvisor
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 
-class AirBudTacticsAdvisor: SoccerTacticsAdvisor() {
+class AirBudTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input) {
 
     override fun suitableGameModes(): Set<GameMode> {
         return setOf(GameMode.SOCCER, GameMode.DROPSHOT, GameMode.HOOPS, GameMode.SPIKE_RUSH)
