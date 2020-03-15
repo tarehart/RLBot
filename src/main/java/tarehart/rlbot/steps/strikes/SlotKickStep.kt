@@ -41,6 +41,11 @@ import java.awt.Color
  * 7. If the ball slice is off the ground and requires a single jump:
  *    - Don't pre-plan it, just jump when you have exactly enough time to reach the required height
  *    - Once in the air, dodge if/when necessary to refine the contact
+ *
+ *
+ * This is currently going poorly for jump stuff, largely because the ball radius multiplier in BallPhysics is screwing us up,
+ * but also because the hits are really weak. If we dodge it'll be better. If we stretch higher we can accelerate
+ * more before jumping. 
  */
 class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
