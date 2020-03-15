@@ -1,5 +1,9 @@
 package tarehart.rlbot.tactics
 
+import rlbot.cppinterop.RLBotDll
+import rlbot.flat.QuickChat
+import rlbot.flat.QuickChatMessages
+import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.bots.Team
@@ -12,6 +16,7 @@ import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.planning.Posture.*
+import tarehart.rlbot.quickchat.QuickChatManager
 import tarehart.rlbot.steps.*
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
@@ -37,10 +42,11 @@ import java.awt.Color
 
 // TODO: Specific rotate out state which gathers big boost if possible
 
-open class SoccerTacticsAdvisor: TacticsAdvisor {
+open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
     var goNuts = false
     val kickoffAdvisor = KickoffAdvisor()
+    val quickChatManager = QuickChatManager(input.playerIndex, input.team.ordinal)
 
     override fun suitableGameModes(): Set<GameMode> {
         return setOf(GameMode.SOCCER)
@@ -49,6 +55,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
     override fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
 
         val input = bundle.agentInput
+        quickChatManager.receive(input)
         val situation = bundle.tacticalSituation
         val car = input.myCarData
         val threatReport = ThreatAssessor.getThreatReport(bundle)
@@ -150,6 +157,14 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
                 }.withStep(ChallengeStep())
                         .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
             }
+
+            if (quickChatManager.hasLatestChatFromTeammate(QuickChatSelection.Information_IGotIt, input.time.minusSeconds(1))) {
+                println("Rotating out per teammate's request!", car.playerIndex)
+                return RetryableViableStepPlan(DEFENSIVE, GetOnDefenseStep()) {
+                    quickChatManager.hasLatestChatFromTeammate(QuickChatSelection.Information_IGotIt, it.agentInput.time.minusSeconds(1))
+                }.withStep(GetBoostStep())
+                        .withStep(ShadowThePlayStep())
+            }
         }
 
         val alone = input.getTeamRoster(input.team).size <= 1
@@ -160,6 +175,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
                 && situation.teamPlayerWithBestShot?.car == input.myCarData) {
 
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
+            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_IGotIt)
 
             val plan = FirstViableStepPlan(OFFENSIVE)
 
@@ -232,6 +248,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
         val car = input.myCarData
 
         if (car.boost < 10) {
+            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_GoForIt)
             return Plan().withStep(GetBoostStep())
         }
 
@@ -242,6 +259,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
         val enemyGoal = GoalUtil.getEnemyGoal(car.team)
 
         if (situation.expectedContact != null && generousShotAngle(enemyGoal, situation.expectedContact)) {
+            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_IGotIt)
             val plan = FirstViableStepPlan(OFFENSIVE)
                     .withStep(WallTouchStep())
                     .withStep(FlexibleKickStep(KickAtEnemyGoal()))
@@ -253,6 +271,7 @@ open class SoccerTacticsAdvisor: TacticsAdvisor {
         }
 
         if (car.boost < 50) {
+            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_GoForIt)
             return Plan().withStep(GetBoostStep())
         }
 

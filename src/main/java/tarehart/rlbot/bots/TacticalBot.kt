@@ -20,7 +20,7 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
 
     private fun assessSituation(input: AgentInput): TacticalBundle {
         if (!::tacticsAdvisor.isInitialized) {
-            tacticsAdvisor = getNewTacticsAdvisor()
+            tacticsAdvisor = getNewTacticsAdvisor(input)
         }
         return tacticsAdvisor.assessSituation(input, currentPlan)
     }
@@ -66,13 +66,13 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
         return SteerUtil.steerTowardGroundPosition(car, input.ballPosition.flatten()).withBoost(car.boost > 75)
     }
 
-    open fun getNewTacticsAdvisor() : TacticsAdvisor {
+    open fun getNewTacticsAdvisor(input: AgentInput) : TacticsAdvisor {
         val gameMode = GameModeSniffer.getGameMode()
 
         return when (gameMode) {
             GameMode.SOCCER -> {
                 println("Game Mode: Soccar")
-                SoccerTacticsAdvisor()
+                SoccerTacticsAdvisor(input)
             }
             GameMode.DROPSHOT -> {
                 println("Game Mode: Dropshot")
