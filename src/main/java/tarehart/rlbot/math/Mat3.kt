@@ -1,6 +1,7 @@
 package tarehart.rlbot.math
 
-import org.ejml.simple.SimpleMatrix
+import org.ejml.data.FMatrixRMaj
+import org.ejml.dense.row.CommonOps_FDRM
 import tarehart.rlbot.math.vector.Vector3
 import kotlin.math.abs
 import kotlin.math.acos
@@ -8,40 +9,52 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 
-class Mat3(private val matrix: SimpleMatrix) {
+class Mat3(private val matrix: FMatrixRMaj) {
 
-    constructor(values: Array<FloatArray>): this(SimpleMatrix(values))
+    constructor(values: Array<FloatArray>): this(FMatrixRMaj(values))
 
     fun transpose(): Mat3 {
-        return Mat3(matrix.transpose())
+        val ret = emptyMatrix()
+        CommonOps_FDRM.transpose(matrix, ret)
+        return Mat3(ret)
     }
 
     fun dot(vec: Vector3): Vector3 {
-        return toVec(matrix.mult(toMatrix(vec)))
+        val ret = emptyMatrix()
+        CommonOps_FDRM.mult(matrix, toMatrix(vec), ret)
+        return toVec(ret)
     }
 
     fun dot(mat: Mat3): Mat3 {
-        return Mat3(matrix.mult(mat.matrix))
+        val ret = emptyMatrix()
+        CommonOps_FDRM.mult(matrix, mat.matrix, ret)
+        return Mat3(ret)
     }
 
     fun trace(): Float {
-        return matrix.trace().toFloat()
+        return CommonOps_FDRM.trace(matrix)
     }
 
-    fun get(row: Int, col: Int): Double {
+    fun get(row: Int, col: Int): Float {
         return matrix.get(row, col)
     }
 
     operator fun plus(mat: Mat3): Mat3 {
-        return Mat3(matrix.plus(mat.matrix))
+        val ret = emptyMatrix()
+        CommonOps_FDRM.add(matrix, mat.matrix, ret)
+        return Mat3(ret)
     }
 
     operator fun times(value: Float): Mat3 {
-        return Mat3(matrix.scale(value.toDouble()))
+        val ret = emptyMatrix()
+        CommonOps_FDRM.scale(value, matrix, ret)
+        return Mat3(ret)
     }
 
-    operator fun times(matrix: Mat3): Mat3 {
-        return Mat3(this.matrix.mult(matrix.matrix))
+    operator fun times(other: Mat3): Mat3 {
+        val ret = emptyMatrix()
+        CommonOps_FDRM.mult(matrix, other.matrix, ret)
+        return Mat3(ret)
     }
 
     fun forward(): Vector3 {
@@ -89,13 +102,15 @@ class Mat3(private val matrix: SimpleMatrix) {
     */
 
     companion object {
-        val IDENTITY = Mat3(SimpleMatrix.identity(3))
+        val IDENTITY = Mat3(FMatrixRMaj(arrayOf(floatArrayOf(1F, 0F, 0F), floatArrayOf(0F, 1F, 0F), floatArrayOf(0F, 0F, 1F))))
 
-        private fun toMatrix(vec: Vector3): SimpleMatrix {
-            return SimpleMatrix(arrayOf(floatArrayOf(vec.x), floatArrayOf(vec.y), floatArrayOf(vec.z)))
+        private fun emptyMatrix() = FMatrixRMaj(3, 3)
+
+        private fun toMatrix(vec: Vector3): FMatrixRMaj {
+            return FMatrixRMaj(arrayOf(floatArrayOf(vec.x), floatArrayOf(vec.y), floatArrayOf(vec.z)))
         }
 
-        private fun toVec(matrix: SimpleMatrix): Vector3 {
+        private fun toVec(matrix: FMatrixRMaj): Vector3 {
             return Vector3(matrix.get(0), matrix.get(1), matrix.get(2))
         }
 

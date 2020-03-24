@@ -47,8 +47,7 @@ dependencies {
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
-    compile group: 'org.ejml', name: 'ejml-ddense', version: '0.35'
-    compile group: 'org.ejml', name: 'ejml-simple', version: '0.35'
+    compile group: 'org.ejml', name: 'ejml-fdense', version: '0.38'
 
     // This directory will be created and the interface dll copied into it at runtime.
     // The end result is that the interface dll will be on the classpath.
