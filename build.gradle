@@ -46,7 +46,6 @@ dependencies {
     compile 'org.rlbot.commons:framework:2.+'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
     compile group: 'org.ejml', name: 'ejml-fdense', version: '0.38'
 
     // This directory will be created and the interface dll copied into it at runtime.
