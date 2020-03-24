@@ -9,7 +9,7 @@ repositories {
 }
 
 buildscript {
-    ext.kotlin_version = '1.2.60'
+    ext.kotlin_version = '1.3.71'
     repositories {
         jcenter()
     }
@@ -43,12 +43,10 @@ test {
 
 dependencies {
     // Fetch the framework jar file
-    compile 'org.rlbot.commons:framework:1.+'
+    compile 'org.rlbot.commons:framework:2.+'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
-    compile 'com.google.guava:guava:23.4-jre'
     compile group: 'org.ejml', name: 'ejml-ddense', version: '0.35'
     compile group: 'org.ejml', name: 'ejml-simple', version: '0.35'
 
@@ -58,6 +56,7 @@ dependencies {
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
+    testCompile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
 }
 
 mainClassName = 'tarehart.rlbot.ReliefBotMainKt'
@@ -92,44 +91,8 @@ compileTestKotlin {
     }
 }
 
-task checkPipUpgradeSafety {
-    doLast {
-        new ByteArrayOutputStream().withStream { os ->
-            def exitValue = exec {
-                commandLine "python", "-c", "from rlbot.utils import public_utils; print(public_utils.is_safe_to_upgrade());"
-                standardOutput = os
-                ignoreExitValue = true
-            }.exitValue
-
-            // If the exit value is nonzero, the command  probably failed because rlbot is not installed at all.
-            ext.isSafe = exitValue != 0 || os.toString().trim() == "True"
-        }
-    }
-}
-
-
-// Uses pip (the python package manager) to install all the python packages needed for this bot, as defined
-// in requirements.txt.
-task pipInstallRequirements {
-    dependsOn 'checkPipUpgradeSafety'
-
-    doLast {
-        if (checkPipUpgradeSafety.isSafe) {
-            exec {
-                commandLine "python", "-m", "pip", "install", "-r", "./src/main/python/requirements.txt", "--upgrade"
-            }
-        } else {
-            println 'Skipping upgrade attempt because files are in use.'
-        }
-    }
-}
-
 task createDllDirectory {
     mkdir dllDirectory
 }
 
-// Installs or updates RLBot. Empty task for now. It still does stuff because it "dependsOn" tasks that do things.
-task updateRLBot {
-    dependsOn 'pipInstallRequirements'
-    dependsOn 'createDllDirectory'
-}
+run.dependsOn createDllDirectory

@@ -1,48 +1,29 @@
 package tarehart.rlbot.physics
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.*
+import tarehart.rlbot.math.BotMath.PI
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.cpp.BallPredictorHelper
 import tarehart.rlbot.planning.SoccerGoal
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.time.Duration
+import tarehart.rlbot.time.GameTime
 import java.awt.Color
-import java.lang.Math.*
-import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.streams.asStream
 
 class ArenaModel {
 
     private var previousBallPath: BallPath? = null
-    fun simulateBall(start: BallSlice): BallPath {
-        val prevPath = previousBallPath
-        val ballPath: BallPath
-        if (prevPath != null) {
-            val prevPrediction = prevPath.getMotionAt(start.time)
-            if ((prevPath.endpoint.time - start.time) > SIMULATION_DURATION &&
-                    prevPrediction != null &&
-                    prevPrediction.space.distance(start.space) < .1 &&
-                    prevPrediction.velocity.distance(start.velocity) < .1) {
 
-                ballPath = prevPath // Previous prediction is still legit, build on top of it.
-            } else {
-                ballPath = BallPredictorHelper.predictPath()
-            }
-        } else {
-            ballPath = BallPredictorHelper.predictPath()
-        }
-        previousBallPath = ballPath
-        return ballPath
-    }
 
     companion object {
 
@@ -64,7 +45,7 @@ class ArenaModel {
         }
 
         fun isMicroGravity(): Boolean {
-            return Math.abs(GRAVITY) < 5
+            return abs(GRAVITY) < 5
         }
 
         fun setSoccerWalls() {
@@ -151,23 +132,6 @@ class ArenaModel {
 
         val SIMULATION_DURATION = Duration.ofSeconds(5.0)
 
-        private val mainModel = ArenaModel()
-
-        private val pathCache = CacheBuilder.newBuilder()
-                .maximumSize(10)
-                .build(object : CacheLoader<BallSlice, BallPath>() {
-                    @Throws(Exception::class)
-                    override fun load(key: BallSlice): BallPath {
-                        synchronized(lock) {
-                            // Always use a new ArenaModel. There's a nasty bug
-                            // where bounces stop working properly and I can't track it down.
-                            return mainModel.simulateBall(key)
-                        }
-                    }
-                })
-
-        private val lock = Any()
-
         fun isInBounds(location: Vector2): Boolean {
             return isInBounds(location.toVector3(), 0.0)
         }
@@ -188,17 +152,36 @@ class ArenaModel {
         }
 
         fun isBehindGoalLine(position: Vector3): Boolean {
-            return Math.abs(position.y) > BACK_WALL
+            return kotlin.math.abs(position.y) > BACK_WALL
+        }
+
+        private var cachedPath = BallPath(BallSlice(Vector3.ZERO, GameTime.zero(), Vector3.ZERO, Vector3.ZERO))
+
+        private fun isCachedPathValid(start: BallSlice): Boolean {
+            val prevPath = cachedPath
+            val prevPrediction = prevPath.getMotionAt(start.time)
+            if ((prevPath.endpoint.time - start.time) > SIMULATION_DURATION &&
+                    prevPrediction != null &&
+                    prevPrediction.space.distance(start.space) < .1 &&
+                    prevPrediction.velocity.distance(start.velocity) < .1) {
+
+                return true
+            }
+            return false
         }
 
         fun predictBallPath(input: AgentInput): BallPath {
             try {
-                val key = BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin)
-                return pathCache.get(key)
+                val slice = BallSlice(input.ballPosition, input.time, input.ballVelocity, input.ballSpin)
+                synchronized(ArenaModel) {
+                    if (!isCachedPathValid(slice)) {
+                        cachedPath = BallPredictorHelper.predictPath()
+                    }
+                    return cachedPath
+                }
             } catch (e: ExecutionException) {
                 throw RuntimeException("Failed to compute ball slices!", e)
             }
-
         }
 
         fun isCarNearWall(car: CarData): Boolean {
@@ -217,11 +200,11 @@ class ArenaModel {
         }
 
         fun isCarOnWall(car: CarData): Boolean {
-            return car.hasWheelContact && isCarNearWall(car) && Math.abs(car.orientation.roofVector.z) < 0.05
+            return car.hasWheelContact && isCarNearWall(car) && abs(car.orientation.roofVector.z) < 0.05
         }
 
         fun isNearFloorEdge(position: Vector3): Boolean {
-            return Math.abs(position.x) > SoccerGoal.EXTENT && getDistanceFromWall(position) + position.z < 6
+            return abs(position.x) > SoccerGoal.EXTENT && getDistanceFromWall(position) + position.z < 6
         }
 
         fun getCollisionPlanes(): List<Plane> {

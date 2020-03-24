@@ -3,13 +3,9 @@ package tarehart.rlbot.tuning
 import com.google.gson.Gson
 import tarehart.rlbot.carpredict.CarPath
 import tarehart.rlbot.carpredict.CarSlice
-import tarehart.rlbot.math.BallSlice
-import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.time.GameTime
-
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
 class CarRecorder(private val endTime: GameTime) {
