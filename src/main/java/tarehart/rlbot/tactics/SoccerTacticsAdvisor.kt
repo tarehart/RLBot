@@ -119,7 +119,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
                 return RetryableViableStepPlan(CLEAR, GetOnDefenseStep()) {
                     b -> b.tacticalSituation.needsDefensiveClear
-                }.withStep(WallTouchStep()).withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+                }.withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
             }
 
             println("Canceling current plan. Going for clear!", input.playerIndex)
@@ -282,8 +282,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
         val plan = FirstViableStepPlan(NEUTRAL)
 
-        val teamHasMeCovered = RotationAdvisor.teamHasMeCovered(bundle)
-        if (teamHasMeCovered) {
+        if (!RotationAdvisor.shouldWaitForTeammateToRotateBack(bundle)) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 

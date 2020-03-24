@@ -32,6 +32,9 @@ class FlipHitStrike: StrikeProfile() {
             BotLog.println("Performing FlipHit!", car.playerIndex)
             return frontFlip()
         }
+        if (checklist.timeForIgnition) {
+            BotLog.println("Hesitating on flip hit: $checklist", car.playerIndex)
+        }
         return null
     }
 

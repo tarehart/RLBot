@@ -186,7 +186,11 @@ object DirectedKickUtil {
     private fun dodgePosition(carPosition: Vector2, carAtContact: Vector2, dodgeDeflectionAngle: Float, dodgeTravel: Float): Vector2? {
 
         val toContact = carAtContact - carPosition
-        val triangle = Triangle.sideSideAngle(toContact.magnitude(), dodgeTravel, Math.PI.toFloat() - abs(dodgeDeflectionAngle)) ?: return null
+        val toContactMagnitude = toContact.magnitude()
+        if (dodgeTravel > toContactMagnitude) {
+            return null  // This will be an impossible triangle
+        }
+        val triangle = Triangle.sideSideAngle(toContactMagnitude, dodgeTravel, Math.PI.toFloat() - abs(dodgeDeflectionAngle)) ?: return null
 
         // We want the location of pt A as the launch position.
         // carPosition is at B

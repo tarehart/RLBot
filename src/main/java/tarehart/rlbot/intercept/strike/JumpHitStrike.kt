@@ -36,6 +36,9 @@ class JumpHitStrike(height: Float): StrikeProfile() {
             BotLog.println("Performing JumpHit!", car.playerIndex)
             return performJumpHit(preDodgeTime.seconds)
         }
+        if (checklist.timeForIgnition) {
+            BotLog.println("Hesitating on jump hit: $checklist", car.playerIndex)
+        }
         return null
     }
 

@@ -42,6 +42,9 @@ class SideHitStrike(height: Float): StrikeProfile() {
             val left = car.orientation.noseVector.flatten().correctionAngle(toIntercept) > 0
             return jumpSideFlip(left, Duration.ofSeconds(jumpTime))
         }
+        if (checklist.timeForIgnition) {
+            BotLog.println("Hesitating on side hit: $checklist", car.playerIndex)
+        }
         return null
     }
 

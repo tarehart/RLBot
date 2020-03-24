@@ -17,6 +17,12 @@ object RotationAdvisor {
         return false
     }
 
+    fun shouldWaitForTeammateToRotateBack(bundle: TacticalBundle): Boolean {
+        val input = bundle.agentInput
+        val alone = input.getTeamRoster(input.team).size <= 1
+        return !alone && !teamHasMeCovered(bundle)
+    }
+
     private fun isCoveringDefense(car: CarData, bundle: TacticalBundle): Boolean {
 
         val me = bundle.agentInput.myCarData

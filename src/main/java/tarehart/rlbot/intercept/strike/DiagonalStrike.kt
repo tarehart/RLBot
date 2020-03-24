@@ -33,7 +33,7 @@ class DiagonalStrike(height: Float): StrikeProfile() {
 
     private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8F
     override val preDodgeTime = Duration.ofSeconds(jumpTime + .02F)
-    override val postDodgeTime = Duration.ofMillis(60)
+    override val postDodgeTime = Duration.ofMillis(30)
     override val speedBoost = 10.0F
     override val style = Style.DIAGONAL_HIT
     override val isForward = false
@@ -46,6 +46,9 @@ class DiagonalStrike(height: Float): StrikeProfile() {
             val left = car.velocity.flatten().correctionAngle(toIntercept) > 0
             return diagonalKick(left, Duration.ofSeconds(jumpTime))
         }
+        if (checklist.timeForIgnition) {
+            BotLog.println("Hesitating on diagonal hit: $checklist", car.playerIndex)
+        }
         return null
     }
 
@@ -57,6 +60,9 @@ class DiagonalStrike(height: Float): StrikeProfile() {
             val toIntercept = kickPlan.intercept.space.flatten() - car.position.flatten()
             val left = car.velocity.flatten().correctionAngle(toIntercept) > 0
             return diagonalKick(left, Duration.ofSeconds(jumpTime))
+        }
+        if (checklist.timeForIgnition) {
+            BotLog.println("Hesitating on diagonal hit (fancy): $checklist", car.playerIndex)
         }
         return null
     }
