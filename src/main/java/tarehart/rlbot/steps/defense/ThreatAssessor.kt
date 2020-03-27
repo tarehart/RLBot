@@ -47,6 +47,8 @@ class ThreatAssessor {
             var challengeImminent = false
             val ourIntercept = bundle.tacticalSituation.expectedContact
             val ourTimeToEnemyIntercept = ourIntercept?.distancePlot?.getMotionUponArrival(car, enemyIntercept.space)?.time
+            val enemyDrivingTowardIntercept = enemyFlatVel.magnitude() > 5 && enemyFlatVel.normalized().dotProduct(enemyToIntercept.normalized()) > 0.5
+
             if (ourIntercept != null && ourTimeToEnemyIntercept != null) {
                 // Sometimes our own intercept time is not very important because the enemy is going to get there first
                 // and redirect the ball.
@@ -56,13 +58,13 @@ class ThreatAssessor {
                         ourTimeToEnemyIntercept < Duration.ofSeconds(1.5) &&
                         enemyIntercept.time.isBefore(car.time.plusSeconds(1.0)) &&
                         !enemyFlatVel.isZero &&
-                        enemyFlatVel.normalized().dotProduct(enemyToIntercept.normalized()) > 0.5 &&  // Enemy driving toward intercept
+                        enemyDrivingTowardIntercept &&  // Enemy driving toward intercept
                         shotAlignment > 0.3 // Enemy is a threat to our goal
             }
 
 
             return ThreatReport(
-                    enemyMightBoom = impactSpeed > 30 && shotAlignment > 0.6 && enemyIntercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT,
+                    enemyMightBoom = enemyDrivingTowardIntercept && impactSpeed > 30 && shotAlignment > 0.6 && enemyIntercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT,
                     enemyShotAligned = shotAlignment > 0.6 && enemyIntercept.space.z < JumpHitStrike.MAX_BALL_HEIGHT_FOR_JUMP_HIT,
                     enemyWinsRace = bundle.tacticalSituation.ballAdvantage.millis < 0,
                     enemyHasBreakaway = ZoneUtil.isEnemyOffensiveBreakaway(car, enemyCar.car, ballPosition),

@@ -125,7 +125,8 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             }
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) { b -> b.tacticalSituation.goForKickoff }
+                return RetryableViableStepPlan(Posture.DEFENSIVE, "Covering goal as second man on kickoff", GetOnDefenseStep())
+                { b -> b.tacticalSituation.goForKickoff }
             }
 
             return Plan(Posture.KICKOFF).withStep(GetBoostStep())
@@ -157,7 +158,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
 
             println("Canceling current plan. Forcing defensive rotation!", input.playerIndex)
-            return RetryableViableStepPlan(Posture.DEFENSIVE, GetOnDefenseStep()) {
+            return RetryableViableStepPlan(Posture.DEFENSIVE, "Defensive posture is forced.", GetOnDefenseStep()) {
                 b -> getForceDefensivePosture(b.agentInput.myCarData, b.tacticalSituation.enemyPlayerWithInitiative?.car, b.agentInput.ballPosition)
             }
         }

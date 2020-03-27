@@ -84,7 +84,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
             if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
                 val expiryTime = car.time.plusSeconds(3)
-                return RetryableViableStepPlan(DEFENSIVE, GetOnDefenseStep()) { b -> b.agentInput.time < expiryTime }
+                return RetryableViableStepPlan(DEFENSIVE, "Covering goal on kickoff as second man", GetOnDefenseStep()) { b -> b.agentInput.time < expiryTime }
                         .withStep(GetOnDefenseStep())
             }
 
@@ -117,7 +117,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
             if (situation.ballAdvantage.seconds < 0.3 && threatReport.challengeImminent) {
                 println("Need to clear, but also need to challenge first!", input.playerIndex)
-                return RetryableViableStepPlan(CLEAR, GetOnDefenseStep()) {
+                return RetryableViableStepPlan(CLEAR, "Need to challenge and clear", GetOnDefenseStep()) {
                     b -> b.tacticalSituation.needsDefensiveClear
                 }.withStep(ChallengeStep()).withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
             }
@@ -136,14 +136,14 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                 }
             }
 
-            return RetryableViableStepPlan(CLEAR, GetOnDefenseStep()) { b -> b.tacticalSituation.needsDefensiveClear }
+            return RetryableViableStepPlan(CLEAR, "Need to clear", GetOnDefenseStep()) { b -> b.tacticalSituation.needsDefensiveClear }
                     .withStep(FlexibleKickStep(KickAwayFromOwnGoal())) // TODO: make these fail if you have to drive through a goal post
         }
 
         if (DEFENSIVE.canInterrupt(currentPlan)) {
 
             if (threatReport.challengeImminent) {
-                return RetryableViableStepPlan(DEFENSIVE, GetOnDefenseStep()) {
+                return RetryableViableStepPlan(DEFENSIVE, "Responding to imminent challenge", GetOnDefenseStep()) {
                     ThreatAssessor.getThreatReport(it).challengeImminent
                 }.withStep(ChallengeStep())
             }
@@ -152,7 +152,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                     threatReport.looksSerious() &&
                     situation.teamPlayerWithInitiative?.car == input.myCarData) {
                 println("Canceling current plan due to threat level: $threatReport", input.playerIndex)
-                return RetryableViableStepPlan(DEFENSIVE, GetOnDefenseStep()) {
+                return RetryableViableStepPlan(DEFENSIVE, "Responding to serious threat from enemy", GetOnDefenseStep()) {
                     ThreatAssessor.getThreatReport(it).looksSerious()
                 }.withStep(ChallengeStep())
                         .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
@@ -160,7 +160,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
             if (quickChatManager.hasLatestChatFromTeammate(QuickChatSelection.Information_IGotIt, input.time.minusSeconds(1))) {
                 println("Rotating out per teammate's request!", car.playerIndex)
-                return RetryableViableStepPlan(DEFENSIVE, GetOnDefenseStep()) {
+                return RetryableViableStepPlan(NEUTRAL, "Rotating out per teammate's request", GetOnDefenseStep()) {
                     quickChatManager.hasLatestChatFromTeammate(QuickChatSelection.Information_IGotIt, it.agentInput.time.minusSeconds(1))
                 }.withStep(GetBoostStep())
                         .withStep(ShadowThePlayStep())
@@ -233,7 +233,8 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             }
 
             // Enemy is just gonna hit it for the sake of hitting it, presumably. Let's try to stay on offense if possible.
-            return RetryableViableStepPlan(NEUTRAL, ShadowThePlayStep()) { b -> !RotationAdvisor.teamHasMeCovered(b) && !canTouchFirst }
+            return RetryableViableStepPlan(NEUTRAL, "Enemy looks mildly dangerous", ShadowThePlayStep())
+            { b -> !RotationAdvisor.teamHasMeCovered(b) && !canTouchFirst }
                     .withStep(GetBoostStep())
                     .withStep(GetOnOffenseStep())
         }

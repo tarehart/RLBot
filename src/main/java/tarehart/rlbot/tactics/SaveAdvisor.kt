@@ -24,7 +24,7 @@ object SaveAdvisor {
         val car = bundle.agentInput.myCarData
         val situation = bundle.tacticalSituation
 
-        val savePlan = RetryableViableStepPlan(Posture.SAVE, GetOnDefenseStep()) {
+        val savePlan = RetryableViableStepPlan(Posture.SAVE, "Making a save", GetOnDefenseStep()) {
             b -> b.tacticalSituation.scoredOnThreat != null
         }
 

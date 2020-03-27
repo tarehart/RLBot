@@ -1,10 +1,14 @@
 package tarehart.rlbot.planning
 
+import rlbot.render.Renderer
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.steps.Step
 import tarehart.rlbot.steps.UnfailingStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
+import java.awt.Color
+import java.awt.Point
 
 /**
  * Composed of:
@@ -21,6 +25,7 @@ import tarehart.rlbot.time.GameTime
  */
 class RetryableViableStepPlan(
         posture: Posture,
+        private val label: String,
         private val fallback: UnfailingStep,
         private val stillValid: (TacticalBundle) -> Boolean = {false}) : Plan(posture) {
 
@@ -29,7 +34,7 @@ class RetryableViableStepPlan(
             if (isComplete()) {
                 return "Dead plan"
             }
-            return "${posture.name} RetryableViable (${currentStepIndex + 1}/${steps.size}) - ${currentStep.situation}"
+            return "${posture.name} RetryableViable - $label (${currentStepIndex + 1}/${steps.size}) - ${currentStep.situation}"
         }
 
     private val fallbackDuration = Duration.ofMillis(500)
@@ -43,6 +48,9 @@ class RetryableViableStepPlan(
 
         val expiration = fallbackExpiration
         val time = bundle.agentInput.time
+
+        renderPlan(expiration, time, bundle.agentInput.myCarData.renderer)
+
         if (expiration != null) {
             if (time > expiration) {
                 fallbackExpiration = null
@@ -73,5 +81,33 @@ class RetryableViableStepPlan(
         fallbackExpiration = time.plus(fallbackDuration)
 
         return fallback.getUnfailingOutput(bundle)
+    }
+
+    override val currentStep: Step
+        get() {
+            return if (fallbackExpiration == null) {
+                steps[currentStepIndex]
+            } else {
+                fallback
+            }
+        }
+
+    private fun renderPlan(expiration: GameTime?, time: GameTime, renderer: Renderer) {
+
+        renderer.drawString2d(label, Color.CYAN, Point(400, 80), 1, 1)
+        var text = ""
+        for (step in steps + fallback) {
+            if (step == currentStep) {
+                text += ">> "
+            } else {
+                text += "   "
+            }
+            text += step.javaClass.simpleName + "\n"
+        }
+        if (expiration != null) {
+            text += "#".repeat((expiration - time).millis.toInt() / 50)
+        }
+
+        renderer.drawString2d(text, Color.WHITE, Point(400, 100), 1, 1)
     }
 }

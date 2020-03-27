@@ -14,7 +14,7 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
     /**
      * You should make sure the plan is not complete before calling this.
      */
-    val currentStep: Step
+    open val currentStep: Step
         get() = steps[currentStepIndex]
 
     open val situation: String
