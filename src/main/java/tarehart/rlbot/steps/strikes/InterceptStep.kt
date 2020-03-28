@@ -68,7 +68,7 @@ class InterceptStep(
 
         val renderer = carData.renderer
         RenderUtil.drawSphere(renderer, soonestIntercept.ballSlice.space, ArenaModel.BALL_RADIUS.toDouble(), Color.YELLOW)
-        RenderUtil.drawBallPath(renderer, ballPath, soonestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
+        // RenderUtil.drawBallPath(renderer, ballPath, soonestIntercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
         if (!interceptModifier.isZero) {
             RenderUtil.drawImpact(renderer, soonestIntercept.space, interceptModifier.scaled(-1F), Color.CYAN)
         }

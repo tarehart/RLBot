@@ -60,16 +60,16 @@ object RenderUtil {
         renderer.drawLine3d(color, p4, tipPosition)
     }
 
-    fun drawBallPath(renderer: Renderer, ballPath: BallPath, endTime: GameTime, color: Color) {
+    fun drawBallPath(renderer: Renderer, ballPath: BallPath, endTime: GameTime, color: Color, step: Int = 1) {
         if(DisplayFlags[DisplayFlags.BALL_PATH] == 1) {
             var prevSlice = ballPath.startPoint
             var slice: BallSlice
-            var i = 1
+            var i = step
             while (prevSlice.time < endTime && i < ballPath.slices.size) {
                 slice = ballPath.slices[i]
 
                 renderer.drawLine3d(color, prevSlice.space, slice.space)
-                i += 1
+                i += step
                 prevSlice = slice
             }
         }

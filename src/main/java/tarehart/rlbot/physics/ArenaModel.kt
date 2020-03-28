@@ -1,7 +1,9 @@
 package tarehart.rlbot.physics
 
+import rlbot.render.NamedRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.AgentInput
+import tarehart.rlbot.BotHouse
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.*
 import tarehart.rlbot.math.BotMath.PI
@@ -162,13 +164,16 @@ class ArenaModel {
             val prevPrediction = prevPath.getMotionAt(start.time)
             if ((prevPath.endpoint.time - start.time) > SIMULATION_DURATION &&
                     prevPrediction != null &&
-                    prevPrediction.space.distance(start.space) < .1 &&
-                    prevPrediction.velocity.distance(start.velocity) < .1) {
+                    prevPrediction.space.distance(start.space) < .2 &&
+                    prevPrediction.velocity.distance(start.velocity) < .2) {
 
                 return true
             }
             return false
         }
+
+        private val pathRenderer = NamedRenderer("reliefBotBallPath")
+        private var rainbowCount = 0
 
         fun predictBallPath(input: AgentInput): BallPath {
             try {
@@ -176,6 +181,11 @@ class ArenaModel {
                 synchronized(ArenaModel) {
                     if (!isCachedPathValid(slice)) {
                         cachedPath = BallPredictorHelper.predictPath()
+                        if (BotHouse.debugMode) {
+                            pathRenderer.startPacket()
+                            RenderUtil.drawBallPath(pathRenderer, cachedPath, input.time.plusSeconds(6), RenderUtil.rainbowColor(rainbowCount++), 10)
+                            pathRenderer.finishAndSend()
+                        }
                     }
                     return cachedPath
                 }
