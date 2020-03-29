@@ -21,7 +21,7 @@ class LongRunupShotTest: StateSettingAbstractTest() {
                 GameState()
                         .withBallState(BallState().withPhysics(PhysicsState()
                                 .withLocation(StateVector(-50F, 40F, ArenaModel.BALL_RADIUS))
-                                .withVelocity(StateVector(10F, 0F, 20.1F))
+                                .withVelocity(StateVector(10, 0, 15))
                                 .withAngularVelocity(StateVector.ZERO)
                         ))
                         .withCarState(0, CarState().withBoostAmount(50F).withPhysics(PhysicsState()

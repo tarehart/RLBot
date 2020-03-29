@@ -100,14 +100,6 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
 
         recentPrecisionPlan = precisionPlan
 
-        val isNearGoal = intercept.space.distance(GoalUtil.getNearestGoal(intercept.space).center) < 50
-
-        if (!intercept.strikeProfile.isForward && !isNearGoal) {
-            // Don't do long-range diagonal or side dodges, it leaves us open to counter attacks.
-            BotLog.println("Canceling flexible kick because it's non-forward in midfield.", car.playerIndex)
-            return null
-        }
-
         if (strikeHint == null) {
             val steerCorrection = SteerUtil.getCorrectionAngleRad(car, precisionPlan.steerPlan.waypoint)
             if (Math.abs(steerCorrection) < Math.PI / 20) {
