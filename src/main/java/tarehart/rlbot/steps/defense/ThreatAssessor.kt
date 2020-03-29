@@ -49,11 +49,11 @@ class ThreatAssessor {
             val ourTimeToEnemyIntercept = ourIntercept?.distancePlot?.getMotionUponArrival(car, enemyIntercept.space)?.time
             val enemyDrivingTowardIntercept = enemyFlatVel.magnitude() > 5 && enemyFlatVel.normalized().dotProduct(enemyToIntercept.normalized()) > 0.5
 
-            if (ourIntercept != null && ourTimeToEnemyIntercept != null) {
+            if (ourIntercept.intercept != null && ourTimeToEnemyIntercept != null) {
                 // Sometimes our own intercept time is not very important because the enemy is going to get there first
                 // and redirect the ball.
 
-                challengeImminent = ourIntercept.space.z < 10 &&
+                challengeImminent = ourIntercept.intercept.space.z < 10 &&
                         bundle.tacticalSituation.ballAdvantage.seconds < 0.3 &&
                         ourTimeToEnemyIntercept < Duration.ofSeconds(1.5) &&
                         enemyIntercept.time.isBefore(car.time.plusSeconds(1.0)) &&

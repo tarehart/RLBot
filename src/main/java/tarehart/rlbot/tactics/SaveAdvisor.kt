@@ -36,7 +36,7 @@ object SaveAdvisor {
             savePlan.withStep(ChallengeStep())
         }
 
-        bundle.tacticalSituation.expectedContact?.let {
+        bundle.tacticalSituation.expectedContact.intercept?.let {
             val goalToContact = (it.space - GoalUtil.getOwnGoal(car.team).center).flatten()
             val contactToBall = (bundle.agentInput.ballPosition - it.space).flatten()
             if (goalToContact.dotProduct(contactToBall) > -0.3) {

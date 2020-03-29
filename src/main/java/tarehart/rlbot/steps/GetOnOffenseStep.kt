@@ -30,7 +30,7 @@ class GetOnOffenseStep : NestedPlanStep() {
         val situation = bundle.tacticalSituation
         val ballPath = bundle.tacticalSituation.ballPath
 
-        val ballFuture = situation.expectedContact?.space ?:
+        val ballFuture = situation.expectedContact.intercept?.space ?:
                 ballPath.getMotionAt(bundle.agentInput.time.plusSeconds(4.0))?.space ?: bundle.agentInput.ballPosition
 
         latestBallFuture = ballFuture

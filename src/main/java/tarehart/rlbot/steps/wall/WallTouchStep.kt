@@ -174,7 +174,7 @@ class WallTouchStep : NestedPlanStep() {
                 return false // Not on wall soon enough
             }
 
-            val expectedContact = bundle.tacticalSituation.expectedContact?.time ?: return false
+            val expectedContact = bundle.tacticalSituation.expectedContact.intercept?.time ?: return false
 
             ballPath.getMotionAt(expectedContact)?.let {
                 return ballPredicate.invoke(it)

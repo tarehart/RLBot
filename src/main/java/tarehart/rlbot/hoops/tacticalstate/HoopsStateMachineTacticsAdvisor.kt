@@ -137,7 +137,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         val enemyCar = enemyGoGetter?.car
 
         val car = input.myCarData
-        val ourIntercept = teamIntercepts.first { it.car.playerIndex == car.playerIndex }.intercept
+        val ourIntercept = teamIntercepts.first { it.car.playerIndex == car.playerIndex }
 
         val zonePlan = ZonePlan(input)
 
@@ -146,7 +146,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
                 expectedEnemyContact = enemyIntercept,
-                ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept?.time, enemyIntercept?.time),
+                ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept.intercept?.time, enemyIntercept?.time),
                 ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).center, futureBallMotion.space),
                 distanceBallIsBehindUs = TacticsAdvisor.measureOutOfPosition(input),
                 enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureApproachError(enemyCar!!, it.space.flatten()) },

@@ -147,11 +147,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         val distancePlot = bundle.tacticalSituation.teamIntercepts.first { it.car == car }.distancePlot
 
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
-            specificTarget ?:
-            oppositeTeam.filter { !it.isDemolished }.minBy {
-                // Go after the enemy we can reach soonest, with a bias for going after humans.
-                AccelerationModel.getTravelTime(car, distancePlot, it.position)?.seconds ?: 6F - (if (car.isBot) 0 else 2 )
-            } ?: return
+            specificTarget ?: selectEnemyCar(bundle) ?: return
 
         if (!::carPredictor.isInitialized) {
             carPredictor = CarPredictor(enemyCar.playerIndex)
@@ -178,7 +174,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
 
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
-        oppositeTeam.filter { !it.isDemolished }.minBy { car.position.distance(it.position) }
+        selectEnemyCar(bundle)
 
         if (enemyCar == null) {
             resetChat()
@@ -340,6 +336,16 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
     companion object {
         fun hasEnoughBoost(car: CarData): Boolean {
             return car.isSupersonic || car.boost > 15
+        }
+
+        fun selectEnemyCar(bundle: TacticalBundle): CarData? {
+            val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
+            val car = bundle.agentInput.myCarData
+            val distancePlot = bundle.tacticalSituation.expectedContact.distancePlot
+            return oppositeTeam.filter { !it.isDemolished }.minBy {
+                // Go after the enemy we can reach soonest, with a bias for going after humans.
+                AccelerationModel.getTravelTime(car, distancePlot, it.position)?.seconds ?: 6F - (if (car.isBot) 0 else 2 )
+            }
         }
     }
 }

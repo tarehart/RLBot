@@ -113,7 +113,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         val enemyIntercept = enemyGoGetter?.intercept
         val enemyCar = enemyGoGetter?.car
 
-        val ourIntercept = teamIntercepts.asSequence().filter { it.car == input.myCarData }.first().intercept
+        val ourIntercept = teamIntercepts.asSequence().filter { it.car == input.myCarData }.first()
 
         val zonePlan = ZonePlan(input)
 
@@ -122,7 +122,7 @@ class DropshotTacticsAdvisor: TacticsAdvisor {
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
                 expectedEnemyContact = enemyIntercept,
-                ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept?.time, enemyIntercept?.time),
+                ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept.intercept?.time, enemyIntercept?.time),
                 ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).center, futureBallMotion.space),
                 distanceBallIsBehindUs = TacticsAdvisor.measureOutOfPosition(input),
                 enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureApproachError(enemyCar!!, it.space.flatten()) },

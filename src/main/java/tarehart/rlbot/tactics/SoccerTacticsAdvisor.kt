@@ -124,7 +124,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
             println("Canceling current plan. Going for clear!", input.playerIndex)
 
-            situation.expectedContact?.let {
+            situation.expectedContact.intercept?.let {
                 val carToIntercept = it.space - car.position
                 val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
 
@@ -167,28 +167,16 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             }
         }
 
-        val alone = input.getTeamRoster(input.team).size <= 1
-
-        if (situation.shotOnGoalAvailable && (alone || teamHasMeCovered) &&
+        if (situation.shotOnGoalAvailable &&
                 !threatReport.looksSerious() && !threatReport.enemyWinsRace &&
                 OFFENSIVE.canInterrupt(currentPlan)
-                && situation.teamPlayerWithBestShot?.car == input.myCarData) {
+                && situation.teamPlayerWithBestShot?.car == input.myCarData
+                && situation.expectedContact.intercept != null) {
 
             println("Canceling current plan. Shot opportunity!", input.playerIndex)
             RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_IGotIt)
 
-            val plan = FirstViableStepPlan(OFFENSIVE)
-
-            if (DribbleStep.canDribble(bundle, true) && situation.expectedContact != null &&
-                    Duration.between(car.time, situation.expectedContact.time).seconds < 1.0) {
-                plan.withStep(DribbleStep())
-            }
-
-            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
-                    .withStep(CatchBallStep())
-                    .withStep(FlexibleKickStep(WallPass()))
-
-            return plan
+            return ShotAdvisor.planShot(bundle, situation.expectedContact.intercept)
         }
 
         return null
@@ -259,16 +247,9 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
         val enemyGoal = GoalUtil.getEnemyGoal(car.team)
 
-        if (situation.expectedContact != null && generousShotAngle(enemyGoal, situation.expectedContact)) {
+        if (situation.expectedContact.intercept != null && generousShotAngle(enemyGoal, situation.expectedContact.intercept)) {
             RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_IGotIt)
-            val plan = FirstViableStepPlan(OFFENSIVE)
-                    .withStep(WallTouchStep())
-                    .withStep(FlexibleKickStep(KickAtEnemyGoal()))
-                    .withStep(FlexibleKickStep(WallPass()))
-                    .withStep(GetOnOffenseStep())
-                    .withStep(DribbleStep())
-                    .withStep(CatchBallStep())
-            return plan
+            return ShotAdvisor.planShot(bundle, situation.expectedContact.intercept)
         }
 
         if (car.boost < 50) {
@@ -283,18 +264,14 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
         val plan = FirstViableStepPlan(NEUTRAL)
 
-        if (!RotationAdvisor.shouldWaitForTeammateToRotateBack(bundle)) {
-            plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
-        }
-
         plan.withStep(WallTouchStep())
-        plan.withStep(FlexibleKickStep(WallPass()))
 
-        if (car.boost > 80 && situation.enemyPlayerWithInitiative != null &&
-                car.position.distance(situation.enemyPlayerWithInitiative.car.position) < 80) {
-            plan.withStep(DemolishEnemyStep())
+        if (car.boost > 40) {
+            val enemyTarget = DemolishEnemyStep.selectEnemyCar(bundle)
+            if (enemyTarget != null && car.position.distance(enemyTarget.position) < 80) {
+                plan.withStep(DemolishEnemyStep())
+            }
         }
-        plan.withStep(CatchBallStep())
         plan.withStep(GetBoostStep())
         // TODO: Add a rotate out step right here.
         return plan
@@ -311,7 +288,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         val enemyIntercept = enemyGoGetter?.intercept
         val enemyCar = enemyGoGetter?.car
 
-        val ourIntercept = teamIntercepts.first { it.car == input.myCarData }.intercept
+        val ourIntercept = teamIntercepts.first { it.car == input.myCarData }
 
         val zonePlan = ZonePlan(input)
         val myCar = input.myCarData
@@ -321,14 +298,14 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         val situation = TacticalSituation(
                 expectedContact = ourIntercept,
                 expectedEnemyContact = enemyIntercept,
-                ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept?.time, enemyIntercept?.time),
+                ballAdvantage = TacticsAdvisor.calculateRaceResult(ourIntercept.intercept?.time, enemyIntercept?.time),
                 ownGoalFutureProximity = VectorUtil.flatDistance(GoalUtil.getOwnGoal(input.team).center, futureBallMotion.space),
                 distanceBallIsBehindUs = TacticsAdvisor.measureOutOfPosition(input),
                 enemyOffensiveApproachError = enemyIntercept?.let { TacticsAdvisor.measureApproachError(enemyCar!!, it.space.flatten()) },
                 futureBallMotion = futureBallMotion,
                 scoredOnThreat = GoalUtil.getOwnGoal(input.team).predictGoalEvent(ballPath),
                 needsDefensiveClear = GoalUtil.ballLingersInBox(GoalUtil.getOwnGoal(input.team) as SoccerGoal, ballPath),
-                shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, enemyCar, input.ballPosition, ourIntercept, ballPath),
+                shotOnGoalAvailable = getShotOnGoalAvailable(input.team, myCar, enemyCar, input.ballPosition, ourIntercept.intercept, ballPath),
                 goForKickoff = getGoForKickoff(myCar, input.ballPosition),
                 currentPlan = currentPlan,
                 teamIntercepts = teamIntercepts,

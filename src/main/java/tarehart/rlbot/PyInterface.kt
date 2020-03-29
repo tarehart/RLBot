@@ -15,9 +15,7 @@ class PyInterface(port: Int, botManager: BotManager, private val bots: MutableMa
         val newBot: BaseBot
         val teamEnum = AgentInput.teamFromInt(team)
 
-        if (botType.startsWith("JumpingBean")) {
-            newBot = JumpingBeanBot(teamEnum, index)
-        } else if (botType.startsWith("AdversityBot")) {
+        if (botType.startsWith("AdversityBot")) {
             newBot = AdversityBot(teamEnum, index)
         } else if (botType.startsWith("Air Bud")) {
             newBot = AirBudBot(teamEnum, index)
