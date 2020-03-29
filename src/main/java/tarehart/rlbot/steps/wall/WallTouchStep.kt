@@ -6,9 +6,6 @@ import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
-import tarehart.rlbot.intercept.strike.ChipStrike
-import tarehart.rlbot.intercept.strike.CustomStrike
-import tarehart.rlbot.intercept.strike.StrikeProfile
 import tarehart.rlbot.intercept.strike.WallTouchStrike
 import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
@@ -16,8 +13,6 @@ import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
-import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
-import tarehart.rlbot.planning.cancellation.BallTouchedListener
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.blind.BlindStep
@@ -32,10 +27,7 @@ import java.awt.Graphics2D
 class WallTouchStep : NestedPlanStep() {
 
     private var latestIntercept: Intercept? = null
-    private var disruptionMeter = BallPathDisruptionMeter(10.0)
-    private val ballTouchedListener = BallTouchedListener()
-    private var confusion = 0
-    private var onWall = false
+    private var elevated = false
 
     override fun getLocalSituation(): String {
         return "Making a wall touch."
@@ -44,7 +36,7 @@ class WallTouchStep : NestedPlanStep() {
     override fun canInterrupt(): Boolean {
         // Don't allow interrupts if we're on the wall because otherwise the tactics advisor will get concerned about
         // being on the wall and try to recover.
-        return !onWall
+        return !elevated
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -55,7 +47,7 @@ class WallTouchStep : NestedPlanStep() {
             println("Failed to make the wall touch because the car has no wheel contact", input.playerIndex)
             return null
         }
-        onWall = ArenaModel.isCarOnWall(car)
+        elevated = car.position.z > 1
         val ballPath = bundle.tacticalSituation.ballPath
         val fullAcceleration = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(4.0), car.boost, 0.0)
 
@@ -72,15 +64,14 @@ class WallTouchStep : NestedPlanStep() {
 
         val motion = interceptOpportunity?.ballSlice
 
-        if (motion == null || disruptionMeter.isDisrupted(ballPath) || interceptOpportunity.spatialPredicateFailurePeriod > Duration.ofSeconds(0.5)) {
-            confusion++
-            if (confusion > 4) {
-                println("Failed to make the wall touch because one of many things went wrong", input.playerIndex)
-                return null
-            }
-            return AgentOutput().withThrottle(1.0)
-        } else {
-            confusion = 0
+        if (motion == null) {
+            println("Failed to make the wall touch because there was no valid intercept.", input.playerIndex)
+            return null
+        }
+
+        if (interceptOpportunity.spatialPredicateFailurePeriod > Duration.ofSeconds(0.5)) {
+            println("Failed to make the wall touch because we would have needed to slow down.", input.playerIndex)
+            return null
         }
 
         RenderUtil.drawSphere(car.renderer, motion.space, ArenaModel.BALL_RADIUS.toDouble(), LOVELY_TEAL)
