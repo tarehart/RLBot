@@ -12,11 +12,9 @@ This repository contains:
 
 ![Use the precompiled instead](https://i.imgur.com/p0Pamd9.png "Don't use this!")
 
-If you want to play a local game with ReliefBot (or AdversityBot or Air Bud), the easiest way is to ***get the precompiled zip from https://drive.google.com/drive/folders/1zxLr46h_KAz61_N6XQ5e89skizPO0wo-?usp=sharing***. 
+If you want to play a local game with ReliefBot (or AdversityBot or Air Bud), the easiest way is to ***install the RLBotGUI and download the bot pack***. 
 
-Follow this tutorial video for more instructions: https://www.youtube.com/watch?v=VHOkWVYlfa0
-
-[![Watch the video](https://img.youtube.com/vi/VHOkWVYlfa0/maxresdefault.jpg)](https://youtu.be/VHOkWVYlfa0)
+Follow this tutorial video for more instructions: https://youtu.be/lPkID_IH88U
 
 ## Modifying ReliefBot
 
@@ -38,7 +36,7 @@ The console output may show a percentage less than 100%, but once a little
 java window pops up, it's ready to go.
 1. On another command line, run `run-framework.bat`. This should start up a game.
 
-For more advanced ways to use rlbot.cfg, see https://github.com/RLBot/RLBot/wiki/Setup-Instructions-%28current%29
+For more advanced ways to use rlbot.cfg, see https://github.com/RLBot/RLBot/wiki/Config-File-Documentation
 
 If you have trouble with these instructions, see if you can at least get
 https://github.com/RLBot/RLBotJavaExample working. Same general concept,
