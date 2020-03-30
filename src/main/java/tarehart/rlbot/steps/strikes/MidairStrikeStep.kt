@@ -18,7 +18,6 @@ import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.HoopsGoal
-import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
@@ -45,7 +44,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
     private var finalOrientation = false
 
     private val ballPathDisruptionMeter = BallPathDisruptionMeter(1.0)
-    // private var spaceTime = initialIntercept
 
     override fun getLocalSituation(): String {
         return "Midair Strike"
@@ -105,8 +103,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             intercept = InterceptCalculator.getAerialIntercept(car, ballPath, offset, beginningOfStep, spatialPredicate)
 
         val latestIntercept = intercept?.toSpaceTime() ?: return null
-        // val latestIntercept = spaceTime ?: return null
-
 
         if (latestIntercept.time < car.time) {
             return null // We missed the intercept
@@ -147,13 +143,11 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
             return orientForFinalTouch(offset, car)
         }
 
-        val up = if (offset.z > 0 && secondsSinceLaunch > 1.5) Vector3.DOWN else Vector3.UP
-
         if (courseResult.targetError.magnitude() < acceptableError && !wasBoosting) {
-            return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT)
+            return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, Vector3.UP), ORIENT_DT)
         }
 
-        if (millisTillIntercept > DODGE_TIME.millis && secondsSoFar > 1 &&
+        if (secondsSoFar > 1 &&
                 Vector2.angle(car.velocity.flatten(), carToIntercept.flatten()) > Math.PI / 6 &&
                 courseResult.averageAccelerationRequired > AerialMath.BOOST_ACCEL_IN_AIR) {
             BotLog.println("Failed aerial on bad angle", bundle.agentInput.playerIndex)
@@ -170,17 +164,14 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         wasBoosting = courseResult.correctionDirection.dotProduct(car.orientation.noseVector) > boostThreshold
 
-        return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, up), ORIENT_DT)
+        return OrientationSolver.orientCar(car, Mat3.lookingTo(courseResult.correctionDirection, Vector3.UP), ORIENT_DT)
                 .withJump(timeInAirAtStart.millis == 0L)
                 .withBoost(wasBoosting)
 
     }
 
     private fun orientForFinalTouch(offset: Vector3, car: CarData): AgentOutput {
-        // If we're facing the wrong way, hit it with the tail!
-        // val direction = offset.scaled(offset.dotProduct(car.orientation.noseVector))
-        val up = if (offset.z > 0) Vector3.DOWN else Vector3.UP
-        return OrientationSolver.orientCar(car, Mat3.lookingTo(offset.scaled(-1.0), up), ORIENT_DT)
+        return OrientationSolver.orientCar(car, Mat3.lookingTo(offset.scaled(-1.0), Vector3.UP), ORIENT_DT)
     }
 
     override fun canInterrupt(): Boolean {
@@ -196,9 +187,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
     }
 
     companion object {
-        private const val SIDE_DODGE_THRESHOLD = Math.PI / 4
-        private val DODGE_TIME = Duration.ofMillis(300)
-        val MAX_TIME_FOR_AIR_DODGE = Duration.ofSeconds(1.3)
         const val ORIENT_DT = 1/60F
 
         fun standardOffset(intercept: Intercept?, team: Team, tacticalBundle: TacticalBundle): Vector3 {
