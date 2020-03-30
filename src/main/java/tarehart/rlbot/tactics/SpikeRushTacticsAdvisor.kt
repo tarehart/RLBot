@@ -21,7 +21,6 @@ import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
-import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep
 import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
@@ -151,7 +150,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
         if (SoccerTacticsAdvisor.getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
             println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
-            return Plan(Posture.DEFENSIVE).withStep(RotateAndWaitToClearStep())
+            return Plan(Posture.DEFENSIVE).withStep(GetOnDefenseStep())
         }
 
         if (getForceDefensivePosture(car, situation.enemyPlayerWithInitiative?.car, input.ballPosition)

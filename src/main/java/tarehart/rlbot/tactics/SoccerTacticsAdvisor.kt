@@ -1,8 +1,6 @@
 package tarehart.rlbot.tactics
 
 import rlbot.cppinterop.RLBotDll
-import rlbot.flat.QuickChat
-import rlbot.flat.QuickChatMessages
 import rlbot.flat.QuickChatSelection
 import tarehart.rlbot.AgentInput
 import tarehart.rlbot.TacticalBundle
@@ -17,20 +15,22 @@ import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.planning.Posture.*
 import tarehart.rlbot.quickchat.QuickChatManager
-import tarehart.rlbot.steps.*
+import tarehart.rlbot.steps.DribbleStep
+import tarehart.rlbot.steps.GetBoostStep
+import tarehart.rlbot.steps.GetOnOffenseStep
+import tarehart.rlbot.steps.GoForKickoffStep
 import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
-import tarehart.rlbot.steps.defense.RotateAndWaitToClearStep
 import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.*
+import tarehart.rlbot.steps.teamwork.RotateBackToGoalStep
 import tarehart.rlbot.steps.teamwork.ShadowThePlayStep
 import tarehart.rlbot.steps.wall.DescendFromWallStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.tactics.TacticsAdvisor.Companion.getYAxisWrongSidedness
 import tarehart.rlbot.time.Duration
-import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
@@ -108,10 +108,10 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             return SaveAdvisor.planSave(bundle, situation.scoredOnThreat)
         }
 
-        if (!goNuts && getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && DEFENSIVE.canInterrupt(currentPlan)) {
-            println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
-            return Plan(DEFENSIVE).withStep(RotateAndWaitToClearStep())
-        }
+//        if (!goNuts && getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && DEFENSIVE.canInterrupt(currentPlan)) {
+//            println("Canceling current plan. Ball is in the corner and I need to rotate!", input.playerIndex)
+//            return Plan(DEFENSIVE).withStep(RotateAndWaitToClearStep())
+//        }
 
         if (situation.needsDefensiveClear && CLEAR.canInterrupt(currentPlan) && situation.teamPlayerWithInitiative?.car == input.myCarData) {
 
@@ -273,7 +273,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             }
         }
         plan.withStep(GetBoostStep())
-        // TODO: Add a rotate out step right here.
+        plan.withStep(RotateBackToGoalStep())
         return plan
     }
 

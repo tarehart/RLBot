@@ -98,7 +98,7 @@ object SteerUtil {
         } else {
             adjustedPosition =
                     if (!detourForBoost || car.boost > 99.0) position // This keeps us from swerving all around during unlimited boost games
-                    else Optional.ofNullable(BoostAdvisor.getBoostWaypoint(car, position)).orElse(position)
+                    else BoostAdvisor.getBoostWaypoint(car, position) ?: position
         }
 
         val correctionAngle = getCorrectionAngleRad(car, adjustedPosition)
@@ -228,10 +228,10 @@ object SteerUtil {
         return getSensibleFlip(car, target.flatten())
     }
 
-    fun getSensibleFlip(car: CarData, target: Vector2): Plan? {
+    fun getSensibleFlip(car: CarData, target: Vector2, maximumSafeFlipDistanceOverride: Float? = null): Plan? {
 
-        if (car.orientation.roofVector.dotProduct(Vector3(0.0, 0.0, 1.0)) < .98 ||
-                !car.hasWheelContact) {
+        if (!car.hasWheelContact || car.position.z > ManeuverMath.BASE_CAR_Z ||
+                car.orientation.roofVector.dotProduct(Vector3(0.0, 0.0, 1.0)) < .98) {
             return null
         }
 
@@ -240,7 +240,7 @@ object SteerUtil {
         }
 
         val toTarget = target.minus(car.position.flatten())
-        val targetDistance = toTarget.magnitude()
+        val targetDistance = maximumSafeFlipDistanceOverride ?: toTarget.magnitude()
         val toTargetAngle = Vector2.angle(car.orientation.noseVector.flatten(), toTarget)
         val speed = car.velocity.flatten().magnitude()
 
@@ -263,6 +263,8 @@ object SteerUtil {
         }
 
         val distanceCovered = AccelerationModel.getFrontFlipDistance(speed)
+        // TODO: isDrivingOnTarget is often false in situations where the bot is greedy for boost, because the
+        // steering gets overridden. Consider making the greed a pre-target computation more often.
         if (targetDistance > distanceCovered + 10 && isDrivingOnTarget(car, target)) {
             return SetPieces.speedupFlip()
         }
