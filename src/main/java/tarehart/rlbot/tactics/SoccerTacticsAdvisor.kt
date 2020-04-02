@@ -233,33 +233,24 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
         val input = bundle.agentInput
         val situation = bundle.tacticalSituation
-        val ballPath = situation.ballPath
         val car = input.myCarData
 
-        if (car.boost < 10) {
-            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_GoForIt)
-            return Plan().withStep(GetBoostStep())
+        val enemyGoal = GoalUtil.getEnemyGoal(car.team)
+
+        if (situation.expectedContact.intercept != null && situation.teamPlayerWithInitiative?.car == car &&
+                generousShotAngle(enemyGoal, situation.expectedContact.intercept)) {
+            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_IGotIt)
+            return ShotAdvisor.planShot(bundle, situation.expectedContact.intercept)
         }
 
         if (DribbleStep.reallyWantsToDribble(bundle)) {
             return Plan(NEUTRAL).withStep(DribbleStep())
         }
 
-        val enemyGoal = GoalUtil.getEnemyGoal(car.team)
+        RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_GoForIt)
 
-        if (situation.expectedContact.intercept != null && generousShotAngle(enemyGoal, situation.expectedContact.intercept)) {
-            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_IGotIt)
-            return ShotAdvisor.planShot(bundle, situation.expectedContact.intercept)
-        }
-
-        if (car.boost < 50) {
-            RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_GoForIt)
+        if (car.boost < 10) {
             return Plan().withStep(GetBoostStep())
-        }
-
-        if (getYAxisWrongSidedness(input) > 0) {
-            println("Getting behind the ball", input.playerIndex)
-            return Plan(NEUTRAL).withStep(GetOnOffenseStep())
         }
 
         val plan = FirstViableStepPlan(NEUTRAL)
@@ -271,8 +262,9 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             if (enemyTarget != null && car.position.distance(enemyTarget.position) < 80) {
                 plan.withStep(DemolishEnemyStep())
             }
+        } else {
+            plan.withStep(GetBoostStep())
         }
-        plan.withStep(GetBoostStep())
         plan.withStep(RotateBackToGoalStep())
         return plan
     }
