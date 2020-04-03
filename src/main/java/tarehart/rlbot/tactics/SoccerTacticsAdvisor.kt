@@ -207,26 +207,11 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             }
         }
 
-        // The enemy is probably going to get there first.
-        if (situation.enemyOffensiveApproachError?.let { it < Math.PI / 3 } == true && situation.distanceBallIsBehindUs > -50) {
-            // Enemy can probably shoot on goal, so get on defense
-            return Plan(DEFENSIVE).withStep(GetOnDefenseStep())
-        } else {
-
-            val canTouchFirst = situation.teamPlayerWithInitiative?.car == bundle.agentInput.myCarData && situation.ballAdvantage.seconds > 0.5
-
-            if (canTouchFirst) {
-                return FirstViableStepPlan(OFFENSIVE)
-                        .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
-            }
-
-            // Enemy is just gonna hit it for the sake of hitting it, presumably. Let's try to stay on offense if possible.
-            return RetryableViableStepPlan(NEUTRAL, "Enemy looks mildly dangerous", ShadowThePlayStep())
-            { b -> !RotationAdvisor.teamHasMeCovered(b) && !canTouchFirst }
-                    .withStep(GetBoostStep())
-                    .withStep(GetOnOffenseStep())
-        }
-
+        // For truly urgent situations, we can rely on defensive overrides in findMoreUrgentPlan. We'll be brave here.
+        return RetryableViableStepPlan(NEUTRAL, "Team does not have my back and I'm not first to the ball", ShadowThePlayStep())
+        { b -> !RotationAdvisor.teamHasMeCovered(b) }
+                .withStep(GetBoostStep())
+                .withStep(ChallengeStep())
     }
 
     private fun makePlanWithPlentyOfTime(bundle: TacticalBundle): Plan {
@@ -235,10 +220,8 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         val situation = bundle.tacticalSituation
         val car = input.myCarData
 
-        val enemyGoal = GoalUtil.getEnemyGoal(car.team)
-
-        if (situation.expectedContact.intercept != null && situation.teamPlayerWithInitiative?.car == car &&
-                generousShotAngle(enemyGoal, situation.expectedContact.intercept)) {
+        if (situation.expectedContact.intercept != null && situation.teamPlayerWithBestShot?.car == car &&
+                (situation.expectedContact.intercept.space.y - car.position.y) * car.team.side < 0) {
             RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_IGotIt)
             return ShotAdvisor.planShot(bundle, situation.expectedContact.intercept)
         }
@@ -257,9 +240,9 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
         plan.withStep(WallTouchStep())
 
-        if (car.boost > 40) {
+        if (car.boost > 60) {
             val enemyTarget = DemolishEnemyStep.selectEnemyCar(bundle)
-            if (enemyTarget != null && car.position.distance(enemyTarget.position) < 80) {
+            if (enemyTarget != null && car.position.distance(enemyTarget.position) < 40) {
                 plan.withStep(DemolishEnemyStep())
             }
         } else {

@@ -46,7 +46,7 @@ class RotateBackToGoalStep: NestedPlanStep() {
         val carPosition = car.position.flatten()
         val toAttractor = attractor - carPosition
         val goalCenter = GoalUtil.getOwnGoal(car.team).center.flatten()
-                .scaled(.95F) // A little bit in front of the goal
+                .scaled(.92F) // A little bit in front of the goal
         val toGoalCenter = goalCenter - carPosition
 
         if (toGoalCenter.magnitude() < SoccerGoal.EXTENT) {
