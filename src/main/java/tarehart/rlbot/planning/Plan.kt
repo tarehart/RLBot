@@ -5,7 +5,7 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.steps.Step
 import java.util.*
 
-open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL) {
+open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL, val label: String? = null) {
     private var unstoppable: Boolean = false
     protected var steps = ArrayList<Step>()
     protected var currentStepIndex = 0
@@ -18,9 +18,12 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
         get() = steps[currentStepIndex]
 
     open val situation: String
-        get() = if (isComplete()) {
-            "Dead plan"
-        } else posture.name + " " + (currentStepIndex + 1) + ". " + currentStep.situation
+        get() {
+            val labelOrEmpty = label ?: ""
+            return if (isComplete()) {
+                "$labelOrEmpty (Dead plan)"
+            } else "${posture.name} $labelOrEmpty ${currentStepIndex + 1}. ${currentStep.situation}"
+        }
 
     fun canInterrupt(): Boolean {
         return isComplete() || !unstoppable && currentStep.canInterrupt()

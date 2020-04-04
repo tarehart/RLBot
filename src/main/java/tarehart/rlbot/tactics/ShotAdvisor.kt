@@ -23,7 +23,7 @@ object ShotAdvisor {
         val goalEntrance = enemyGoal.getNearestEntrance(roughIntercept.space, 2).flatten()
         val shotAlignment = Vector2.alignment(car.position.flatten(), roughIntercept.space.flatten(), goalEntrance)
 
-        val plan = FirstViableStepPlan(Posture.OFFENSIVE)
+        val plan = FirstViableStepPlan(Posture.OFFENSIVE, "Shot advisor")
 
         plan.withStep(WallTouchStep())
 

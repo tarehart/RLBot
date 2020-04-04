@@ -3,7 +3,7 @@ package tarehart.rlbot.planning
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 
-class FirstViableStepPlan(posture: Posture) : Plan(posture) {
+class FirstViableStepPlan(posture: Posture, label: String? = null) : Plan(posture, label) {
 
     private var frameCount = 0
 
@@ -13,11 +13,13 @@ class FirstViableStepPlan(posture: Posture) : Plan(posture) {
 
     override val situation: String
         get() {
+            val labelOrEmpty = label ?: ""
             if (isComplete()) {
-                return "Dead plan"
+                return "$labelOrEmpty (Dead plan)"
             }
-            val committed = frameCount >= framesTillCommitment
-            return posture.name + " " + (if (committed) "committed" else "sampling") + " - " + currentStep.situation
+            val committed = frameCount >= framesTillCommitment || currentStepIndex == steps.size - 1
+            val statusText = if (committed) "committed" else "sampling"
+            return "${posture.name} $labelOrEmpty | $statusText: ${currentStep.situation}"
         }
 
     override fun getOutput(bundle: TacticalBundle): AgentOutput? {

@@ -25,9 +25,9 @@ import java.awt.Point
  */
 class RetryableViableStepPlan(
         posture: Posture,
-        private val label: String,
+        label: String,
         private val fallback: UnfailingStep,
-        private val stillValid: (TacticalBundle) -> Boolean = {false}) : Plan(posture) {
+        private val stillValid: (TacticalBundle) -> Boolean = {false}) : Plan(posture, label) {
 
     override val situation: String
         get() {

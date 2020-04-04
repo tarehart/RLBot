@@ -88,7 +88,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                         .withStep(GetOnDefenseStep())
             }
 
-            return Plan(KICKOFF).withStep(GetBoostStep())
+            return Plan(KICKOFF, "Getting boost during kickoff").withStep(GetBoostStep())
         }
 
         if (LANDING.canInterrupt(currentPlan)) {
@@ -96,7 +96,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                 return Plan(LANDING).withStep(DescendFromWallStep())
             } else if (!car.hasWheelContact && !ArenaModel.isBehindGoalLine(car.position)) {
                 if (ArenaModel.isMicroGravity() && situation.distanceBallIsBehindUs < 0) {
-                    return Plan().withStep(MidairStrikeStep(Duration.ofMillis(0)))
+                    return Plan(NEUTRAL, "Microgravity flight").withStep(MidairStrikeStep(Duration.ofMillis(0)))
                 }
 
                 return Plan(LANDING).withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
@@ -129,9 +129,10 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                 val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
 
                 if (Math.abs(carApproachVsBallApproach) > Math.PI / 2) {
-                    return FirstViableStepPlan(CLEAR)
+                    return FirstViableStepPlan(CLEAR, "Needs clear, seems boomable")
                             .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                             .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+                            // TODO: an intercept in these circumstances seems suspect
                             .withStep(InterceptStep(Vector3(0.0, Math.signum(GoalUtil.getOwnGoal(car.team).center.y) * 1.5, 0.0)))
                 }
             }
@@ -196,7 +197,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         val threatReport = ThreatAssessor.getThreatReport(bundle)
 
         if (threatReport.challengeImminent) {
-            return Plan(DEFENSIVE).withStep(ChallengeStep())
+            return Plan(DEFENSIVE, "Challenge is imminent").withStep(ChallengeStep())
         }
 
         val alone = bundle.agentInput.getTeamRoster(bundle.agentInput.team).size <= 1
@@ -213,7 +214,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
             return makePlanWithPlentyOfTime(bundle)
         } else {
-            return Plan(NEUTRAL).withStep(ChallengeStep())
+            return Plan(NEUTRAL, "Challenging because not overly concerned").withStep(ChallengeStep())
         }
     }
 
@@ -230,16 +231,16 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         }
 
         if (DribbleStep.reallyWantsToDribble(bundle)) {
-            return Plan(NEUTRAL).withStep(DribbleStep())
+            return Plan(NEUTRAL, "Overwhelming urge to dribble").withStep(DribbleStep())
         }
 
         RLBotDll.sendQuickChat(car.playerIndex, true, QuickChatSelection.Information_GoForIt)
 
         if (car.boost < 10) {
-            return Plan().withStep(GetBoostStep())
+            return Plan(NEUTRAL, "Boost less than 10").withStep(GetBoostStep())
         }
 
-        val plan = FirstViableStepPlan(NEUTRAL)
+        val plan = FirstViableStepPlan(NEUTRAL, "Plenty of time, do whatever")
 
         plan.withStep(WallTouchStep())
 
