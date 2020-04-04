@@ -112,6 +112,12 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             val arrivalHeight = intercept.ballSlice.space.z - ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z
             val chipOption = BallPhysics.computeBestChipOption(car.position, intercept.accelSlice.speed,
                     intercept.ballSlice, car.hitbox, idealDirection, arrivalHeight)
+
+            if (chipOption == null) {
+                println("Could not compute chip option", car.playerIndex)
+                return null
+            }
+
             favoredChipOption = chipOption
             favoredSliceToCar = chipOption.carSlice.space - intercept.ballSlice.space
             slotStart = car.position

@@ -207,7 +207,7 @@ object BallPhysics {
     }
 
     fun computeBestChipOption(position: Vector3, speed: Float, ballSlice: BallSlice, hitbox: CarHitbox,
-                              idealDirection: Vector3, arrivalCarHeight: Float = ManeuverMath.BASE_CAR_Z): ChipOption {
+                              idealDirection: Vector3, arrivalCarHeight: Float = ManeuverMath.BASE_CAR_Z): ChipOption? {
         var lowerBound = -2.6F
         var upperBound = 2.6F
         val flatIdeal = idealDirection.flatten()
@@ -228,6 +228,6 @@ object BallPhysics {
                 lowerBound = middle
             }
         }
-        return latestOption!!
+        return latestOption
     }
 }
