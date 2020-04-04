@@ -39,6 +39,14 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     private val disruptionMeter = BallPathDisruptionMeter()
     private var strikeHint: Style? = null
 
+    override fun reset() {
+        super.reset()
+        doneMoment = null
+        initialized = false
+        disruptionMeter.reset()
+        strikeHint = null
+    }
+
     override fun doInitialComputation(bundle: TacticalBundle) {
         recentCar = bundle.agentInput.myCarData
 

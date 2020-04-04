@@ -28,6 +28,11 @@ class PlanarBlockStep: NestedPlanStep() {
 
     var launched = false
 
+    override fun reset() {
+        super.reset()
+        launched = false
+    }
+
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = bundle.agentInput.myCarData

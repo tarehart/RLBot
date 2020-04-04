@@ -129,7 +129,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                 val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
 
                 if (Math.abs(carApproachVsBallApproach) > Math.PI / 2) {
-                    return Plan(CLEAR)
+                    return FirstViableStepPlan(CLEAR)
                             .withStep(FlexibleKickStep(KickAtEnemyGoal()))
                             .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
                             .withStep(InterceptStep(Vector3(0.0, Math.signum(GoalUtil.getOwnGoal(car.team).center.y) * 1.5, 0.0)))
@@ -200,18 +200,21 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         }
 
         val alone = bundle.agentInput.getTeamRoster(bundle.agentInput.team).size <= 1
-        if (teamHasMeCovered || alone) {
-            if (raceResult.seconds > 0 || !threatReport.enemyShotAligned || goNuts) {
-                // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
-                return makePlanWithPlentyOfTime(bundle)
-            }
+
+        if (!teamHasMeCovered && !alone) {
+            // For truly urgent situations, we can rely on defensive overrides in findMoreUrgentPlan. We'll be brave here.
+            return RetryableViableStepPlan(NEUTRAL, "Team does not have my back and I'm not first to the ball", ShadowThePlayStep())
+            { b -> !RotationAdvisor.teamHasMeCovered(b) }
+                    .withStep(GetBoostStep())
+                    .withStep(ChallengeStep())
         }
 
-        // For truly urgent situations, we can rely on defensive overrides in findMoreUrgentPlan. We'll be brave here.
-        return RetryableViableStepPlan(NEUTRAL, "Team does not have my back and I'm not first to the ball", ShadowThePlayStep())
-        { b -> !RotationAdvisor.teamHasMeCovered(b) }
-                .withStep(GetBoostStep())
-                .withStep(ChallengeStep())
+        if (raceResult.seconds > 0 || !threatReport.enemyShotAligned || goNuts) {
+            // We can take our sweet time. Now figure out whether we want a directed kick, a dribble, an intercept, a catch, etc
+            return makePlanWithPlentyOfTime(bundle)
+        } else {
+            return Plan(NEUTRAL).withStep(ChallengeStep())
+        }
     }
 
     private fun makePlanWithPlentyOfTime(bundle: TacticalBundle): Plan {

@@ -1,6 +1,5 @@
 package tarehart.rlbot.steps
 
-import tarehart.rlbot.AgentInput
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.Plan
@@ -8,11 +7,17 @@ import tarehart.rlbot.planning.PlanGuidance
 import tarehart.rlbot.tuning.BotLog
 import java.awt.Graphics2D
 
-abstract class NestedPlanStep : Step {
+abstract class NestedPlanStep : StandardStep() {
 
     private var plan : Plan? = null
     protected var zombie : Boolean = false
     protected var cancelPlan = false
+
+    override fun reset() {
+        plan = null
+        zombie = false
+        cancelPlan = false
+    }
 
     protected fun startPlan(p: Plan, bundle: TacticalBundle): AgentOutput? {
         plan = p

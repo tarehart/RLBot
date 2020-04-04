@@ -35,10 +35,13 @@ class InterceptStep(
         return  "Working on intercept"
     }
 
-    private var originalIntercept: Intercept? = null
     private var chosenIntercept: Intercept? = null
-    private var originalTouch: BallTouch? = null
-    private val interceptDisruptionMeter = InterceptDisruptionMeter()
+    private val interceptDisruptionMeter = InterceptDisruptionMeter(distanceThreshold = 10.0, timeThreshold = Duration.ofSeconds(1))
+
+    override fun reset() {
+        super.reset()
+        interceptDisruptionMeter.reset(null)
+    }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 

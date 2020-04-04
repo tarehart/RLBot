@@ -31,6 +31,11 @@ class RotateBackToGoalStep: NestedPlanStep() {
         return  "Rotating out"
     }
 
+    override fun reset() {
+        super.reset()
+        attractorNode = null
+    }
+
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
         val car = bundle.agentInput.myCarData

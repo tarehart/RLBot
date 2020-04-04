@@ -117,7 +117,6 @@ open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?):
             checklist.notSkidding = !ManeuverMath.isSkidding(car)
             checklist.linedUp = car.velocity.magnitude() < 5 || Math.abs(velocityCorrectionRad) < 0.1
             if (!checklist.readyToLaunch()) {
-                BotLog.println("Not aerialing yet: $checklist", car.playerIndex)
                 return false
             }
 
@@ -126,8 +125,6 @@ open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?):
             val timeToAirRatio = AerialMath.timeToAir(intercept.space.z) / (intercept.time - car.time).seconds
 
             if (speedRatio < 0.6 || timeToAirRatio < 0.6) {
-                BotLog.println("Not aerialing yet: Have only sped up to $speedRatio of the average speed needed" +
-                        " and timeToAirRatio is $timeToAirRatio", car.playerIndex)
                 return false
             }
 
@@ -136,7 +133,6 @@ open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?):
             val accelRatio = courseCorrection.averageAccelerationRequired / AerialMath.BOOST_ACCEL_IN_AIR
 
             if (accelRatio < 0.4) {
-                BotLog.println("Not aerialing yet: Only need to boost $accelRatio of the time", car.playerIndex)
                 return false
             }
 

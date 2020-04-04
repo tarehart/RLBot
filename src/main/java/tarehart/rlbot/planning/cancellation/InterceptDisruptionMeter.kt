@@ -32,7 +32,7 @@ class InterceptDisruptionMeter(
         return false
     }
 
-    fun reset(newIntercept: BallSlice) {
+    fun reset(newIntercept: BallSlice?) {
         originalIntercept = newIntercept
     }
 }

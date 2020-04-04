@@ -77,6 +77,7 @@ class RetryableViableStepPlan(
             nextStep()
         }
 
+        steps.forEach { it.reset() }
         currentStepIndex = 0
         fallbackExpiration = time.plus(fallbackDuration)
 

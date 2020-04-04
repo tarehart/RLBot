@@ -45,7 +45,7 @@ import java.awt.Color
  *
  * This is currently going poorly for jump stuff, largely because the ball radius multiplier in BallPhysics is screwing us up,
  * but also because the hits are really weak. If we dodge it'll be better. If we stretch higher we can accelerate
- * more before jumping. 
+ * more before jumping.
  */
 class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
@@ -55,6 +55,13 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
     private var favoredSliceToCar: Vector3? = null
 
     private val disruptionMeter = BallPathDisruptionMeter(5)
+
+    override fun reset() {
+        super.reset()
+        slotStart = null
+        slotEnd = null
+        disruptionMeter.reset()
+    }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 

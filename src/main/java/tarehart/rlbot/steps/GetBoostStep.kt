@@ -19,6 +19,11 @@ import java.awt.Color
 class GetBoostStep : NestedPlanStep() {
     private var targetLocation: BoostPad? = null
 
+    override fun reset() {
+        super.reset()
+        targetLocation = null
+    }
+
     public override fun doInitialComputation(bundle: TacticalBundle) {
 
         if (targetLocation == null) {

@@ -139,7 +139,6 @@ class MidairStrikeStep(private val timeInAirAtStart: Duration,
 
         if (courseResult.targetError.magnitude() < acceptableError) {
             finalOrientation = true
-            BotLog.println("Doing final orientation for aerial touch!", car.playerIndex)
             return orientForFinalTouch(offset, car)
         }
 

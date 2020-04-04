@@ -16,4 +16,8 @@ abstract class StandardStep : Step {
     override fun drawDebugInfo(graphics: Graphics2D) {
         // Draw nothing.
     }
+
+    override fun reset() {
+        // Do nothing
+    }
 }

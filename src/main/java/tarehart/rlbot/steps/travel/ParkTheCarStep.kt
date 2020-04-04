@@ -31,6 +31,14 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
     private var target: PositionFacing? = null
     private var shouldManeuver = false
 
+    override fun reset() {
+        super.reset()
+        phase = AIM_AT_TARGET
+        backwards = false
+        turnDirection = null
+        target = null
+    }
+
     override fun getLocalSituation(): String {
         return "Parking the car - phase $phase"
     }
