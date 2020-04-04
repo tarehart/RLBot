@@ -1,5 +1,6 @@
 package tarehart.rlbot.physics
 
+import tarehart.rlbot.AgentInput
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarHitbox
 import tarehart.rlbot.input.CarOrientation
@@ -8,9 +9,7 @@ import tarehart.rlbot.math.Circle
 import tarehart.rlbot.math.Ray2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.time.GameTime
-import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
-import java.lang.Exception
 import kotlin.math.abs
 import kotlin.math.asin
 import kotlin.math.cos
@@ -59,9 +58,9 @@ object BallPhysics {
                                        ballPosition: Vector3,
                                        ballVelocity: Vector3,
                                        carForwardDirectionNormal: Vector3): Vector3 {
-        val BallInteraction_MaxRelativeSpeed = 4600.0F
+        val BallInteraction_MaxRelativeSpeed = 4600.0F / UU_CONST
         val BallInteraction_PushZScale = 0.35F
-        val BallInteraction_PushForwardScale = 0.65F
+        val BallInteraction_PushForwardScale = 1.0F // 0.65F  TODO: Experimentally, 1.0 works a lot better.
 
         val RelVel = carVelocity - ballVelocity
         // UKismetMathLibrary::VSize
@@ -72,11 +71,11 @@ object BallPhysics {
             HitDir = HitDir.withZ(HitDir.z * BallInteraction_PushZScale)
             HitDir = HitDir.normaliseCopy()
 
-            // If PushForwardScale != 1.0
-            val ForwardDir = carForwardDirectionNormal
-            val ForwardAdjustment = (ForwardDir * HitDir.dotProduct(ForwardDir)) * (1.0 - BallInteraction_PushForwardScale)
-            HitDir = (HitDir - ForwardAdjustment).normaliseCopy()
-            // EndIf
+             if (BallInteraction_PushForwardScale != 1.0F) {
+                 val ForwardDir = carForwardDirectionNormal
+                 val ForwardAdjustment = (ForwardDir * HitDir.dotProduct(ForwardDir)) * (1.0 - BallInteraction_PushForwardScale)
+                 HitDir = (HitDir - ForwardAdjustment).normaliseCopy()
+             }
 
             val pushFactor = ballPushFactorCurve(RelSpeed)
             val Impulse = (HitDir * RelSpeed) * pushFactor //  * (float(1) + Ball.ReplicatedAddedCarBounceScale)) + (HitDirXY * Ball.AdditionalCarGroundBounceScaleXY);
@@ -101,29 +100,30 @@ object BallPhysics {
     }
 
     fun predictBallVelocity(carSlice: CarSlice, ballPosition: Vector3, ballVelocity: Vector3): Vector3 {
-        val inelasticImpulse = BallPhysics.calculateCarBallCollisionImpulse(
+        val inelasticImpulse = calculateCarBallCollisionImpulse(
                 carPosition = carSlice.space,
                 carVelocity = carSlice.velocity,
                 ballPosition = ballPosition,
                 ballVelocity = ballVelocity)
 
-        val scriptImpulse = BallPhysics.calculateScriptBallImpactForce(
+        val inelasticVelocityChange = inelasticImpulse / 30
+
+        val scriptVelocityChange = calculateScriptBallImpactForce(
                 carPosition = carSlice.space,
                 carVelocity = carSlice.velocity,
                 ballPosition = ballPosition,
                 ballVelocity = ballVelocity,
                 carForwardDirectionNormal = carSlice.orientation.noseVector)
 
-        return ballVelocity + inelasticImpulse / 30.0 + scriptImpulse
+         return ballVelocity + inelasticVelocityChange + scriptVelocityChange
     }
 
     fun computeChipOptions(currentCarPosition: Vector3, arrivalSpeed: Float, ballSlice: BallSlice, hitbox: CarHitbox,
                            horizontalOffsetList: List<Float>, arrivalCarHeight: Float = ManeuverMath.BASE_CAR_Z): List<ChipOption> {
         val contactHeight = arrivalCarHeight + hitbox.upwardExtent
 
-        val radiusMultiplier = 1.3F // TODO: this is a fudge factor, needed?
         val chipRingRadius = cos(asin((ballSlice.space.z - contactHeight) / ArenaModel.BALL_RADIUS)) *
-                ArenaModel.BALL_RADIUS * radiusMultiplier
+                ArenaModel.BALL_RADIUS
         if (chipRingRadius.isNaN()) {
             println("Failed to find chip options, probably because the car is too low to touch the ball!")
             return emptyList()

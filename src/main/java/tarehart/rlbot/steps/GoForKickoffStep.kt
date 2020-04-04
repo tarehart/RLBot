@@ -2,6 +2,7 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.math.BotMath.numberDistance
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
@@ -94,25 +95,21 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         private val WIGGLE_ROOM = 2.0F
         private val CHEATIN_BOOST_Y = 58.0F
 
-        private fun getNumberDistance(first: Float, second: Float): Float {
-            return abs(first - second)
-        }
-
         fun getKickoffType(bundle: TacticalBundle): KickoffType {
             val car = bundle.agentInput.myCarData
             val xPosition = abs(car.position.x)
             val yPosition = abs(car.position.y)
-            if (getNumberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(CENTER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
+            if (numberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM && numberDistance(CENTER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
                 BotLog.println("it be center", car.playerIndex)
                 return KickoffType.CENTER
             }
 
-            if (getNumberDistance(CHEATER_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(CHEATER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
+            if (numberDistance(CHEATER_KICKOFF_X, xPosition) < WIGGLE_ROOM && numberDistance(CHEATER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
                 BotLog.println("it be cheatin", car.playerIndex)
                 return KickoffType.CHEATIN
             }
 
-            if (getNumberDistance(DIAGONAL_KICKOFF_X, xPosition) < WIGGLE_ROOM && getNumberDistance(DIAGONAL_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
+            if (numberDistance(DIAGONAL_KICKOFF_X, xPosition) < WIGGLE_ROOM && numberDistance(DIAGONAL_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
                 BotLog.println("it be slanterd", car.playerIndex)
                 return KickoffType.SLANTERD
             }
