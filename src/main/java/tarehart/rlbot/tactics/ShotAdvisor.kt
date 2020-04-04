@@ -27,8 +27,8 @@ object ShotAdvisor {
 
         plan.withStep(WallTouchStep())
 
-        val canDoSlotKick = roughIntercept.space.z < ArenaModel.BALL_RADIUS * 1.3
-        if (shotAlignment > 0.8 || roughIntercept.space.flatten().distance(enemyGoal.center.flatten()) < 50) {
+        val canDoSlotKick = roughIntercept.space.z < ArenaModel.BALL_RADIUS * 2
+        if (shotAlignment > 0.7 || roughIntercept.space.flatten().distance(enemyGoal.center.flatten()) < 50) {
             if (canDoSlotKick) {
                 plan.withStep(SlotKickStep(KickAtEnemyGoal()))
             }

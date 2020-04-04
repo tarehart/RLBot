@@ -53,6 +53,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
     private var slotEnd: Vector3? = null
     private var favoredChipOption: ChipOption? = null
     private var favoredSliceToCar: Vector3? = null
+    private var isFinalMoments = false
 
     private val disruptionMeter = BallPathDisruptionMeter(5)
 
@@ -61,6 +62,10 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
         slotStart = null
         slotEnd = null
         disruptionMeter.reset()
+    }
+
+    override fun canInterrupt(): Boolean {
+        return super.canInterrupt() && !isFinalMoments
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -80,8 +85,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             verticallyAccessible && viableKick
         }
 
-        val distancePlot = bundle.tacticalSituation.expectedContact?.distancePlot ?:
-            return null
+        val distancePlot = bundle.tacticalSituation.expectedContact.distancePlot
 
         val sliceToCar = favoredSliceToCar ?: Vector3()
         val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, sliceToCar, overallPredicate,
@@ -121,6 +125,9 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             favoredChipOption = chipOption
             favoredSliceToCar = chipOption.carSlice.space - intercept.ballSlice.space
             slotStart = car.position
+            if (Duration.between(car.time, chipOption.carSlice.time).seconds < 0.7) {
+                isFinalMoments = true
+            }
         }
 
         if (firmStart != null) {
