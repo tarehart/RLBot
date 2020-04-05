@@ -12,10 +12,9 @@ import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.routing.RoutePlanner
-import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
+import tarehart.rlbot.planning.SteerUtil
+import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.strikes.KickStrategy
@@ -23,6 +22,7 @@ import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
+import kotlin.math.max
 
 open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?): StrikeProfile() {
     override val preDodgeTime = Duration.ofSeconds(AerialMath.timeToAir(height))
@@ -66,37 +66,39 @@ open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?):
         val flatForce = desiredKickForce.flatten()
         val approachError = Vector2.angle(flatForce, toIntercept)
 
-        val speedForBackoff = Math.max(car.velocity.flatten().magnitude(), averageSpeedNeeded)
-        val idealLaunchToIntercept = flatForce.scaledToMagnitude(strikeDuration.seconds * speedForBackoff)
         val maxAerialApproachError = Math.PI / 4
 
-        if (approachError < maxAerialApproachError) {
-
-            val desiredSpeedAtLaunch = averageSpeedNeeded * 0.8F
-            val orientSeconds = FacingAndSpeedPreKickWaypoint.getOrientDuration(car.orientation.noseVector.flatten(), toIntercept).seconds
-
-            val motionAfterSpeedChange = RoutePlanner.getMotionAfterSpeedChange(
-                    car.velocity.flatten().magnitude(), desiredSpeedAtLaunch, intercept.distancePlot) ?: return null
-
-            return FacingAndSpeedPreKickWaypoint(
-                    position = car.position.flatten(),
-                    facing = toIntercept,
-                    expectedTime = car.time + Duration.ofSeconds(Math.max(orientSeconds, motionAfterSpeedChange.time.seconds)),
-                    speed = desiredSpeedAtLaunch)
-        }
-
-        val lazyLaunchToIntercept = idealLaunchToIntercept.rotateTowards(toIntercept, maxAerialApproachError)
-        val launchPosition = intercept.space.flatten() - lazyLaunchToIntercept
-        val facing = lazyLaunchToIntercept.normalized()
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
         val momentOrNow = if (launchPadMoment.isBefore(car.time))
             car.time
         else
             launchPadMoment
 
-        return StrictPreKickWaypoint(
-                position = launchPosition,
-                facing = facing,
+        if (approachError < maxAerialApproachError) {
+
+            val desiredSpeedAtLaunch = averageSpeedNeeded * 0.8F
+            val orientSeconds = SteerUtil.getSteerPenaltySeconds(car, intercept.space)
+
+            val motionAfterSpeedChange = ManeuverMath.getMotionAfterSpeedChange(
+                    car.velocity.flatten().magnitude(), desiredSpeedAtLaunch, intercept.distancePlot) ?: return null
+
+            return AnyFacingPreKickWaypoint(
+                    position = car.position.flatten(),
+                    idealFacing = toIntercept,
+                    allowableFacingError = .2F,
+                    expectedTime = car.time + Duration.ofSeconds(max(orientSeconds, motionAfterSpeedChange.time.seconds)),
+                    expectedSpeed = desiredSpeedAtLaunch,
+                    waitUntil = if (intercept.needsPatience) momentOrNow else null)
+        }
+
+
+        val lazyLaunchToIntercept = flatForce.rotateTowards(toIntercept, maxAerialApproachError)
+        val facing = lazyLaunchToIntercept.normalized()
+
+        return AnyFacingPreKickWaypoint(
+                position = car.position.flatten(),
+                idealFacing = facing,
+                allowableFacingError = 1F,
                 expectedTime = momentOrNow,
                 expectedSpeed = averageSpeedNeeded,
                 waitUntil = if (intercept.needsPatience) momentOrNow else null)

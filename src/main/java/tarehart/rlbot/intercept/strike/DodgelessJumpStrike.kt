@@ -9,6 +9,7 @@ import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.planning.Plan
+import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
@@ -44,7 +45,7 @@ class DodgelessJumpStrike(height: Float): StrikeProfile() {
         val flatForce = desiredKickForce.flatten()
         val strikeTravel = preDodgeTime.seconds * expectedArrivalSpeed
         val launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
-        return DirectedKickUtil.getStandardWaypoint(launchPosition, flatForce.normalized(), intercept)
+        return AnyFacingPreKickWaypoint(launchPosition, flatForce.normalized(), 1F, expectedTime = intercept.time - strikeDuration)
     }
 
     private fun checkJumpHitReadiness(car: CarData, intercept: SpaceTime): LaunchChecklist {

@@ -12,7 +12,6 @@ import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.PositionFacing
-import tarehart.rlbot.routing.RoutePlanner
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.time.Duration
@@ -132,7 +131,7 @@ class ParkTheCarStep(private val targetFunction: (AgentInput) -> PositionFacing?
                     }
 
                     val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(6.0), car.boost)
-                    val decelerationPeriod = RoutePlanner.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 30F, distancePlot)
+                    val decelerationPeriod = ManeuverMath.getDecelerationDistanceWhenTargetingSpeed(flatPosition, waypoint, 30F, distancePlot)
 
                     val steer = SteerUtil.steerTowardGroundPosition(car, waypoint, detourForBoost = distance > 50, conserveBoost = car.boost < 50 || distance < 20)
 

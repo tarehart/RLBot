@@ -3,7 +3,6 @@ package tarehart.rlbot.intercept
 import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.carpredict.CarSlice
 import tarehart.rlbot.input.CarData
-import tarehart.rlbot.input.CarOrientation
 import tarehart.rlbot.intercept.strike.ChipStrike
 import tarehart.rlbot.intercept.strike.CustomStrike
 import tarehart.rlbot.intercept.strike.StrikeProfile
@@ -12,17 +11,10 @@ import tarehart.rlbot.math.BallSlice
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.DistancePlot
-import tarehart.rlbot.routing.PrecisionPlan
-import tarehart.rlbot.routing.StrikeRoutePart
-import tarehart.rlbot.routing.waypoint.FacingAndSpeedPreKickWaypoint
-import tarehart.rlbot.steps.strikes.DirectedKickUtil
-import tarehart.rlbot.steps.strikes.KickStrategy
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
-import tarehart.rlbot.tuning.ManeuverMath
 
 object InterceptCalculator {
 
@@ -106,121 +98,6 @@ object InterceptCalculator {
                 }
             }
             previousRangeDeficiency = rangeDeficiency
-        }
-
-        // No slices in the ball slices were in range and satisfied the predicate
-        return null
-    }
-
-    // The distance from the car's position to the edge of its hitbox. This number is conservative
-    // to make sure we can make contact even if it's a roof hit.
-    private const val STANDARD_CAR_RADIUS = 1.5
-
-    /**
-     *
-     * @param carData
-     * @param ballPath
-     * @param acceleration
-     * @param interceptModifier an offset from the ball position that the car is trying to reach
-     * @param spatialPredicate determines whether a particular ball slice is eligible for intercept
-     * @param strikeProfileFn a description of how the car will move during the final moments of the intercept
-     * @param planeNormal the normal of the plane that the car is driving on for this intercept.
-     * @return
-     */
-    fun getRouteAwareIntercept(
-            carData: CarData,
-            ballPath: BallPath,
-            spatialPredicate: (CarData, SpaceTime, StrikeProfile) -> Boolean,
-            strikeProfileFn: (BallSlice, Vector3, CarData) -> StrikeProfile,
-            kickStrategy: KickStrategy): PrecisionPlan? {
-
-        val myPosition = carData.position.flatten()
-        var firstMomentInRange: GameTime? = null
-        var spatialPredicateFailurePeriod: Duration? = null
-
-        var acceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(6.0), carData.boost, 0F)
-        var frontFlipDistance = AccelerationModel.getFrontFlipDistance(carData.velocity.magnitude())
-        var hasUsedHypotheticalFlip = false
-
-        for (i in 0 until ballPath.slices.size) {
-            val slice = ballPath.slices[i]
-            val kickDirection = kickStrategy.getKickDirection(carData, slice.space) ?: continue
-
-            val interceptModifier = kickDirection.scaledToMagnitude(-1 * (ArenaModel.BALL_RADIUS + STANDARD_CAR_RADIUS))
-            val spaceTime = SpaceTime(slice.space.plus(interceptModifier), slice.time)
-            val interceptFlat = spaceTime.space.flatten()
-            val toIntercept = interceptFlat - myPosition
-
-            val strikeProfile = strikeProfileFn.invoke(slice, kickDirection, carData)
-
-            // If it's a forward strike, it's safe to factor in orient duration now, which is good for efficiency.
-            // Otherwise, defer until we have a route because angled strikes are tricky.
-            val orientDuration = if (strikeProfile.isForward) AccelerationModel.getOrientDuration(carData, spaceTime.space) else Duration.ofMillis(0)
-            val dts = acceleration.getMotionAfterDuration(Duration.between(carData.time, spaceTime.time) - orientDuration, strikeProfile) ?: return null
-
-            val interceptDistance = toIntercept.magnitude()
-
-            if (interceptDistance > frontFlipDistance && !hasUsedHypotheticalFlip) {
-                acceleration = AccelerationModel.simulateAcceleration(carData, Duration.ofSeconds(6.0), carData.boost)
-                hasUsedHypotheticalFlip = true
-            }
-
-            val rangeDeficiency = interceptDistance - dts.distance
-            if (rangeDeficiency <= 0) {
-                if (firstMomentInRange == null) {
-                    firstMomentInRange = spaceTime.time
-                }
-                if (spatialPredicate.invoke(carData, spaceTime, strikeProfile) && strikeProfile.isVerticallyAccessible(carData, spaceTime)) {
-
-                    if (spatialPredicateFailurePeriod == null) {
-                        spatialPredicateFailurePeriod = spaceTime.time - firstMomentInRange
-                    }
-
-                    val boostNeeded = StrikePlanner.boostNeededForAerial(spaceTime.space.z)
-
-                    val intercept = Intercept(
-                            slice.space + interceptModifier,
-                            slice.time,
-                            boostNeeded,
-                            strikeProfile,
-                            acceleration,
-                            spatialPredicateFailurePeriod,
-                            slice,
-                            dts)
-
-                    val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, carData, kickStrategy)
-                            ?: return null // Also consider continuing the loop instead.
-                    val steerPlan = kickPlan.launchPad.planRoute(carData, kickPlan.distancePlot)
-
-
-                    val strikeDuration = if (kickPlan.intercept.strikeProfile.style == Style.AERIAL && kickPlan.launchPad.expectedSpeed != null) {
-
-                        val orientation = if (kickPlan.launchPad is FacingAndSpeedPreKickWaypoint) {
-                            CarOrientation(kickPlan.launchPad.facing.toVector3(), Vector3.UP)
-                        } else {
-                            carData.orientation
-                        }
-                        val correction = AerialMath.calculateAerialCourseCorrection(
-                                CarSlice(
-                                        kickPlan.launchPad.position.withZ(ManeuverMath.BASE_CAR_Z),
-                                        kickPlan.launchPad.expectedTime,
-                                        toIntercept.scaledToMagnitude(kickPlan.launchPad.expectedSpeed).toVector3(),
-                                        orientation),
-                                intercept.toSpaceTime(), true, 0F)
-                        AerialMath.calculateAerialTimeNeeded(correction)
-                    } else
-                        kickPlan.intercept.strikeProfile.strikeDuration
-
-
-                    steerPlan.route.withPart(StrikeRoutePart(kickPlan.launchPad.position, kickPlan.intercept.space, strikeDuration))
-
-                    val postRouteTime = Duration.between(carData.time, intercept.time) - steerPlan.route.duration
-
-                    if (postRouteTime.millis >= -8) {
-                        return PrecisionPlan(kickPlan, steerPlan)
-                    }
-                }
-            }
         }
 
         // No slices in the ball slices were in range and satisfied the predicate

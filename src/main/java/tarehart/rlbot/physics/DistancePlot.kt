@@ -105,7 +105,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
 
     fun getMaximumRange(car: CarData, direction: Vector3, travelTime: Duration): Float? {
         val orientSeconds = SteerUtil.getSteerPenaltySeconds(car, direction)
-        return getMotionAfterDuration(Duration.ofSeconds(max(0.0, travelTime.seconds - orientSeconds)))?.distance
+        return getMotionAfterDuration(Duration.ofSeconds(max(0F, travelTime.seconds - orientSeconds)))?.distance
     }
 
     fun getMotionUponArrival(carData: CarData, destination: Vector3): DistanceTimeSpeed? {

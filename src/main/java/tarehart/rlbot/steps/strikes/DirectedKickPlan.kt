@@ -18,11 +18,9 @@ class DirectedKickPlan (
         val intercept: Intercept,
         val ballPath: BallPath,
         val distancePlot: DistancePlot,
-        val interceptModifier: Vector3,
         val desiredBallVelocity: Vector3,
         val plannedKickForce: Vector3,
-        val launchPad: PreKickWaypoint,
-        val easyKickAllowed: Boolean
+        val launchPad: PreKickWaypoint
 ) {
 
     fun drawDebugInfo(graphics: Graphics2D) {

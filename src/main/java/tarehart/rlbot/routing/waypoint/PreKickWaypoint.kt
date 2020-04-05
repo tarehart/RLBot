@@ -1,13 +1,13 @@
 package tarehart.rlbot.routing.waypoint
 
 import rlbot.render.Renderer
+import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.rendering.RenderUtil
-import tarehart.rlbot.routing.SteerPlan
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
@@ -21,7 +21,7 @@ abstract class PreKickWaypoint(
 
     val facing = facing.normalized()
 
-    abstract fun planRoute(car: CarData, distancePlot: DistancePlot): SteerPlan
+    abstract fun planRoute(car: CarData, distancePlot: DistancePlot): AgentOutput
     abstract fun isPlausibleFinalApproach(car: CarData): Boolean
 
     open fun renderDebugInfo(renderer: Renderer) {

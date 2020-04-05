@@ -205,15 +205,15 @@ object SteerUtil {
      *
      * This was tuned via lots of timing trials using DriveToPositionSampler to predict time-to-target.
      */
-    fun getSteerPenaltySeconds(car: CarData, target: Vector3): Double {
+    fun getSteerPenaltySeconds(car: CarData, target: Vector3): Float {
         val unpleasantSpeed = car.velocity.magnitude() - car.velocity.dotProduct((target - car.position).normaliseCopy())
         val toTargetOnPlane = (target - car.position).projectToPlane(car.orientation.roofVector).normaliseCopy()
         val angle = toTargetOnPlane.angle(car.orientation.noseVector)
 
-        return 0.2786 * angle +
-               -0.101  * angle * angle +
-               0.0326 * angle * angle * angle +
-               0.0151 * unpleasantSpeed
+        return 0.2786F * angle +
+               -0.101F  * angle * angle +
+               0.0326F * angle * angle * angle +
+               0.0151F * unpleasantSpeed
     }
 
     fun steerTowardGroundPosition(carData: CarData, position: Vector3): AgentOutput {

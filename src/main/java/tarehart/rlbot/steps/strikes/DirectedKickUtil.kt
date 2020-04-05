@@ -3,99 +3,44 @@ package tarehart.rlbot.steps.strikes
 import rlbot.render.Renderer
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
-import tarehart.rlbot.intercept.strike.Style
 import tarehart.rlbot.math.Atan
-import tarehart.rlbot.math.Clamper
 import tarehart.rlbot.math.Triangle
-import tarehart.rlbot.math.VectorUtil
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
+import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
-import tarehart.rlbot.routing.waypoint.StrictPreKickWaypoint
-import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sign
+import kotlin.math.sin
 
 object DirectedKickUtil {
-    private const val BALL_VELOCITY_INFLUENCE = .2F
 
     fun planKickFromIntercept(intercept: Intercept, ballPath: BallPath, car: CarData, kickStrategy: KickStrategy): DirectedKickPlan? {
 
-        val ballAtIntercept = intercept.ballSlice
-        val currentSpeed = car.velocity.flatten().magnitude()
+        val idealDirection = kickStrategy.getKickDirection(car, intercept.space) ?:
+        return null
 
-        val preStrikeTime = Duration.max(Duration.ZERO, (intercept.time - car.time) - intercept.strikeProfile.strikeDuration)
-        val preStrikeSpeed = intercept.distancePlot.getMotionAfterDuration(preStrikeTime)?.speed
-        if (preStrikeSpeed == null) {
-            BotLog.println("preStrikeSpeed was null.", car.playerIndex)
+        val arrivalHeight = intercept.ballSlice.space.z - ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z
+
+        val chipOption = BallPhysics.computeBestChipOption(car.position, intercept.accelSlice.speed,
+                intercept.ballSlice, car.hitbox, idealDirection, arrivalHeight)
+
+        if (chipOption == null) {
+            BotLog.println("Could not compute chip option", car.playerIndex)
             return null
         }
 
-        val arrivalSpeed = if (intercept.needsPatience) {
-            currentSpeed
-        } else {
-            val closenessRatio = Clamper.clamp(0.1 / preStrikeTime.seconds, 0.0, 1.0)
-            closenessRatio * currentSpeed + (1 - closenessRatio) * preStrikeSpeed
-        }
-        val interceptModifier = intercept.space - intercept.ballSlice.space
+        val plannedKickForce1 = (intercept.ballSlice.space - chipOption.impactPoint).scaledToMagnitude(chipOption.velocity.magnitude())
+        val launchPad = intercept.strikeProfile.getPreKickWaypoint(car, intercept, plannedKickForce1, intercept.accelSlice.speed) ?: return null
 
-        var kickDirection: Vector3
-        val easyKickAllowed: Boolean
-        val plannedKickForce: Vector3 // This empty vector will never be used, but the compiler hasn't noticed.
-        val desiredBallVelocity: Vector3
-
-        val impactSpeed = if (intercept.strikeProfile.style == Style.SIDE_HIT) ManeuverMath.DODGE_SPEED else 30F
-
-        if (intercept.strikeProfile.isForward) {
-
-            val easyForce: Vector3 = (ballAtIntercept.space - car.position).scaledToMagnitude(impactSpeed)
-            val easyKick = bump(ballAtIntercept.velocity, easyForce)
-            kickDirection = kickStrategy.getKickDirection(car, ballAtIntercept.space, easyKick) ?: return null
-            easyKickAllowed = easyKick.x == kickDirection.x && easyKick.y == kickDirection.y
-            if (easyKickAllowed) {
-                // The kick strategy is fine with the easy kick.
-                plannedKickForce = easyForce
-                desiredBallVelocity = easyKick
-            } else {
-                // TODO: this is a rough approximation.
-                kickDirection = kickStrategy.getKickDirection(car, ballAtIntercept.space) ?: return null
-                val orthogonal = VectorUtil.orthogonal(kickDirection.flatten())
-                val transverseBallVelocity = VectorUtil.project(ballAtIntercept.velocity.flatten(), orthogonal)
-                desiredBallVelocity = kickDirection.normaliseCopy().scaled(impactSpeed * 2)
-
-                val towardIntercept = (intercept.space - car.position).normaliseCopy()
-                val approximateCarVelocityAtContact = towardIntercept.scaled(preStrikeSpeed)
-                val relativeVelocity = intercept.ballSlice.velocity - approximateCarVelocityAtContact
-                val ballVelocityFactor = BALL_VELOCITY_INFLUENCE + max(0.0, 4 - relativeVelocity.magnitude() * 0.12)
-
-                plannedKickForce = Vector3(
-                        desiredBallVelocity.x - transverseBallVelocity.x * ballVelocityFactor,
-                        desiredBallVelocity.y - transverseBallVelocity.y * ballVelocityFactor,
-                        desiredBallVelocity.z)
-            }
-        } else {
-            easyKickAllowed = true
-            plannedKickForce = kickStrategy.getKickDirection(car, ballAtIntercept.space) ?: return null
-            desiredBallVelocity = plannedKickForce
-        }
-
-        val launchPad = intercept.strikeProfile.getPreKickWaypoint(car, intercept, plannedKickForce, arrivalSpeed) ?: return null
-
-        return DirectedKickPlan(
-                interceptModifier = interceptModifier,
-                ballPath = ballPath,
-                distancePlot = intercept.distancePlot,
-                intercept = intercept,
-                plannedKickForce = plannedKickForce,
-                desiredBallVelocity = desiredBallVelocity,
-                launchPad = launchPad,
-                easyKickAllowed = easyKickAllowed
-        )
+        return DirectedKickPlan(intercept, ballPath, intercept.distancePlot, chipOption.velocity, plannedKickForce1, launchPad)
     }
 
     /**
@@ -108,14 +53,16 @@ object DirectedKickUtil {
         return estimatedApproach.correctionAngle(desiredForce)
     }
 
+    @Deprecated("This originally vended strict waypoints, and may not be valid anymore in many cases")
     fun getStandardWaypoint(launchPosition: Vector2, facing: Vector2, intercept: Intercept): PreKickWaypoint {
         val launchPad: PreKickWaypoint
 
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
-        launchPad = StrictPreKickWaypoint(
+        launchPad = AnyFacingPreKickWaypoint(
                 position = launchPosition,
-                facing = facing,
+                idealFacing = facing,
+                allowableFacingError = 1F,
                 expectedTime = launchPadMoment,
                 waitUntil = if (intercept.spatialPredicateFailurePeriod.millis > 0) launchPadMoment else null
         )
@@ -138,34 +85,6 @@ object DirectedKickUtil {
         val deflectionAngle = Atan.atan2(postDodgeVelocity.sidewaysMagnitude, postDodgeVelocity.forwardMagnitude) * sign(approachVsKickForceAngle)
         // Time is chosen with a bias toward hurrying
         val launchPadMoment = intercept.time - intercept.strikeProfile.strikeDuration
-
-        // After we dodge, the car will take on a new angle which is more favorable. This is a signed value.
-        val finalApproachVsKickForceAngle = approachVsKickForceAngle - deflectionAngle
-
-        if (abs(finalApproachVsKickForceAngle) > shallowAngleThreshold) {
-            // The angle is too shallow, we need to curve into it!
-            val force = intercept.ballSlice.space.flatten() - carPositionAtContact
-            val approach = carPositionAtContact - carPosition
-
-            // we know that abs(finalApproachVsKickForceAngle) > shallowAngleThreshold. We want to move
-            // that final approach angle closer to zero by the amount of shallowAngleThreshold(which is always positive)
-            val approachError = abs(finalApproachVsKickForceAngle - shallowAngleThreshold * sign(deflectionAngle))
-            val allowedApproach = approach.rotateTowards(force, approachError)
-            val wishfulCarPosition = carPositionAtContact - allowedApproach
-            val dodgePosition = dodgePosition(wishfulCarPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
-            val dodgePositionToHop = (wishfulCarPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
-            val hopPosition = dodgePosition + dodgePositionToHop
-
-            renderer.drawLine3d(Color.GREEN, dodgePosition.withZ(intercept.space.z), carPositionAtContact.withZ(intercept.space.z))
-            renderer.drawLine3d(Color.CYAN, hopPosition.withZ(ManeuverMath.BASE_CAR_Z), dodgePosition.withZ(intercept.space.z))
-
-            return StrictPreKickWaypoint(
-                    position = hopPosition,
-                    expectedTime = launchPadMoment,
-                    waitUntil = if (intercept.needsPatience) launchPadMoment else null,
-                    facing = allowedApproach
-            )
-        }
 
         val dodgePosition = dodgePosition(carPosition, carPositionAtContact, deflectionAngle, strikeTravel) ?: return null
         val dodgePositionToHop = (carPosition - dodgePosition).scaledToMagnitude(intercept.strikeProfile.preDodgeTime.seconds * arrivalSpeed)
@@ -202,21 +121,5 @@ object DirectedKickUtil {
         val toDodge = Vector2(cos(sideBAngle), sin(sideBAngle)).scaled(triangle.sideC)
         return carPosition + toDodge
 
-    }
-
-    /**
-     * https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
-     */
-    private fun reflect(incident: Vector3, normal: Vector3): Vector3 {
-
-        val normalized = normal.normaliseCopy()
-        return incident - normalized.scaled(2 * incident.dotProduct(normalized))
-    }
-
-    private fun bump(incident: Vector3, movingWall: Vector3): Vector3 {
-        // Move into reference frame of moving wall
-        val incidentAccordingToWall = incident - movingWall
-        val reflectionAccordingToWall = reflect(incidentAccordingToWall, movingWall)
-        return reflectionAccordingToWall + movingWall
     }
 }

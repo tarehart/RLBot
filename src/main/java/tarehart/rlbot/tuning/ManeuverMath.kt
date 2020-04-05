@@ -1,9 +1,13 @@
 package tarehart.rlbot.tuning
 
 import tarehart.rlbot.input.CarData
+import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.routing.DistanceDuration
 import tarehart.rlbot.routing.PositionFacing
+import tarehart.rlbot.time.Duration
 import kotlin.math.sqrt
 
 object ManeuverMath {
@@ -110,6 +114,36 @@ object ManeuverMath {
         }
         val estimatedEntryAngle = currentFacing.facing + toTarget.scaledToMagnitude(2 + toTarget.magnitude())
         return estimatedEntryAngle.normalized()
+    }
+
+    fun getDecelerationDistanceWhenTargetingSpeed(start: Vector2, end: Vector2, desiredSpeed: Float, distancePlot: DistancePlot): DistanceDuration {
+
+        val distance = start.distance(end)
+        // Assume we'll only accelerate half way.
+        val maxAccelMotion = distancePlot.getMotionAfterDistance(distance / 2) ?: return DistanceDuration(0F, Duration.ofMillis(0))
+
+        if (maxAccelMotion.speed <= desiredSpeed) {
+            return DistanceDuration(0F, Duration.ofMillis(0))
+        }
+
+        val speedDiff = maxAccelMotion.speed - desiredSpeed
+        val secondsDecelerating = speedDiff / ManeuverMath.BRAKING_DECELERATION
+        val avgSpeed = (maxAccelMotion.speed + desiredSpeed) / 2
+        return DistanceDuration(avgSpeed * secondsDecelerating, Duration.ofSeconds(secondsDecelerating))
+    }
+
+    fun getMotionAfterSpeedChange(currentSpeed: Float, idealSpeed: Float, forwardAccelPlot: DistancePlot): DistanceTimeSpeed? {
+
+        if (idealSpeed < currentSpeed) {
+            val secondsRequired = (currentSpeed - idealSpeed) / ManeuverMath.BRAKING_DECELERATION
+            val avgSpeed = (currentSpeed + idealSpeed) / 2
+            return DistanceTimeSpeed(
+                    avgSpeed * secondsRequired,
+                    Duration.ofSeconds(secondsRequired),
+                    idealSpeed)
+        }
+
+        return forwardAccelPlot.getMotionUponSpeed(idealSpeed)
     }
 
 }
