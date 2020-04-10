@@ -43,9 +43,9 @@ class DodgelessJumpStrike(height: Float): StrikeProfile() {
 
     override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
         val flatForce = desiredKickForce.flatten()
-        val strikeTravel = preDodgeTime.seconds * expectedArrivalSpeed
-        val launchPosition = intercept.space.flatten() - flatForce.scaledToMagnitude(strikeTravel)
-        return AnyFacingPreKickWaypoint(launchPosition, flatForce.normalized(), 1F, expectedTime = intercept.time - strikeDuration)
+        return AnyFacingPreKickWaypoint(intercept.space.flatten(), flatForce.normalized(), 1F,
+                expectedTime = intercept.time - strikeDuration,
+                waitUntil = if (intercept.needsPatience) intercept.time else null)
     }
 
     private fun checkJumpHitReadiness(car: CarData, intercept: SpaceTime): LaunchChecklist {

@@ -50,11 +50,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
             return null
         }
 
-        val overallPredicate = { cd: CarData, st: SpaceTime ->
-            val verticallyAccessible = StrikePlanner.isVerticallyAccessible(cd, st)
-            val viableKick = kickStrategy.looksViable(cd, st.space)
-            verticallyAccessible && viableKick
-        }
+        val overallPredicate = { cd: CarData, st: SpaceTime -> kickStrategy.looksViable(cd, st.space) }
 
         val distancePlot = bundle.tacticalSituation.expectedContact.distancePlot
 
@@ -66,17 +62,18 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
         val kickPlan = DirectedKickUtil.planKickFromIntercept(intercept, ballPath, car, kickStrategy)
 
         if (kickPlan == null) {
-            println("Bent kick failed to make kick plan", car.playerIndex)
+            println("Flexible kick failed to make kick plan", car.playerIndex)
             return null
         }
 
-        if (kickPlan.launchPad.isPlausibleFinalApproach(car)) {
-            kickPlan.intercept.strikeProfile.getPlanFancy(car, kickPlan)?.let {
-                println("Launched at %s %s with speed %s"
-                        .format(bundle.agentInput.time, car.position, car.velocity.magnitude()),
-                        car.playerIndex)
-                return startPlan(it, bundle)
-            }
+        favoredSliceToCar = kickPlan.chipOption.carSlice.space - intercept.ballSlice.space
+        kickPlan.renderDebugInfo(car.renderer)
+
+        kickPlan.intercept.strikeProfile.getPlanFancy(car, kickPlan)?.let {
+            println("Launched at %s %s with speed %s"
+                    .format(bundle.agentInput.time, car.position, car.velocity.magnitude()),
+                    car.playerIndex)
+            return startPlan(it, bundle)
         }
 
         return kickPlan.launchPad.planRoute(car, distancePlot)
@@ -88,7 +85,7 @@ class FlexibleKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep(
     }
 
     override fun getLocalSituation(): String {
-        return "Bent kick - " + kickStrategy.javaClass.simpleName
+        return "Flexible kick - " + kickStrategy.javaClass.simpleName
     }
 
     companion object {

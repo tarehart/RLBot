@@ -22,7 +22,6 @@ abstract class PreKickWaypoint(
     val facing = facing.normalized()
 
     abstract fun planRoute(car: CarData, distancePlot: DistancePlot): AgentOutput
-    abstract fun isPlausibleFinalApproach(car: CarData): Boolean
 
     open fun renderDebugInfo(renderer: Renderer) {
         RenderUtil.drawSquare(renderer, Plane(Vector3.UP, position.withZ(1.0)), 2.0, Color.WHITE)

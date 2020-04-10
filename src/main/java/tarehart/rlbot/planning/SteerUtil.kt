@@ -282,6 +282,8 @@ object SteerUtil {
 
     fun getThereOnTime(car: CarData, groundPositionAndTime: SpaceTime, greedy: Boolean = false): AgentOutput {
 
+
+
         var timeToIntercept = Duration.between(car.time, groundPositionAndTime.time)
         if (timeToIntercept.millis < 0) {
             timeToIntercept = Duration.ofMillis(1)
@@ -290,6 +292,13 @@ object SteerUtil {
         var waypoint = groundPositionAndTime.space.flatten()
         val distanceToIntercept = car.position.flatten().distance(waypoint)
         val averageSpeedNeeded = distanceToIntercept / timeToIntercept.seconds
+
+        val distancePlot = AccelerationModel.simulateAcceleration(car, groundPositionAndTime.time - car.time, 0F, 0)
+
+        if (distancePlot.getEndPoint().distance > distanceToIntercept + 15) {
+            // Go backwards
+            return AgentOutput().withThrottle(-1)
+        }
 
         if (greedy && distanceToIntercept > 40 && car.boost < 75) {
             waypoint = Optional.ofNullable(BoostAdvisor.getBoostWaypoint(car, waypoint)).orElse(waypoint)

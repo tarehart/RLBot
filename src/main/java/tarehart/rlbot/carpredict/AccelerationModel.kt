@@ -205,6 +205,11 @@ object AccelerationModel {
         }
 
         var accel = 0F
+
+        if (currentSpeed < 0) {
+            accel = BRAKING_DECELERATION
+        }
+
         if (currentSpeed < MEDIUM_SPEED) {
             accel = 30 - currentSpeed * .95F
         }

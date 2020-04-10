@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import rlbot.render.NamedRenderer
 import rlbot.render.Renderer
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
@@ -9,6 +10,7 @@ import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
 import tarehart.rlbot.physics.BallPhysics
+import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.routing.waypoint.AnyFacingPreKickWaypoint
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
@@ -37,10 +39,15 @@ object DirectedKickUtil {
             return null
         }
 
+        val renderer = car.renderer
+        renderer.drawLine3d(Color.YELLOW, intercept.ballSlice.space, intercept.ballSlice.space + chipOption.velocity)
+        chipOption.carSlice.render(renderer, Color.YELLOW)
+        RenderUtil.drawCircle(renderer, chipOption.chipCircle, chipOption.impactPoint.z, Color.WHITE)
+
         val plannedKickForce1 = (intercept.ballSlice.space - chipOption.impactPoint).scaledToMagnitude(chipOption.velocity.magnitude())
         val launchPad = intercept.strikeProfile.getPreKickWaypoint(car, intercept, plannedKickForce1, intercept.accelSlice.speed) ?: return null
 
-        return DirectedKickPlan(intercept, ballPath, intercept.distancePlot, chipOption.velocity, plannedKickForce1, launchPad)
+        return DirectedKickPlan(intercept, chipOption, launchPad)
     }
 
     /**

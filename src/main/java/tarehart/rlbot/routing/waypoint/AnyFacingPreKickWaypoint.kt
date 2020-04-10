@@ -4,39 +4,14 @@ import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
-import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.SteerUtil
-import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.ManeuverMath
 
 class AnyFacingPreKickWaypoint(position: Vector2, idealFacing: Vector2, private val allowableFacingError: Float, expectedTime: GameTime, expectedSpeed: Float? = null, waitUntil: GameTime? = null) :
         PreKickWaypoint(position, idealFacing, expectedTime, expectedSpeed, waitUntil) {
 
-    override fun isPlausibleFinalApproach(car: CarData): Boolean {
-
-        if (ArenaModel.isCarOnWall(car)) return false
-        val tminus = Duration.between(car.time, expectedTime).millis
-        if (tminus > 200 || tminus < -50) return false
-        val distance = car.position.flatten().distance(position)
-        if (distance > 4) return false
-
-        if (distance < 2) {
-            // When a car approaches a waypoint, it tends not to hit it completely perfectly, and the angle error will
-            // thrash as it passes by. Ignore this thrash when the car is super close to the waypoint.
-            return true
-        }
-
-        val facingError = Vector2.angle(car.orientation.noseVector.flatten(), facing)
-        if (facingError > allowableFacingError) {
-            return false
-        }
-
-        val angleError = Math.abs(SteerUtil.getCorrectionAngleRad(car, position))
-        val skidError = Vector2.angle(car.velocity.flatten(), car.orientation.noseVector.flatten())
-        return angleError < Math.PI / 12 && skidError < Math.PI / 12 && tminus > 0
-    }
 
     override fun planRoute(car: CarData, distancePlot: DistancePlot): AgentOutput {
         val distance = this.position.distance(car.position.flatten())
@@ -53,7 +28,7 @@ class AnyFacingPreKickWaypoint(position: Vector2, idealFacing: Vector2, private 
             return SteerUtil.getThereOnTime(car, SpaceTime(waypoint.toVector3(), this.waitUntil))
         }
 
-        if (distance > 50 && car.boost < 50) {
+        if (distance > 70 && car.boost < 50) {
             return SteerUtil.steerTowardGroundPosition(car, waypoint)
         }
 

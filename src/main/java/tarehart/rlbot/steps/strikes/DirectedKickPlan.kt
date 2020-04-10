@@ -5,6 +5,7 @@ import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPath
+import tarehart.rlbot.physics.ChipOption
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
@@ -16,12 +17,12 @@ import java.awt.geom.Line2D
 
 class DirectedKickPlan (
         val intercept: Intercept,
-        val ballPath: BallPath,
-        val distancePlot: DistancePlot,
-        val desiredBallVelocity: Vector3,
-        val plannedKickForce: Vector3,
+        val chipOption: ChipOption,
         val launchPad: PreKickWaypoint
 ) {
+
+    val plannedKickForce = (intercept.ballSlice.space - chipOption.impactPoint).scaledToMagnitude(chipOption.velocity.magnitude())
+    val desiredBallVelocity = chipOption.velocity
 
     fun drawDebugInfo(graphics: Graphics2D) {
         graphics.color = Color(73, 111, 73)
@@ -48,6 +49,5 @@ class DirectedKickPlan (
 
         val anticipatedContactPoint = intercept.ballSlice.space - plannedKickForce.scaledToMagnitude(ArenaModel.BALL_RADIUS)
         RenderUtil.drawImpact(renderer, anticipatedContactPoint, plannedKickForce.scaled(0.5F), Color(1.0f, 0.4f, 0.4f))
-        RenderUtil.drawBallPath(renderer, ballPath, intercept.time, RenderUtil.STANDARD_BALL_PATH_COLOR)
     }
 }
