@@ -57,7 +57,7 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
 
         } else {
-            target = Vector2(0.0, ySide * 6)
+            target = Vector2(0.0, ySide * 10)
         }
 
         if (kickoffType == KickoffType.SPACE_JAM) {

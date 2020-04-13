@@ -74,7 +74,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         kickoffAdvisor.gradeKickoff(bundle)
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
+        if ((currentPlan == null || currentPlan.posture.lessUrgentThan(KICKOFF)) && situation.goForKickoff) {
             if (situation.teamPlayerWithInitiative?.car == car) {
                 val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(bundle), bundle)
                 return Plan(KICKOFF).withStep(GoForKickoffStep(
