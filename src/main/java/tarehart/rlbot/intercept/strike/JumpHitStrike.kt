@@ -8,6 +8,7 @@ import tarehart.rlbot.intercept.LaunchChecklist
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindSequence
@@ -23,7 +24,7 @@ import kotlin.math.min
 class JumpHitStrike(height: Float): StrikeProfile() {
 
     // If we have time to tilt back, the nose will be higher and we can cheat a little.
-    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT) - TILT_HEIGHT_CHEAT
+    private val requiredHeight = (height - StrikePlanner.CAR_BASE_HEIGHT - ArenaModel.BALL_RADIUS * .7F) - TILT_HEIGHT_CHEAT
 
     override val preDodgeTime = Duration.ofSeconds(ManeuverMath.secondsForMashJumpHeight(requiredHeight) ?: .8F + .016F)
     override val postDodgeTime = Duration.ofMillis(100)

@@ -2,6 +2,7 @@ package tarehart.rlbot.steps.teamwork
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.carpredict.AccelerationModel
 import tarehart.rlbot.math.BotMath
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
@@ -14,6 +15,7 @@ import tarehart.rlbot.routing.BoostAdvisor
 import tarehart.rlbot.steps.NestedPlanStep
 import tarehart.rlbot.steps.UnfailingStep
 import tarehart.rlbot.tuning.BotLog.println
+import tarehart.rlbot.tuning.ManeuverMath
 import java.awt.Color
 import java.awt.Point
 import kotlin.math.sign
@@ -83,7 +85,12 @@ class RotateBackToGoalStep: NestedPlanStep() {
             return startPlan(it, bundle)
         }
 
-        return SteerUtil.steerTowardGroundPosition(car, boostGreedWaypoint, detourForBoost = false)
+        val steer = SteerUtil.steerTowardGroundPosition(car, boostGreedWaypoint, detourForBoost = false)
+
+        if (car.velocity.magnitude() < AccelerationModel.MEDIUM_SPEED * .95) {
+            steer.withBoost(false)
+        }
+        return steer
     }
 
     companion object {
