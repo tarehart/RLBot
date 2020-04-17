@@ -175,7 +175,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
     private fun selectStrike(height: Float): StrikeProfile {
         return DodgelessJumpStrike(height)
-        // TODO: enable some higher stuff
+        // TODO: enable some higher stuff... Reflex jump strike?
     }
 
     private fun reflexManeuver(car: CarData, intercept: Intercept, bundle: TacticalBundle): AgentOutput? {
