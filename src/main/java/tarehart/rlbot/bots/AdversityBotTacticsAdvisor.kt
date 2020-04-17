@@ -5,12 +5,16 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.Posture
+import tarehart.rlbot.planning.RetryableViableStepPlan
 import tarehart.rlbot.steps.GetBoostStep
 import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
+import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
+import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
+import tarehart.rlbot.steps.teamwork.RotateBackToGoalStep
 import tarehart.rlbot.tactics.GameMode
 import tarehart.rlbot.tactics.SaveAdvisor
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
@@ -25,13 +29,15 @@ class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input)
 
         val plan = FirstViableStepPlan(Posture.NEUTRAL)
 
-        if (situation.shotOnGoalAvailable && situation.teamPlayerWithInitiative?.car == car) {
+        if (situation.shotOnGoalAvailable && situation.teamPlayerWithInitiative?.car == car &&
+                situation.expectedContact.intercept != null && situation.expectedContact.intercept.space.distance(car.position) < 50) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
 
         plan.withStep(DemolishEnemyStep(isAdversityBot = true))
         plan.withStep(GetBoostStep())
-        plan.withStep(GetOnOffenseStep())
+        plan.withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+        plan.withStep(RotateBackToGoalStep())
         return plan
     }
 
@@ -45,9 +51,11 @@ class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input)
         val car = input.myCarData
         val situation = bundle.tacticalSituation
 
-        // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
-            return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
+        kickoffAdvisor.gradeKickoff(bundle)
+
+        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
+            val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(car), bundle)
+            return GoForKickoffStep.chooseKickoffPlan(bundle, kickoffAdvice)
         }
 
         if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {

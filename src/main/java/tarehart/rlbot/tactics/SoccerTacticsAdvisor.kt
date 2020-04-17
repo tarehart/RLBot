@@ -74,19 +74,8 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         kickoffAdvisor.gradeKickoff(bundle)
 
         if ((currentPlan == null || currentPlan.posture.lessUrgentThan(KICKOFF)) && situation.goForKickoff) {
-            if (situation.teamPlayerWithInitiative?.car == car) {
-                val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(bundle), bundle)
-                return Plan(KICKOFF).withStep(GoForKickoffStep(
-                        dodgeDistance = kickoffAdvice.dodgeRange,
-                        counterAttack = kickoffAdvice.counterAttack))
-            }
-
-            if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                val expiryTime = car.time.plusSeconds(5)
-                return RetryableViableStepPlan(DEFENSIVE, "Covering goal on kickoff as last back", GetOnDefenseStep()) { b -> b.agentInput.time < expiryTime }
-            }
-
-            return Plan(KICKOFF, "Getting boost during kickoff").withStep(GetBoostStep())
+            val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(car), bundle)
+            return GoForKickoffStep.chooseKickoffPlan(bundle, kickoffAdvice)
         }
 
         if (LANDING.canInterrupt(currentPlan)) {

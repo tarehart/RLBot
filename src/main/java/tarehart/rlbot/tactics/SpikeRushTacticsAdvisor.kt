@@ -123,7 +123,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
             }
 
-            if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
+            if (GoForKickoffStep.getKickoffType(car) == GoForKickoffStep.KickoffType.CENTER) {
                 return RetryableViableStepPlan(Posture.DEFENSIVE, "Covering goal as second man on kickoff", GetOnDefenseStep())
                 { b -> b.tacticalSituation.goForKickoff }
             }

@@ -42,7 +42,7 @@ abstract class HoopsStateMachineTacticsAdvisor : TacticsAdvisor {
                 return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
             }
 
-            if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
+            if (GoForKickoffStep.getKickoffType(car) == GoForKickoffStep.KickoffType.CENTER) {
                 return RetryableViableStepPlan(Posture.DEFENSIVE, "Second man on center kickoff", GetOnDefenseStep()) { b -> b.tacticalSituation.goForKickoff }
             }
 
