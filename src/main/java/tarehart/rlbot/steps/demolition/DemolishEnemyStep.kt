@@ -20,6 +20,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 import java.awt.Color
+import java.lang.Math.random
 import java.util.*
 
 class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget: CarData? = null,
@@ -40,10 +41,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         // Seconds away from demo
         Demoing,
         // Demo was a success
-        Quip,
-        // Chat has been blocked for this demo
-        // Controlled by CHAT_ATTENUATION
-        Inhibited
+        Quip
     }
 
     class WheelContactWatcher(val carIndex: Int) {
@@ -76,34 +74,28 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
     private lateinit var selfContactWatcher: WheelContactWatcher
     private lateinit var carPredictor: CarPredictor
     private var enemyWatcher: WheelContactWatcher? = null
+    private var deadline: GameTime? = null
 
     // 0 = chat every time
     // 0.5 = chat half the time
     // 1 = chat never
-    private val CHAT_ATTENUATION = 0.3
-    private var chatProgression = ChatProgression.Incoming;
+    private val shouldChat = isAdversityBot && random() > 0.3
+    private var previousChatType = ChatProgression.Quip
 
     private fun resetChat() {
-        chatProgression = ChatProgression.Incoming
+        previousChatType = ChatProgression.Quip
     }
 
-    private fun progressChat(playerIndex: Int, targetProgression: ChatProgression) {
-        if (!isAdversityBot) return
-        if (chatProgression == targetProgression) when(chatProgression) {
+    private fun progressChat(playerIndex: Int, desiredChat: ChatProgression) {
+        if (!shouldChat) return
+
+        // Only emit chat when we have just made a transition.
+        if (previousChatType == desiredChat) return
+
+        when(desiredChat) {
             ChatProgression.Incoming -> {
-                if (Random().nextDouble() < CHAT_ATTENUATION) {
-                    chatProgression = ChatProgression.Inhibited
-                } else {
-                    val incomingChatOptions = arrayOf(
-                            QuickChatSelection.Information_InPosition
-                            , QuickChatSelection.Information_Incoming
-                            // , QuickChatSelection.Information_GoForIt
-                            // , QuickChatSelection.Information_TakeTheShot
-                    )
-                    val randomIncoming = incomingChatOptions[Random().nextInt(incomingChatOptions.size)]
-                    RLBotDll.sendQuickChat(playerIndex, false, randomIncoming)
-                    chatProgression = ChatProgression.Demoing
-                }
+                val incomingChatOptions = arrayOf(QuickChatSelection.Information_InPosition, QuickChatSelection.Information_Incoming)
+                RLBotDll.sendQuickChat(playerIndex, false, incomingChatOptions.random())
             }
             ChatProgression.Demoing -> {
                 val demoingChatOptions = arrayOf(
@@ -113,9 +105,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
                         , QuickChatSelection.Custom_Toxic_404NoSkill
                         , QuickChatSelection.Custom_Toxic_DeAlloc
                 )
-                val randomDemoing = demoingChatOptions[Random().nextInt(demoingChatOptions.size)]
-                RLBotDll.sendQuickChat(playerIndex, false, randomDemoing)
-                chatProgression = ChatProgression.Quip
+                RLBotDll.sendQuickChat(playerIndex, false, demoingChatOptions.random())
             }
             ChatProgression.Quip -> {
                 val quipChatOptions = arrayOf(
@@ -131,37 +121,18 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
                         , QuickChatSelection.Compliments_WhatAPlay
                         , QuickChatSelection.PostGame_Rematch
                 )
-                val randomQuip = quipChatOptions[Random().nextInt(quipChatOptions.size)]
-                RLBotDll.sendQuickChat(playerIndex, false, randomQuip)
-                chatProgression = ChatProgression.Incoming
+                RLBotDll.sendQuickChat(playerIndex, false, quipChatOptions.random())
             }
         }
+
+        previousChatType = desiredChat
     }
 
 
     override fun doInitialComputation(bundle: TacticalBundle) {
         super.doInitialComputation(bundle)
 
-        val car = bundle.agentInput.myCarData
-        val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
-        val distancePlot = bundle.tacticalSituation.teamIntercepts.first { it.car == car }.distancePlot
 
-        val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
-            specificTarget ?: selectEnemyCar(bundle) ?: return
-
-        if (!::carPredictor.isInitialized) {
-            carPredictor = CarPredictor(enemyCar.playerIndex)
-        }
-
-        val path = carPredictor.predictCarMotion(bundle, Duration.ofSeconds(SECONDS_TO_PREDICT))
-        val renderer = car.renderer
-        path.renderIn3d(renderer)
-
-        val carIntercept = CarInterceptPlanner.getCarIntercept(car, path, distancePlot)
-
-        carIntercept?.let {
-            RenderUtil.drawSphere(renderer, it.space, 1F, Color.RED)
-        }
     }
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
@@ -174,11 +145,10 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
 
         val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
-        selectEnemyCar(bundle)
+        selectEnemyCar(bundle) ?: return null
 
-        if (enemyCar == null) {
-            resetChat()
-            return null
+        if (!::carPredictor.isInitialized) {
+            carPredictor = CarPredictor(enemyCar.playerIndex)
         }
 
         if(enemyCar.isDemolished) {
@@ -196,6 +166,12 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
             return null // We already attempted a midair dodge, and now we've hit the ground. Give up.
         }
 
+        deadline?.let {
+            if (car.time > it) {
+                return null
+            }
+        }
+
         if (enemyCar.position.distance(car.position) < 30) {
             progressChat(bundle.agentInput.playerIndex, ChatProgression.Incoming)
             enemyWatcher = WheelContactWatcher(enemyCar.playerIndex) // Commit to demolishing this particular enemy
@@ -203,15 +179,13 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
         val transition = when (demolishPhase) {
 
-            DemolishPhase.CHASE -> chase(bundle, enemyCar) ?:
-            return null
+            DemolishPhase.CHASE -> chase(bundle, enemyCar) ?: return null
 
             DemolishPhase.AWAIT_LIFTOFF -> DemolishTransition(
                     AgentOutput().withBoost().withJump(),
                     if (!car.hasWheelContact) DemolishPhase.JUMP else DemolishPhase.AWAIT_LIFTOFF)
 
-            DemolishPhase.JUMP -> jump(bundle, enemyCar) ?:
-            return null
+            DemolishPhase.JUMP -> jump(bundle, enemyCar) ?: return null
 
             else -> DemolishTransition(AgentOutput().withThrottle(1.0), demolishPhase)
         }
@@ -235,7 +209,14 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         val distancePlot = AccelerationModel.simulateAcceleration(car, Duration.ofSeconds(SECONDS_TO_PREDICT), car.boost)
         val carIntercept = CarInterceptPlanner.getCarIntercept(car, path, distancePlot)
 
+        val deadlineSnapshot = deadline
+
         carIntercept?.let {
+
+            if (deadlineSnapshot == null) {
+                deadline = it.time.plusSeconds(2)
+            }
+
             RenderUtil.drawSphere(renderer, it.space, 1.0, Color.RED)
 
             val secondsTillContact = Duration.between(car.time, it.time).seconds
