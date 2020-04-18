@@ -71,9 +71,11 @@ class AirBudTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input) {
         val situation = bundle.tacticalSituation
         val car = input.myCarData
 
-        // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff && situation.teamPlayerWithInitiative?.car == car) {
-            return Plan(Posture.KICKOFF).withStep(GoForKickoffStep())
+        kickoffAdvisor.gradeKickoff(bundle)
+
+        if (Posture.KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
+            val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(car), bundle)
+            return GoForKickoffStep.chooseKickoffPlan(bundle, kickoffAdvice)
         }
 
         if (Posture.LANDING.canInterrupt(currentPlan) && !car.hasWheelContact &&

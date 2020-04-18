@@ -37,6 +37,10 @@ class RetryableViableStepPlan(
             return "${posture.name} RetryableViable - $label (${currentStepIndex + 1}/${steps.size}) - ${currentStep.situation}"
         }
 
+    override fun isComplete(): Boolean {
+        return canceled
+    }
+
     private val fallbackDuration = Duration.ofMillis(500)
     private var fallbackExpiration: GameTime? = null
 
@@ -86,7 +90,7 @@ class RetryableViableStepPlan(
 
     override val currentStep: Step
         get() {
-            return if (fallbackExpiration == null) {
+            return if (fallbackExpiration == null && steps.size > 0) {
                 steps[currentStepIndex]
             } else {
                 fallback

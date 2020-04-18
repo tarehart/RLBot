@@ -126,7 +126,7 @@ open class AerialStrike(height: Float, private val kickStrategy: KickStrategy?):
             val speedRatio = car.velocity.magnitude() / avgSpeedNeeded
             val timeToAirRatio = AerialMath.timeToAir(intercept.space.z) / (intercept.time - car.time).seconds
 
-            if (speedRatio < 0.6 || timeToAirRatio < 0.6) {
+            if (speedRatio < 0.6 || timeToAirRatio < 0.5) {
                 return false
             }
 

@@ -98,7 +98,9 @@ object SetPieces {
                 .withStep(LandGracefullyStep(LandGracefullyStep.FACE_BALL))
     }
 
-    fun anyDirectionFlip(car: CarData, direction: Vector2): Plan {
+    fun anyDirectionBlindSequence(car: CarData, direction: Vector2): BlindSequence {
+
+        val sequence = BlindSequence()
 
         val velocityOffset = VectorUtil.project(car.velocity.flatten(), VectorUtil.orthogonal(direction))
         val realDirection = direction.scaledToMagnitude(10.0) - velocityOffset
@@ -107,8 +109,7 @@ object SetPieces {
         val pitch = -cos(correctionAngle)
         val roll = -sin(correctionAngle)
 
-        val plan = Plan()
-                .unstoppable()
+        sequence
                 .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput().withJump(true)))
                 .withStep(BlindStep(Duration.ofSeconds(.05), AgentOutput()))
                 .withStep(BlindStep(Duration.ofSeconds(.24),
@@ -118,7 +119,7 @@ object SetPieces {
                                 .withRoll(roll)))
 
         if (pitch > .5) {
-            plan
+            sequence
                     .withStep(BlindStep(Duration.ofSeconds(.4), AgentOutput()
                             .withPitch(-1.0)
                     ))
@@ -128,6 +129,11 @@ object SetPieces {
                     ))
         }
 
-        return plan.withStep(LandGracefullyStep { direction })
+        return sequence
+    }
+
+    fun anyDirectionFlip(car: CarData, direction: Vector2): Plan {
+        val sequence = anyDirectionBlindSequence(car, direction);
+        return Plan().unstoppable().withStep(sequence).withStep(LandGracefullyStep { direction })
     }
 }

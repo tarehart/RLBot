@@ -31,7 +31,7 @@ import kotlin.math.min
  */
 class DiagonalStrike(height: Float): StrikeProfile() {
 
-    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height) ?: .8F
+    private val jumpTime = ManeuverMath.secondsForMashJumpHeight(height - ArenaModel.BALL_RADIUS * .7F) ?: .8F
     override val preDodgeTime = Duration.ofSeconds(jumpTime + .02F)
     override val postDodgeTime = Duration.ofMillis(30)
     override val speedBoost = 10.0F

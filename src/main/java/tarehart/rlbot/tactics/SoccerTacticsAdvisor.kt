@@ -73,22 +73,9 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
         // goNuts = scoreAdvantage < -1
         kickoffAdvisor.gradeKickoff(bundle)
 
-        // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
-        if (KICKOFF.canInterrupt(currentPlan) && situation.goForKickoff) {
-            if (situation.teamPlayerWithInitiative?.car == car) {
-                val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(bundle), bundle)
-                return Plan(KICKOFF).withStep(GoForKickoffStep(
-                        dodgeDistance = kickoffAdvice.dodgeRange,
-                        counterAttack = kickoffAdvice.counterAttack))
-            }
-
-            if (GoForKickoffStep.getKickoffType(bundle) == GoForKickoffStep.KickoffType.CENTER) {
-                val expiryTime = car.time.plusSeconds(3)
-                return RetryableViableStepPlan(DEFENSIVE, "Covering goal on kickoff as second man", GetOnDefenseStep()) { b -> b.agentInput.time < expiryTime }
-                        .withStep(GetOnDefenseStep())
-            }
-
-            return Plan(KICKOFF, "Getting boost during kickoff").withStep(GetBoostStep())
+        if ((currentPlan == null || currentPlan.posture.lessUrgentThan(KICKOFF)) && situation.goForKickoff) {
+            val kickoffAdvice = kickoffAdvisor.giveAdvice(GoForKickoffStep.getKickoffType(car), bundle)
+            return GoForKickoffStep.chooseKickoffPlan(bundle, kickoffAdvice)
         }
 
         if (LANDING.canInterrupt(currentPlan)) {
@@ -356,7 +343,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             val goalCenter = goal.center.flatten()
             val ballToGoal = goalCenter.minus(expectedContact)
             val generousAngle = Vector2.angle(goalCenter, ballToGoal) < Math.PI * .35
-            val generousTriangle = measureShotTriangle(goal, expectedContact) > Math.PI / 4
+            val generousTriangle = measureShotTriangle(goal, expectedContact) > Math.PI / 10
 
             return generousAngle || generousTriangle
         }

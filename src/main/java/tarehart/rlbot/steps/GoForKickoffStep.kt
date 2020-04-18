@@ -2,15 +2,18 @@ package tarehart.rlbot.steps
 
 import tarehart.rlbot.AgentOutput
 import tarehart.rlbot.TacticalBundle
+import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.BotMath.numberDistance
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.blind.BlindStep
+import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.MidairStrikeStep
 import tarehart.rlbot.steps.travel.ParkTheCarStep
+import tarehart.rlbot.tactics.KickoffAdvice
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
@@ -37,7 +40,7 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         val car = bundle.agentInput.myCarData
 
         if (kickoffType == null) {
-            kickoffType = getKickoffType(bundle)
+            kickoffType = getKickoffType(car)
             startTime = bundle.agentInput.time
         }
 
@@ -52,12 +55,12 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
 
         val target: Vector2
         val ySide = sign(car.position.y)
-        if (kickoffType == KickoffType.CHEATIN && abs(car.position.y) > CHEATIN_BOOST_Y + 10) {
+        if ((kickoffType == KickoffType.CHEATIN_LEFT || kickoffType == KickoffType.CHEATIN_RIGHT) && abs(car.position.y) > CHEATIN_BOOST_Y + 10) {
             // Steer toward boost
             target = Vector2(0.0, ySide * CHEATIN_BOOST_Y)
 
         } else {
-            target = Vector2(0.0, ySide * 6)
+            target = Vector2(0.0, ySide * 10)
         }
 
         if (kickoffType == KickoffType.SPACE_JAM) {
@@ -77,12 +80,14 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         return SteerUtil.steerTowardGroundPosition(car, target, detourForBoost = false)
     }
 
-    enum class KickoffType {
-        CENTER,
-        CHEATIN,
-        SLANTERD,
-        SPACE_JAM,
-        UNKNOWN
+    enum class KickoffType constructor(val rank: Int) {
+        CENTER(5),
+        CHEATIN_RIGHT(4),
+        CHEATIN_LEFT(3),
+        SLANTERD_RIGHT(2),
+        SLANTERD_LEFT(1),
+        SPACE_JAM(10),
+        UNKNOWN(100)
     }
 
     companion object {
@@ -95,8 +100,7 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         private val WIGGLE_ROOM = 2.0F
         private val CHEATIN_BOOST_Y = 58.0F
 
-        fun getKickoffType(bundle: TacticalBundle): KickoffType {
-            val car = bundle.agentInput.myCarData
+        fun getKickoffType(car: CarData): KickoffType {
             val xPosition = abs(car.position.x)
             val yPosition = abs(car.position.y)
             if (numberDistance(CENTER_KICKOFF_X, xPosition) < WIGGLE_ROOM && numberDistance(CENTER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
@@ -106,12 +110,12 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
 
             if (numberDistance(CHEATER_KICKOFF_X, xPosition) < WIGGLE_ROOM && numberDistance(CHEATER_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
                 BotLog.println("it be cheatin", car.playerIndex)
-                return KickoffType.CHEATIN
+                return if (xPosition * car.team.side > 0) KickoffType.CHEATIN_LEFT else KickoffType.CHEATIN_RIGHT
             }
 
             if (numberDistance(DIAGONAL_KICKOFF_X, xPosition) < WIGGLE_ROOM && numberDistance(DIAGONAL_KICKOFF_Y, yPosition) < WIGGLE_ROOM) {
                 BotLog.println("it be slanterd", car.playerIndex)
-                return KickoffType.SLANTERD
+                return if (xPosition * car.team.side > 0) KickoffType.SLANTERD_LEFT else KickoffType.SLANTERD_RIGHT
             }
 
             if (ArenaModel.isMicroGravity()) {
@@ -120,6 +124,24 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
 
             BotLog.println("what on earth", car.playerIndex)
             return KickoffType.UNKNOWN
+        }
+
+        fun chooseKickoffPlan(bundle: TacticalBundle, kickoffAdvice: KickoffAdvice): Plan {
+            val car = bundle.agentInput.myCarData
+            val kickoffPriorities = bundle.agentInput.getTeamRoster(car.team).sortedBy { GoForKickoffStep.getKickoffType(it).rank }
+
+            if (kickoffPriorities.first() == car) {
+                return Plan(Posture.KICKOFF).withStep(GoForKickoffStep(
+                        dodgeDistance = kickoffAdvice.dodgeRange,
+                        counterAttack = kickoffAdvice.counterAttack))
+            }
+
+            if (kickoffPriorities.last() == car) {
+                val expiryTime = car.time.plusSeconds(3)
+                return RetryableViableStepPlan(Posture.KICKOFF, "Covering goal on kickoff as last back", GetOnDefenseStep()) { b -> b.agentInput.time < expiryTime }
+            }
+
+            return Plan(Posture.KICKOFF, "Getting boost during kickoff").withStep(GetBoostStep())
         }
     }
 }
