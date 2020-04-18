@@ -7,22 +7,20 @@ import tarehart.rlbot.input.CarData
 import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
-import tarehart.rlbot.intercept.strike.DodgelessJumpStrike
-import tarehart.rlbot.intercept.strike.DoubleJumpPokeStrike
+import tarehart.rlbot.intercept.strike.AerialStrike
+import tarehart.rlbot.intercept.strike.ReflexJumpStrike
 import tarehart.rlbot.intercept.strike.StrikeProfile
+import tarehart.rlbot.intercept.strike.Style
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.BallPhysics
 import tarehart.rlbot.physics.ChipOption
-import tarehart.rlbot.planning.Plan
-import tarehart.rlbot.planning.Posture
 import tarehart.rlbot.planning.SteerUtil
 import tarehart.rlbot.planning.cancellation.BallPathDisruptionMeter
 import tarehart.rlbot.rendering.RenderUtil
 import tarehart.rlbot.steps.NestedPlanStep
-import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.BotLog
 import tarehart.rlbot.tuning.BotLog.println
@@ -47,7 +45,7 @@ import java.awt.Color
  * but also because the hits are really weak. If we dodge it'll be better. If we stretch higher we can accelerate
  * more before jumping.
  */
-class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
+open class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
 
     private var slotStart: Vector3? = null
     private var slotEnd: Vector3? = null
@@ -79,17 +77,13 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
             return null
         }
 
-        val overallPredicate = { cd: CarData, st: SpaceTime ->
-            val verticallyAccessible = StrikePlanner.isVerticallyAccessible(cd, st)
-            val viableKick = kickStrategy.looksViable(cd, st.space)
-            verticallyAccessible && viableKick
-        }
+        val overallPredicate = { cd: CarData, st: SpaceTime -> kickStrategy.looksViable(cd, st.space) }
 
         val distancePlot = bundle.tacticalSituation.expectedContact.distancePlot
 
         val sliceToCar = favoredSliceToCar ?: Vector3()
         val intercept = InterceptCalculator.getFilteredInterceptOpportunity(car, ballPath, distancePlot, sliceToCar, overallPredicate,
-                strikeProfileFn = { height -> selectStrike(height) }) ?:
+                strikeProfileFn = { heightOfBall -> selectStrike(heightOfBall, kickStrategy) }) ?:
         return null
 
         if (slotStart == null) {
@@ -146,7 +140,7 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
                 renderer.finishAndSend()
             }
 
-            val jumpOutput = reflexManeuver(car, intercept, bundle)
+            val jumpOutput = reflexManeuver(car, intercept, favoredChipOption, bundle)
             if (jumpOutput != null) {
                 return jumpOutput
             }
@@ -173,15 +167,30 @@ class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep() {
                 conserveBoost = false)
     }
 
-    private fun selectStrike(height: Float): StrikeProfile {
-        return DodgelessJumpStrike(height)
+    private fun selectStrike(heightOfBall: Float, kickStrategy: KickStrategy): StrikeProfile {
+
+        if (heightOfBall > StrikePlanner.NEEDS_AERIAL_THRESHOLD) {
+            return AerialStrike(heightOfBall, kickStrategy)
+        }
+
+        // Rough approximation of the contact point
+        return ReflexJumpStrike(heightOfBall - ReflexJumpStrike.STANDARD_HEIGHT_OFFSET)
+        // return DodgelessJumpStrike(height)
         // TODO: enable some higher stuff... Reflex jump strike?
     }
 
-    private fun reflexManeuver(car: CarData, intercept: Intercept, bundle: TacticalBundle): AgentOutput? {
+    private fun reflexManeuver(car: CarData, intercept: Intercept, chipOption: ChipOption?, bundle: TacticalBundle): AgentOutput? {
 
-        intercept.strikeProfile.getPlan(car, intercept.toSpaceTime())?.let {
-            return startPlan(it, bundle)
+        if (intercept.strikeProfile.style == Style.REFLEX_JUMP_HIT && chipOption != null) {
+            // Redo the strike profile because we have a more accurate impact point here vs what we had to use
+            // in the intercept calculator
+            ReflexJumpStrike(chipOption.impactPoint.z).getPlan(car, intercept.toSpaceTime())?.let {
+                return startPlan(it, bundle)
+            }
+        } else {
+            intercept.strikeProfile.getPlan(car, intercept.toSpaceTime())?.let {
+                return startPlan(it, bundle)
+            }
         }
 
         return null

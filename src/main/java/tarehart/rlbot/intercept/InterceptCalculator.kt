@@ -28,6 +28,10 @@ object InterceptCalculator {
         return getFilteredInterceptOpportunity(carData, ballPath, acceleration, Vector3(), { _, _ ->  true })
     }
 
+    /**
+     * The predicate does NOT need to account for vertical accessibility, internally we will already
+     * ask the chosen strike profile about that.
+     */
     @JvmOverloads
     fun getFilteredInterceptOpportunity(
             carData: CarData,

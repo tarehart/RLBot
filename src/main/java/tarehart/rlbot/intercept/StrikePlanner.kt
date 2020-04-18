@@ -104,6 +104,7 @@ object StrikePlanner {
             Style.DRIBBLE -> DribbleStrike()
             Style.DOUBLE_JUMP_POKE -> DoubleJumpPokeStrike(height)
             Style.DODGELESS_JUMP_HIT -> DodgelessJumpStrike(height)
+            Style.REFLEX_JUMP_HIT -> ReflexJumpStrike(height)
         }
     }
 
