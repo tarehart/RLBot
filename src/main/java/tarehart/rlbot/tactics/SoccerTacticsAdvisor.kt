@@ -188,8 +188,6 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             // For truly urgent situations, we can rely on defensive overrides in findMoreUrgentPlan. We'll be brave here.
             return RetryableViableStepPlan(NEUTRAL, "Team does not have my back and I'm not first to the ball", ShadowThePlayStep())
             { b -> !RotationAdvisor.teamHasMeCovered(b) }
-                    .withStep(GetBoostStep())
-                    .withStep(ChallengeStep())
         }
 
         if (raceResult.seconds > 0 || !threatReport.enemyShotAligned || goNuts) {
