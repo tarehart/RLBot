@@ -42,11 +42,11 @@ class KickAtEnemyGoal : KickStrategy {
         val ballPositionFlat = ballPosition.flatten()
 
         val leftPost = GoalUtil.transformNearPost(
-                GoalUtil.getEnemyGoal(car.team).getLeftPost(6.0).flatten(),
+                GoalUtil.getEnemyGoal(car.team).getLeftPost(9.0).flatten(),
                 ballPositionFlat)
 
         val rightPost = GoalUtil.transformNearPost(
-                GoalUtil.getEnemyGoal(car.team).getRightPost(6.0).flatten(),
+                GoalUtil.getEnemyGoal(car.team).getRightPost(9.0).flatten(),
                 ballPositionFlat)
 
         val toLeftCorner = leftPost - ballPositionFlat

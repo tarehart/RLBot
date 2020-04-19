@@ -10,6 +10,8 @@ import tarehart.rlbot.intercept.InterceptCalculator
 import tarehart.rlbot.intercept.StrikePlanner
 import tarehart.rlbot.intercept.strike.FlipHitStrike
 import tarehart.rlbot.intercept.strike.Style
+import tarehart.rlbot.math.BallSlice
+import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.ArenaModel
@@ -144,8 +146,8 @@ class InterceptStep(
             fullAcceleration: DistancePlot,
             interceptModifier: Vector3): Intercept? {
 
-        val strikeProfileFn = { height: Float ->
-            val desiredProfile = StrikePlanner.computeStrikeProfile(height)
+        val strikeProfileFn = { ballSpaceTime: BallSlice ->
+            val desiredProfile = StrikePlanner.computeStrikeProfile(ballSpaceTime.space.z)
             if (needsChallenge && desiredProfile.style == Style.CHIP) {
                 FlipHitStrike()
             } else {

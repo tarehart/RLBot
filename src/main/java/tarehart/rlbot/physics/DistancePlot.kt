@@ -122,7 +122,7 @@ class DistancePlot(start: DistanceTimeSpeed) {
         val secondsForPreDodge = min(strikeProfile.preDodgeTime.seconds, max(0F, time.seconds))
         val secondsForPostDodge = max(0F, min(time.seconds - strikeProfile.preDodgeTime.seconds, strikeProfile.postDodgeTime.seconds))
 
-        val speedBoost = if (time < strikeProfile.strikeDuration) strikeProfile.speedBoost else 0F
+        val speedBoost = if (time > strikeProfile.strikeDuration) strikeProfile.speedBoost else 0F
 
         val dts = getMotionAfterDuration(Duration.ofSeconds(secondsSpentAccelerating)) ?: return null
         val increasedSpeed = min(dts.speed + speedBoost, AccelerationModel.SUPERSONIC_SPEED)

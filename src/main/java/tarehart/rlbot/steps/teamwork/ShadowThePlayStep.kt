@@ -29,7 +29,7 @@ class ShadowThePlayStep: NestedPlanStep(), UnfailingStep {
 
         val ballPosition = bundle.agentInput.ballPosition
         val ballToOwnGoal = GoalUtil.getOwnGoal(car.team).center.flatten() - ballPosition.flatten()
-        val backoffVectorMagnitude = (ballToOwnGoal.magnitude() - 5).coerceAtMost(70F)
+        val backoffVectorMagnitude = (ballToOwnGoal.magnitude() - 5).coerceAtMost(90F)
         var idealPosition = ballPosition.flatten() + ballToOwnGoal.scaledToMagnitude(backoffVectorMagnitude)
 
         bundle.agentInput.getTeamRoster(car.team).forEach {

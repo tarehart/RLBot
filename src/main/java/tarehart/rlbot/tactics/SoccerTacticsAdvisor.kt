@@ -111,17 +111,12 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
 
             println("Canceling current plan. Going for clear!", input.playerIndex)
 
-            situation.expectedContact.intercept?.let {
-                val carToIntercept = it.space - car.position
-                val carApproachVsBallApproach = carToIntercept.flatten().correctionAngle(input.ballVelocity.flatten())
-
-                if (Math.abs(carApproachVsBallApproach) > Math.PI / 2) {
-                    return FirstViableStepPlan(CLEAR, "Needs clear, seems boomable")
-                            .withStep(FlexibleKickStep(KickAtEnemyGoal()))
-                            .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
-                            // TODO: an intercept in these circumstances seems suspect
-                            .withStep(InterceptStep(Vector3(0.0, Math.signum(GoalUtil.getOwnGoal(car.team).center.y) * 1.5, 0.0)))
-                }
+            if (ManeuverMath.getInterceptLocationFavorability(situation.expectedContact, GoalUtil.getEnemyGoal(car.team).center.flatten()) > .8) {
+                return FirstViableStepPlan(CLEAR, "Needs clear, aligned with enemy goal")
+                        .withStep(FlexibleKickStep(KickAtEnemyGoal()))
+                        .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+                        // TODO: an intercept in these circumstances seems suspect
+                        .withStep(InterceptStep(Vector3(0.0, Math.signum(GoalUtil.getOwnGoal(car.team).center.y) * 1.5, 0.0)))
             }
 
             return RetryableViableStepPlan(CLEAR, "Need to clear", GetOnDefenseStep()) { b -> b.tacticalSituation.needsDefensiveClear }

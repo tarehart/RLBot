@@ -5,6 +5,7 @@ import tarehart.rlbot.math.DistanceTimeSpeed
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
 import tarehart.rlbot.physics.DistancePlot
+import tarehart.rlbot.planning.CarWithIntercept
 import tarehart.rlbot.routing.DistanceDuration
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.time.Duration
@@ -144,6 +145,13 @@ object ManeuverMath {
         }
 
         return forwardAccelPlot.getMotionUponSpeed(idealSpeed)
+    }
+
+    fun getInterceptLocationFavorability(carWithIntercept: CarWithIntercept, sendBallHere: Vector2): Float {
+        if (carWithIntercept.intercept == null) {
+            return -1F
+        }
+        return Vector2.alignment(carWithIntercept.car.position.flatten(), carWithIntercept.intercept.space.flatten(), sendBallHere)
     }
 
 }

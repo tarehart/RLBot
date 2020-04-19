@@ -28,14 +28,14 @@ class ReflexJumpStrike(private val heightOfContactPoint: Float): StrikeProfile()
         val checklist = checkJumpHitReadiness(car, intercept)
         if (checklist.readyToLaunch()) {
             BotLog.println("Performing Reflex Jump Hit!", car.playerIndex)
-            val plan = Plan().unstoppable().withStep(ReflexStrikeStep(heightOfContactPoint, intercept.time))
+            val plan = Plan().unstoppable().withStep(ReflexStrikeStep(heightOfContactPoint, intercept.time.plusSeconds(.5)))
             return plan.withStep(LandGracefullyStep(LandGracefullyStep.FACE_MOTION))
         }
         return null
     }
 
     override fun isVerticallyAccessible(car: CarData, intercept: SpaceTime): Boolean {
-        return intercept.space.z < MAX_JUMP + STANDARD_HEIGHT_OFFSET
+        return intercept.space.z < MAX_JUMP
     }
 
     override fun getPreKickWaypoint(car: CarData, intercept: Intercept, desiredKickForce: Vector3, expectedArrivalSpeed: Float): PreKickWaypoint? {
@@ -63,8 +63,6 @@ class ReflexJumpStrike(private val heightOfContactPoint: Float): StrikeProfile()
 
         val MIN_JUMP = JUMP_HEIGHT_CURVE[0].second
         val MAX_JUMP = JUMP_HEIGHT_CURVE.last().second
-
-        val STANDARD_HEIGHT_OFFSET = ArenaModel.BALL_RADIUS * .3F
 
         /**
          * The car starts on the ground. Presses and holds jump the entire time, and pitches backwards

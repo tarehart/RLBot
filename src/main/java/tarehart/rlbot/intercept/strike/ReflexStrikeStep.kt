@@ -15,6 +15,7 @@ import kotlin.math.max
 class ReflexStrikeStep(val desiredHeightOfContactPoint: Float, val deadline: GameTime): NestedPlanStep() {
 
     val jumpPlan = getJumpPlan()
+    var startedDodge = false
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
@@ -22,6 +23,10 @@ class ReflexStrikeStep(val desiredHeightOfContactPoint: Float, val deadline: Gam
         if (car.velocity.z < -1 || car.time > deadline) {
             BotLog.println("Missed our chance at a reflex strike.", car.playerIndex)
             return null
+        }
+
+        if (startedDodge) {
+            return null // Already dodged successfully.
         }
 
         val slice = CarSlice(car)
@@ -36,6 +41,8 @@ class ReflexStrikeStep(val desiredHeightOfContactPoint: Float, val deadline: Gam
             val max = max(forward, left)
             val pitch = -forward / max
             val roll = -left / max
+
+            startedDodge = true
 
             return startPlan(Plan().unstoppable()
                     .withStep(BlindStep(UNJUMP_TIME, AgentOutput()))

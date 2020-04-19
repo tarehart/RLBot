@@ -18,6 +18,8 @@ import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.geom.Line2D
+import kotlin.math.max
+import kotlin.math.min
 
 class ChallengeStep: NestedPlanStep() {
 
@@ -39,12 +41,15 @@ class ChallengeStep: NestedPlanStep() {
 
         val enemyShotLine = GoalUtil.getOwnGoal(bundle.agentInput.team).center - enemyContact.space
 
+        val defensiveNodeDistance = max(ballAdvantage.seconds * -20F, MIN_DEFENSIVE_NODE_DISTANCE)
+
         val flatPosition = car.position.flatten()
-        val defensiveNode = ArenaModel.clampPosition(enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(DEFENSIVE_NODE_DISTANCE), 3.0)
+        val defensiveNode = ArenaModel.clampPosition(
+                enemyContact.space.flatten() + enemyShotLine.flatten().scaledToMagnitude(defensiveNodeDistance), 3.0)
 
         latestDefensiveNode = defensiveNode
 
-        val defensiveNodeDistance = flatPosition.distance(defensiveNode)
+        val carDistanceToDefensiveNode = flatPosition.distance(defensiveNode)
 
         if (tacticalSituation.distanceBallIsBehindUs > 0 && ballAdvantage.seconds > -.2) {
             startPlan(
@@ -55,7 +60,7 @@ class ChallengeStep: NestedPlanStep() {
 
         // TODO: also attack aggressively if the enemy appears to be dribbling
 
-        if (defensiveNodeDistance < DEFENSIVE_NODE_DISTANCE + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
+        if (carDistanceToDefensiveNode < MIN_DEFENSIVE_NODE_DISTANCE + 15 && ballAdvantage.seconds > -.3) { // Don't set ball advantage too low or you'll break kickoffs.
             startPlan(
                     Plan(Posture.DEFENSIVE)
                             .withStep(InterceptStep(enemyShotLine.scaledToMagnitude(1.5))),
@@ -71,11 +76,11 @@ class ChallengeStep: NestedPlanStep() {
         val renderer = car.renderer
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.0, Color(0.8f, 0.0f, 0.8f))
         RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), enemyContact.space), 1.5, Color(0.8f, 0.0f, 0.8f))
-        RenderUtil.drawSquare(renderer, Plane(enemyShotLine.normaliseCopy(), defensiveNode.withZ(1.0)), 1.5, Color.MAGENTA)
+        RenderUtil.drawSphere(renderer, defensiveNode.withZ(1.0), 1.5, Color.BLUE)
 
         // If we're too greedy, we'll be late to kickoffs
         return SteerUtil.steerTowardGroundPosition(car, defensiveNode,
-                detourForBoost = defensiveNodeDistance > 50 && car.boost < 50)
+                detourForBoost = carDistanceToDefensiveNode > 50 && car.boost < 50)
     }
 
     override fun drawDebugInfo(graphics: Graphics2D) {
@@ -94,6 +99,6 @@ class ChallengeStep: NestedPlanStep() {
 
     companion object {
 
-        const val DEFENSIVE_NODE_DISTANCE = 18.0
+        const val MIN_DEFENSIVE_NODE_DISTANCE = 18.0F
     }
 }

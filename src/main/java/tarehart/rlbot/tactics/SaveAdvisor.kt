@@ -17,6 +17,7 @@ import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.InterceptStep
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.tuning.BotLog
+import tarehart.rlbot.tuning.ManeuverMath
 
 object SaveAdvisor {
 
@@ -34,14 +35,6 @@ object SaveAdvisor {
                 situation.distanceBallIsBehindUs < 0) {
             BotLog.println("Need to save, but also need to challenge first!", car.playerIndex)
             savePlan.withStep(ChallengeStep())
-        }
-
-        bundle.tacticalSituation.expectedContact.intercept?.let {
-            val goalToContact = (it.space - GoalUtil.getOwnGoal(car.team).center).flatten()
-            val contactToBall = (bundle.agentInput.ballPosition - it.space).flatten()
-            if (goalToContact.dotProduct(contactToBall) > -0.3) {
-                savePlan.withStep(InterceptStep(Vector3(0, car.team.side * 0.9, 0)))
-            }
         }
 
         savePlan.withStep(FlexibleKickStep(KickAwayFromOwnGoal()))

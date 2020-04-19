@@ -51,6 +51,6 @@ class ChipStrike: StrikeProfile() {
     }
 
     companion object {
-        const val MAX_HEIGHT_OF_BALL_FOR_CHIP = ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z * .5
+        const val MAX_HEIGHT_OF_BALL_FOR_CHIP = ArenaModel.BALL_RADIUS + .2
     }
 }

@@ -20,7 +20,7 @@ import kotlin.math.PI
 
 class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : NestedPlanStep() {
 
-    var wheelContactFrames = 0
+    var wheelContactMoment: GameTime? = null
 
     override fun getLocalSituation(): String {
         return "Landing gracefully"
@@ -31,9 +31,14 @@ class LandGracefullyStep(private val facingFn: (TacticalBundle) -> Vector2) : Ne
         val car = bundle.agentInput.myCarData
 
         if (car.hasWheelContact) {
-            wheelContactFrames++
-            if (wheelContactFrames > 5) {
-                return null
+            if (wheelContactMoment == null) {
+                wheelContactMoment = car.time
+            }
+
+            wheelContactMoment?.let {
+                if ((car.time - it).seconds > .2) {
+                    return null
+                }
             }
         }
 
