@@ -10,8 +10,7 @@ import tarehart.rlbot.planning.*
 import tarehart.rlbot.routing.PositionFacing
 import tarehart.rlbot.steps.blind.BlindStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
-import tarehart.rlbot.steps.strikes.InterceptStep
-import tarehart.rlbot.steps.strikes.MidairStrikeStep
+import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.travel.ParkTheCarStep
 import tarehart.rlbot.tactics.KickoffAdvice
 import tarehart.rlbot.time.Duration
@@ -38,6 +37,11 @@ class GoForKickoffStep(val dodgeDistance:Double = 20.0, val counterAttack: Boole
         }
 
         val car = bundle.agentInput.myCarData
+
+        if (bundle.tacticalSituation.ballAdvantage.seconds > 1) {
+            BotLog.println("Opponent is not going for kickoff, will avoid rolling it to them.", car.playerIndex)
+            return startPlan(Plan().withStep(FlexibleKickStep(KickAwayFromOpponent())), bundle)
+        }
 
         if (kickoffType == null) {
             kickoffType = getKickoffType(car)

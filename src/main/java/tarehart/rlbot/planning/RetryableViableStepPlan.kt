@@ -109,7 +109,7 @@ class RetryableViableStepPlan(
             }
             text += step.javaClass.simpleName + "\n"
         }
-        if (expiration != null) {
+        if (expiration != null && expiration > time) {
             text += "#".repeat((expiration - time).millis.toInt() / 50)
         }
 

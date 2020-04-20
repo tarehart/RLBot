@@ -107,7 +107,8 @@ open class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep
         val firmStart = slotStart
         val firmEnd = intercept.space
         if (Math.abs(steerCorrection) < 0.03) {
-            val idealDirection = kickStrategy.getKickDirection(car, intercept.space) ?:
+            val easyKick = intercept.space - car.position
+            val idealDirection = kickStrategy.getKickDirection(bundle, intercept.space, easyKick) ?:
                 return null
 
             val arrivalHeight = intercept.ballSlice.space.z - ArenaModel.BALL_RADIUS + ManeuverMath.BASE_CAR_Z
@@ -135,7 +136,7 @@ open class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep
             }
 
             favoredChipOption?.let {
-                val renderer = NamedRenderer("slotKick")
+                val renderer = NamedRenderer("slotKick ${car.playerIndex}")
                 renderer.startPacket()
                 renderer.drawLine3d(Color.GREEN, intercept.ballSlice.space, intercept.ballSlice.space + it.velocity)
                 it.carSlice.render(renderer, Color.GREEN)

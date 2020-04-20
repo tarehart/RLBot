@@ -1,5 +1,6 @@
 package tarehart.rlbot.steps.strikes
 
+import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.Plane
 import tarehart.rlbot.math.Ray
@@ -15,8 +16,8 @@ class DropshotWallKick : KickStrategy {
         return getDirection(car, ballPosition, toBall)
     }
 
-    override fun getKickDirection(car: CarData, ballPosition: Vector3, easyKick: Vector3): Vector3 {
-        return getDirection(car, ballPosition, easyKick)
+    override fun getKickDirection(bundle: TacticalBundle, ballPosition: Vector3, easyKick: Vector3): Vector3 {
+        return getDirection(bundle.agentInput.myCarData, ballPosition, easyKick)
     }
 
     override fun looksViable(car: CarData, ballPosition: Vector3): Boolean {
