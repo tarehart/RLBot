@@ -23,7 +23,7 @@ import java.awt.Color
 import java.lang.Math.random
 import java.util.*
 
-class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget: CarData? = null,
+class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget: Int? = null,
                         val requireSupersonic: Boolean = true, private val isSpikeRush: Boolean = false) : NestedPlanStep() {
 
     enum class DemolishPhase {
@@ -144,8 +144,9 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         val car = bundle.agentInput.myCarData
         val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
 
-        val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
-        selectEnemyCar(bundle) ?: return null
+        val enemyCar = specificTarget?.let { targ -> oppositeTeam.first { it.playerIndex == targ } } ?:
+                enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
+                selectEnemyCar(bundle) ?: return null
 
         if (!::carPredictor.isInitialized) {
             carPredictor = CarPredictor(enemyCar.playerIndex)

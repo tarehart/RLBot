@@ -1,5 +1,8 @@
 package tarehart.rlbot
 
+import org.rlbot.twitch.action.server.invoker.Swagger2SpringBoot
+import org.springframework.boot.SpringApplication
+
 import rlbot.manager.BotManager
 import tarehart.rlbot.bots.BaseBot
 import tarehart.rlbot.ui.DisplayFlags
@@ -32,6 +35,10 @@ class BotHouse {
         botManager.setRefreshRate(120)
         val pythonInterface = PyInterface(port, botManager, bots)
         Thread { pythonInterface.start() }.start()
+
+//        // This will run on a port specified by server.port in a command line argument or
+//        // application.properties file. See https://www.baeldung.com/spring-boot-change-port
+//        Thread { SpringApplication(Swagger2SpringBoot::class.java).run() }.start()
 
         startWindow(port, botManager)
     }
