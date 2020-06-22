@@ -81,6 +81,13 @@ installDist {
     }
 }
 
+// https://github.com/gradle/gradle/issues/1989
+startScripts {
+    doLast {
+        windowsScript.text = windowsScript.text.replaceAll('set CLASSPATH=.*', 'set CLASSPATH=.;%APP_HOME%/lib/*')
+    }
+}
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
