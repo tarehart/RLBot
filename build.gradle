@@ -43,7 +43,7 @@ test {
 
 dependencies {
     // Fetch the framework jar file
-    compile 'org.rlbot.commons:framework:2.+'
+    compile 'org.rlbot.commons:framework:2.1+'
 
     compile 'org.rlbot.twitch:ActionServer:1.+'
     compile 'org.rlbot.twitch:TwitchBrokerClient:1.+'

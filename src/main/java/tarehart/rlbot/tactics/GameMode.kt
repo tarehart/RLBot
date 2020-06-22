@@ -8,7 +8,8 @@ enum class GameMode {
     SOCCER,
     DROPSHOT,
     HOOPS,
-    SPIKE_RUSH
+    SPIKE_RUSH,
+    HEATSEEKER
 }
 
 object GameModeSniffer {
@@ -28,6 +29,8 @@ object GameModeSniffer {
             gameMode = GameMode.DROPSHOT
         } else if (mode == rlbot.flat.GameMode.Hoops) {
             gameMode = GameMode.HOOPS
+        } else if (mode == rlbot.flat.GameMode.Heatseeker){
+            gameMode = GameMode.HEATSEEKER
         } else {
             gameMode = GameMode.SOCCER
         }
