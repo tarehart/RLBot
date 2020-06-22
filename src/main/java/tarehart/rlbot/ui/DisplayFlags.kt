@@ -21,6 +21,7 @@ object DisplayFlags {
         flags[HOOPS_KICKOFF] = Integer.parseInt(props.getProperty("flags.$HOOPS_KICKOFF"))
         flags[HOOPS_GOAL_PREDICTION] = Integer.parseInt(props.getProperty("flags.$HOOPS_GOAL_PREDICTION"))
         flags[GOAL_CROSSING] = Integer.parseInt(props.getProperty("flags.$GOAL_CROSSING"))
+        flags[BOT_LOG_IN_CONSOLE] = Integer.parseInt(props.getProperty("flags.$BOT_LOG_IN_CONSOLE"))
     }
 
     operator fun set(flag: String, value: Int) {
@@ -43,6 +44,7 @@ object DisplayFlags {
         DisplayFlags[DisplayFlags.HOOPS_KICKOFF] = flagVal
         DisplayFlags[DisplayFlags.HOOPS_GOAL_PREDICTION] = flagVal
         DisplayFlags[DisplayFlags.GOAL_CROSSING] = flagVal
+        DisplayFlags[DisplayFlags.BOT_LOG_IN_CONSOLE] = flagVal
     }
 
     const val ALL = "allFlags"
@@ -94,4 +96,7 @@ object DisplayFlags {
     // 0 : Hide
     // 1 : Show
     const val GOAL_CROSSING = "goalCrossing"
+
+    // 1 : Print log statements to console
+    const val BOT_LOG_IN_CONSOLE = "botLogInConsole"
 }

@@ -1,8 +1,8 @@
 package tarehart.rlbot.tuning
 
 import tarehart.rlbot.time.GameTime
-
-import java.util.HashMap
+import tarehart.rlbot.ui.DisplayFlags
+import java.util.*
 
 object BotLog {
 
@@ -12,7 +12,9 @@ object BotLog {
     fun println(message: String, playerIndex: Int) {
 
         //getLog(playerIndex).append(timeStamp + message).append("\n")
-        println("$timeStamp $playerIndex $message")
+        if (DisplayFlags[DisplayFlags.BOT_LOG_IN_CONSOLE] == 1) {
+            println("$timeStamp $playerIndex $message")
+        }
     }
 
     private fun getLog(playerIndex: Int): StringBuilder {
