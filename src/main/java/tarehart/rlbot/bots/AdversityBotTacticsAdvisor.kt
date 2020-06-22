@@ -16,6 +16,7 @@ import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.steps.teamwork.RotateBackToGoalStep
 import tarehart.rlbot.tactics.GameMode
+import tarehart.rlbot.tactics.GameModeSniffer
 import tarehart.rlbot.tactics.SaveAdvisor
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
 import tarehart.rlbot.tuning.BotLog
@@ -33,16 +34,18 @@ class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input)
                 situation.expectedContact.intercept != null && situation.expectedContact.intercept.space.distance(car.position) < 50) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
-
         plan.withStep(DemolishEnemyStep(isAdversityBot = true))
-        plan.withStep(GetBoostStep())
-        plan.withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
-        plan.withStep(RotateBackToGoalStep())
+
+        if (GameModeSniffer.getGameMode() != GameMode.HEATSEEKER) {
+            plan.withStep(GetBoostStep())
+            plan.withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+            plan.withStep(RotateBackToGoalStep())
+        }
         return plan
     }
 
     override fun suitableGameModes(): Set<GameMode> {
-        return setOf(GameMode.SOCCER, GameMode.DROPSHOT, GameMode.HOOPS, GameMode.SPIKE_RUSH)
+        return setOf(GameMode.SOCCER, GameMode.DROPSHOT, GameMode.HOOPS, GameMode.SPIKE_RUSH, GameMode.HEATSEEKER)
     }
 
     override fun findMoreUrgentPlan(bundle: TacticalBundle, currentPlan: Plan?): Plan? {
@@ -58,7 +61,8 @@ class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input)
             return GoForKickoffStep.chooseKickoffPlan(bundle, kickoffAdvice)
         }
 
-        if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {
+        if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan) &&
+                GameModeSniffer.getGameMode() != GameMode.HEATSEEKER) {
             BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
             return SaveAdvisor.planSave(bundle, situation.scoredOnThreat)
         }
