@@ -5,20 +5,14 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.planning.FirstViableStepPlan
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.planning.Posture
-import tarehart.rlbot.planning.RetryableViableStepPlan
 import tarehart.rlbot.steps.GetBoostStep
-import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
-import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.strikes.FlexibleKickStep
 import tarehart.rlbot.steps.strikes.KickAtEnemyGoal
 import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
 import tarehart.rlbot.steps.teamwork.RotateBackToGoalStep
-import tarehart.rlbot.tactics.GameMode
-import tarehart.rlbot.tactics.GameModeSniffer
-import tarehart.rlbot.tactics.SaveAdvisor
-import tarehart.rlbot.tactics.SoccerTacticsAdvisor
+import tarehart.rlbot.tactics.*
 import tarehart.rlbot.tuning.BotLog
 
 class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input) {
@@ -34,13 +28,11 @@ class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input)
                 situation.expectedContact.intercept != null && situation.expectedContact.intercept.space.distance(car.position) < 50) {
             plan.withStep(FlexibleKickStep(KickAtEnemyGoal()))
         }
-        plan.withStep(DemolishEnemyStep(isAdversityBot = true))
 
-        if (GameModeSniffer.getGameMode() != GameMode.HEATSEEKER) {
-            plan.withStep(GetBoostStep())
-            plan.withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
-            plan.withStep(RotateBackToGoalStep())
-        }
+        plan.withStep(DemolishEnemyStep(isAdversityBot = true))
+        plan.withStep(GetBoostStep())
+        plan.withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
+        plan.withStep(RotateBackToGoalStep())
         return plan
     }
 
@@ -61,10 +53,13 @@ class AdversityBotTacticsAdvisor(input: AgentInput): SoccerTacticsAdvisor(input)
             return GoForKickoffStep.chooseKickoffPlan(bundle, kickoffAdvice)
         }
 
-        if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan) &&
-                GameModeSniffer.getGameMode() != GameMode.HEATSEEKER) {
-            BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
-            return SaveAdvisor.planSave(bundle, situation.scoredOnThreat)
+        if (situation.scoredOnThreat != null && Posture.SAVE.canInterrupt(currentPlan)) {
+            val teamCoveringGoal = RotationAdvisor.teamHasMeCovered(bundle)
+            val shouldAlwaysAttemptSave = GameModeSniffer.getGameMode() != GameMode.HEATSEEKER
+            if (!teamCoveringGoal || shouldAlwaysAttemptSave) {
+                BotLog.println("Canceling current plan. Need to go for save!", input.playerIndex)
+                return SaveAdvisor.planSave(bundle, situation.scoredOnThreat)
+            }
         }
 
         return null
