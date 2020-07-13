@@ -111,7 +111,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
         if (ballCarrier != null && ballCarrier.team != car.team && Posture.SAVE.canInterrupt(currentPlan)) {
             if (situation.teamPlayerWithInitiative?.car == car) {
-                return Plan(Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier.playerIndex, requireSupersonic = false, isSpikeRush = true))
+                return Plan(Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false, isSpikeRush = true))
             } else {
                 return Plan(Posture.SAVE).withStep(GetOnDefenseStep())
             }

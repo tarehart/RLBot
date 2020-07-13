@@ -1,7 +1,5 @@
 package tarehart.rlbot
 
-import org.rlbot.twitch.action.server.api.handler.ActionEntity
-import org.rlbot.twitch.action.server.api.handler.StandardActionHandler
 import rlbot.Bot
 import rlbot.manager.BotManager
 import rlbot.pyinterop.SocketServer
@@ -30,10 +28,6 @@ class PyInterface(port: Int, botManager: BotManager, private val bots: MutableMa
         }
 
         bots[index] = newBot
-
-        if (newBot is ActionEntity) {
-            StandardActionHandler.registerActionEntity(botType, newBot)
-        }
 
         return newBot
     }

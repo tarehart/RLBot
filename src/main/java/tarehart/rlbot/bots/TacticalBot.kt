@@ -12,9 +12,8 @@ import java.awt.Color
 
 abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerIndex) {
 
-    protected lateinit var tacticsAdvisor: TacticsAdvisor
+    private lateinit var tacticsAdvisor: TacticsAdvisor
     private val bundleListeners = ArrayList<BundleListener>()
-    protected var previousBundle: TacticalBundle? = null
 
     override var loaded = false
         get() = super.loaded && ::tacticsAdvisor.isInitialized
@@ -28,9 +27,7 @@ abstract class TacticalBot(team: Team, playerIndex: Int) : BaseBot(team, playerI
 
     override fun getOutput(input: AgentInput): AgentOutput {
         val bundle = assessSituation(input)
-        val output = getOutput(bundle)
-        previousBundle = bundle
-        return output
+        return getOutput(bundle)
     }
 
     /**

@@ -4,7 +4,7 @@ apply plugin: 'application'
 
 
 repositories {
-    mavenLocal()
+//    mavenLocal()
     jcenter()
 }
 
@@ -44,9 +44,6 @@ test {
 dependencies {
     // Fetch the framework jar file
     compile 'org.rlbot.commons:framework:2.1+'
-
-    compile 'org.rlbot.twitch:ActionServer:1.+'
-    compile 'org.rlbot.twitch:TwitchBrokerClient:1.+'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'org.ejml', name: 'ejml-fdense', version: '0.38'
