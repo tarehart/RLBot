@@ -34,11 +34,6 @@ open class Plan @JvmOverloads constructor(val posture: Posture = Posture.NEUTRAL
         return this
     }
 
-    fun withSteps(plan: Plan): Plan {
-        steps.addAll(plan.steps)
-        return this
-    }
-
     fun unstoppable(): Plan {
         this.unstoppable = true
         return this
