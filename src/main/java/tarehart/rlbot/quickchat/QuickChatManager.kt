@@ -16,6 +16,9 @@ class QuickChatManager(val playerIndex: Int, val team: Int) {
             if (message.playerIndex() == playerIndex) {
                 continue // Ignore messages coming from self
             }
+            if (message.playerIndex() >= input.allCars.size) {
+                continue // Ignore messages that are out of bounds
+            }
             if (input.allCars[message.playerIndex()].team.ordinal == team) {
                 latestTeamMessages[message.playerIndex()] = QuickChatRecord(message.quickChatSelection(), GameTime.fromGameSeconds(message.timeStamp()))
             }

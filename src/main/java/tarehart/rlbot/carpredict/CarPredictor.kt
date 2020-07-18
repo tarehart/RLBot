@@ -12,7 +12,7 @@ import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 import java.util.*
 
-class CarPredictor(private val carIndex: Int, private val respectFloor: Boolean = true) {
+class CarPredictor(val carIndex: Int, private val respectFloor: Boolean = true) {
 
 
     private val SECONDS_SPENT_CIRCLING = 0.25

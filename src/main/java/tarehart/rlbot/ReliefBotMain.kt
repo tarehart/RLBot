@@ -4,7 +4,7 @@ const val DEFAULT_PORT = 22868
 
 fun main(args: Array<String>) {
     val port = readPortFromArgs(args) ?: DEFAULT_PORT
-    BotHouse().start(port)
+    BotHouse.start(port)
 }
 
 fun readPortFromArgs(args: Array<String>): Int? {

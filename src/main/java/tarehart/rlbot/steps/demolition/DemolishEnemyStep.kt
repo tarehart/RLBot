@@ -21,7 +21,6 @@ import tarehart.rlbot.time.GameTime
 import tarehart.rlbot.tuning.BotLog
 import java.awt.Color
 import java.lang.Math.random
-import java.util.*
 
 class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget: CarData? = null,
                         val requireSupersonic: Boolean = true, private val isSpikeRush: Boolean = false) : NestedPlanStep() {
@@ -44,24 +43,6 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
         Quip
     }
 
-    class WheelContactWatcher(val carIndex: Int) {
-        var previouslyHadWheelContact: Boolean? = null
-        fun justJumped(bundle: TacticalBundle): Boolean {
-            return previouslyHadWheelContact == true && inputChanged(bundle)
-        }
-
-        fun justLanded(bundle: TacticalBundle): Boolean {
-            return previouslyHadWheelContact == false && inputChanged(bundle)
-        }
-
-        private fun inputChanged(bundle: TacticalBundle): Boolean {
-            val car = bundle.agentInput.allCars[carIndex]
-            val changed = previouslyHadWheelContact != null && previouslyHadWheelContact != car.hasWheelContact
-            previouslyHadWheelContact = car.hasWheelContact
-            return changed
-        }
-    }
-
     class DemolishTransition(val output: AgentOutput, val phase: DemolishPhase)
 
     private var canDodge: Boolean = true
@@ -71,9 +52,8 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
     private val SECONDS_TO_PREDICT = 4.0
     private val NEEDS_JUMP_HEIGHT = 0.5
     private var demolishPhase = DemolishPhase.CHASE
-    private lateinit var selfContactWatcher: WheelContactWatcher
     private lateinit var carPredictor: CarPredictor
-    private var enemyWatcher: WheelContactWatcher? = null
+    private var enemyIndex: Int? = null
     private var deadline: GameTime? = null
 
     // 0 = chat every time
@@ -137,17 +117,13 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
     override fun doComputationInLieuOfPlan(bundle: TacticalBundle): AgentOutput? {
 
-        if (!::selfContactWatcher.isInitialized) {
-            selfContactWatcher = WheelContactWatcher(bundle.agentInput.playerIndex)
-        }
-
         val car = bundle.agentInput.myCarData
         val oppositeTeam = bundle.agentInput.getTeamRoster(bundle.agentInput.team.opposite())
 
-        val enemyCar = enemyWatcher?.let { detector -> oppositeTeam.first { it.playerIndex == detector.carIndex } } ?:
+        val enemyCar = enemyIndex?.let { enemyInd -> oppositeTeam.firstOrNull { it.playerIndex == enemyInd } } ?:
         selectEnemyCar(bundle) ?: return null
 
-        if (!::carPredictor.isInitialized) {
+        if (!::carPredictor.isInitialized || carPredictor.carIndex != enemyCar.playerIndex) {
             carPredictor = CarPredictor(enemyCar.playerIndex)
         }
 
@@ -174,7 +150,7 @@ class DemolishEnemyStep(val isAdversityBot: Boolean = false, val specificTarget:
 
         if (enemyCar.position.distance(car.position) < 30) {
             progressChat(bundle.agentInput.playerIndex, ChatProgression.Incoming)
-            enemyWatcher = WheelContactWatcher(enemyCar.playerIndex) // Commit to demolishing this particular enemy
+            enemyIndex = enemyCar.playerIndex // Commit to demolishing this particular enemy
         }
 
         val transition = when (demolishPhase) {

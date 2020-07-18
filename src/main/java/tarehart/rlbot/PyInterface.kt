@@ -31,4 +31,10 @@ class PyInterface(port: Int, botManager: BotManager, private val bots: MutableMa
 
         return newBot
     }
+
+    override fun retireBot(index: Int) {
+        BotHouse.retireBot(index)
+        // Normally this would check to see if any bots remain, and if not, shut down the process.
+        // However, I want to keep it hot and ready for PokebotTrainer.
+    }
 }

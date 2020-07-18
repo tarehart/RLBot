@@ -13,9 +13,12 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 
 
-class BotHouse {
+object BotHouse {
 
     private val bots: MutableMap<Int, BaseBot> = HashMap()
+    val botManager = BotManager()
+    var debugMode = false
+    var disableDriving = false
 
     fun start(port: Int) {
 
@@ -28,12 +31,16 @@ class BotHouse {
         ScreenResolution.init()
         DisplayFlags.init()
 
-        val botManager = BotManager()
         botManager.setRefreshRate(120)
         val pythonInterface = PyInterface(port, botManager, bots)
         Thread { pythonInterface.start() }.start()
 
         startWindow(port, botManager)
+    }
+
+    fun retireBot(playerIndex: Int) {
+        botManager.retireBot(playerIndex)
+        bots.remove(playerIndex)
     }
 
     private fun startWindow(port: Int, botManager: BotManager) {
@@ -97,10 +104,5 @@ class BotHouse {
         }
 
         Timer(1000, myListener).start()
-    }
-
-    companion object {
-        var debugMode = false
-        var disableDriving = false
     }
 }
