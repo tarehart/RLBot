@@ -135,14 +135,14 @@ open class SlotKickStep(private val kickStrategy: KickStrategy) : NestedPlanStep
                 return null
             }
 
-            favoredChipOption?.let {
-                val renderer = NamedRenderer("slotKick ${car.playerIndex}")
-                renderer.startPacket()
-                renderer.drawLine3d(Color.GREEN, intercept.ballSlice.space, intercept.ballSlice.space + it.velocity)
-                it.carSlice.render(renderer, Color.GREEN)
-                RenderUtil.drawCircle(renderer, it.chipCircle, it.impactPoint.z, Color.WHITE)
-                renderer.finishAndSend()
-            }
+//            favoredChipOption?.let {
+//                val renderer = NamedRenderer("slotKick ${car.playerIndex}")
+//                renderer.startPacket()
+//                renderer.drawLine3d(Color.GREEN, intercept.ballSlice.space, intercept.ballSlice.space + it.velocity)
+//                it.carSlice.render(renderer, Color.GREEN)
+//                RenderUtil.drawCircle(renderer, it.chipCircle, it.impactPoint.z, Color.WHITE)
+//                renderer.finishAndSend()
+//            }
 
             val jumpOutput = reflexManeuver(car, intercept, favoredChipOption, bundle)
             if (jumpOutput != null) {
