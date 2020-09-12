@@ -45,7 +45,7 @@ class ReliefBotTestHarness(private val testCase: StateSettingTestCase) {
         DisplayFlags.init()
         botInstance = ReliefBot(Team.BLUE, STANDARD_PLAYER_INDEX)
         botInstance.currentPlan = testCase.initialPlan
-        botManager.ensureBotRegistered(STANDARD_PLAYER_INDEX) { botInstance }
+        botManager.ensureBotRegistered(STANDARD_PLAYER_INDEX, Team.BLUE.ordinal) { botInstance }
 
         while(!botInstance.loaded) {
             Thread.sleep(16)

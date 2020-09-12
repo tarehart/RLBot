@@ -18,34 +18,14 @@ import tarehart.rlbot.steps.state.StateVector
 import tarehart.rlbot.time.Duration
 import tarehart.rlbot.tuning.ManeuverMath
 
-class DoubleJumpPokeMeasurementTest: StateSettingAbstractTest() {
+class SingleJumpMeasurementTest: StateSettingAbstractTest() {
     @Test
-    fun doubleJumpPoke() {
+    fun singleJump() {
 
         val blindSequence = BlindSequence()
-                .withStep(BlindStep(Duration.ofMillis(200), AgentOutput()
+                .withStep(BlindStep(Duration.ofSeconds(5), AgentOutput()
                         .withJump(true)
-                        .withPitch(0.5)
                 ))
-                .withStep(BlindStep(Duration.ofMillis(16), AgentOutput()
-                        .withPitch(1.0)
-                        .withJump(false)
-                        .withThrottle(1.0)))
-                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
-                        .withJump(true)
-                        .withThrottle(1.0)))
-                .withStep(BlindStep(Duration.ofMillis(170), AgentOutput()
-                        .withPitch(1.0)
-                        .withJump(true)
-                        .withThrottle(1.0)))
-                .withStep(BlindStep(Duration.ofMillis(50), AgentOutput()
-                        .withPitch(-1.0)
-                        .withJump(true)
-                        .withThrottle(1.0)))
-                .withStep(BlindStep(Duration.ofMillis(800), AgentOutput()
-                        .withJump(true)
-                        .withThrottle(1.0)))
-                .withStep(BlindStep(Duration.ofSeconds(5), AgentOutput()))
 
 
         val testCase = StateSettingTestCase(

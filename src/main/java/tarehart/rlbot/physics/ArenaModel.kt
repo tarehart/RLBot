@@ -50,6 +50,10 @@ class ArenaModel {
             return abs(GRAVITY) < 5
         }
 
+        fun isLowGravity(): Boolean {
+            return BotMath.numberDistance(GRAVITY, 6.5F) < 1
+        }
+
         fun setSoccerWalls() {
 
             arenaPlanes.clear()

@@ -82,7 +82,7 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
             if (car.hasWheelContact && car.position.z > 5) {
                 return Plan(LANDING).withStep(DescendFromWallStep())
             } else if (!car.hasWheelContact && !ArenaModel.isBehindGoalLine(car.position)) {
-                if (ArenaModel.isMicroGravity() && situation.distanceBallIsBehindUs < 0) {
+                if (ArenaModel.isMicroGravity() || ArenaModel.isLowGravity() && situation.shotOnGoalAvailable) {
                     return Plan(NEUTRAL, "Microgravity flight").withStep(MidairStrikeStep(Duration.ofMillis(0)))
                 }
 

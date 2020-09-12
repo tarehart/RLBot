@@ -4,11 +4,10 @@ import tarehart.rlbot.TacticalBundle
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
-import tarehart.rlbot.planning.Goal
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.GoalUtil
 import tarehart.rlbot.planning.SoccerGoal
 import tarehart.rlbot.tactics.SoccerTacticsAdvisor
-import tarehart.rlbot.tactics.TacticsAdvisor
 
 class KickAtEnemyGoal : KickStrategy {
 
@@ -22,9 +21,12 @@ class KickAtEnemyGoal : KickStrategy {
     }
 
     override fun looksViable(car: CarData, ballPosition: Vector3): Boolean {
-
-        if (ballPosition.z > SoccerGoal.GOAL_HEIGHT) {
-            if (Math.abs(ballPosition.y - GoalUtil.getEnemyGoal(car.team).center.y) < ballPosition.z - SoccerGoal.GOAL_HEIGHT) {
+        val entryHeight = SoccerGoal.GOAL_HEIGHT - ArenaModel.BALL_RADIUS
+        if (ballPosition.z > entryHeight) {
+            val angleSlopeLimit = 1  // 45 degree angle
+            val backWallGap = Math.abs(GoalUtil.getEnemyGoal(car.team).center.y - ballPosition.y - ArenaModel.BALL_RADIUS)
+            val heightOverEntry = ballPosition.z - entryHeight
+            if (backWallGap / heightOverEntry < angleSlopeLimit) {
                 // Ball is too tight above the crossbar, can't angle it down.
                 return false
             }

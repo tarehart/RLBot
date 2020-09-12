@@ -2,8 +2,10 @@ package tarehart.rlbot.tuning
 
 import tarehart.rlbot.input.CarData
 import tarehart.rlbot.math.DistanceTimeSpeed
+import tarehart.rlbot.math.Interpolate
 import tarehart.rlbot.math.vector.Vector2
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.physics.DistancePlot
 import tarehart.rlbot.planning.CarWithIntercept
 import tarehart.rlbot.routing.DistanceDuration
@@ -31,11 +33,24 @@ object ManeuverMath {
     private const val MASH_SLOPE = 7.78F
     private const val SLOPE_CUTOFF = 3.2F
 
+
+    private val JUMP_HEIGHT_CURVE_LOW_GRAV = listOf(
+            Pair(0F, 1.1F), Pair(.2F, 2.73F), Pair(.4F, 4.63F), Pair(.7F, 7.01F), Pair(1F, 8.79F), Pair(1.2F, 9.66F), Pair(1.5F, 10.47F), Pair(1.77F, 10.7F))
+
+
     /**
      * @param height the raw height that we want the center of the car to achieve.
      * If the height is less than BASE_CAR_Z, there's nothing to do.
      */
     fun secondsForMashJumpHeight(height: Float): Float? {
+        if (ArenaModel.isLowGravity()) {
+            return Interpolate.getInverse(JUMP_HEIGHT_CURVE_LOW_GRAV, height)
+        } else {
+            return secondsForMashJumpHeightStandardGrav(height)
+        }
+    }
+
+    private fun secondsForMashJumpHeightStandardGrav(height: Float): Float? {
         if (height > MASH_JUMP_HEIGHT) {
             return null
         }

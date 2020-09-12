@@ -6,6 +6,7 @@ import tarehart.rlbot.intercept.Intercept
 import tarehart.rlbot.math.Interpolate
 import tarehart.rlbot.math.SpaceTime
 import tarehart.rlbot.math.vector.Vector3
+import tarehart.rlbot.physics.ArenaModel
 import tarehart.rlbot.planning.Plan
 import tarehart.rlbot.routing.waypoint.PreKickWaypoint
 import tarehart.rlbot.steps.blind.BlindSequence
@@ -49,8 +50,11 @@ class DoubleJumpPokeStrike(heightOfContactPoint: Float): StrikeProfile() {
 
         const val MAX_BALL_HEIGHT_FOR_DOUBLE_JUMP_POKE = 11.5
 
-        val JUMP_HEIGHT_CURVE = listOf(
+        private val JUMP_HEIGHT_CURVE = listOf(
                 Pair(0F, 1.1F), Pair(.2F, 2.6F), Pair(.48F, 6.7F), Pair(.71F, 9F), Pair(.95F, 10.5F), Pair(1.16F, 11.3F), Pair(1.4F, 11.58F))
+
+        private val JUMP_HEIGHT_CURVE_LOW_GRAV = listOf(
+                Pair(0F, 1.1F), Pair(.2F, 2.83F), Pair(.3F, 4.37F), Pair(0.82F, 12.12F), Pair(1.5F, 19.19F), Pair(1.97F, 22.48F), Pair(2.84F, 24.89F))
 
         val MIN_JUMP = ReflexJumpStrike.JUMP_HEIGHT_CURVE[0].second
 
@@ -64,7 +68,9 @@ class DoubleJumpPokeStrike(heightOfContactPoint: Float): StrikeProfile() {
             if (heightOfContactPoint < MIN_JUMP) {
                 return 0F
             }
-            return Interpolate.getInverse(JUMP_HEIGHT_CURVE, heightOfContactPoint)
+
+            val curve = if (ArenaModel.isLowGravity()) JUMP_HEIGHT_CURVE_LOW_GRAV else JUMP_HEIGHT_CURVE
+            return Interpolate.getInverse(curve, heightOfContactPoint)
         }
 
         fun performDoubleJumpPoke(): Plan {
