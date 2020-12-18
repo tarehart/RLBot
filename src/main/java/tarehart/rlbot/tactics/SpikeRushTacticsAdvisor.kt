@@ -26,8 +26,7 @@ import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.spikerush.SpikeCarryStep
 import tarehart.rlbot.steps.spikerush.SpikedCeilingShotStep
-import tarehart.rlbot.steps.strikes.InterceptStep
-import tarehart.rlbot.steps.strikes.MidairStrikeStep
+import tarehart.rlbot.steps.strikes.*
 import tarehart.rlbot.steps.teamwork.ShadowThePlayStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
@@ -75,7 +74,9 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
                 val ballRelative = car.relativePosition(bundle.agentInput.ballPosition).normaliseCopy()
 
-                if (ballRelative.x > .5 && ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes(car.team)).distance(car.position) < 35) {
+                if (ballRelative.x > .5 &&
+                        ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes(car.team))
+                                .distance(car.position) < 40) {
                     return Plan(Posture.SPIKE_CARRY).withStep(SpikedCeilingShotStep())
                 }
 
@@ -110,11 +111,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
         }
 
         if (ballCarrier != null && ballCarrier.team != car.team && Posture.SAVE.canInterrupt(currentPlan)) {
-            if (situation.teamPlayerWithInitiative?.car == car) {
-                return Plan(Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false, isSpikeRush = true))
-            } else {
-                return Plan(Posture.SAVE).withStep(GetOnDefenseStep())
-            }
+            return Plan(Posture.SAVE).withStep(DemolishEnemyStep(specificTarget = ballCarrier, requireSupersonic = false, isSpikeRush = true))
         }
 
         // NOTE: Kickoffs can happen unpredictably because the bot doesn't know about goals at the moment.
@@ -145,7 +142,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
             RLBotDll.sendQuickChat(car.playerIndex, false, QuickChatSelection.Reactions_Noooo)
             println("Canceling current plan. Going for intercept save!", input.playerIndex)
-            return Plan(Posture.SAVE).withStep(InterceptStep(needsChallenge = false))
+            return Plan(Posture.SAVE).withStep(SlotKickStep(KickAbsolutelyAnywhere()))
         }
 
         if (SoccerTacticsAdvisor.getWaitToClear(bundle, situation.enemyPlayerWithInitiative?.car) && Posture.DEFENSIVE.canInterrupt(currentPlan)) {
@@ -164,13 +161,12 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
 
         val threatReport = ThreatAssessor.getThreatReport(bundle)
 
-        if (threatReport.looksSerious() && situation.ballAdvantage.seconds < 0.5 && Posture.DEFENSIVE.canInterrupt(currentPlan)
+        if (threatReport.looksSerious() && situation.ballAdvantage.seconds < -0.5 && Posture.DEFENSIVE.canInterrupt(currentPlan)
                 && situation.teamPlayerWithInitiative?.car == input.myCarData) {
             println("Canceling current plan due to threat level.", input.playerIndex)
             return FirstViableStepPlan(Posture.DEFENSIVE)
-                    .withStep(ChallengeStep())
                     .withStep(GetOnDefenseStep())
-                    .withStep(InterceptStep(needsChallenge = false))
+                    .withStep(SlotKickStep(KickAwayFromOwnGoal()))
         }
 
         return null
@@ -213,7 +209,8 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
             return makePlanWithPlentyOfTime(bundle)
         }
 
-        return FirstViableStepPlan(Posture.DEFENSIVE).withStep(ChallengeStep()).withStep(InterceptStep(needsChallenge = false))
+        return FirstViableStepPlan(Posture.DEFENSIVE)
+                .withStep(SlotKickStep(KickAbsolutelyAnywhere()))
     }
 
     private fun makePlanWithPlentyOfTime(bundle: TacticalBundle): Plan {
@@ -222,14 +219,16 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
         val car = input.myCarData
 
         if (WallTouchStep.hasWallTouchOpportunity(bundle)) {
-            return FirstViableStepPlan(OFFENSIVE).withStep(WallTouchStep()).withStep(InterceptStep(needsChallenge = false))
+            return FirstViableStepPlan(OFFENSIVE)
+                    .withStep(WallTouchStep())
+                    .withStep(SlotKickStep(KickAbsolutelyAnywhere()))
         }
 
         if (car.boost < 50) {
             return Plan().withStep(GetBoostStep())
         }
 
-        return Plan().withStep(InterceptStep(needsChallenge = false))
+        return Plan().withStep(SlotKickStep(KickAbsolutelyAnywhere()))
     }
 
     override fun assessSituation(input: AgentInput, currentPlan: Plan?): TacticalBundle {
