@@ -140,14 +140,6 @@ open class SoccerTacticsAdvisor(input: AgentInput): TacticsAdvisor {
                 }.withStep(ChallengeStep())
                         .withStep(FlexibleKickStep(KickAwayFromOwnGoal()))
             }
-
-            if (quickChatManager.hasLatestChatFromTeammate(QuickChatSelection.Information_IGotIt, input.time.minusSeconds(1))) {
-                println("Rotating out per teammate's request!", car.playerIndex)
-                return RetryableViableStepPlan(NEUTRAL, "Rotating out per teammate's request", GetOnDefenseStep()) {
-                    quickChatManager.hasLatestChatFromTeammate(QuickChatSelection.Information_IGotIt, it.agentInput.time.minusSeconds(1))
-                }.withStep(GetBoostStep())
-                        .withStep(ShadowThePlayStep())
-            }
         }
 
         if (situation.shotOnGoalAvailable &&

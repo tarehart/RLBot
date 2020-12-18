@@ -165,6 +165,9 @@ class ArenaModel {
 
         private fun isCachedPathValid(start: BallSlice): Boolean {
             val prevPath = cachedPath
+            if (prevPath.slices.isEmpty()) {
+                return false
+            }
             val prevPrediction = prevPath.getMotionAt(start.time)
             if ((prevPath.endpoint.time - start.time) > SIMULATION_DURATION &&
                     prevPrediction != null &&
