@@ -19,14 +19,16 @@ import tarehart.rlbot.steps.GetOnOffenseStep
 import tarehart.rlbot.steps.GoForKickoffStep
 import tarehart.rlbot.steps.blind.BlindSequence
 import tarehart.rlbot.steps.blind.BlindStep
-import tarehart.rlbot.steps.challenge.ChallengeStep
 import tarehart.rlbot.steps.defense.GetOnDefenseStep
 import tarehart.rlbot.steps.defense.ThreatAssessor
 import tarehart.rlbot.steps.demolition.DemolishEnemyStep
 import tarehart.rlbot.steps.landing.LandGracefullyStep
 import tarehart.rlbot.steps.spikerush.SpikeCarryStep
 import tarehart.rlbot.steps.spikerush.SpikedCeilingShotStep
-import tarehart.rlbot.steps.strikes.*
+import tarehart.rlbot.steps.strikes.KickAbsolutelyAnywhere
+import tarehart.rlbot.steps.strikes.KickAwayFromOwnGoal
+import tarehart.rlbot.steps.strikes.MidairStrikeStep
+import tarehart.rlbot.steps.strikes.SlotKickStep
 import tarehart.rlbot.steps.teamwork.ShadowThePlayStep
 import tarehart.rlbot.steps.wall.WallTouchStep
 import tarehart.rlbot.time.Duration
@@ -77,7 +79,7 @@ class SpikeRushTacticsAdvisor: TacticsAdvisor {
                 if (ballRelative.x > .5 &&
                         ArenaModel.getNearestPlane(car.position, SpikedCeilingShotStep.getViableWallPlanes(car.team))
                                 .distance(car.position) < 40) {
-                    return Plan(Posture.SPIKE_CARRY).withStep(SpikedCeilingShotStep())
+                    return Plan(Posture.OVERRIDE).withStep(SpikedCeilingShotStep())
                 }
 
                 return Plan(Posture.SPIKE_CARRY).withStep(SpikeCarryStep())
